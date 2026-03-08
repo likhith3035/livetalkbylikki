@@ -172,6 +172,7 @@ const ChatStatusBar = ({
               <span className="hidden sm:inline">{disappearTimer ? `${disappearTimer}s` : ""}</span>
             </Button>
             {onThemeChange && <ChatThemePicker onApply={onThemeChange} />}
+            <ChatTimer isConnected={status === "connected"} onAutoDisconnect={onStop} />
           </>
         )}
 
