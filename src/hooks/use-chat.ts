@@ -412,7 +412,7 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping,
-    autoReconnectCountdown, sessionId,
+    autoReconnectCountdown, sessionId, searchElapsed,
     roomChannel: roomChannelRef.current,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger,
