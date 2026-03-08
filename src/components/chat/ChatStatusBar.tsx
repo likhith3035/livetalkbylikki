@@ -25,6 +25,8 @@ interface ChatStatusBarProps {
   isVideoCallActive: boolean;
   onCreateRoom: () => string;
   onJoinRoom: (code: string) => void;
+  disappearTimer?: number | null;
+  onSetDisappearTimer?: (t: number | null) => void;
 }
 
 const statusMessages: Record<string, { text: string; hint?: string }> = {
