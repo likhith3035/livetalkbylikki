@@ -328,14 +328,19 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       if (senderId === sessionId) return;
 
       switch (event) {
-        case "webrtc:request":
+        case "webrtc:request": {
+          const reqAudioOnly = payload.audioOnly as boolean | undefined;
+          if (reqAudioOnly) setIsAudioOnly(true);
           setCallStatus("incoming");
           break;
+        }
 
-        case "webrtc:accept":
+        case "webrtc:accept": {
+          const accAudioOnly = payload.audioOnly as boolean | undefined;
+          if (accAudioOnly) setIsAudioOnly(true);
           try {
             setCallStatus("connecting");
-            const stream = await getMedia();
+            const stream = await getMedia("user", isAudioOnly || !!accAudioOnly);
             const pc = createPeerConnection();
             stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
