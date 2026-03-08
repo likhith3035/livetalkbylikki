@@ -191,6 +191,7 @@ const ChatPage = () => {
         isMuted={isMuted}
         isCameraOff={isCameraOff}
         isScreenSharing={isScreenSharing}
+        remoteIsScreenSharing={remoteIsScreenSharing}
         isBlurred={isBlurred}
         facingMode={facingMode}
         onToggleMute={toggleMute}
