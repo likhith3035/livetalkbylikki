@@ -222,7 +222,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
             className="sm:hidden mx-auto max-w-3xl mt-1.5 flex gap-1 items-center justify-center"
           >
             <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
-            <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
+            <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
             <LocationShareButton isConnected={isConnected} onSend={onSend} />
           </motion.div>
         )}
