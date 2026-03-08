@@ -87,6 +87,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping }: ChatInputProps) 
       <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2 items-center">
         <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
         <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
+        <ChatGames onSendMessage={onSend} isConnected={isConnected} />
 
         <AnimatePresence mode="wait">
           {isRecording ? (

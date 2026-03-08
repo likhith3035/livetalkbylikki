@@ -182,6 +182,7 @@ const ChatPage = () => {
       <ChatMessageList
         messages={messages}
         strangerTyping={strangerTyping}
+        strangerTypingText={strangerTypingText}
         onReact={reactToMessage}
       />
 
