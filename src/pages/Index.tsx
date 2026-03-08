@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, ArrowRight, Sparkles, Instagram, Linkedin, Mail } from "lucide-react";
+import { MessageSquare, ArrowRight, Sparkles, Instagram, Linkedin, Mail, Link2, Copy, Check, Hash } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import FeatureBadges from "@/components/FeatureBadges";
 import BottomNav from "@/components/BottomNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
+import { useToast } from "@/hooks/use-toast";
 
 const STEPS = [
   { emoji: "1️⃣", title: "Tap \"Start Chatting\"", desc: "We'll find a random stranger for you" },
