@@ -26,11 +26,20 @@ const Index = () => {
   const appOrigin = "https://ohmeglebylikki.lovable.app";
   const getRoomUrl = (code: string) => `${appOrigin}/room/${code}`;
 
-  const generateRoomCode = () => {
+  const generateAndJoinRoom = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
     setRoomCode(code);
+  };
+
+  const shareAndJoin = async () => {
+    if (!roomCode) return;
+    const url = getRoomUrl(roomCode);
+    await navigator.clipboard.writeText(url);
+    toast({ title: "Link copied!", description: "Now entering the room..." });
+    // Navigate to room after a short delay so user sees the toast
+    setTimeout(() => navigate(`/room/${roomCode}`), 600);
   };
 
   const copyLink = async () => {
