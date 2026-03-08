@@ -19,11 +19,14 @@ export interface Message {
   text: string;
   imageUrl?: string;
   timestamp: Date;
-  reactions: Record<string, string[]>; // emoji -> senderIds
+  reactions: Record<string, string[]>;
   senderNickname?: string;
   senderAvatar?: string;
   read?: boolean;
   replyTo?: { id: string; text: string; sender: string };
+  deleted?: boolean;
+  pinned?: boolean;
+  disappearAt?: number; // unix ms when message auto-deletes
 }
 
 export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
