@@ -232,6 +232,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
       <VideoCallOverlay
         callStatus={callStatus}
+        isAudioOnly={isAudioOnly}
         localStream={localStream}
         remoteStream={remoteStream}
         isMuted={isMuted}
