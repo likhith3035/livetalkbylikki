@@ -187,6 +187,7 @@ const ChatPage = () => {
         strangerTyping={strangerTyping}
         strangerTypingText={strangerTypingText}
         onReact={reactToMessage}
+        onReply={(msg) => setReplyingTo(msg)}
       />
 
       <ChatInput
@@ -194,6 +195,8 @@ const ChatPage = () => {
         onSend={sendMessage}
         onImageUpload={handleImageUpload}
         onTyping={sendTyping}
+        replyingTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
       />
 
       <VideoCallOverlay
