@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, ArrowRight, Sparkles, Instagram, Linkedin, Mail, Link2, Copy, Check, Hash } from "lucide-react";
+import { MessageSquare, ArrowRight, Sparkles, Instagram, Linkedin, Mail, Link2, Copy, Check, Hash, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
