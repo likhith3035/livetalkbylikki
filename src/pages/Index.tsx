@@ -90,6 +90,52 @@ const Index = () => {
           </p>
         </motion.div>
 
+        {/* Share Link to Connect */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+          className="w-full max-w-sm"
+        >
+          {!roomCode ? (
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full h-12 text-sm font-medium rounded-2xl gap-2 border-primary/30 hover:border-primary/50"
+              onClick={generateRoomCode}
+            >
+              <Link2 className="h-4 w-4 text-primary" />
+              Share Link to Chat with a Friend
+            </Button>
+          ) : (
+            <div className="space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-xs font-medium text-muted-foreground text-center">Your private room code</p>
+              <div className="flex items-center gap-2 rounded-xl bg-secondary border border-border p-3">
+                <Hash className="h-4 w-4 text-primary shrink-0" />
+                <span className="font-mono text-lg font-bold tracking-widest text-foreground flex-1">
+                  {roomCode}
+                </span>
+                <Button size="sm" variant="ghost" onClick={copyLink} className="h-8 px-2">
+                  {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={copyLink} variant="secondary" size="sm" className="flex-1 gap-1.5 text-xs">
+                  <Copy className="h-3.5 w-3.5" />
+                  Copy Link
+                </Button>
+                <Button onClick={joinMyRoom} variant="glow" size="sm" className="flex-1 gap-1.5 text-xs">
+                  <ArrowRight className="h-3.5 w-3.5" />
+                  Enter Room
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">
+                Share the link, then tap "Enter Room" to wait for your friend
+              </p>
+            </div>
+          )}
+        </motion.div>
+
         {/* How it works */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
