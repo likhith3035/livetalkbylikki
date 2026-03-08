@@ -9,10 +9,13 @@ interface MessageReactionsProps {
   reactions: Record<string, string[]>;
   onReact: (messageId: string, emoji: string) => void;
   isMine: boolean;
+  forceOpen?: boolean;
+  onClose?: () => void;
 }
 
-const MessageReactions = ({ messageId, reactions, onReact, isMine }: MessageReactionsProps) => {
+const MessageReactions = ({ messageId, reactions, onReact, isMine, forceOpen, onClose }: MessageReactionsProps) => {
   const [showPicker, setShowPicker] = useState(false);
+  const isOpen = showPicker || forceOpen;
 
   const hasReactions = Object.values(reactions).some((arr) => arr.length > 0);
 
