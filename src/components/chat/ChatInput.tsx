@@ -141,6 +141,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
         <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
         <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
         <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
+        <LocationShareButton isConnected={isConnected} onSend={onSend} />
 
         <AnimatePresence mode="wait">
           {isRecording ? (
