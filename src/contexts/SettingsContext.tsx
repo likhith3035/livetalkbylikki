@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 
-export type ChatTheme = "default" | "ocean" | "sunset" | "forest" | "rose" | "midnight";
-export type ChatWallpaper = "none" | "dots" | "grid" | "waves" | "gradient";
+export type ChatTheme = "default" | "ocean" | "sunset" | "forest" | "rose" | "midnight" | "amber" | "cyan" | "crimson" | "lavender" | "emerald" | "slate";
+export type ChatWallpaper = "none" | "dots" | "grid" | "waves" | "gradient" | "bubbles" | "stars" | "zigzag";
 
 export type SettingsState = {
   darkMode: boolean;
