@@ -108,6 +108,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [showInterests, setShowInterests] = useState(true);
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [searchHighlight, setSearchHighlight] = useState<string | null>(null);
   const lastAutoJoinCodeRef = useRef<string | null>(null);
 
   // Auto-join private room from URL/code
