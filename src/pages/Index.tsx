@@ -4,6 +4,7 @@ import {
   MessageSquare, ArrowRight, Sparkles, Shield, Zap, Users, Globe, Lock,
   EyeOff, Video, Gamepad2, Link2, Copy, Check, Hash, Share2,
   Instagram, Linkedin, Mail, ChevronDown, Phone, Timer,
+  Heart, Search, Pin, Image, Palette, MapPin,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
