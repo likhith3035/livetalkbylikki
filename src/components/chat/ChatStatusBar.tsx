@@ -20,7 +20,7 @@ interface ChatStatusBarProps {
 }
 
 const ChatStatusBar = ({
-  status, matchedInterests, autoReconnectCountdown,
+  status, matchedInterests, autoReconnectCountdown, searchElapsed,
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
   onVideoCall, isVideoCallActive,
 }: ChatStatusBarProps) => {
