@@ -113,8 +113,6 @@ const ChatPage = () => {
     }
   }, [status, joinPrivateRoom]);
 
-  useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
-
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
@@ -127,10 +125,12 @@ const ChatPage = () => {
     prevStatusRef.current = status;
   }, [status]);
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     setShowInterests(false);
     startChat();
-  };
+  }, [startChat]);
+
+  useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
 
   const handleImageUpload = (url: string) => {
     sendMessage("", url);
