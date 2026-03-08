@@ -84,6 +84,7 @@ const ChatPage = () => {
         status={status}
         matchedInterests={matchedInterests}
         autoReconnectCountdown={autoReconnectCountdown}
+        searchElapsed={searchElapsed}
         onToggleInterests={() => setShowInterests(!showInterests)}
         showInterests={showInterests}
         onNext={nextChat}
