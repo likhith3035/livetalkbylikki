@@ -286,6 +286,15 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                   )}
                 >
                   <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(msg.text || "");
+                      setContextMenuId(null); setLongPressedId(null);
+                    }}
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <Copy className="h-3 w-3" /> Copy
+                  </button>
+                  <button
                     onClick={() => { onReply?.(msg); setContextMenuId(null); setLongPressedId(null); }}
                     className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                   >
