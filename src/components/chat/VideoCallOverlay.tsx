@@ -220,7 +220,7 @@ const VideoCallOverlay = ({
       <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/80 backdrop-blur-lg animate-fade-in">
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-card border border-border p-8 shadow-2xl max-w-xs w-full mx-4">
           <div className="h-20 w-20 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center animate-pulse">
-            <Video className="h-8 w-8 text-primary" />
+            {isAudioOnly ? <Phone className="h-8 w-8 text-primary" /> : <Video className="h-8 w-8 text-primary" />}
           </div>
           <div className="text-center space-y-1">
             <p className="text-lg font-display font-semibold text-foreground">Calling...</p>
