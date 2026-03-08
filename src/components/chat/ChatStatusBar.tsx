@@ -54,7 +54,7 @@ const ChatStatusBar = ({
         )}
       </div>
 
-      <div className="flex gap-1.5 sm:gap-2 items-center shrink-0">
+      <div className="flex gap-1 sm:gap-2 items-center shrink-0 flex-wrap justify-end">
         {status === "idle" && (
           <Button variant="ghost" size="sm" onClick={onToggleInterests} className="gap-1 h-8 px-2 sm:px-3">
             <Tags className="h-3.5 w-3.5" />
@@ -62,32 +62,31 @@ const ChatStatusBar = ({
         )}
 
         {status === "connected" && (
-          <>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onVideoCall}
-              disabled={isVideoCallActive}
-              className="gap-1.5 h-8 px-2.5 sm:px-3 text-xs sm:text-sm bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 hover:text-primary"
-            >
-              <Video className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline">Video</span>
-            </Button>
-            <ReportBlockMenu onBlock={onBlock} />
-          </>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onVideoCall}
+            disabled={isVideoCallActive}
+            className="gap-1 h-8 px-2 sm:px-3 text-xs bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 hover:text-primary"
+          >
+            <Video className="h-3.5 w-3.5" />
+          </Button>
         )}
 
         {(status === "connected" || status === "disconnected") && (
-          <Button variant="secondary" size="sm" onClick={onNext} className="gap-1 h-8 px-2 sm:px-3 text-xs sm:text-sm">
+          <Button variant="secondary" size="sm" onClick={onNext} className="gap-1 h-8 px-2 sm:px-3 text-xs">
             <SkipForward className="h-3.5 w-3.5" />
-            <span className="hidden xs:inline">Next</span>
+            Next
           </Button>
         )}
         {status === "connected" && (
-          <Button variant="danger" size="sm" onClick={onStop} className="gap-1 h-8 px-2 sm:px-3 text-xs sm:text-sm">
+          <Button variant="danger" size="sm" onClick={onStop} className="gap-1 h-8 px-2 sm:px-3 text-xs">
             <X className="h-3.5 w-3.5" />
-            <span className="hidden xs:inline">Stop</span>
+            Stop
           </Button>
+        )}
+        {status === "connected" && (
+          <ReportBlockMenu onBlock={onBlock} />
         )}
         {status === "disconnected" && autoReconnectCountdown && (
           <Button variant="ghost" size="sm" onClick={onStop} className="gap-1 h-8 px-2 sm:px-3 text-xs text-muted-foreground">
