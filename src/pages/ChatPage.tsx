@@ -113,16 +113,15 @@ const ChatPage = () => {
 
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
+  const [showMatchCelebration, setShowMatchCelebration] = useState(false);
 
   useEffect(() => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
-      toast({
-        title: "🟢 Connected!",
-        description: "You're matched. Let's chat!",
-      });
+      setShowMatchCelebration(true);
+      setTimeout(() => setShowMatchCelebration(false), 2500);
     }
     prevStatusRef.current = status;
-  }, [status, toast]);
+  }, [status]);
 
   const handleStart = () => {
     setShowInterests(false);
