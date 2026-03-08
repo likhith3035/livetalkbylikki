@@ -141,6 +141,18 @@ const ChatStatusBar = ({
           </Button>
         )}
 
+        {/* Export buttons */}
+        {messages.length > 0 && (status === "connected" || status === "disconnected") && (
+          <>
+            <Button variant="ghost" size="sm" onClick={handleCopyChat} className="gap-1 h-8 px-2 text-xs" title="Copy chat to clipboard">
+              <Copy className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleDownloadChat} className="gap-1 h-8 px-2 text-xs" title="Download chat as text">
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </>
+        )}
+
         {(status === "connected" || status === "disconnected") && (
           <Button
             variant="secondary"
