@@ -4,6 +4,7 @@ import {
   MessageSquare, ArrowRight, Sparkles, Shield, Zap, Users, Globe, Lock,
   EyeOff, Video, Gamepad2, Link2, Copy, Check, Hash, Share2,
   Instagram, Linkedin, Mail, ChevronDown, Phone, Timer,
+  Heart, Search, Pin, Image, Palette, MapPin,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,14 @@ const FEATURES = [
   { icon: Lock, title: "End-to-End Secure", desc: "Your conversations are fully encrypted and never stored on servers." },
   { icon: EyeOff, title: "Zero Data Collection", desc: "No accounts, no tracking, no cookies. Complete digital privacy." },
   { icon: Zap, title: "Instant Matching", desc: "Get paired with a stranger in seconds based on shared interests." },
-  { icon: Video, title: "Audio & Video Calls", desc: "Switch to voice or video mid-chat with one tap." },
+  { icon: Video, title: "Audio & Video Calls", desc: "Switch to voice or video mid-chat with one tap. Screen sharing included." },
   { icon: Gamepad2, title: "Built-in Games", desc: "Play Truth or Dare, Tic-Tac-Toe, and more while chatting." },
+  { icon: Heart, title: "Reactions & Emojis", desc: "React to messages with ❤️ 😂 🔥 and more — just like Instagram DMs." },
+  { icon: Image, title: "GIFs & Images", desc: "Send GIFs from Tenor or share images directly in your conversations." },
+  { icon: Timer, title: "Disappearing Messages", desc: "Set messages to auto-delete after 30s, 1 min, or 5 min for extra privacy." },
+  { icon: Search, title: "Message Search", desc: "Instantly find any message in your conversation with full-text search." },
+  { icon: Pin, title: "Pin Messages", desc: "Pin important messages to keep them accessible throughout the chat." },
+  { icon: Palette, title: "Chat Themes", desc: "Customize your chat with color themes like Ocean, Sunset, and Neon." },
   { icon: Globe, title: "Global Community", desc: "Meet people from around the world, anytime, anywhere." },
 ];
 
@@ -262,7 +269,7 @@ const Index = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
-            className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-4 sm:gap-5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
           >
             {FEATURES.map((feature) => (
               <motion.div
