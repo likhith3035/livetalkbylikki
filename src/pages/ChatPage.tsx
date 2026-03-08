@@ -117,6 +117,7 @@ const ChatPage = () => {
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   useEffect(() => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
