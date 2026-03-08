@@ -1,4 +1,4 @@
-import { SkipForward, X, Tags } from "lucide-react";
+import { SkipForward, X, Tags, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
 import { cn } from "@/lib/utils";
@@ -14,11 +14,14 @@ interface ChatStatusBarProps {
   onStop: () => void;
   onStart: () => void;
   onBlock: () => void;
+  onVideoCall: () => void;
+  isVideoCallActive: boolean;
 }
 
 const ChatStatusBar = ({
   status, matchedInterests, autoReconnectCountdown,
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
+  onVideoCall, isVideoCallActive,
 }: ChatStatusBarProps) => {
   return (
     <div className="flex items-center justify-between border-b border-border px-3 sm:px-5 py-2.5 gap-2">
@@ -58,7 +61,19 @@ const ChatStatusBar = ({
         )}
 
         {status === "connected" && (
-          <ReportBlockMenu onBlock={onBlock} />
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onVideoCall}
+              disabled={isVideoCallActive}
+              className="gap-1 h-8 px-2 sm:px-3 text-primary hover:text-primary hover:bg-primary/10"
+              title="Start video call"
+            >
+              <Video className="h-4 w-4" />
+            </Button>
+            <ReportBlockMenu onBlock={onBlock} />
+          </>
         )}
 
         {(status === "connected" || status === "disconnected") && (
