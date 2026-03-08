@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useOnlineCount } from "./use-online-count";
+import { sounds } from "@/lib/sounds";
+import { sendNotification } from "@/lib/notifications";
 
 interface Message {
   id: string;
@@ -11,6 +13,11 @@ interface Message {
 }
 
 type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
+
+interface ChatCallbacks {
+  soundEnabled: boolean;
+  notificationsEnabled: boolean;
+}
 
 const getSessionId = () => {
   let id = sessionStorage.getItem("echo_session_id");
@@ -23,7 +30,7 @@ const getSessionId = () => {
 
 const sessionId = getSessionId();
 
-export function useChat() {
+export function useChat(callbacks?: ChatCallbacks) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ChatStatus>("idle");
   const onlineCount = useOnlineCount();
@@ -35,10 +42,27 @@ export function useChat() {
   const roomIdRef = useRef<string | null>(null);
   const interestsRef = useRef<string[]>([]);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callbacksRef = useRef(callbacks);
+
+  useEffect(() => {
+    callbacksRef.current = callbacks;
+  }, [callbacks]);
 
   useEffect(() => {
     interestsRef.current = interests;
   }, [interests]);
+
+  const playSoundIfEnabled = useCallback((sound: keyof typeof sounds) => {
+    if (callbacksRef.current?.soundEnabled) {
+      sounds[sound]();
+    }
+  }, []);
+
+  const notifyIfEnabled = useCallback((title: string, body: string) => {
+    if (callbacksRef.current?.notificationsEnabled) {
+      sendNotification(title, body);
+    }
+  }, []);
 
   const addMessage = useCallback((sender: Message["sender"], text: string) => {
     setMessages((prev) => [
@@ -70,6 +94,8 @@ export function useChat() {
           if (data.senderId !== sessionId) {
             setStrangerTyping(false);
             addMessage("stranger", data.text);
+            playSoundIfEnabled("messageReceived");
+            notifyIfEnabled("Echo", data.text.slice(0, 100));
           }
         })
         .on("broadcast", { event: "typing" }, (payload) => {
@@ -85,6 +111,8 @@ export function useChat() {
           if (data.senderId !== sessionId) {
             setStatus("disconnected");
             addMessage("system", "Stranger has disconnected.");
+            playSoundIfEnabled("disconnected");
+            notifyIfEnabled("Echo", "Stranger has disconnected.");
             leaveRoom();
           }
         })
@@ -92,7 +120,7 @@ export function useChat() {
 
       roomChannelRef.current = channel;
     },
-    [addMessage, leaveRoom]
+    [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
   );
 
   const sendTyping = useCallback(() => {
@@ -153,12 +181,14 @@ export function useChat() {
       setStatus("connected");
       setMessages([]);
       setMatchedInterests(best.shared);
+      playSoundIfEnabled("connected");
 
       if (best.shared.length > 0) {
         addMessage("system", `Matched! You both like: ${best.shared.join(", ")}`);
       } else {
         addMessage("system", "You are now connected with a stranger. Say hello!");
       }
+      notifyIfEnabled("Echo", "Connected with a stranger!");
       matchChannel.unsubscribe();
       channelRef.current = null;
     };
@@ -172,12 +202,14 @@ export function useChat() {
           setStatus("connected");
           setMessages([]);
           setMatchedInterests(data.sharedInterests || []);
+          playSoundIfEnabled("connected");
 
           if (data.sharedInterests?.length > 0) {
             addMessage("system", `Matched! You both like: ${data.sharedInterests.join(", ")}`);
           } else {
             addMessage("system", "You are now connected with a stranger. Say hello!");
           }
+          notifyIfEnabled("Echo", "Connected with a stranger!");
           matchChannel.unsubscribe();
           channelRef.current = null;
         }
@@ -192,19 +224,20 @@ export function useChat() {
       });
 
     channelRef.current = matchChannel;
-  }, [addMessage, joinRoom]);
+  }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled]);
 
   const sendMessage = useCallback(
     (text: string) => {
       if (status !== "connected" || !text.trim() || !roomChannelRef.current) return;
       addMessage("you", text.trim());
+      playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
         payload: { senderId: sessionId, text: text.trim() },
       });
     },
-    [status, addMessage]
+    [status, addMessage, playSoundIfEnabled]
   );
 
   const nextChat = useCallback(() => {
