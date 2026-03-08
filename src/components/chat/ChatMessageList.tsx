@@ -326,8 +326,8 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                   </button>
                 )}
 
-                {!msg.deleted && msg.imageUrl && msg.imageUrl.endsWith(".webm") ? (
-                  <audio controls src={msg.imageUrl} className="max-w-[200px] my-1" />
+                {!msg.deleted && msg.imageUrl && /\.(webm|m4a|ogg|mp3|wav)$/i.test(msg.imageUrl) ? (
+                  <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
                 ) : !msg.deleted && msg.imageUrl ? (
                   <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
                 ) : null}
