@@ -14,8 +14,8 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
   const { pathname } = useLocation();
 
   return (
-    <nav ref={ref} className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/80 backdrop-blur-lg">
-      <div className="mx-auto flex max-w-md justify-around py-3">
+    <nav ref={ref} className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-xl safe-area-bottom">
+      <div className="mx-auto flex max-w-md justify-around py-2 sm:py-3">
         {navItems.map((item) => (
           <Link
             key={item.label}
