@@ -294,6 +294,12 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                     </button>
                   )}
                   <button
+                    onClick={() => { onForward?.(msg); setContextMenuId(null); setLongPressedId(null); }}
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <Forward className="h-3 w-3" /> Forward
+                  </button>
+                  <button
                     onClick={() => { setContextMenuId(null); setLongPressedId(null); }}
                     className="flex items-center rounded-lg px-1.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary transition-colors"
                   >
