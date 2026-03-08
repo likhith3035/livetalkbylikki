@@ -407,6 +407,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     isMuted,
     isCameraOff,
     isScreenSharing,
+    remoteIsScreenSharing,
     isBlurred,
     facingMode,
     startCall,
