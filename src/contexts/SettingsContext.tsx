@@ -73,7 +73,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // Apply chat theme CSS variables
-    const theme = CHAT_THEMES[settings.chatTheme];
+    const theme = CHAT_THEMES[settings.chatTheme] || CHAT_THEMES.default;
     document.documentElement.style.setProperty("--bubble-you", theme.bubble);
   }, [settings]);
 
