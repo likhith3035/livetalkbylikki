@@ -24,6 +24,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [remoteIsScreenSharing, setRemoteIsScreenSharing] = useState(false);
   const [isBlurred, setIsBlurred] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
