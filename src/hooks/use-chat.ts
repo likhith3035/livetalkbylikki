@@ -138,11 +138,15 @@ export function useChat(callbacks?: ChatCallbacks) {
           }
         })
         .on("broadcast", { event: "typing" }, (payload) => {
-          const data = payload.payload as { senderId: string };
+          const data = payload.payload as { senderId: string; text?: string };
           if (data.senderId !== sessionId) {
             setStrangerTyping(true);
+            setStrangerTypingText(data.text || "");
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-            typingTimeoutRef.current = setTimeout(() => setStrangerTyping(false), 3000);
+            typingTimeoutRef.current = setTimeout(() => {
+              setStrangerTyping(false);
+              setStrangerTypingText("");
+            }, 3000);
           }
         })
         .on("broadcast", { event: "reaction" }, (payload) => {
