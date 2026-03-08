@@ -199,7 +199,7 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                 onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
                 onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setContextMenuId(msg.id); } }}
                 className={cn(
-                  "relative max-w-[82%] sm:max-w-[70%] px-3.5 py-2 text-sm leading-relaxed break-words select-none",
+                  "relative max-w-[78%] sm:max-w-[70%] px-3 sm:px-3.5 py-2 text-sm leading-relaxed break-words select-none",
                   msg.sender === "you" &&
                     "bg-[hsl(var(--bubble-you))] text-[hsl(var(--bubble-you-foreground))] rounded-2xl rounded-br-md shadow-md min-w-[60px]",
                   msg.sender === "stranger" &&
