@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { CheckCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
@@ -42,10 +42,22 @@ const TIPS = [
 
 const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
+  const [longPressedId, setLongPressedId] = useState<string | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, strangerTyping]);
+
+  const handleTouchStart = useCallback((msgId: string) => {
+    longPressTimer.current = setTimeout(() => {
+      setLongPressedId((prev) => (prev === msgId ? null : msgId));
+    }, 500);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  }, []);
 
   if (messages.length === 0 && !strangerTyping) {
     return (
@@ -108,14 +120,18 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
             >
               {/* Bubble */}
               <div
+                onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
+                onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
+                onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
                 className={cn(
-                  "relative max-w-[82%] sm:max-w-[70%] px-3.5 py-2 text-sm leading-relaxed break-words",
+                  "relative max-w-[82%] sm:max-w-[70%] px-3.5 py-2 text-sm leading-relaxed break-words select-none",
                   msg.sender === "you" &&
                     "bg-[hsl(var(--bubble-you))] text-[hsl(var(--bubble-you-foreground))] rounded-2xl rounded-br-md shadow-md min-w-[60px]",
                   msg.sender === "stranger" &&
                     "bg-[hsl(var(--bubble-stranger))] text-[hsl(var(--bubble-stranger-foreground))] rounded-2xl rounded-bl-md shadow-sm min-w-[60px]",
                   msg.sender === "system" &&
-                    "max-w-fit bg-transparent text-muted-foreground text-[11px] text-center italic px-3 py-1"
+                    "max-w-fit bg-transparent text-muted-foreground text-[11px] text-center italic px-3 py-1",
+                  longPressedId === msg.id && "ring-2 ring-primary/40"
                 )}
               >
                 {msg.sender !== "system" && (
@@ -150,8 +166,13 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
               <MessageReactions
                 messageId={msg.id}
                 reactions={msg.reactions}
-                onReact={onReact}
+                onReact={(id, emoji) => {
+                  onReact(id, emoji);
+                  setLongPressedId(null);
+                }}
                 isMine={msg.sender === "you"}
+                forceOpen={longPressedId === msg.id}
+                onClose={() => setLongPressedId(null)}
               />
             )}
           </motion.div>

@@ -98,11 +98,13 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body);
   }, []);
 
-  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string) => {
+  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string) => {
+    const id = existingId || crypto.randomUUID();
     setMessages((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar },
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar },
     ]);
+    return id;
   }, []);
 
   const leaveRoom = useCallback(() => {
@@ -126,10 +128,10 @@ export function useChat(callbacks?: ChatCallbacks) {
 
       channel
         .on("broadcast", { event: "message" }, (payload) => {
-          const data = payload.payload as { senderId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string };
+          const data = payload.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string };
           if (data.senderId !== sessionId) {
             setStrangerTyping(false);
-            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar);
+            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId);
             playSoundIfEnabled("messageReceived");
             notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
           }
@@ -341,12 +343,13 @@ export function useChat(callbacks?: ChatCallbacks) {
     (text: string, imageUrl?: string) => {
       if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
       const p = getProfile();
-      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar);
+      const messageId = crypto.randomUUID();
+      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId);
       playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar },
+        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar },
       });
     },
     [status, addMessage, playSoundIfEnabled]
