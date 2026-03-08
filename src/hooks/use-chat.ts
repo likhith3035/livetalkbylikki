@@ -101,11 +101,11 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body);
   }, []);
 
-  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string) => {
+  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
     const id = existingId || crypto.randomUUID();
     setMessages((prev) => [
       ...prev,
-      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar },
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo },
     ]);
     return id;
   }, []);
