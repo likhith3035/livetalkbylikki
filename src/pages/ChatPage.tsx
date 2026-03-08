@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 const ChatPage = () => {
   const { toast } = useToast();
   const { settings } = useSettings();
-  const prevStatusRef = useRef(status);
 
   const chatCallbacks = useMemo(() => ({
     soundEnabled: settings.soundEffects,
@@ -27,7 +26,18 @@ const ChatPage = () => {
     reactToMessage, blockStranger,
   } = useChat(chatCallbacks);
 
+  const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
+
+  useEffect(() => {
+    if (status === "connected" && prevStatusRef.current !== "connected") {
+      toast({
+        title: "🟢 Connected!",
+        description: "You're matched with a stranger. Let's chat!",
+      });
+    }
+    prevStatusRef.current = status;
+  }, [status, toast]);
 
   const handleStart = () => {
     setShowInterests(false);
