@@ -63,14 +63,14 @@ const ChatStatusBar = ({
         {status === "connected" && (
           <>
             <Button
-              variant="ghost"
+              variant="default"
               size="sm"
               onClick={onVideoCall}
               disabled={isVideoCallActive}
-              className="gap-1 h-8 px-2 sm:px-3 text-primary hover:text-primary hover:bg-primary/10"
-              title="Start video call"
+              className="gap-1.5 h-8 px-2.5 sm:px-3 text-xs sm:text-sm bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 hover:text-primary"
             >
-              <Video className="h-4 w-4" />
+              <Video className="h-3.5 w-3.5" />
+              <span className="hidden xs:inline">Video</span>
             </Button>
             <ReportBlockMenu onBlock={onBlock} />
           </>

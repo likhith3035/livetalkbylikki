@@ -110,9 +110,9 @@ const VideoCallOverlay = ({
   // Active call
   if (callStatus === "active") {
     return (
-      <div className="fixed inset-0 z-[90] bg-background flex flex-col animate-fade-in">
+      <div className="fixed inset-0 z-[90] bg-background flex flex-col animate-fade-in" style={{ height: "100dvh" }}>
         {/* Remote video (fullscreen) */}
-        <div className="flex-1 relative bg-muted overflow-hidden">
+        <div className="flex-1 relative bg-muted overflow-hidden min-h-0">
           {remoteStream ? (
             <video
               ref={remoteVideoRef}
@@ -122,19 +122,19 @@ const VideoCallOverlay = ({
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <VideoOff className="h-16 w-16 text-muted-foreground/30" />
+              <VideoOff className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30" />
             </div>
           )}
 
-          {/* Local video (PiP) */}
-          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 sm:w-36 sm:h-48 rounded-xl overflow-hidden border-2 border-border shadow-xl bg-muted">
+          {/* Local video (PiP) — larger on mobile */}
+          <div className="absolute bottom-3 right-3 sm:top-4 sm:right-4 sm:bottom-auto w-28 h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted">
             {localStream && !isCameraOff ? (
               <video
                 ref={localVideoRef}
                 autoPlay
                 playsInline
                 muted
-                className="h-full w-full object-cover mirror"
+                className="h-full w-full object-cover"
                 style={{ transform: "scaleX(-1)" }}
               />
             ) : (
@@ -152,14 +152,14 @@ const VideoCallOverlay = ({
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-center gap-4 py-4 sm:py-6 bg-card border-t border-border safe-area-bottom">
+        <div className="flex items-center justify-center gap-5 py-5 sm:py-6 bg-card border-t border-border safe-area-bottom px-4">
           <button
             onClick={onToggleMute}
             className={cn(
-              "flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full border transition-colors",
+              "flex flex-col items-center justify-center h-14 w-14 rounded-full border transition-colors",
               isMuted
                 ? "bg-destructive/20 border-destructive/30 text-destructive"
-                : "bg-secondary border-border text-foreground hover:bg-secondary/80"
+                : "bg-secondary border-border text-foreground active:bg-secondary/80"
             )}
           >
             {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
@@ -168,10 +168,10 @@ const VideoCallOverlay = ({
           <button
             onClick={onToggleCamera}
             className={cn(
-              "flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full border transition-colors",
+              "flex flex-col items-center justify-center h-14 w-14 rounded-full border transition-colors",
               isCameraOff
                 ? "bg-destructive/20 border-destructive/30 text-destructive"
-                : "bg-secondary border-border text-foreground hover:bg-secondary/80"
+                : "bg-secondary border-border text-foreground active:bg-secondary/80"
             )}
           >
             {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
@@ -179,7 +179,7 @@ const VideoCallOverlay = ({
 
           <button
             onClick={onEndCall}
-            className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-destructive text-destructive-foreground shadow-lg hover:bg-destructive/90 transition-colors"
+            className="flex items-center justify-center h-14 w-14 rounded-full bg-destructive text-destructive-foreground shadow-lg active:bg-destructive/90 transition-colors"
           >
             <PhoneOff className="h-5 w-5" />
           </button>
