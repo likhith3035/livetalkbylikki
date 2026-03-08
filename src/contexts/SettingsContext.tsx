@@ -46,6 +46,12 @@ export const CHAT_THEMES: Record<ChatTheme, { label: string; bubble: string; acc
   forest: { label: "Forest", bubble: "150 60% 40%", accent: "hsl(150 60% 40%)" },
   rose: { label: "Rose", bubble: "340 80% 55%", accent: "hsl(340 80% 55%)" },
   midnight: { label: "Midnight", bubble: "230 60% 45%", accent: "hsl(230 60% 45%)" },
+  amber: { label: "Amber", bubble: "38 92% 50%", accent: "hsl(38 92% 50%)" },
+  cyan: { label: "Cyan", bubble: "185 80% 45%", accent: "hsl(185 80% 45%)" },
+  crimson: { label: "Crimson", bubble: "0 75% 50%", accent: "hsl(0 75% 50%)" },
+  lavender: { label: "Lavender", bubble: "280 60% 65%", accent: "hsl(280 60% 65%)" },
+  emerald: { label: "Emerald", bubble: "160 70% 38%", accent: "hsl(160 70% 38%)" },
+  slate: { label: "Slate", bubble: "215 20% 45%", accent: "hsl(215 20% 45%)" },
 };
 
 export const CHAT_WALLPAPERS: Record<ChatWallpaper, { label: string; emoji: string }> = {
@@ -54,6 +60,9 @@ export const CHAT_WALLPAPERS: Record<ChatWallpaper, { label: string; emoji: stri
   grid: { label: "Grid", emoji: "▦" },
   waves: { label: "Waves", emoji: "🌊" },
   gradient: { label: "Gradient", emoji: "🎨" },
+  bubbles: { label: "Bubbles", emoji: "🫧" },
+  stars: { label: "Stars", emoji: "⭐" },
+  zigzag: { label: "Zigzag", emoji: "⚡" },
 };
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
