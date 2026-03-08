@@ -253,6 +253,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onFlipCamera={flipCamera}
         onToggleScreenShare={toggleScreenShare}
         onToggleBlur={toggleBlur}
+        onUpgradeToVideo={upgradeToVideo}
         onSendInCallMessage={sendInCallMessage}
         inCallMessages={inCallMessages}
       />
