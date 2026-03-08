@@ -24,6 +24,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <DesktopSidebar />
+          <PwaInstallBanner />
           <div className="lg:pl-[220px]">
             <Routes>
               <Route path="/" element={<Index />} />
