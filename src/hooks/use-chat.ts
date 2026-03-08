@@ -193,11 +193,11 @@ export function useChat(callbacks?: ChatCallbacks) {
     [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
   );
 
-  const sendTyping = useCallback(() => {
+  const sendTyping = useCallback((text?: string) => {
     roomChannelRef.current?.send({
       type: "broadcast",
       event: "typing",
-      payload: { senderId: sessionId },
+      payload: { senderId: sessionId, text: text?.slice(0, 50) },
     });
   }, []);
 
