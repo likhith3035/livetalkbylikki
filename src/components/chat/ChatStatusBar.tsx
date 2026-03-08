@@ -1,6 +1,7 @@
 import { SkipForward, X, Tags, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
+import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
 import { cn } from "@/lib/utils";
 import type { ChatStatus } from "@/hooks/use-chat";
 
@@ -17,12 +18,14 @@ interface ChatStatusBarProps {
   onBlock: () => void;
   onVideoCall: () => void;
   isVideoCallActive: boolean;
+  onCreateRoom: () => string;
+  onJoinRoom: (code: string) => void;
 }
 
 const ChatStatusBar = ({
   status, matchedInterests, autoReconnectCountdown, searchElapsed,
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
-  onVideoCall, isVideoCallActive,
+  onVideoCall, isVideoCallActive, onCreateRoom, onJoinRoom,
 }: ChatStatusBarProps) => {
   return (
     <div className="flex items-center justify-between border-b border-border px-3 sm:px-5 py-2.5 gap-2">
@@ -56,9 +59,15 @@ const ChatStatusBar = ({
 
       <div className="flex gap-1 sm:gap-2 items-center shrink-0 flex-wrap justify-end">
         {status === "idle" && (
-          <Button variant="ghost" size="sm" onClick={onToggleInterests} className="gap-1 h-8 px-2 sm:px-3">
-            <Tags className="h-3.5 w-3.5" />
-          </Button>
+          <>
+            <Button variant="ghost" size="sm" onClick={onToggleInterests} className="gap-1 h-8 px-2 sm:px-3">
+              <Tags className="h-3.5 w-3.5" />
+            </Button>
+            <PrivateRoomDialog
+              onCreateRoom={onCreateRoom}
+              onJoinRoom={onJoinRoom}
+            />
+          </>
         )}
 
         {status === "connected" && (
