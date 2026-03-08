@@ -18,6 +18,7 @@ interface InCallMessage {
 
 interface VideoCallOverlayProps {
   callStatus: VideoCallStatus;
+  isAudioOnly?: boolean;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   isMuted: boolean;
