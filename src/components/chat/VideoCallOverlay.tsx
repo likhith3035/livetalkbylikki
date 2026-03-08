@@ -241,7 +241,7 @@ const VideoCallOverlay = ({
       <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/90 backdrop-blur-lg animate-fade-in">
         <div className="text-center space-y-3">
           <div className="h-12 w-12 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">Connecting video...</p>
+          <p className="text-sm text-muted-foreground">Connecting {isAudioOnly ? "audio" : "video"}...</p>
         </div>
       </div>
     );
