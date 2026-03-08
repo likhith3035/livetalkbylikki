@@ -49,7 +49,7 @@ const TIPS = [
   "⏱️ Enable disappearing messages for privacy",
 ];
 
-const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact, onReply, onDelete, onPin, disappearTimer }: ChatMessageListProps) => {
+const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact, onReply, onDelete, onPin, onForward, disappearTimer, highlightMessageId }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
   const [longPressedId, setLongPressedId] = useState<string | null>(null);
   const [contextMenuId, setContextMenuId] = useState<string | null>(null);
