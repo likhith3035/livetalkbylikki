@@ -193,7 +193,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStatus("disconnected");
             addMessage("system", "Stranger has disconnected.");
             playSoundIfEnabled("disconnected");
-            notifyIfEnabled("L Chat", "Stranger has disconnected.");
+            notifyIfEnabled("L Chat", "Stranger has disconnected.", "disconnected");
             leaveRoom();
           }
         })
