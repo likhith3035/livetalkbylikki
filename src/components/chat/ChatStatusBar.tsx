@@ -1,4 +1,5 @@
 import { SkipForward, X, Tags, Video } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
 import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
@@ -28,15 +29,17 @@ const ChatStatusBar = ({
   onVideoCall, isVideoCallActive, onCreateRoom, onJoinRoom,
 }: ChatStatusBarProps) => {
   return (
-    <div className="flex items-center justify-between border-b border-border px-3 sm:px-5 py-2.5 gap-2">
+    <div className="flex items-center justify-between border-b border-border/50 px-3 sm:px-5 py-2.5 gap-2 glass">
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <span
           className={cn(
-            "h-2 w-2 rounded-full shrink-0",
-            status === "connected" ? "bg-online" : status === "searching" ? "bg-warning animate-pulse" : "bg-muted-foreground"
+            "h-2.5 w-2.5 rounded-full shrink-0 transition-colors duration-300",
+            status === "connected" && "bg-online shadow-[0_0_8px_hsl(var(--online)/0.5)]",
+            status === "searching" && "bg-warning animate-pulse shadow-[0_0_8px_hsl(var(--warning)/0.5)]",
+            status !== "connected" && status !== "searching" && "bg-muted-foreground"
           )}
         />
-        <span className="text-xs sm:text-sm text-muted-foreground truncate">
+        <span className="text-xs sm:text-sm text-muted-foreground truncate font-medium">
           {status === "idle" && "Ready to chat"}
           {status === "searching" && `Searching${searchElapsed > 0 ? ` (${searchElapsed}s)` : "..."}`}
           {status === "connected" && "Connected"}
@@ -46,15 +49,21 @@ const ChatStatusBar = ({
               : "Disconnected"
           )}
         </span>
-        {matchedInterests.length > 0 && status === "connected" && (
-          <div className="hidden sm:flex gap-1 ml-1">
-            {matchedInterests.map((i) => (
-              <span key={i} className="rounded-full bg-primary/20 border border-primary/30 px-2 py-0.5 text-[10px] text-primary">
-                {i}
-              </span>
-            ))}
-          </div>
-        )}
+        <AnimatePresence>
+          {matchedInterests.length > 0 && status === "connected" && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="hidden sm:flex gap-1 ml-1"
+            >
+              {matchedInterests.map((i) => (
+                <span key={i} className="rounded-full bg-primary/20 border border-primary/30 px-2 py-0.5 text-[10px] text-primary font-medium">
+                  {i}
+                </span>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex gap-1 sm:gap-2 items-center shrink-0 flex-wrap justify-end">
