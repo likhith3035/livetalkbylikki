@@ -19,6 +19,7 @@ interface UseVideoCallOptions {
 
 export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOptions) {
   const [callStatus, setCallStatus] = useState<VideoCallStatus>("idle");
+  const [isAudioOnly, setIsAudioOnly] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
