@@ -34,6 +34,12 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
   const handleCreate = () => {
     const code = onCreateRoom();
     setCreatedCode(code);
+    // Auto-copy the link
+    const url = `https://ohmeglebylikki.lovable.app/room/${code}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
   const handleCopyLink = async () => {
