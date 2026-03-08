@@ -8,6 +8,7 @@ interface ChatStatusBarProps {
   status: ChatStatus;
   matchedInterests: string[];
   autoReconnectCountdown: number | null;
+  searchElapsed: number;
   onToggleInterests: () => void;
   showInterests: boolean;
   onNext: () => void;
