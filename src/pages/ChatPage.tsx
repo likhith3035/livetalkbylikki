@@ -192,6 +192,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onJoinRoom={handleJoinRoom}
         disappearTimer={disappearTimer}
         onSetDisappearTimer={setDisappearTimer}
+        onSearchResult={setSearchHighlight}
+        onThemeChange={handleThemeChange}
       />
 
       <InterestBar
@@ -210,7 +212,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onReply={(msg) => setReplyingTo(msg)}
         onDelete={deleteMessage}
         onPin={pinMessage}
+        onForward={handleForwardMessage}
         disappearTimer={disappearTimer}
+        highlightMessageId={searchHighlight}
       />
 
       <ChatInput
