@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Send, SkipForward, X, Tags } from "lucide-react";
+import { Send, SkipForward, X, Tags, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import InterestSelector from "@/components/InterestSelector";
 import TypingIndicator from "@/components/TypingIndicator";
+import MessageReactions from "@/components/MessageReactions";
+import ReportBlockMenu from "@/components/ReportBlockMenu";
+import ImageUploadButton from "@/components/ImageUploadButton";
 import { useChat } from "@/hooks/use-chat";
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
@@ -15,11 +18,14 @@ const ChatPage = () => {
   const chatCallbacks = useMemo(() => ({
     soundEnabled: settings.soundEffects,
     notificationsEnabled: settings.notifications,
+    autoReconnect: true,
   }), [settings.soundEffects, settings.notifications]);
 
   const {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping,
+    autoReconnectCountdown,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
+    reactToMessage, blockStranger,
   } = useChat(chatCallbacks);
 
   const [input, setInput] = useState("");
@@ -42,6 +48,10 @@ const ChatPage = () => {
     setInput("");
   };
 
+  const handleImageUpload = (url: string) => {
+    sendMessage("", url);
+  };
+
   const handleInputChange = (value: string) => {
     setInput(value);
     const now = Date.now();
@@ -56,7 +66,7 @@ const ChatPage = () => {
       <Header onlineCount={onlineCount} />
 
       {/* Status bar */}
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
+      <div className="relative flex items-center justify-between border-b border-border px-5 py-3">
         <div className="flex items-center gap-2">
           <span
             className={cn(
@@ -68,7 +78,11 @@ const ChatPage = () => {
             {status === "idle" && "Ready to chat"}
             {status === "searching" && "Finding a stranger..."}
             {status === "connected" && "Connected with Stranger"}
-            {status === "disconnected" && "Disconnected"}
+            {status === "disconnected" && (
+              autoReconnectCountdown
+                ? `Reconnecting in ${autoReconnectCountdown}s...`
+                : "Disconnected"
+            )}
           </span>
           {matchedInterests.length > 0 && status === "connected" && (
             <div className="flex gap-1 ml-2">
@@ -80,12 +94,18 @@ const ChatPage = () => {
             </div>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           {status === "idle" && (
             <Button variant="ghost" size="sm" onClick={() => setShowInterests(!showInterests)} className="gap-1.5">
               <Tags className="h-3.5 w-3.5" />
             </Button>
           )}
+
+          {/* Report/Block */}
+          {status === "connected" && (
+            <ReportBlockMenu onBlock={blockStranger} />
+          )}
+
           {(status === "connected" || status === "disconnected") && (
             <Button variant="secondary" size="sm" onClick={nextChat} className="gap-1.5">
               <SkipForward className="h-3.5 w-3.5" />
@@ -98,7 +118,13 @@ const ChatPage = () => {
               Stop
             </Button>
           )}
-          {(status === "idle" || status === "disconnected") && (
+          {status === "disconnected" && autoReconnectCountdown && (
+            <Button variant="ghost" size="sm" onClick={stopChat} className="gap-1.5 text-muted-foreground">
+              <X className="h-3.5 w-3.5" />
+              Cancel
+            </Button>
+          )}
+          {(status === "idle" || (status === "disconnected" && !autoReconnectCountdown)) && (
             <Button variant="glow" size="sm" onClick={handleStart}>
               Start
             </Button>
@@ -129,21 +155,40 @@ const ChatPage = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 pb-40 space-y-3">
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={cn(
-              "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm animate-fade-in",
-              msg.sender === "you" && "ml-auto bg-primary text-primary-foreground rounded-br-md",
-              msg.sender === "stranger" && "bg-secondary text-secondary-foreground rounded-bl-md",
-              msg.sender === "system" && "mx-auto max-w-fit bg-transparent text-muted-foreground text-xs text-center italic"
-            )}
-          >
+          <div key={msg.id} className={cn(msg.sender === "you" && "flex flex-col items-end")}>
+            <div
+              className={cn(
+                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm animate-fade-in",
+                msg.sender === "you" && "bg-primary text-primary-foreground rounded-br-md",
+                msg.sender === "stranger" && "bg-secondary text-secondary-foreground rounded-bl-md",
+                msg.sender === "system" && "mx-auto max-w-fit bg-transparent text-muted-foreground text-xs text-center italic"
+              )}
+            >
+              {msg.sender !== "system" && (
+                <p className="text-[10px] font-medium opacity-60 mb-0.5">
+                  {msg.sender === "you" ? "You" : "Stranger"}
+                </p>
+              )}
+              {msg.imageUrl && (
+                <img
+                  src={msg.imageUrl}
+                  alt="Shared image"
+                  className="max-w-full rounded-lg mb-1 max-h-60 object-cover"
+                  loading="lazy"
+                />
+              )}
+              {msg.text && <span>{msg.text}</span>}
+            </div>
+
+            {/* Reactions */}
             {msg.sender !== "system" && (
-              <p className="text-[10px] font-medium opacity-60 mb-0.5">
-                {msg.sender === "you" ? "You" : "Stranger"}
-              </p>
+              <MessageReactions
+                messageId={msg.id}
+                reactions={msg.reactions}
+                onReact={reactToMessage}
+                isMine={msg.sender === "you"}
+              />
             )}
-            {msg.text}
           </div>
         ))}
         {strangerTyping && <TypingIndicator />}
@@ -153,6 +198,10 @@ const ChatPage = () => {
       {/* Input */}
       <div className="fixed bottom-16 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-lg px-4 py-3">
         <div className="mx-auto flex max-w-2xl gap-2">
+          <ImageUploadButton
+            disabled={status !== "connected"}
+            onUpload={handleImageUpload}
+          />
           <input
             type="text"
             value={input}

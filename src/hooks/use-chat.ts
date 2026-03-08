@@ -5,18 +5,21 @@ import { useOnlineCount } from "./use-online-count";
 import { sounds } from "@/lib/sounds";
 import { sendNotification } from "@/lib/notifications";
 
-interface Message {
+export interface Message {
   id: string;
   sender: "you" | "stranger" | "system";
   text: string;
+  imageUrl?: string;
   timestamp: Date;
+  reactions: Record<string, string[]>; // emoji -> senderIds
 }
 
-type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
+export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
 
 interface ChatCallbacks {
   soundEnabled: boolean;
   notificationsEnabled: boolean;
+  autoReconnect: boolean;
 }
 
 const getSessionId = () => {
@@ -30,6 +33,20 @@ const getSessionId = () => {
 
 const sessionId = getSessionId();
 
+const getBlockedIds = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem("echo.blocked") || "[]");
+  } catch { return []; }
+};
+
+const addBlockedId = (id: string) => {
+  const blocked = getBlockedIds();
+  if (!blocked.includes(id)) {
+    blocked.push(id);
+    localStorage.setItem("echo.blocked", JSON.stringify(blocked));
+  }
+};
+
 export function useChat(callbacks?: ChatCallbacks) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ChatStatus>("idle");
@@ -37,37 +54,39 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [interests, setInterests] = useState<string[]>([]);
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const [strangerTyping, setStrangerTyping] = useState(false);
+  const [autoReconnectCountdown, setAutoReconnectCountdown] = useState<number | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const roomChannelRef = useRef<RealtimeChannel | null>(null);
   const roomIdRef = useRef<string | null>(null);
+  const strangerIdRef = useRef<string | null>(null);
   const interestsRef = useRef<string[]>([]);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const callbacksRef = useRef(callbacks);
 
-  useEffect(() => {
-    callbacksRef.current = callbacks;
-  }, [callbacks]);
+  useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
+  useEffect(() => { interestsRef.current = interests; }, [interests]);
 
-  useEffect(() => {
-    interestsRef.current = interests;
-  }, [interests]);
+  const clearReconnectTimer = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearInterval(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    setAutoReconnectCountdown(null);
+  }, []);
 
   const playSoundIfEnabled = useCallback((sound: keyof typeof sounds) => {
-    if (callbacksRef.current?.soundEnabled) {
-      sounds[sound]();
-    }
+    if (callbacksRef.current?.soundEnabled) sounds[sound]();
   }, []);
 
   const notifyIfEnabled = useCallback((title: string, body: string) => {
-    if (callbacksRef.current?.notificationsEnabled) {
-      sendNotification(title, body);
-    }
+    if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body);
   }, []);
 
-  const addMessage = useCallback((sender: Message["sender"], text: string) => {
+  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string) => {
     setMessages((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), sender, text, timestamp: new Date() },
+      { id: crypto.randomUUID(), sender, text, imageUrl, timestamp: new Date(), reactions: {} },
     ]);
   }, []);
 
@@ -77,25 +96,27 @@ export function useChat(callbacks?: ChatCallbacks) {
       roomChannelRef.current = null;
     }
     roomIdRef.current = null;
+    strangerIdRef.current = null;
     setStrangerTyping(false);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
   }, []);
 
   const joinRoom = useCallback(
-    (roomId: string) => {
+    (roomId: string, strangerId: string) => {
       leaveRoom();
       roomIdRef.current = roomId;
+      strangerIdRef.current = strangerId;
 
       const channel = supabase.channel(`room:${roomId}`);
 
       channel
         .on("broadcast", { event: "message" }, (payload) => {
-          const data = payload.payload as { senderId: string; text: string };
+          const data = payload.payload as { senderId: string; text: string; imageUrl?: string };
           if (data.senderId !== sessionId) {
             setStrangerTyping(false);
-            addMessage("stranger", data.text);
+            addMessage("stranger", data.text, data.imageUrl);
             playSoundIfEnabled("messageReceived");
-            notifyIfEnabled("Echo", data.text.slice(0, 100));
+            notifyIfEnabled("Echo", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
           }
         })
         .on("broadcast", { event: "typing" }, (payload) => {
@@ -104,6 +125,24 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStrangerTyping(true);
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
             typingTimeoutRef.current = setTimeout(() => setStrangerTyping(false), 3000);
+          }
+        })
+        .on("broadcast", { event: "reaction" }, (payload) => {
+          const data = payload.payload as { senderId: string; messageId: string; emoji: string };
+          if (data.senderId !== sessionId) {
+            setMessages((prev) =>
+              prev.map((msg) => {
+                if (msg.id !== data.messageId) return msg;
+                const reactions = { ...msg.reactions };
+                const senders = reactions[data.emoji] || [];
+                if (senders.includes(data.senderId)) {
+                  reactions[data.emoji] = senders.filter((s) => s !== data.senderId);
+                } else {
+                  reactions[data.emoji] = [...senders, data.senderId];
+                }
+                return { ...msg, reactions };
+              })
+            );
           }
         })
         .on("broadcast", { event: "leave" }, (payload) => {
@@ -124,26 +163,47 @@ export function useChat(callbacks?: ChatCallbacks) {
   );
 
   const sendTyping = useCallback(() => {
-    if (roomChannelRef.current) {
-      roomChannelRef.current.send({
-        type: "broadcast",
-        event: "typing",
-        payload: { senderId: sessionId },
-      });
-    }
+    roomChannelRef.current?.send({
+      type: "broadcast",
+      event: "typing",
+      payload: { senderId: sessionId },
+    });
+  }, []);
+
+  const reactToMessage = useCallback((messageId: string, emoji: string) => {
+    // Local update
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id !== messageId) return msg;
+        const reactions = { ...msg.reactions };
+        const senders = reactions[emoji] || [];
+        if (senders.includes(sessionId)) {
+          reactions[emoji] = senders.filter((s) => s !== sessionId);
+        } else {
+          reactions[emoji] = [...senders, sessionId];
+        }
+        return { ...msg, reactions };
+      })
+    );
+    // Broadcast
+    roomChannelRef.current?.send({
+      type: "broadcast",
+      event: "reaction",
+      payload: { senderId: sessionId, messageId, emoji },
+    });
   }, []);
 
   const startChat = useCallback(() => {
+    clearReconnectTimer();
     setMessages([]);
     setMatchedInterests([]);
     setStrangerTyping(false);
     setStatus("searching");
     addMessage("system", "Looking for a stranger...");
 
-    if (channelRef.current) {
-      channelRef.current.unsubscribe();
-    }
+    if (channelRef.current) channelRef.current.unsubscribe();
 
+    const blocked = getBlockedIds();
     const matchChannel = supabase.channel("matchmaking", {
       config: { presence: { key: sessionId } },
     });
@@ -151,7 +211,9 @@ export function useChat(callbacks?: ChatCallbacks) {
     const findMatch = () => {
       const state = matchChannel.presenceState();
       const myInterests = interestsRef.current;
-      const waitingUsers = Object.keys(state).filter((id) => id !== sessionId);
+      const waitingUsers = Object.keys(state).filter(
+        (id) => id !== sessionId && !blocked.includes(id)
+      );
 
       if (waitingUsers.length === 0) return;
 
@@ -177,7 +239,7 @@ export function useChat(callbacks?: ChatCallbacks) {
         });
       }
 
-      joinRoom(roomId);
+      joinRoom(roomId, best.id);
       setStatus("connected");
       setMessages([]);
       setMatchedInterests(best.shared);
@@ -198,7 +260,10 @@ export function useChat(callbacks?: ChatCallbacks) {
       .on("broadcast", { event: "matched" }, (payload) => {
         const data = payload.payload as { roomId: string; user1: string; user2: string; sharedInterests: string[] };
         if (data.user1 === sessionId || data.user2 === sessionId) {
-          joinRoom(data.roomId);
+          const strangerId = data.user1 === sessionId ? data.user2 : data.user1;
+          if (blocked.includes(strangerId)) return;
+
+          joinRoom(data.roomId, strangerId);
           setStatus("connected");
           setMessages([]);
           setMatchedInterests(data.sharedInterests || []);
@@ -224,17 +289,17 @@ export function useChat(callbacks?: ChatCallbacks) {
       });
 
     channelRef.current = matchChannel;
-  }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled]);
+  }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled, clearReconnectTimer]);
 
   const sendMessage = useCallback(
-    (text: string) => {
-      if (status !== "connected" || !text.trim() || !roomChannelRef.current) return;
-      addMessage("you", text.trim());
+    (text: string, imageUrl?: string) => {
+      if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
+      addMessage("you", text.trim(), imageUrl);
       playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, text: text.trim() },
+        payload: { senderId: sessionId, text: text.trim(), imageUrl },
       });
     },
     [status, addMessage, playSoundIfEnabled]
@@ -270,6 +335,34 @@ export function useChat(callbacks?: ChatCallbacks) {
     addMessage("system", "You have disconnected.");
   }, [addMessage, leaveRoom]);
 
+  const blockStranger = useCallback(() => {
+    if (strangerIdRef.current) {
+      addBlockedId(strangerIdRef.current);
+    }
+    stopChat();
+  }, [stopChat]);
+
+  // Auto-reconnect countdown
+  useEffect(() => {
+    if (status === "disconnected" && callbacksRef.current?.autoReconnect) {
+      let count = 5;
+      setAutoReconnectCountdown(count);
+      reconnectTimerRef.current = setInterval(() => {
+        count -= 1;
+        if (count <= 0) {
+          clearReconnectTimer();
+          startChat();
+        } else {
+          setAutoReconnectCountdown(count);
+        }
+      }, 1000);
+    } else {
+      clearReconnectTimer();
+    }
+    return () => clearReconnectTimer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
   useEffect(() => {
     return () => {
       if (channelRef.current) channelRef.current.unsubscribe();
@@ -282,11 +375,14 @@ export function useChat(callbacks?: ChatCallbacks) {
         roomChannelRef.current.unsubscribe();
       }
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (reconnectTimerRef.current) clearInterval(reconnectTimerRef.current);
     };
   }, []);
 
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping,
+    autoReconnectCountdown,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
+    reactToMessage, blockStranger,
   };
 }
