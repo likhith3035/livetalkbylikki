@@ -41,7 +41,7 @@ const TIPS = [
   "🎤 Hold the mic button to send voice messages",
 ];
 
-const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListProps) => {
+const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
   const [longPressedId, setLongPressedId] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
