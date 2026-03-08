@@ -22,7 +22,7 @@ interface InCallMessage {
   timestamp: Date;
 }
 
-const ChatPage = () => {
+const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const { toast } = useToast();
   const { settings } = useSettings();
   const signalingHandlerRef = useRef<((event: string, payload: Record<string, unknown>) => void) | null>(null);
