@@ -26,6 +26,9 @@ interface VideoCallOverlayProps {
   remoteIsScreenSharing: boolean;
   isBlurred: boolean;
   facingMode: "user" | "environment";
+  remoteMuted?: boolean;
+  remoteCameraOff?: boolean;
+  remoteBlurred?: boolean;
   onToggleMute: () => void;
   onToggleCamera: () => void;
   onEndCall: () => void;
@@ -47,6 +50,7 @@ const formatDuration = (seconds: number) => {
 const VideoCallOverlay = ({
   callStatus, localStream, remoteStream,
   isMuted, isCameraOff, isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
+  remoteMuted, remoteCameraOff, remoteBlurred,
   onToggleMute, onToggleCamera, onEndCall, onAccept, onDecline,
   onFlipCamera, onToggleScreenShare, onToggleBlur,
   onSendInCallMessage, inCallMessages = [],
@@ -264,6 +268,27 @@ const VideoCallOverlay = ({
           ) : (
             <div className="flex h-full items-center justify-center">
               <VideoOff className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30" />
+            </div>
+          )}
+
+          {/* Remote state indicators */}
+          {(remoteMuted || remoteCameraOff || remoteBlurred) && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+              {remoteMuted && (
+                <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  <MicOff className="h-3 w-3" /> Muted
+                </div>
+              )}
+              {remoteCameraOff && (
+                <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  <VideoOff className="h-3 w-3" /> Camera Off
+                </div>
+              )}
+              {remoteBlurred && (
+                <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  <Sparkles className="h-3 w-3" /> Blurred
+                </div>
+              )}
             </div>
           )}
 

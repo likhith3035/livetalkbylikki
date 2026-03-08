@@ -27,6 +27,9 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
   const [remoteIsScreenSharing, setRemoteIsScreenSharing] = useState(false);
   const [isBlurred, setIsBlurred] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [remoteMuted, setRemoteMuted] = useState(false);
+  const [remoteCameraOff, setRemoteCameraOff] = useState(false);
+  const [remoteBlurred, setRemoteBlurred] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -59,6 +62,9 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     setRemoteIsScreenSharing(false);
     setIsBlurred(false);
     setFacingMode("user");
+    setRemoteMuted(false);
+    setRemoteCameraOff(false);
+    setRemoteBlurred(false);
     pendingCandidatesRef.current = [];
   }, []);
 
@@ -168,20 +174,32 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
-        setIsMuted(!audioTrack.enabled);
+        const muted = !audioTrack.enabled;
+        setIsMuted(muted);
+        channelRef.current?.send({
+          type: "broadcast",
+          event: "webrtc:state",
+          payload: { senderId: sessionId, key: "muted", value: muted },
+        });
       }
     }
-  }, []);
+  }, [sessionId]);
 
   const toggleCamera = useCallback(() => {
     if (localStreamRef.current) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
-        setIsCameraOff(!videoTrack.enabled);
+        const off = !videoTrack.enabled;
+        setIsCameraOff(off);
+        channelRef.current?.send({
+          type: "broadcast",
+          event: "webrtc:state",
+          payload: { senderId: sessionId, key: "cameraOff", value: off },
+        });
       }
     }
-  }, []);
+  }, [sessionId]);
 
   // Flip camera (front/back)
   const flipCamera = useCallback(async () => {
@@ -289,8 +307,16 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
 
   // Background blur toggle
   const toggleBlur = useCallback(() => {
-    setIsBlurred((prev) => !prev);
-  }, []);
+    setIsBlurred((prev) => {
+      const next = !prev;
+      channelRef.current?.send({
+        type: "broadcast",
+        event: "webrtc:state",
+        payload: { senderId: sessionId, key: "blurred", value: next },
+      });
+      return next;
+    });
+  }, [sessionId]);
 
   // Handle signaling events
   const handleSignalingEvent = useCallback(
@@ -381,6 +407,15 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
           break;
         }
 
+        case "webrtc:state": {
+          const key = payload.key as string;
+          const value = payload.value as boolean;
+          if (key === "muted") setRemoteMuted(value);
+          else if (key === "cameraOff") setRemoteCameraOff(value);
+          else if (key === "blurred") setRemoteBlurred(value);
+          break;
+        }
+
         case "webrtc:end":
           cleanup();
           setCallStatus("idle");
@@ -410,6 +445,9 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     remoteIsScreenSharing,
     isBlurred,
     facingMode,
+    remoteMuted,
+    remoteCameraOff,
+    remoteBlurred,
     startCall,
     acceptCall,
     declineCall,

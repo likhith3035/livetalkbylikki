@@ -54,6 +54,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const {
     callStatus, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
+    remoteMuted, remoteCameraOff, remoteBlurred,
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     handleSignalingEvent, cleanup,
@@ -238,6 +239,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         remoteIsScreenSharing={remoteIsScreenSharing}
         isBlurred={isBlurred}
         facingMode={facingMode}
+        remoteMuted={remoteMuted}
+        remoteCameraOff={remoteCameraOff}
+        remoteBlurred={remoteBlurred}
         onToggleMute={toggleMute}
         onToggleCamera={toggleCamera}
         onEndCall={endCall}
