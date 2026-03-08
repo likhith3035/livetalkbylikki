@@ -125,10 +125,10 @@ export function useChat(callbacks?: ChatCallbacks) {
 
       channel
         .on("broadcast", { event: "message" }, (payload) => {
-          const data = payload.payload as { senderId: string; text: string; imageUrl?: string };
+          const data = payload.payload as { senderId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string };
           if (data.senderId !== sessionId) {
             setStrangerTyping(false);
-            addMessage("stranger", data.text, data.imageUrl);
+            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar);
             playSoundIfEnabled("messageReceived");
             notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
           }
