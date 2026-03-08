@@ -56,6 +56,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     setIsMuted(false);
     setIsCameraOff(false);
     setIsScreenSharing(false);
+    setRemoteIsScreenSharing(false);
     setIsBlurred(false);
     setFacingMode("user");
     pendingCandidatesRef.current = [];
