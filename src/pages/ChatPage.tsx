@@ -113,6 +113,8 @@ const ChatPage = () => {
     }
   }, [status, joinPrivateRoom]);
 
+  useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
+
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
