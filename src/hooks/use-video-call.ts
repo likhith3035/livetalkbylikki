@@ -15,9 +15,10 @@ interface UseVideoCallOptions {
   sessionId: string;
   channel: RealtimeChannel | null;
   onCallEnded?: () => void;
+  onCallUpgraded?: () => void;
 }
 
-export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOptions) {
+export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }: UseVideoCallOptions) {
   const [callStatus, setCallStatus] = useState<VideoCallStatus>("idle");
   const [isAudioOnly, setIsAudioOnly] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
