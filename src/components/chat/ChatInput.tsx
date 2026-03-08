@@ -16,9 +16,11 @@ interface ChatInputProps {
   onTyping: (text?: string) => void;
   replyingTo?: Message | null;
   onCancelReply?: () => void;
+  roomChannel?: RealtimeChannel | null;
+  sessionId?: string;
 }
 
-const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply }: ChatInputProps) => {
+const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
