@@ -298,7 +298,6 @@
   }
 
   .chat-wallpaper-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.05), hsl(var(--primary) / 0.08));
-    opacity: 1 !important;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--accent) / 0.04), hsl(var(--primary) / 0.06));
   }
 }
