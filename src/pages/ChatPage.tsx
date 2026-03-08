@@ -51,6 +51,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     setInCallMessages([]);
   }, [toast]);
 
+  const onCallUpgraded = useCallback(() => {
+    toast({ title: "🎥 Upgraded to video", description: "The call has been upgraded to video." });
+  }, [toast]);
+
   const {
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
@@ -59,7 +63,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
     handleSignalingEvent, cleanup,
-  } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded });
+  } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded, onCallUpgraded });
 
   // Handle in-call chat messages via the room channel
   useEffect(() => {

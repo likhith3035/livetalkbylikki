@@ -15,9 +15,10 @@ interface UseVideoCallOptions {
   sessionId: string;
   channel: RealtimeChannel | null;
   onCallEnded?: () => void;
+  onCallUpgraded?: () => void;
 }
 
-export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOptions) {
+export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }: UseVideoCallOptions) {
   const [callStatus, setCallStatus] = useState<VideoCallStatus>("idle");
   const [isAudioOnly, setIsAudioOnly] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -319,7 +320,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       localStreamRef.current.addTrack(videoTrack);
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
       setIsAudioOnly(false);
-      // Signal remote to expect video
+      onCallUpgraded?.();
       channelRef.current?.send({
         type: "broadcast",
         event: "webrtc:upgrade-video",
@@ -450,6 +451,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
         case "webrtc:upgrade-video": {
           // Remote upgraded to video — add local video track too
           setIsAudioOnly(false);
+          onCallUpgraded?.();
           try {
             const videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             const videoTrack = videoStream.getVideoTracks()[0];
