@@ -18,6 +18,29 @@ const STEPS = [
 const Index = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
+  const { toast } = useToast();
+  const [roomCode, setRoomCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const generateRoomCode = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    setRoomCode(code);
+  };
+
+  const copyLink = async () => {
+    if (!roomCode) return;
+    const url = `${window.location.origin}/room/${roomCode}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast({ title: "Link copied!", description: "Share it with your friend to connect directly." });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const joinMyRoom = () => {
+    if (roomCode) navigate(`/room/${roomCode}`);
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
