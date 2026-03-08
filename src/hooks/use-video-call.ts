@@ -506,6 +506,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     flipCamera,
     toggleScreenShare,
     toggleBlur,
+    upgradeToVideo,
     handleSignalingEvent,
     cleanup,
   };

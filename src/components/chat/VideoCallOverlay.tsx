@@ -38,6 +38,7 @@ interface VideoCallOverlayProps {
   onFlipCamera: () => void;
   onToggleScreenShare: () => void;
   onToggleBlur: () => void;
+  onUpgradeToVideo?: () => void;
   onSendInCallMessage?: (text: string) => void;
   inCallMessages?: InCallMessage[];
 }
