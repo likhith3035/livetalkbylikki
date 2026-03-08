@@ -47,6 +47,7 @@ const ChatStatusBar = ({
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
   onVideoCall, isVideoCallActive, onCreateRoom, onJoinRoom,
   disappearTimer, onSetDisappearTimer,
+  onSearchResult, onThemeChange,
 }: ChatStatusBarProps) => {
   const statusInfo = statusMessages[status] || statusMessages.idle;
   const { toast } = useToast();
