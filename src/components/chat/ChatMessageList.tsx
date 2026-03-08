@@ -109,11 +109,11 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
               {/* Bubble */}
               <div
                 className={cn(
-                  "relative max-w-[82%] sm:max-w-[70%] px-3.5 py-2.5 text-sm",
+                  "relative max-w-[82%] sm:max-w-[70%] px-3.5 py-2 text-sm leading-relaxed break-words",
                   msg.sender === "you" &&
-                    "bg-[hsl(var(--bubble-you))] text-[hsl(var(--bubble-you-foreground))] rounded-2xl rounded-br-sm bubble-tail-right shadow-md",
+                    "bg-[hsl(var(--bubble-you))] text-[hsl(var(--bubble-you-foreground))] rounded-2xl rounded-br-md shadow-md min-w-[60px]",
                   msg.sender === "stranger" &&
-                    "bg-[hsl(var(--bubble-stranger))] text-[hsl(var(--bubble-stranger-foreground))] rounded-2xl rounded-bl-sm bubble-tail-left shadow-sm",
+                    "bg-[hsl(var(--bubble-stranger))] text-[hsl(var(--bubble-stranger-foreground))] rounded-2xl rounded-bl-md shadow-sm min-w-[60px]",
                   msg.sender === "system" &&
                     "max-w-fit bg-transparent text-muted-foreground text-[11px] text-center italic px-3 py-1"
                 )}
