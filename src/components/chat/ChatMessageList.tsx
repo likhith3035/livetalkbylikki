@@ -139,7 +139,7 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
                   )}>
                     {format(msg.timestamp, "h:mm a")}
                     {msg.sender === "you" && (
-                      <CheckCheck className="h-3 w-3 text-primary/60 tick-appear" />
+                      <CheckCheck className="h-3 w-3 opacity-60 tick-appear" />
                     )}
                   </p>
                 )}
