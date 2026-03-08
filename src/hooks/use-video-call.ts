@@ -19,6 +19,7 @@ interface UseVideoCallOptions {
 
 export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOptions) {
   const [callStatus, setCallStatus] = useState<VideoCallStatus>("idle");
+  const [isAudioOnly, setIsAudioOnly] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -61,6 +62,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     setIsScreenSharing(false);
     setRemoteIsScreenSharing(false);
     setIsBlurred(false);
+    setIsAudioOnly(false);
     setFacingMode("user");
     setRemoteMuted(false);
     setRemoteCameraOff(false);
@@ -101,9 +103,9 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     return pc;
   }, [sessionId]);
 
-  const getMedia = useCallback(async (facing: "user" | "environment" = "user") => {
+  const getMedia = useCallback(async (facing: "user" | "environment" = "user", audioOnly = false) => {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: facing },
+      video: audioOnly ? false : { facingMode: facing },
       audio: true,
     });
     localStreamRef.current = stream;
@@ -111,13 +113,14 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     return stream;
   }, []);
 
-  const startCall = useCallback(async () => {
+  const startCall = useCallback(async (audioOnly = false) => {
     if (!channelRef.current) return;
     setCallStatus("requesting");
+    setIsAudioOnly(audioOnly);
     channelRef.current.send({
       type: "broadcast",
       event: "webrtc:request",
-      payload: { senderId: sessionId },
+      payload: { senderId: sessionId, audioOnly },
     });
   }, [sessionId]);
 
@@ -125,7 +128,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     if (!channelRef.current) return;
     try {
       setCallStatus("connecting");
-      const stream = await getMedia();
+      const stream = await getMedia("user", isAudioOnly);
       const pc = createPeerConnection();
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
@@ -137,13 +140,13 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       channelRef.current.send({
         type: "broadcast",
         event: "webrtc:accept",
-        payload: { senderId: sessionId },
+        payload: { senderId: sessionId, audioOnly: isAudioOnly },
       });
     } catch {
       setCallStatus("idle");
       cleanup();
     }
-  }, [sessionId, getMedia, createPeerConnection, cleanup]);
+  }, [sessionId, isAudioOnly, getMedia, createPeerConnection, cleanup]);
 
   const declineCall = useCallback(() => {
     if (channelRef.current) {
@@ -325,14 +328,19 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       if (senderId === sessionId) return;
 
       switch (event) {
-        case "webrtc:request":
+        case "webrtc:request": {
+          const reqAudioOnly = payload.audioOnly as boolean | undefined;
+          if (reqAudioOnly) setIsAudioOnly(true);
           setCallStatus("incoming");
           break;
+        }
 
-        case "webrtc:accept":
+        case "webrtc:accept": {
+          const accAudioOnly = payload.audioOnly as boolean | undefined;
+          if (accAudioOnly) setIsAudioOnly(true);
           try {
             setCallStatus("connecting");
-            const stream = await getMedia();
+            const stream = await getMedia("user", isAudioOnly || !!accAudioOnly);
             const pc = createPeerConnection();
             stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
@@ -349,6 +357,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
             cleanup();
           }
           break;
+        }
 
         case "webrtc:decline":
           setCallStatus("idle");
@@ -437,6 +446,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
 
   return {
     callStatus,
+    isAudioOnly,
     localStream,
     remoteStream,
     isMuted,

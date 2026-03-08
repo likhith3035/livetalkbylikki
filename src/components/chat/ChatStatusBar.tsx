@@ -1,4 +1,4 @@
-import { SkipForward, X, Tags, Video, Play, Download, Copy, Timer } from "lucide-react";
+import { SkipForward, X, Tags, Video, Phone, Play, Download, Copy, Timer } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
@@ -27,6 +27,7 @@ interface ChatStatusBarProps {
   onStart: () => void;
   onBlock: () => void;
   onVideoCall: () => void;
+  onAudioCall: () => void;
   isVideoCallActive: boolean;
   onCreateRoom: () => string;
   onJoinRoom: (code: string) => void;
@@ -47,7 +48,7 @@ const ChatStatusBar = ({
   status, matchedInterests, autoReconnectCountdown, searchElapsed,
   messages = [],
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
-  onVideoCall, isVideoCallActive, onCreateRoom, onJoinRoom,
+  onVideoCall, onAudioCall, isVideoCallActive, onCreateRoom, onJoinRoom,
   disappearTimer, onSetDisappearTimer,
   onSearchResult, onThemeChange,
 }: ChatStatusBarProps) => {
@@ -141,6 +142,17 @@ const ChatStatusBar = ({
 
         {status === "connected" && (
           <>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onAudioCall}
+              disabled={isVideoCallActive}
+              className="gap-1 h-8 px-2 sm:px-3 text-xs bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 hover:text-primary"
+              title="Start an audio call"
+            >
+              <Phone className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Call</span>
+            </Button>
             <Button
               variant="default"
               size="sm"

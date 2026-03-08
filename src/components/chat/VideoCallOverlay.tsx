@@ -18,6 +18,7 @@ interface InCallMessage {
 
 interface VideoCallOverlayProps {
   callStatus: VideoCallStatus;
+  isAudioOnly?: boolean;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   isMuted: boolean;
@@ -48,7 +49,7 @@ const formatDuration = (seconds: number) => {
 };
 
 const VideoCallOverlay = ({
-  callStatus, localStream, remoteStream,
+  callStatus, isAudioOnly = false, localStream, remoteStream,
   isMuted, isCameraOff, isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
   remoteMuted, remoteCameraOff, remoteBlurred,
   onToggleMute, onToggleCamera, onEndCall, onAccept, onDecline,
@@ -179,12 +180,16 @@ const VideoCallOverlay = ({
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-card border border-border p-8 shadow-2xl max-w-xs w-full mx-4">
           <div className="relative">
             <div className="h-20 w-20 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center animate-pulse">
-              <Video className="h-8 w-8 text-primary" />
+              {isAudioOnly ? <Phone className="h-8 w-8 text-primary" /> : <Video className="h-8 w-8 text-primary" />}
             </div>
           </div>
           <div className="text-center space-y-1">
-            <p className="text-lg font-display font-semibold text-foreground">Incoming Video Call</p>
-            <p className="text-sm text-muted-foreground">Stranger wants to video chat</p>
+            <p className="text-lg font-display font-semibold text-foreground">
+              Incoming {isAudioOnly ? "Audio" : "Video"} Call
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Stranger wants to {isAudioOnly ? "voice" : "video"} chat
+            </p>
           </div>
           <div className="flex gap-4">
             <Button
@@ -215,7 +220,7 @@ const VideoCallOverlay = ({
       <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/80 backdrop-blur-lg animate-fade-in">
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-card border border-border p-8 shadow-2xl max-w-xs w-full mx-4">
           <div className="h-20 w-20 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center animate-pulse">
-            <Video className="h-8 w-8 text-primary" />
+            {isAudioOnly ? <Phone className="h-8 w-8 text-primary" /> : <Video className="h-8 w-8 text-primary" />}
           </div>
           <div className="text-center space-y-1">
             <p className="text-lg font-display font-semibold text-foreground">Calling...</p>
@@ -236,7 +241,7 @@ const VideoCallOverlay = ({
       <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/90 backdrop-blur-lg animate-fade-in">
         <div className="text-center space-y-3">
           <div className="h-12 w-12 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">Connecting video...</p>
+          <p className="text-sm text-muted-foreground">Connecting {isAudioOnly ? "audio" : "video"}...</p>
         </div>
       </div>
     );
@@ -250,25 +255,39 @@ const VideoCallOverlay = ({
         style={{ height: "100dvh" }}
         onClick={handleTapScreen}
       >
-        {/* Remote video (fullscreen) */}
+        {/* Remote video/audio area */}
         <div className={cn(
           "flex-1 relative overflow-hidden min-h-0",
-          remoteIsScreenSharing ? "bg-black" : "bg-muted"
+          isAudioOnly ? "bg-gradient-to-b from-card to-background" : remoteIsScreenSharing ? "bg-black" : "bg-muted"
         )}>
-          {remoteStream ? (
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              className={cn(
-                "h-full w-full",
-                remoteIsScreenSharing ? "object-contain" : "object-cover"
+          {isAudioOnly ? (
+            <div className="flex h-full items-center justify-center flex-col gap-4">
+              <div className="h-24 w-24 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center">
+                <Phone className="h-10 w-10 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">Audio Call</p>
+              {remoteStream && (
+                <audio ref={(el) => { if (el && remoteStream) el.srcObject = remoteStream; }} autoPlay />
               )}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <VideoOff className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30" />
             </div>
+          ) : (
+            <>
+              {remoteStream ? (
+                <video
+                  ref={remoteVideoRef}
+                  autoPlay
+                  playsInline
+                  className={cn(
+                    "h-full w-full",
+                    remoteIsScreenSharing ? "object-contain" : "object-cover"
+                  )}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <VideoOff className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30" />
+                </div>
+              )}
+            </>
           )}
 
           {/* Remote state indicators */}
@@ -279,12 +298,12 @@ const VideoCallOverlay = ({
                   <MicOff className="h-3 w-3" /> Muted
                 </div>
               )}
-              {remoteCameraOff && (
+              {!isAudioOnly && remoteCameraOff && (
                 <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
                   <VideoOff className="h-3 w-3" /> Camera Off
                 </div>
               )}
-              {remoteBlurred && (
+              {!isAudioOnly && remoteBlurred && (
                 <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
                   <Sparkles className="h-3 w-3" /> Blurred
                 </div>
@@ -293,7 +312,7 @@ const VideoCallOverlay = ({
           )}
 
           {/* Screen share indicator on remote */}
-          {remoteIsScreenSharing && (
+          {!isAudioOnly && remoteIsScreenSharing && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
               <div className="flex items-center gap-1.5 rounded-full bg-primary/90 text-primary-foreground px-3 py-1 text-xs font-medium shadow-lg">
                 <Monitor className="h-3.5 w-3.5" />
@@ -302,7 +321,8 @@ const VideoCallOverlay = ({
             </div>
           )}
 
-          {/* Draggable Local video (PiP) */}
+          {/* Draggable Local video (PiP) - only for video calls */}
+          {!isAudioOnly && (
           <motion.div
             drag
             dragMomentum={false}
@@ -343,6 +363,7 @@ const VideoCallOverlay = ({
               </div>
             )}
           </motion.div>
+          )}
 
           {/* Status pill with timer */}
           <AnimatePresence>
@@ -425,27 +446,31 @@ const VideoCallOverlay = ({
             >
               {/* Top row: extra controls */}
               <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
-                <ControlButton
-                  onClick={onFlipCamera}
-                  active={false}
-                  icon={<SwitchCamera className="h-4 w-4" />}
-                  label="Flip"
-                  small
-                />
-                <ControlButton
-                  onClick={onToggleScreenShare}
-                  active={isScreenSharing}
-                  icon={isScreenSharing ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
-                  label={isScreenSharing ? "Stop" : "Share"}
-                  small
-                />
-                <ControlButton
-                  onClick={onToggleBlur}
-                  active={isBlurred}
-                  icon={<Sparkles className="h-4 w-4" />}
-                  label="Blur"
-                  small
-                />
+                {!isAudioOnly && (
+                  <>
+                    <ControlButton
+                      onClick={onFlipCamera}
+                      active={false}
+                      icon={<SwitchCamera className="h-4 w-4" />}
+                      label="Flip"
+                      small
+                    />
+                    <ControlButton
+                      onClick={onToggleScreenShare}
+                      active={isScreenSharing}
+                      icon={isScreenSharing ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
+                      label={isScreenSharing ? "Stop" : "Share"}
+                      small
+                    />
+                    <ControlButton
+                      onClick={onToggleBlur}
+                      active={isBlurred}
+                      icon={<Sparkles className="h-4 w-4" />}
+                      label="Blur"
+                      small
+                    />
+                  </>
+                )}
                 <ControlButton
                   onClick={() => setShowChat(!showChat)}
                   active={showChat}
@@ -453,13 +478,15 @@ const VideoCallOverlay = ({
                   label="Chat"
                   small
                 />
-                <ControlButton
-                  onClick={togglePiP}
-                  active={isPiP}
-                  icon={<PictureInPicture2 className="h-4 w-4" />}
-                  label="PiP"
-                  small
-                />
+                {!isAudioOnly && (
+                  <ControlButton
+                    onClick={togglePiP}
+                    active={isPiP}
+                    icon={<PictureInPicture2 className="h-4 w-4" />}
+                    label="PiP"
+                    small
+                  />
+                )}
               </div>
 
               {/* Main row */}
@@ -469,11 +496,13 @@ const VideoCallOverlay = ({
                   active={isMuted}
                   icon={isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                 />
-                <ControlButton
-                  onClick={onToggleCamera}
-                  active={isCameraOff}
-                  icon={isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-                />
+                {!isAudioOnly && (
+                  <ControlButton
+                    onClick={onToggleCamera}
+                    active={isCameraOff}
+                    icon={isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+                  />
+                )}
                 <button
                   onClick={onEndCall}
                   className="flex items-center justify-center h-14 w-14 rounded-full bg-destructive text-destructive-foreground shadow-lg active:bg-destructive/90 transition-colors"

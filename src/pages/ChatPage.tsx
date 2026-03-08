@@ -52,7 +52,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }, [toast]);
 
   const {
-    callStatus, localStream, remoteStream, isMuted, isCameraOff,
+    callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
     remoteMuted, remoteCameraOff, remoteBlurred,
     startCall, acceptCall, declineCall, endCall,
@@ -187,7 +187,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onStop={stopChat}
         onStart={handleStart}
         onBlock={blockStranger}
-        onVideoCall={startCall}
+        onVideoCall={() => startCall(false)}
+        onAudioCall={() => startCall(true)}
         isVideoCallActive={callStatus !== "idle"}
         onCreateRoom={handleCreateRoom}
         onJoinRoom={handleJoinRoom}
@@ -231,6 +232,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
       <VideoCallOverlay
         callStatus={callStatus}
+        isAudioOnly={isAudioOnly}
         localStream={localStream}
         remoteStream={remoteStream}
         isMuted={isMuted}
