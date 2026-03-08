@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import TypingIndicator from "@/components/TypingIndicator";
 import MessageReactions from "@/components/MessageReactions";
+import ChatImage from "@/components/chat/ChatImage";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/hooks/use-chat";
 
@@ -46,12 +47,7 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
               </p>
             )}
             {msg.imageUrl && (
-              <img
-                src={msg.imageUrl}
-                alt="Shared image"
-                className="max-w-full rounded-lg mb-1 max-h-48 sm:max-h-60 object-cover"
-                loading="lazy"
-              />
+              <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
             )}
             {msg.text && <span className="break-words">{msg.text}</span>}
           </div>
