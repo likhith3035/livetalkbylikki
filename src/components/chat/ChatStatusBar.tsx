@@ -168,7 +168,13 @@ const ChatStatusBar = ({
               <Timer className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{disappearTimer ? `${disappearTimer}s` : ""}</span>
             </Button>
+            {onThemeChange && <ChatThemePicker onApply={onThemeChange} />}
           </>
+        )}
+
+        {/* Search */}
+        {messages.length > 0 && (status === "connected" || status === "disconnected") && onSearchResult && (
+          <ChatSearchBar messages={messages} onSearchResult={onSearchResult} />
         )}
 
         {/* Export buttons */}
