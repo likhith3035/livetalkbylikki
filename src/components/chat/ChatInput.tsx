@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { Send, Mic, Square, X, Reply } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingDurationRef = useRef(0);
   const { toast } = useToast();
 
   const handleSend = () => {
@@ -53,18 +55,34 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
+      recordingDurationRef.current = 0;
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
-        onSend(`🎤 Voice message (${recordingDuration}s)`, undefined);
+      mediaRecorder.onstop = async () => {
+        const dur = recordingDurationRef.current;
         stream.getTracks().forEach((t) => t.stop());
-        if (timerRef.current) clearInterval(timerRef.current);
+        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
         setRecordingDuration(0);
+
+        if (chunksRef.current.length === 0 || dur === 0) return;
+
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        // Upload to storage
+        const fileName = `voice_${Date.now()}.webm`;
+        const { data, error } = await supabase.storage
+          .from("chat-images")
+          .upload(fileName, blob, { contentType: "audio/webm" });
+
+        if (error) {
+          toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+          return;
+        }
+
+        const { data: urlData } = supabase.storage.from("chat-images").getPublicUrl(fileName);
+        onSend(`🎤 Voice message (${dur}s)`, urlData.publicUrl);
       };
 
       mediaRecorder.start();
@@ -72,12 +90,13 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
       setRecordingDuration(0);
 
       timerRef.current = setInterval(() => {
+        recordingDurationRef.current += 1;
         setRecordingDuration((d) => d + 1);
       }, 1000);
     } catch {
       toast({ title: "Microphone access denied", variant: "destructive" });
     }
-  }, [onSend, toast, recordingDuration]);
+  }, [onSend, toast]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
