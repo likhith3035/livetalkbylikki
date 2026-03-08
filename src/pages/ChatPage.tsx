@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import type { Message } from "@/hooks/use-chat";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import ChatStatusBar from "@/components/chat/ChatStatusBar";
@@ -116,6 +117,7 @@ const ChatPage = () => {
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   useEffect(() => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
@@ -133,7 +135,8 @@ const ChatPage = () => {
   useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
 
   const handleImageUpload = (url: string) => {
-    sendMessage("", url);
+    sendMessage("", url, replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.sender } : undefined);
+    setReplyingTo(null);
   };
 
   const handleCreateRoom = (): string => {
@@ -184,6 +187,7 @@ const ChatPage = () => {
         strangerTyping={strangerTyping}
         strangerTypingText={strangerTypingText}
         onReact={reactToMessage}
+        onReply={(msg) => setReplyingTo(msg)}
       />
 
       <ChatInput
@@ -191,6 +195,10 @@ const ChatPage = () => {
         onSend={sendMessage}
         onImageUpload={handleImageUpload}
         onTyping={sendTyping}
+        replyingTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
+        roomChannel={roomChannel}
+        sessionId={sessionId}
       />
 
       <VideoCallOverlay

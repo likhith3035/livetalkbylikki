@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 
 interface SwipeableMessageProps {
   children: ReactNode;
-  onSwipeRight?: () => void; // react
-  onSwipeLeft?: () => void;  // reply (future)
+  onSwipeRight?: () => void;
+  onSwipeLeft?: () => void;
   isMine: boolean;
   disabled?: boolean;
 }
@@ -22,7 +22,6 @@ const SwipeableMessage = ({
   const x = useMotionValue(0);
   const [swiping, setSwiping] = useState(false);
 
-  // Show emoji hint on right swipe, reply hint on left
   const rightOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
   const leftOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
   const rightScale = useTransform(x, [0, SWIPE_THRESHOLD], [0.5, 1.2]);
@@ -42,7 +41,7 @@ const SwipeableMessage = ({
   return (
     <div className="relative overflow-visible">
       {/* Left hint (swipe right → react) */}
-      {!isMine && (
+      {!isMine && onSwipeRight && (
         <motion.div
           className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 pointer-events-none"
           style={{ opacity: rightOpacity, scale: rightScale }}
@@ -52,12 +51,15 @@ const SwipeableMessage = ({
       )}
 
       {/* Right hint (swipe left → reply) */}
-      {isMine && (
+      {onSwipeLeft && (
         <motion.div
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 pointer-events-none"
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 pointer-events-none",
+            isMine ? "right-0 translate-x-2" : "right-0 translate-x-2"
+          )}
           style={{ opacity: leftOpacity, scale: leftScale }}
         >
-          <span className="text-xs text-muted-foreground font-medium">↩ Reply</span>
+          <span className="text-xs text-primary font-medium">↩ Reply</span>
         </motion.div>
       )}
 

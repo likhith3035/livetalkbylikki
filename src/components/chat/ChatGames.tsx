@@ -1,12 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gamepad2, X, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 interface ChatGamesProps {
   onSendMessage: (text: string) => void;
   isConnected: boolean;
+  roomChannel?: RealtimeChannel | null;
+  sessionId?: string;
 }
 
 const TRUTH_OR_DARE = {
@@ -50,38 +53,107 @@ const checkWinner = (board: TicTacToeCell[]): TicTacToeCell => {
   return null;
 };
 
-const ChatGames = ({ onSendMessage, isConnected }: ChatGamesProps) => {
+const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatGamesProps) => {
   const [showGames, setShowGames] = useState(false);
   const [activeGame, setActiveGame] = useState<"none" | "ttt" | "tod">("none");
-  
-  // Tic Tac Toe state (local single-device play for fun)
+
+  // Tic-Tac-Toe state — synced via broadcast
   const [board, setBoard] = useState<TicTacToeCell[]>(Array(9).fill(null));
-  const [isXTurn, setIsXTurn] = useState(true);
+  const [mySymbol, setMySymbol] = useState<"X" | "O" | null>(null);
+  const [currentTurn, setCurrentTurn] = useState<"X" | "O">("X");
   const winner = checkWinner(board);
   const isDraw = !winner && board.every((c) => c !== null);
 
+  // Listen for game events from stranger
+  useEffect(() => {
+    if (!roomChannel) return;
+
+    const handler = roomChannel.on("broadcast", { event: "ttt_move" }, (payload) => {
+      const data = payload.payload as { senderId: string; index: number; symbol: "X" | "O" };
+      if (data.senderId !== sessionId) {
+        setBoard((prev) => {
+          const newBoard = [...prev];
+          newBoard[data.index] = data.symbol;
+          return newBoard;
+        });
+        setCurrentTurn(data.symbol === "X" ? "O" : "X");
+      }
+    });
+
+    const startHandler = roomChannel.on("broadcast", { event: "ttt_start" }, (payload) => {
+      const data = payload.payload as { senderId: string; starterSymbol: "X" | "O" };
+      if (data.senderId !== sessionId) {
+        // The other player started the game — we get the opposite symbol
+        setMySymbol(data.starterSymbol === "X" ? "O" : "X");
+        setBoard(Array(9).fill(null));
+        setCurrentTurn("X");
+        setActiveGame("ttt");
+        setShowGames(true);
+      }
+    });
+
+    const resetHandler = roomChannel.on("broadcast", { event: "ttt_reset" }, (payload) => {
+      const data = payload.payload as { senderId: string };
+      if (data.senderId !== sessionId) {
+        setBoard(Array(9).fill(null));
+        setCurrentTurn("X");
+      }
+    });
+
+    return () => {
+      // Cleanup handled by parent
+    };
+  }, [roomChannel, sessionId]);
+
   const handleCellClick = (i: number) => {
-    if (board[i] || winner) return;
+    if (board[i] || winner || !mySymbol || currentTurn !== mySymbol) return;
     const newBoard = [...board];
-    newBoard[i] = isXTurn ? "X" : "O";
+    newBoard[i] = mySymbol;
     setBoard(newBoard);
-    setIsXTurn(!isXTurn);
+    setCurrentTurn(mySymbol === "X" ? "O" : "X");
+
+    // Broadcast move
+    roomChannel?.send({
+      type: "broadcast",
+      event: "ttt_move",
+      payload: { senderId: sessionId, index: i, symbol: mySymbol },
+    });
 
     const w = checkWinner(newBoard);
     const d = !w && newBoard.every((c) => c !== null);
     if (w) {
-      onSendMessage(`🎮 Tic-Tac-Toe: ${w} wins! 🎉`);
+      onSendMessage(`🎮 Tic-Tac-Toe: ${w === mySymbol ? "I" : "You"} won! 🎉`);
     } else if (d) {
       onSendMessage("🎮 Tic-Tac-Toe: It's a draw! 🤝");
     }
   };
 
-  const resetTTT = () => {
+  const startTTT = () => {
+    setMySymbol("X");
     setBoard(Array(9).fill(null));
-    setIsXTurn(true);
+    setCurrentTurn("X");
+    setActiveGame("ttt");
+
+    // Broadcast game start
+    roomChannel?.send({
+      type: "broadcast",
+      event: "ttt_start",
+      payload: { senderId: sessionId, starterSymbol: "X" },
+    });
+
+    onSendMessage("🎮 I started a Tic-Tac-Toe game! Let's play!");
   };
 
-  // Truth or Dare
+  const resetTTT = () => {
+    setBoard(Array(9).fill(null));
+    setCurrentTurn("X");
+    roomChannel?.send({
+      type: "broadcast",
+      event: "ttt_reset",
+      payload: { senderId: sessionId },
+    });
+  };
+
   const handleTruth = useCallback(() => {
     const q = TRUTH_OR_DARE.truths[Math.floor(Math.random() * TRUTH_OR_DARE.truths.length)];
     onSendMessage(`🎯 Truth: ${q}`);
@@ -93,6 +165,8 @@ const ChatGames = ({ onSendMessage, isConnected }: ChatGamesProps) => {
   }, [onSendMessage]);
 
   if (!isConnected) return null;
+
+  const isMyTurn = mySymbol === currentTurn;
 
   return (
     <div className="relative">
@@ -118,7 +192,7 @@ const ChatGames = ({ onSendMessage, isConnected }: ChatGamesProps) => {
               <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                 <Gamepad2 className="h-3.5 w-3.5 text-primary" /> Games
               </span>
-              <button onClick={() => { setShowGames(false); setActiveGame("none"); }} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => { setShowGames(false); if (activeGame !== "ttt" || !mySymbol) setActiveGame("none"); }} className="text-muted-foreground hover:text-foreground">
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -133,11 +207,11 @@ const ChatGames = ({ onSendMessage, isConnected }: ChatGamesProps) => {
                   <p className="text-[10px] text-muted-foreground">Random questions & challenges</p>
                 </button>
                 <button
-                  onClick={() => { setActiveGame("ttt"); resetTTT(); }}
+                  onClick={startTTT}
                   className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors"
                 >
                   <p className="text-sm font-medium text-foreground">❌⭕ Tic-Tac-Toe</p>
-                  <p className="text-[10px] text-muted-foreground">Classic game on your screen</p>
+                  <p className="text-[10px] text-muted-foreground">Play with your stranger!</p>
                 </button>
               </div>
             )}
@@ -162,7 +236,15 @@ const ChatGames = ({ onSendMessage, isConnected }: ChatGamesProps) => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-muted-foreground">
-                    {winner ? `${winner} wins! 🎉` : isDraw ? "Draw! 🤝" : `Turn: ${isXTurn ? "X" : "O"}`}
+                    {winner
+                      ? `${winner === mySymbol ? "You win" : "They win"}! 🎉`
+                      : isDraw
+                      ? "Draw! 🤝"
+                      : mySymbol
+                      ? isMyTurn
+                        ? `Your turn (${mySymbol})`
+                        : `Their turn (${currentTurn})`
+                      : "Waiting for opponent..."}
                   </span>
                   <button onClick={resetTTT} className="text-muted-foreground hover:text-foreground">
                     <RotateCcw className="h-3 w-3" />
@@ -173,9 +255,11 @@ const ChatGames = ({ onSendMessage, isConnected }: ChatGamesProps) => {
                     <button
                       key={i}
                       onClick={() => handleCellClick(i)}
+                      disabled={!isMyTurn || !!winner || !!cell}
                       className={cn(
                         "h-12 rounded-lg border border-border bg-secondary/40 text-lg font-bold transition-all",
-                        !cell && !winner && "hover:bg-secondary cursor-pointer",
+                        !cell && !winner && isMyTurn && "hover:bg-secondary cursor-pointer",
+                        (!isMyTurn || !!cell) && !winner && "cursor-not-allowed opacity-70",
                         cell === "X" && "text-primary",
                         cell === "O" && "text-destructive"
                       )}
@@ -184,7 +268,7 @@ const ChatGames = ({ onSendMessage, isConnected }: ChatGamesProps) => {
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setActiveGame("none")} className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center">
+                <button onClick={() => { setActiveGame("none"); setMySymbol(null); }} className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center">
                   ← Back
                 </button>
               </div>

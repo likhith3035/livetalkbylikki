@@ -22,6 +22,8 @@ export interface Message {
   reactions: Record<string, string[]>; // emoji -> senderIds
   senderNickname?: string;
   senderAvatar?: string;
+  read?: boolean;
+  replyTo?: { id: string; text: string; sender: string };
 }
 
 export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
@@ -99,11 +101,11 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body);
   }, []);
 
-  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string) => {
+  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
     const id = existingId || crypto.randomUUID();
     setMessages((prev) => [
       ...prev,
-      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar },
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo },
     ]);
     return id;
   }, []);
@@ -129,12 +131,20 @@ export function useChat(callbacks?: ChatCallbacks) {
 
       channel
         .on("broadcast", { event: "message" }, (payload) => {
-          const data = payload.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string };
+          const data = payload.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string; replyTo?: Message["replyTo"] };
           if (data.senderId !== sessionId) {
             setStrangerTyping(false);
-            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId);
+            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId, data.replyTo);
             playSoundIfEnabled("messageReceived");
             notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
+            // Send read receipt
+            channel.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: data.messageId } });
+          }
+        })
+        .on("broadcast", { event: "read" }, (payload) => {
+          const data = payload.payload as { senderId: string; messageId: string };
+          if (data.senderId !== sessionId) {
+            setMessages((prev) => prev.map((msg) => msg.id === data.messageId ? { ...msg, read: true } : msg));
           }
         })
         .on("broadcast", { event: "typing" }, (payload) => {
@@ -345,16 +355,16 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled, clearReconnectTimer]);
 
   const sendMessage = useCallback(
-    (text: string, imageUrl?: string) => {
+    (text: string, imageUrl?: string, replyTo?: Message["replyTo"]) => {
       if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
       const p = getProfile();
       const messageId = crypto.randomUUID();
-      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId);
+      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId, replyTo);
       playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar },
+        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar, replyTo },
       });
     },
     [status, addMessage, playSoundIfEnabled]
