@@ -55,6 +55,7 @@ const VideoCallOverlay = ({
   remoteMuted, remoteCameraOff, remoteBlurred,
   onToggleMute, onToggleCamera, onEndCall, onAccept, onDecline,
   onFlipCamera, onToggleScreenShare, onToggleBlur,
+  onUpgradeToVideo,
   onSendInCallMessage, inCallMessages = [],
 }: VideoCallOverlayProps) => {
   const [showChat, setShowChat] = useState(false);
