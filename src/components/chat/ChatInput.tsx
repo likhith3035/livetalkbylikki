@@ -211,6 +211,22 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
           </Button>
         )}
       </div>
+
+      {/* Mobile tools tray */}
+      <AnimatePresence>
+        {showMobileTools && isConnected && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="sm:hidden mx-auto max-w-3xl mt-1.5 flex gap-1 items-center justify-center"
+          >
+            <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
+            <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
+            <LocationShareButton isConnected={isConnected} onSend={onSend} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
