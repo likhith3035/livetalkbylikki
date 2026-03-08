@@ -146,7 +146,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStrangerTyping(false);
             addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId, data.replyTo);
             playSoundIfEnabled("messageReceived");
-            notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
+            notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100), "message");
             // Send read receipt
             channel.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: data.messageId } });
           }
