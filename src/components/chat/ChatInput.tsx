@@ -1,6 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { Send, X, Reply } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import ChatGames from "@/components/chat/ChatGames";
 import GifPicker from "@/components/chat/GifPicker";
 import LocationShareButton from "@/components/chat/LocationShareButton";
 import type { ChatStatus, Message } from "@/hooks/use-chat";
-import { useToast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
   status: ChatStatus;
@@ -26,8 +24,6 @@ interface ChatInputProps {
 const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const throttleRef = useRef<number>(0);
-  const { toast } = useToast();
-  const { toast } = useToast();
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -46,83 +42,10 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
     }
   };
 
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Pick a supported MIME type (mp4 for Safari, webm for others)
-      const mimeType = MediaRecorder.isTypeSupported("audio/mp4")
-        ? "audio/mp4"
-        : MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : MediaRecorder.isTypeSupported("audio/webm")
-        ? "audio/webm"
-        : "";
-
-      if (!mimeType) {
-        toast({ title: "Voice messages not supported", description: "Your browser doesn't support audio recording.", variant: "destructive" });
-        stream.getTracks().forEach((t) => t.stop());
-        return;
-      }
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-      recordingDurationRef.current = 0;
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const dur = recordingDurationRef.current;
-        stream.getTracks().forEach((t) => t.stop());
-        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        setRecordingDuration(0);
-
-        if (chunksRef.current.length === 0 || dur === 0) return;
-
-        const blob = new Blob(chunksRef.current, { type: mimeType });
-        const ext = mimeType.includes("mp4") ? "m4a" : "webm";
-        const fileName = `voice_${Date.now()}.${ext}`;
-        const { data, error } = await supabase.storage
-          .from("chat-images")
-          .upload(fileName, blob, { contentType: mimeType });
-
-        if (error) {
-          toast({ title: "Upload failed", description: error.message, variant: "destructive" });
-          return;
-        }
-
-        const { data: urlData } = supabase.storage.from("chat-images").getPublicUrl(fileName);
-        onSend(`🎤 Voice message (${dur}s)`, urlData.publicUrl);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-      setRecordingDuration(0);
-
-      timerRef.current = setInterval(() => {
-        recordingDurationRef.current += 1;
-        setRecordingDuration((d) => d + 1);
-      }, 1000);
-    } catch {
-      toast({ title: "Microphone access denied", variant: "destructive" });
-    }
-  }, [onSend, toast]);
-
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  }, [isRecording]);
-
   const isConnected = status === "connected";
 
   return (
     <div className="fixed bottom-14 lg:bottom-0 left-0 lg:left-[220px] right-0 glass-heavy z-40 px-2 sm:px-4 py-2 sm:py-3">
-      {/* Reply preview */}
       <AnimatePresence>
         {replyingTo && (
           <motion.div
@@ -154,60 +77,25 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
         <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
         <LocationShareButton isConnected={isConnected} onSend={onSend} />
 
-        <AnimatePresence mode="wait">
-          {isRecording ? (
-            <motion.div
-              key="recording"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="flex-1 flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5"
-            >
-              <span className="h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
-              <span className="text-sm text-destructive font-medium tabular-nums">
-                {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, "0")}
-              </span>
-              <span className="text-xs text-muted-foreground flex-1">Recording...</span>
-            </motion.div>
-          ) : (
-            <motion.input
-              key="input"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              type="text"
-              value={input}
-              onChange={(e) => handleChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder={isConnected ? "Type a message..." : "Connect to start chatting"}
-              disabled={!isConnected}
-              className="flex-1 min-w-0 rounded-xl border border-border bg-secondary/50 px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary/30 disabled:opacity-50 transition-all duration-200"
-            />
-          )}
-        </AnimatePresence>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => handleChange(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          placeholder={isConnected ? "Type a message..." : "Connect to start chatting"}
+          disabled={!isConnected}
+          className="flex-1 min-w-0 rounded-xl border border-border bg-secondary/50 px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary/30 disabled:opacity-50 transition-all duration-200"
+        />
 
-        {isConnected && !input.trim() && (
-          <Button
-            variant={isRecording ? "destructive" : "ghost"}
-            size="icon"
-            onClick={isRecording ? stopRecording : startRecording}
-            className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
-          >
-            {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-        )}
-
-        {(input.trim() || !isConnected) && (
-          <Button
-            variant="glow"
-            size="icon"
-            onClick={handleSend}
-            disabled={!isConnected || !input.trim()}
-            className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          variant="glow"
+          size="icon"
+          onClick={handleSend}
+          disabled={!isConnected || !input.trim()}
+          className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
