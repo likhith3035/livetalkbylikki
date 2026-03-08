@@ -277,7 +277,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       } else {
         addMessage("system", "You are now connected with a stranger. Say hello!");
       }
-      notifyIfEnabled("Echo", "Connected with a stranger!");
+      notifyIfEnabled("L Chat", "Connected with a stranger!");
       if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
       setSearchElapsed(0);
       matchChannel.unsubscribe();
