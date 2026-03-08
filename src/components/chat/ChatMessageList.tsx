@@ -1,8 +1,10 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TypingIndicator from "@/components/TypingIndicator";
 import MessageReactions from "@/components/MessageReactions";
 import ChatImage from "@/components/chat/ChatImage";
+import FormattedText from "@/components/chat/FormattedText";
+import SwipeableMessage from "@/components/chat/SwipeableMessage";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Message } from "@/hooks/use-chat";
