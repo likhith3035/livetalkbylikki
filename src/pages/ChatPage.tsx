@@ -52,7 +52,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }, [toast]);
 
   const {
-    callStatus, localStream, remoteStream, isMuted, isCameraOff,
+    callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
     remoteMuted, remoteCameraOff, remoteBlurred,
     startCall, acceptCall, declineCall, endCall,
