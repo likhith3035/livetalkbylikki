@@ -9,6 +9,7 @@ import ChatPage from "./pages/ChatPage";
 import RoomPage from "./pages/RoomPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import InfoPage from "./pages/InfoPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
