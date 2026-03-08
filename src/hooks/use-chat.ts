@@ -64,6 +64,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const interestsRef = useRef<string[]>([]);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const callbacksRef = useRef(callbacks);
 
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
