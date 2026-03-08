@@ -5,6 +5,7 @@ import ReportBlockMenu from "@/components/ReportBlockMenu";
 import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
 import ChatSearchBar from "@/components/chat/ChatSearchBar";
 import ChatThemePicker from "@/components/chat/ChatThemePicker";
+import ChatMoodMeter from "@/components/chat/ChatMoodMeter";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { cn } from "@/lib/utils";
 import type { ChatStatus } from "@/hooks/use-chat";
