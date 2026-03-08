@@ -6,6 +6,7 @@ import ChatMessageList from "@/components/chat/ChatMessageList";
 import ChatInput from "@/components/chat/ChatInput";
 import InterestBar from "@/components/chat/InterestBar";
 import VideoCallOverlay from "@/components/chat/VideoCallOverlay";
+import MatchCelebration from "@/components/chat/MatchCelebration";
 import { useChat } from "@/hooks/use-chat";
 import { useVideoCall } from "@/hooks/use-video-call";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -112,16 +113,15 @@ const ChatPage = () => {
 
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
+  const [showMatchCelebration, setShowMatchCelebration] = useState(false);
 
   useEffect(() => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
-      toast({
-        title: "🟢 Connected!",
-        description: "You're matched. Let's chat!",
-      });
+      setShowMatchCelebration(true);
+      setTimeout(() => setShowMatchCelebration(false), 2500);
     }
     prevStatusRef.current = status;
-  }, [status, toast]);
+  }, [status]);
 
   const handleStart = () => {
     setShowInterests(false);
@@ -205,6 +205,8 @@ const ChatPage = () => {
         onSendInCallMessage={sendInCallMessage}
         inCallMessages={inCallMessages}
       />
+
+      <MatchCelebration show={showMatchCelebration} matchedInterests={matchedInterests} />
 
       <BottomNav />
     </div>

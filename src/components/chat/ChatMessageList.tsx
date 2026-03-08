@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { CheckCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -133,10 +134,13 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
                 {/* Timestamp */}
                 {msg.sender !== "system" && (
                   <p className={cn(
-                    "text-[9px] mt-1 opacity-40 tabular-nums",
-                    msg.sender === "you" ? "text-right" : "text-left"
+                    "text-[9px] mt-1 opacity-40 tabular-nums flex items-center gap-1",
+                    msg.sender === "you" ? "justify-end" : "justify-start"
                   )}>
                     {format(msg.timestamp, "h:mm a")}
+                    {msg.sender === "you" && (
+                      <CheckCheck className="h-3 w-3 text-primary/60 tick-appear" />
+                    )}
                   </p>
                 )}
               </div>

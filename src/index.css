@@ -158,9 +158,126 @@
     clip-path: polygon(100% 0, 0 100%, 100% 100%);
     border-radius: 0 0 4px 0;
   }
-}
 
-/* Video blur effect */
-.video-blur {
-  filter: blur(8px) brightness(1.05);
+  /* Video background blur effect */
+  .video-blur {
+    filter: blur(10px) saturate(1.5) brightness(1.1);
+    transform: scale(1.15);
+  }
+
+  /* Typing wave dots */
+  @keyframes typing-wave {
+    0%, 60%, 100% {
+      transform: translateY(0);
+      opacity: 0.4;
+    }
+    30% {
+      transform: translateY(-6px);
+      opacity: 1;
+    }
+  }
+
+  .typing-dot {
+    animation: typing-wave 1.4s ease-in-out infinite;
+  }
+
+  .typing-dot:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  .typing-dot:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  /* Match celebration pulse ring */
+  @keyframes match-ring {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(2.5);
+      opacity: 0;
+    }
+  }
+
+  .match-ring {
+    animation: match-ring 1.5s ease-out forwards;
+  }
+
+  /* Shimmer loading effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.08) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  /* Particle float */
+  @keyframes float-up {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-80px) scale(0.5);
+      opacity: 0;
+    }
+  }
+
+  .float-particle {
+    animation: float-up 1.5s ease-out forwards;
+  }
+
+  /* Status bar search shimmer */
+  .search-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .search-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.06),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  /* Message read receipt tick */
+  @keyframes tick-appear {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .tick-appear {
+    animation: tick-appear 0.3s ease-out forwards;
+  }
 }
