@@ -72,6 +72,7 @@ const MessageReactions = ({ messageId, reactions, onReact, isMine, forceOpen, on
                 onClick={() => {
                   onReact(messageId, emoji);
                   setShowPicker(false);
+                  onClose?.();
                 }}
                 className="text-lg hover:scale-130 active:scale-95 transition-transform px-0.5"
               >
