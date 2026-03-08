@@ -574,7 +574,9 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, []);
 
   // Disappearing messages timer
-  const [disappearTimer, setDisappearTimer] = useState<number | null>(null); // seconds
+  const [disappearTimer, setDisappearTimer] = useState<number | null>(null);
+  const disappearTimerRef = useRef(disappearTimer);
+  useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
 
   // Track messages ref for pin lookup
   const messagesRef = useRef(messages);
@@ -592,17 +594,6 @@ export function useChat(callbacks?: ChatCallbacks) {
       }));
     }, 1000);
     return () => clearInterval(interval);
-  }, [disappearTimer]);
-
-  // Override addMessage to add disappearAt
-  const addMessageWithDisappear = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
-    const id = existingId || crypto.randomUUID();
-    const disappearAt = disappearTimer && sender !== "system" ? Date.now() + disappearTimer * 1000 : undefined;
-    setMessages((prev) => [
-      ...prev,
-      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo, disappearAt },
-    ]);
-    return id;
   }, [disappearTimer]);
 
   return {
