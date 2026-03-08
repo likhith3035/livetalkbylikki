@@ -155,7 +155,7 @@ const Index = () => {
                   <Instagram className="h-4 w-4" />
                 </a>
                 <a
-                  href={`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(`${window.location.origin}/room/${roomCode}`)}`}
+                  href={`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(getRoomUrl(roomCode))}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(55_100%_50%)]/10 border border-[hsl(55_100%_50%)]/20 text-[hsl(55_80%_45%)] hover:bg-[hsl(55_100%_50%)]/20 transition-all"
