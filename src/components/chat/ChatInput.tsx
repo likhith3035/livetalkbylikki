@@ -8,6 +8,7 @@ import ImageUploadButton from "@/components/ImageUploadButton";
 import EmojiPicker from "@/components/chat/EmojiPicker";
 import ChatGames from "@/components/chat/ChatGames";
 import ChatPolls from "@/components/chat/ChatPolls";
+import LocationShareButton from "@/components/chat/LocationShareButton";
 import type { ChatStatus, Message } from "@/hooks/use-chat";
 import { useToast } from "@/hooks/use-toast";
 
