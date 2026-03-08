@@ -10,7 +10,9 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
 
 const ChatPage = () => {
+  const { toast } = useToast();
   const { settings } = useSettings();
+  const prevStatusRef = useRef(status);
 
   const chatCallbacks = useMemo(() => ({
     soundEnabled: settings.soundEffects,
