@@ -120,7 +120,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStrangerTyping(false);
             addMessage("stranger", data.text, data.imageUrl);
             playSoundIfEnabled("messageReceived");
-            notifyIfEnabled("Echo", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
+            notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
           }
         })
         .on("broadcast", { event: "typing" }, (payload) => {
