@@ -174,20 +174,32 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
-        setIsMuted(!audioTrack.enabled);
+        const muted = !audioTrack.enabled;
+        setIsMuted(muted);
+        channelRef.current?.send({
+          type: "broadcast",
+          event: "webrtc:state",
+          payload: { senderId: sessionId, key: "muted", value: muted },
+        });
       }
     }
-  }, []);
+  }, [sessionId]);
 
   const toggleCamera = useCallback(() => {
     if (localStreamRef.current) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
-        setIsCameraOff(!videoTrack.enabled);
+        const off = !videoTrack.enabled;
+        setIsCameraOff(off);
+        channelRef.current?.send({
+          type: "broadcast",
+          event: "webrtc:state",
+          payload: { senderId: sessionId, key: "cameraOff", value: off },
+        });
       }
     }
-  }, []);
+  }, [sessionId]);
 
   // Flip camera (front/back)
   const flipCamera = useCallback(async () => {
