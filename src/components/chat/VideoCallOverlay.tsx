@@ -49,7 +49,7 @@ const formatDuration = (seconds: number) => {
 };
 
 const VideoCallOverlay = ({
-  callStatus, localStream, remoteStream,
+  callStatus, isAudioOnly = false, localStream, remoteStream,
   isMuted, isCameraOff, isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
   remoteMuted, remoteCameraOff, remoteBlurred,
   onToggleMute, onToggleCamera, onEndCall, onAccept, onDecline,
