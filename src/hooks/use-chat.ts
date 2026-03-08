@@ -548,11 +548,69 @@ export function useChat(callbacks?: ChatCallbacks) {
     };
   }, []);
 
+  // Delete for everyone
+  const deleteMessage = useCallback((messageId: string) => {
+    setMessages((prev) => prev.map((msg) =>
+      msg.id === messageId ? { ...msg, deleted: true, text: "🚫 This message was deleted", imageUrl: undefined } : msg
+    ));
+    roomChannelRef.current?.send({
+      type: "broadcast",
+      event: "delete_msg",
+      payload: { senderId: sessionId, messageId },
+    });
+  }, []);
+
+  // Pin/unpin message
+  const pinMessage = useCallback((messageId: string) => {
+    setMessages((prev) => prev.map((msg) =>
+      msg.id === messageId ? { ...msg, pinned: !msg.pinned } : msg
+    ));
+    const msg = messagesRef.current?.find((m) => m.id === messageId);
+    roomChannelRef.current?.send({
+      type: "broadcast",
+      event: "pin_msg",
+      payload: { senderId: sessionId, messageId, pinned: !(msg?.pinned) },
+    });
+  }, []);
+
+  // Disappearing messages timer
+  const [disappearTimer, setDisappearTimer] = useState<number | null>(null); // seconds
+
+  // Track messages ref for pin lookup
+  const messagesRef = useRef(messages);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  // Auto-delete expired disappearing messages
+  useEffect(() => {
+    if (!disappearTimer) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setMessages((prev) => prev.filter((msg) => {
+        if (msg.sender === "system") return true;
+        if (!msg.disappearAt) return true;
+        return msg.disappearAt > now;
+      }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [disappearTimer]);
+
+  // Override addMessage to add disappearAt
+  const addMessageWithDisappear = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
+    const id = existingId || crypto.randomUUID();
+    const disappearAt = disappearTimer && sender !== "system" ? Date.now() + disappearTimer * 1000 : undefined;
+    setMessages((prev) => [
+      ...prev,
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo, disappearAt },
+    ]);
+    return id;
+  }, [disappearTimer]);
+
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, searchElapsed, privateRoomCode,
     roomChannel: roomChannelRef.current,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
+    deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
   };
 }
