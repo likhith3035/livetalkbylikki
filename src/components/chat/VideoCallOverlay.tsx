@@ -26,6 +26,9 @@ interface VideoCallOverlayProps {
   remoteIsScreenSharing: boolean;
   isBlurred: boolean;
   facingMode: "user" | "environment";
+  remoteMuted?: boolean;
+  remoteCameraOff?: boolean;
+  remoteBlurred?: boolean;
   onToggleMute: () => void;
   onToggleCamera: () => void;
   onEndCall: () => void;
