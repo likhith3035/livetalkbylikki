@@ -271,6 +271,27 @@ const VideoCallOverlay = ({
             </div>
           )}
 
+          {/* Remote state indicators */}
+          {(remoteMuted || remoteCameraOff || remoteBlurred) && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+              {remoteMuted && (
+                <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  <MicOff className="h-3 w-3" /> Muted
+                </div>
+              )}
+              {remoteCameraOff && (
+                <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  <VideoOff className="h-3 w-3" /> Camera Off
+                </div>
+              )}
+              {remoteBlurred && (
+                <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  <Sparkles className="h-3 w-3" /> Blurred
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Screen share indicator on remote */}
           {remoteIsScreenSharing && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
