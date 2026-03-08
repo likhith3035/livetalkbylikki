@@ -407,15 +407,6 @@ export function useChat(callbacks?: ChatCallbacks) {
     stopChat();
   }, [stopChat]);
 
-  // Private room: create (generates code then uses joinPrivateRoom)
-  const createPrivateRoom = useCallback((): string => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let code = "";
-    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-    joinPrivateRoom(code);
-    return code;
-  }, [joinPrivateRoom]);
-
   // Private room: join by code (works for both creator and joiner)
   const joinPrivateRoom = useCallback((code: string) => {
     clearReconnectTimer();
@@ -490,6 +481,15 @@ export function useChat(callbacks?: ChatCallbacks) {
 
     channelRef.current = privateChannel;
   }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled, clearReconnectTimer]);
+
+  // Private room: create (generates code then uses joinPrivateRoom)
+  const createPrivateRoom = useCallback((): string => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    joinPrivateRoom(code);
+    return code;
+  }, [joinPrivateRoom]);
 
   // Auto-reconnect countdown (only for random chat, not private rooms)
   useEffect(() => {
