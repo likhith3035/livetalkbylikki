@@ -35,7 +35,7 @@ const Index = () => {
 
   const copyLink = async () => {
     if (!roomCode) return;
-    const url = `${window.location.origin}/room/${roomCode}`;
+    const url = getRoomUrl(roomCode);
     await navigator.clipboard.writeText(url);
     setCopied(true);
     toast({ title: "Link copied!", description: "Share it with your friend to connect directly." });
