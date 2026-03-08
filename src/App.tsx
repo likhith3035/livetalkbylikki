@@ -7,6 +7,7 @@ import { SettingsProvider } from "@/contexts/SettingsContext";
 import { AnimatePresence, motion } from "framer-motion";
 import DesktopSidebar from "@/components/DesktopSidebar";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
+import NotificationPrompt from "@/components/NotificationPrompt";
 import Index from "./pages/Index";
 import ChatPage from "./pages/ChatPage";
 import RoomPage from "./pages/RoomPage";
