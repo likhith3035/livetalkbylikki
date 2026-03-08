@@ -6,7 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import ChatPage from "./pages/ChatPage";
 import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
+import { lazy, Suspense } from "react";
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
