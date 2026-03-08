@@ -359,7 +359,7 @@ const InfoPage = () => {
         {/* Footer note */}
         <div className="text-center pb-4">
           <p className="text-[11px] text-muted-foreground/50">
-            Made with ❤️ by L Chat · © 2026
+            Developed by Likhith · © 2026 L Chat
           </p>
         </div>
       </main>

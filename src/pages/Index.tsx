@@ -102,7 +102,7 @@ const Index = () => {
           <span className="cursor-pointer hover:text-foreground transition-colors" onClick={() => navigate("/info")}>Safety</span>
           <span className="cursor-pointer hover:text-foreground transition-colors">Terms</span>
         </div>
-        <p className="text-xs text-muted-foreground/60">© 2026 L Chat. Speak freely.</p>
+        <p className="text-xs text-muted-foreground/60">© 2026 L Chat. Developed by Likhith.</p>
       </footer>
 
       <BottomNav />
