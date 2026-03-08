@@ -140,7 +140,7 @@ const InfoPage = () => {
         <motion.section id="what" {...fadeUp} transition={{ delay: 0.1 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <HelpCircle className="h-5 w-5 text-primary" />
-            What is Echo?
+            What is L Chat?
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Echo is a free website where you can chat with random strangers from all over the world. 
