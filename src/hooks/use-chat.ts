@@ -22,6 +22,8 @@ export interface Message {
   reactions: Record<string, string[]>; // emoji -> senderIds
   senderNickname?: string;
   senderAvatar?: string;
+  read?: boolean;
+  replyTo?: { id: string; text: string; sender: string };
 }
 
 export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
