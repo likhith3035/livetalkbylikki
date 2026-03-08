@@ -30,6 +30,8 @@ interface ChatStatusBarProps {
   onJoinRoom: (code: string) => void;
   disappearTimer?: number | null;
   onSetDisappearTimer?: (t: number | null) => void;
+  onSearchResult?: (messageId: string | null) => void;
+  onThemeChange?: (theme: ChatTheme) => void;
 }
 
 const statusMessages: Record<string, { text: string; hint?: string }> = {
