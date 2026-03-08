@@ -406,6 +406,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       }
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       if (reconnectTimerRef.current) clearInterval(reconnectTimerRef.current);
+      if (searchTimerRef.current) clearInterval(searchTimerRef.current);
     };
   }, []);
 
