@@ -56,6 +56,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const [strangerTyping, setStrangerTyping] = useState(false);
   const [autoReconnectCountdown, setAutoReconnectCountdown] = useState<number | null>(null);
+  const [searchElapsed, setSearchElapsed] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const roomChannelRef = useRef<RealtimeChannel | null>(null);
   const roomIdRef = useRef<string | null>(null);
@@ -63,6 +64,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const interestsRef = useRef<string[]>([]);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const callbacksRef = useRef(callbacks);
 
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
@@ -205,11 +207,25 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   const startChat = useCallback(() => {
     clearReconnectTimer();
+    if (searchTimerRef.current) clearInterval(searchTimerRef.current);
     setMessages([]);
     setMatchedInterests([]);
     setStrangerTyping(false);
     setStatus("searching");
+    setSearchElapsed(0);
     addMessage("system", "Looking for a stranger...");
+
+    // Track search time
+    const startTime = Date.now();
+    searchTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setSearchElapsed(elapsed);
+      if (elapsed === 10) {
+        addMessage("system", "Still searching... hang tight!");
+      } else if (elapsed === 30) {
+        addMessage("system", "Taking a bit longer than usual. Try sharing the link to get more people online!");
+      }
+    }, 1000);
 
     if (channelRef.current) channelRef.current.unsubscribe();
 
@@ -261,6 +277,8 @@ export function useChat(callbacks?: ChatCallbacks) {
         addMessage("system", "You are now connected with a stranger. Say hello!");
       }
       notifyIfEnabled("Echo", "Connected with a stranger!");
+      if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
+      setSearchElapsed(0);
       matchChannel.unsubscribe();
       channelRef.current = null;
     };
@@ -285,6 +303,8 @@ export function useChat(callbacks?: ChatCallbacks) {
             addMessage("system", "You are now connected with a stranger. Say hello!");
           }
           notifyIfEnabled("Echo", "Connected with a stranger!");
+          if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
+          setSearchElapsed(0);
           matchChannel.unsubscribe();
           channelRef.current = null;
         }
@@ -386,12 +406,13 @@ export function useChat(callbacks?: ChatCallbacks) {
       }
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       if (reconnectTimerRef.current) clearInterval(reconnectTimerRef.current);
+      if (searchTimerRef.current) clearInterval(searchTimerRef.current);
     };
   }, []);
 
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping,
-    autoReconnectCountdown, sessionId,
+    autoReconnectCountdown, sessionId, searchElapsed,
     roomChannel: roomChannelRef.current,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger,
