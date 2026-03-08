@@ -355,16 +355,16 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled, clearReconnectTimer]);
 
   const sendMessage = useCallback(
-    (text: string, imageUrl?: string) => {
+    (text: string, imageUrl?: string, replyTo?: Message["replyTo"]) => {
       if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
       const p = getProfile();
       const messageId = crypto.randomUUID();
-      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId);
+      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId, replyTo);
       playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar },
+        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar, replyTo },
       });
     },
     [status, addMessage, playSoundIfEnabled]
