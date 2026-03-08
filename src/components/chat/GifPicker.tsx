@@ -102,7 +102,7 @@ const GifPicker = ({ isConnected, onSendGif }: GifPickerProps) => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-14 left-0 z-50 w-72 sm:w-80 rounded-2xl border border-border bg-card shadow-xl overflow-hidden"
+            className="fixed bottom-28 left-2 right-2 sm:absolute sm:bottom-14 sm:left-0 sm:right-auto z-50 sm:w-80 rounded-2xl border border-border bg-card shadow-xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
