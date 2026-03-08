@@ -207,11 +207,25 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   const startChat = useCallback(() => {
     clearReconnectTimer();
+    if (searchTimerRef.current) clearInterval(searchTimerRef.current);
     setMessages([]);
     setMatchedInterests([]);
     setStrangerTyping(false);
     setStatus("searching");
+    setSearchElapsed(0);
     addMessage("system", "Looking for a stranger...");
+
+    // Track search time
+    const startTime = Date.now();
+    searchTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setSearchElapsed(elapsed);
+      if (elapsed === 10) {
+        addMessage("system", "Still searching... hang tight!");
+      } else if (elapsed === 30) {
+        addMessage("system", "Taking a bit longer than usual. Try sharing the link to get more people online!");
+      }
+    }, 1000);
 
     if (channelRef.current) channelRef.current.unsubscribe();
 
