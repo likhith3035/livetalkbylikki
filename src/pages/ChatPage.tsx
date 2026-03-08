@@ -11,10 +11,18 @@ import { useVideoCall } from "@/hooks/use-video-call";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
 
+interface InCallMessage {
+  id: string;
+  text: string;
+  sender: "you" | "stranger";
+  timestamp: Date;
+}
+
 const ChatPage = () => {
   const { toast } = useToast();
   const { settings } = useSettings();
   const signalingHandlerRef = useRef<((event: string, payload: Record<string, unknown>) => void) | null>(null);
+  const [inCallMessages, setInCallMessages] = useState<InCallMessage[]>([]);
 
   const chatCallbacks = useMemo(() => ({
     soundEnabled: settings.soundEffects,
@@ -34,13 +42,50 @@ const ChatPage = () => {
 
   const onCallEnded = useCallback(() => {
     toast({ title: "📞 Call ended", description: "Video call has ended." });
+    setInCallMessages([]);
   }, [toast]);
 
   const {
     callStatus, localStream, remoteStream, isMuted, isCameraOff,
+    isScreenSharing, isBlurred, facingMode,
     startCall, acceptCall, declineCall, endCall,
-    toggleMute, toggleCamera, handleSignalingEvent, cleanup,
+    toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
+    handleSignalingEvent, cleanup,
   } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded });
+
+  // Handle in-call chat messages via the room channel
+  useEffect(() => {
+    if (!roomChannel) return;
+    const handler = roomChannel.on("broadcast", { event: "incall_chat" }, (payload) => {
+      const data = payload.payload as { senderId: string; text: string };
+      if (data.senderId !== sessionId) {
+        setInCallMessages((prev) => [...prev, {
+          id: crypto.randomUUID(),
+          text: data.text,
+          sender: "stranger",
+          timestamp: new Date(),
+        }]);
+      }
+    });
+    return () => {
+      // Channel cleanup handled by useChat
+    };
+  }, [roomChannel, sessionId]);
+
+  const sendInCallMessage = useCallback((text: string) => {
+    if (!roomChannel) return;
+    setInCallMessages((prev) => [...prev, {
+      id: crypto.randomUUID(),
+      text,
+      sender: "you",
+      timestamp: new Date(),
+    }]);
+    roomChannel.send({
+      type: "broadcast",
+      event: "incall_chat",
+      payload: { senderId: sessionId, text },
+    });
+  }, [roomChannel, sessionId]);
 
   useEffect(() => {
     signalingHandlerRef.current = handleSignalingEvent;
@@ -49,6 +94,7 @@ const ChatPage = () => {
   useEffect(() => {
     if (status !== "connected" && callStatus !== "idle") {
       cleanup();
+      setInCallMessages([]);
     }
   }, [status, callStatus, cleanup]);
 
@@ -144,11 +190,19 @@ const ChatPage = () => {
         remoteStream={remoteStream}
         isMuted={isMuted}
         isCameraOff={isCameraOff}
+        isScreenSharing={isScreenSharing}
+        isBlurred={isBlurred}
+        facingMode={facingMode}
         onToggleMute={toggleMute}
         onToggleCamera={toggleCamera}
         onEndCall={endCall}
         onAccept={acceptCall}
         onDecline={declineCall}
+        onFlipCamera={flipCamera}
+        onToggleScreenShare={toggleScreenShare}
+        onToggleBlur={toggleBlur}
+        onSendInCallMessage={sendInCallMessage}
+        inCallMessages={inCallMessages}
       />
 
       <BottomNav />
