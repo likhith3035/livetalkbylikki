@@ -407,81 +407,14 @@ export function useChat(callbacks?: ChatCallbacks) {
     stopChat();
   }, [stopChat]);
 
-  // Private room: create
+  // Private room: create (generates code then uses joinPrivateRoom)
   const createPrivateRoom = useCallback((): string => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-    setPrivateRoomCode(code);
-    
-    clearReconnectTimer();
-    if (searchTimerRef.current) clearInterval(searchTimerRef.current);
-    setMessages([]);
-    setMatchedInterests([]);
-    setStrangerTyping(false);
-    setStatus("searching");
-    setSearchElapsed(0);
-    addMessage("system", `Waiting for someone to join room ${code}...`);
-
-    if (channelRef.current) channelRef.current.unsubscribe();
-
-    const roomChannel = supabase.channel(`private:${code}`, {
-      config: { presence: { key: sessionId } },
-    });
-
-    roomChannel
-      .on("presence", { event: "join" }, ({ newPresences }) => {
-        const others = newPresences.filter((p: any) => p.presence_ref !== sessionId && (p as any).key !== sessionId);
-        // Check all presence for another user
-        const state = roomChannel.presenceState();
-        const userIds = Object.keys(state).filter((id) => id !== sessionId);
-        if (userIds.length > 0) {
-          const strangerId = userIds[0];
-          const privateRoomId = `private_${code}`;
-          
-          // Creator initiates
-          roomChannel.send({
-            type: "broadcast",
-            event: "room_matched",
-            payload: { roomId: privateRoomId, creator: sessionId, joiner: strangerId },
-          });
-
-          joinRoom(privateRoomId, strangerId);
-          setStatus("connected");
-          setMessages([]);
-          addMessage("system", "Your friend has joined! Say hello!");
-          playSoundIfEnabled("connected");
-          notifyIfEnabled("L Chat", "Friend joined your room!");
-          if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
-          setSearchElapsed(0);
-          roomChannel.unsubscribe();
-          channelRef.current = null;
-        }
-      })
-      .on("broadcast", { event: "room_matched" }, (payload) => {
-        const data = payload.payload as { roomId: string; creator: string; joiner: string };
-        if (data.joiner === sessionId) {
-          joinRoom(data.roomId, data.creator);
-          setStatus("connected");
-          setMessages([]);
-          addMessage("system", "Connected to room! Say hello!");
-          playSoundIfEnabled("connected");
-          notifyIfEnabled("L Chat", "Connected to room!");
-          if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
-          setSearchElapsed(0);
-          roomChannel.unsubscribe();
-          channelRef.current = null;
-        }
-      })
-      .subscribe(async (s) => {
-        if (s === "SUBSCRIBED") {
-          await roomChannel.track({ joined_at: new Date().toISOString() });
-        }
-      });
-
-    channelRef.current = roomChannel;
+    joinPrivateRoom(code);
     return code;
-  }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled, clearReconnectTimer]);
+  }, [joinPrivateRoom]);
 
   // Private room: join by code (works for both creator and joiner)
   const joinPrivateRoom = useCallback((code: string) => {
