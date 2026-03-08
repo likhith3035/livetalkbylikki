@@ -144,6 +144,19 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     setReplyingTo(null);
   };
 
+  const handleThemeChange = useCallback((theme: ChatTheme) => {
+    const root = document.documentElement;
+    root.style.setProperty("--bubble-you", theme.you);
+    root.style.setProperty("--bubble-you-foreground", theme.youFg);
+    root.style.setProperty("--bubble-stranger", theme.stranger);
+    root.style.setProperty("--bubble-stranger-foreground", theme.strangerFg);
+  }, []);
+
+  const handleForwardMessage = useCallback((msg: Message) => {
+    toast({ title: "📋 Message copied", description: "Start a new chat and paste it!" });
+    navigator.clipboard.writeText(msg.text || "📷 Image");
+  }, [toast]);
+
   const handleCreateRoom = (): string => {
     setShowInterests(false);
     return createPrivateRoom();
