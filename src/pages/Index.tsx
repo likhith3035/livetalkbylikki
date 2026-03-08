@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, ArrowRight, Sparkles, Instagram, Linkedin, Mail, Link2, Copy, Check, Hash } from "lucide-react";
+import { MessageSquare, ArrowRight, Sparkles, Instagram, Linkedin, Mail, Link2, Copy, Check, Hash, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -166,6 +166,21 @@ const Index = () => {
                 >
                   <Mail className="h-4 w-4" />
                 </a>
+                {typeof navigator !== "undefined" && "share" in navigator && (
+                  <button
+                    onClick={() => {
+                      navigator.share({
+                        title: "Let's chat anonymously!",
+                        text: "Join me for an anonymous chat on L Chat",
+                        url: `${window.location.origin}/room/${roomCode}`,
+                      }).catch(() => {});
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/50 border border-border text-foreground hover:bg-accent transition-all"
+                    title="More options"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
               <p className="text-[10px] text-muted-foreground text-center">
                 Share the link, then tap "Enter Room" to wait for your friend
