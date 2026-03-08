@@ -137,7 +137,7 @@ const Index = () => {
               <div className="flex items-center justify-center gap-3 pt-1">
                 <span className="text-[10px] text-muted-foreground">Share via</span>
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`Let's chat anonymously! Join me here: ${window.location.origin}/room/${roomCode}`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(`Let's chat anonymously! Join me here: ${getRoomUrl(roomCode)}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(142_70%_45%)]/10 border border-[hsl(142_70%_45%)]/20 text-[hsl(142_70%_45%)] hover:bg-[hsl(142_70%_45%)]/20 transition-all"
