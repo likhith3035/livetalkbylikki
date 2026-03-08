@@ -67,6 +67,7 @@ const App = () => (
         <BrowserRouter>
           <DesktopSidebar />
           <PwaInstallBanner />
+          <NotificationPrompt />
           <div className="lg:pl-[220px]">
             <AnimatedRoutes />
           </div>
