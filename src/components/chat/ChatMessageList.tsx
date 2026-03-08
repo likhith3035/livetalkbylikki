@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { CheckCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, ArrowRight } from "lucide-react";
+import { MessageSquare, ArrowRight, Reply } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
 import MessageReactions from "@/components/MessageReactions";
 import ChatImage from "@/components/chat/ChatImage";
@@ -16,6 +16,7 @@ interface ChatMessageListProps {
   strangerTyping: boolean;
   strangerTypingText?: string;
   onReact: (messageId: string, emoji: string) => void;
+  onReply?: (message: Message) => void;
 }
 
 const messageVariants = {
@@ -36,12 +37,13 @@ const messageVariants = {
 
 const TIPS = [
   "💡 Use **bold** and *italic* in messages",
-  "👆 Swipe a message right to ❤️ react",
+  "👆 Swipe right to ❤️ react, left to reply",
   "😀 Tap the smiley to open the emoji picker",
   "🎤 Hold the mic button to send voice messages",
+  "🎮 Play Tic-Tac-Toe with your stranger!",
 ];
 
-const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact }: ChatMessageListProps) => {
+const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact, onReply }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
   const [longPressedId, setLongPressedId] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,6 +60,15 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
 
   const handleTouchEnd = useCallback(() => {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  }, []);
+
+  const scrollToMessage = useCallback((msgId: string) => {
+    const el = document.getElementById(`msg-${msgId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary/40");
+      setTimeout(() => el.classList.remove("ring-2", "ring-primary/40"), 1500);
+    }
   }, []);
 
   if (messages.length === 0 && !strangerTyping) {
@@ -103,13 +114,14 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
         {messages.map((msg) => (
           <motion.div
             key={msg.id}
+            id={`msg-${msg.id}`}
             custom={msg.sender}
             variants={messageVariants}
             initial="hidden"
             animate="visible"
             layout
             className={cn(
-              "flex flex-col",
+              "flex flex-col transition-all duration-300",
               msg.sender === "you" && "items-end",
               msg.sender === "system" && "items-center"
             )}
@@ -118,6 +130,7 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
               isMine={msg.sender === "you"}
               disabled={msg.sender === "system"}
               onSwipeRight={msg.sender === "stranger" ? () => onReact(msg.id, "❤️") : undefined}
+              onSwipeLeft={msg.sender !== "system" ? () => onReply?.(msg) : undefined}
             >
               {/* Bubble */}
               <div
@@ -143,12 +156,32 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                       : (msg.senderNickname?.trim() || "Stranger")}
                   </p>
                 )}
+
+                {/* Reply quote */}
+                {msg.replyTo && (
+                  <button
+                    onClick={() => scrollToMessage(msg.replyTo!.id)}
+                    className={cn(
+                      "w-full text-left mb-1.5 rounded-lg px-2.5 py-1.5 border-l-2 border-primary/50 flex items-start gap-1.5",
+                      msg.sender === "you" ? "bg-black/10" : "bg-white/10"
+                    )}
+                  >
+                    <Reply className="h-3 w-3 mt-0.5 shrink-0 opacity-50" />
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold opacity-70">
+                        {msg.replyTo.sender === "you" ? "You" : "Stranger"}
+                      </p>
+                      <p className="text-[11px] opacity-70 truncate">{msg.replyTo.text || "📷 Image"}</p>
+                    </div>
+                  </button>
+                )}
+
                 {msg.imageUrl && (
                   <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
                 )}
                 {msg.text && <FormattedText text={msg.text} />}
 
-                {/* Timestamp */}
+                {/* Timestamp + read receipt */}
                 {msg.sender !== "system" && (
                   <p className={cn(
                     "text-[9px] mt-1 opacity-40 tabular-nums flex items-center gap-1",
@@ -156,7 +189,10 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                   )}>
                     {format(msg.timestamp, "h:mm a")}
                     {msg.sender === "you" && (
-                      <CheckCheck className="h-3 w-3 opacity-60 tick-appear" />
+                      <CheckCheck className={cn(
+                        "h-3 w-3 tick-appear transition-colors",
+                        msg.read ? "text-blue-400 opacity-100" : "opacity-60"
+                      )} />
                     )}
                   </p>
                 )}
