@@ -35,7 +35,7 @@ const ChatStatusBar = ({
         />
         <span className="text-xs sm:text-sm text-muted-foreground truncate">
           {status === "idle" && "Ready to chat"}
-          {status === "searching" && "Finding stranger..."}
+          {status === "searching" && `Searching${searchElapsed > 0 ? ` (${searchElapsed}s)` : "..."}`}
           {status === "connected" && "Connected"}
           {status === "disconnected" && (
             autoReconnectCountdown
