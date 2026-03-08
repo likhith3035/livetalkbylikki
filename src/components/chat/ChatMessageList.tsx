@@ -44,22 +44,22 @@ const messageVariants = {
 const TIPS = [
   "💡 Use **bold** and *italic* in messages",
   "👆 Swipe right to ❤️ react, left to reply",
-  "📌 Long-press to pin or delete messages",
+  "📌 Long-press to react, copy & more",
   "🎮 Play games with your stranger!",
   "⏱️ Enable disappearing messages for privacy",
 ];
 
+const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
+
 const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact, onReply, onDelete, onPin, onForward, disappearTimer, highlightMessageId }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
-  const [longPressedId, setLongPressedId] = useState<string | null>(null);
-  const [contextMenuId, setContextMenuId] = useState<string | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, strangerTyping]);
 
-  // Scroll to highlighted search result
   useEffect(() => {
     if (highlightMessageId) {
       const el = document.getElementById(`msg-${highlightMessageId}`);
@@ -71,15 +71,35 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
     }
   }, [highlightMessageId]);
 
+  // Close menu on outside tap
+  useEffect(() => {
+    if (!activeMenuId) return;
+    const handler = (e: TouchEvent | MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-msg-menu]")) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener("touchstart", handler, { passive: true });
+    document.addEventListener("mousedown", handler);
+    return () => {
+      document.removeEventListener("touchstart", handler);
+      document.removeEventListener("mousedown", handler);
+    };
+  }, [activeMenuId]);
+
   const handleTouchStart = useCallback((msgId: string) => {
     longPressTimer.current = setTimeout(() => {
-      setContextMenuId((prev) => (prev === msgId ? null : msgId));
-      setLongPressedId(msgId);
-    }, 500);
+      setActiveMenuId((prev) => (prev === msgId ? null : msgId));
+    }, 400);
   }, []);
 
   const handleTouchEnd = useCallback(() => {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setActiveMenuId(null);
   }, []);
 
   const scrollToMessage = useCallback((msgId: string) => {
@@ -159,7 +179,6 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
         )}
       </AnimatePresence>
 
-      {/* Disappearing messages indicator */}
       {disappearTimer && (
         <div className="flex items-center justify-center gap-1.5 py-1">
           <Timer className="h-3 w-3 text-primary" />
@@ -192,12 +211,77 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
               onSwipeRight={msg.sender === "stranger" ? () => onReact(msg.id, "❤️") : undefined}
               onSwipeLeft={msg.sender !== "system" && !msg.deleted ? () => onReply?.(msg) : undefined}
             >
+              {/* Instagram-style popup menu above bubble */}
+              <AnimatePresence>
+                {activeMenuId === msg.id && msg.sender !== "system" && !msg.deleted && (
+                  <motion.div
+                    data-msg-menu
+                    initial={{ opacity: 0, scale: 0.85, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.85, y: 8 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className={cn(
+                      "absolute bottom-full mb-2 z-30 flex flex-col items-center gap-1.5",
+                      msg.sender === "you" ? "right-0" : "left-0"
+                    )}
+                  >
+                    {/* Emoji reaction row */}
+                    <div className="flex gap-0.5 rounded-full bg-card border border-border px-2 py-1.5 shadow-xl backdrop-blur-sm">
+                      {REACTION_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          onClick={() => { onReact(msg.id, emoji); closeMenu(); }}
+                          className="text-xl hover:scale-125 active:scale-90 transition-transform px-1 py-0.5"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Action buttons */}
+                    <div className="flex gap-0.5 rounded-xl bg-card border border-border shadow-xl p-1 backdrop-blur-sm">
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(msg.text || ""); closeMenu(); }}
+                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <Copy className="h-3 w-3" /> Copy
+                      </button>
+                      <button
+                        onClick={() => { onReply?.(msg); closeMenu(); }}
+                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <ReplyIcon className="h-3 w-3" /> Reply
+                      </button>
+                      <button
+                        onClick={() => { onPin?.(msg.id); closeMenu(); }}
+                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <Pin className="h-3 w-3" /> {msg.pinned ? "Unpin" : "Pin"}
+                      </button>
+                      <button
+                        onClick={() => { onForward?.(msg); closeMenu(); }}
+                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <Forward className="h-3 w-3" /> Forward
+                      </button>
+                      {msg.sender === "you" && (
+                        <button
+                          onClick={() => { onDelete?.(msg.id); closeMenu(); }}
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Trash2 className="h-3 w-3" /> Delete
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Bubble */}
               <div
                 onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
                 onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
                 onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
-                onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setContextMenuId(msg.id); } }}
+                onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
                 className={cn(
                   "relative max-w-[78%] sm:max-w-[70%] px-3 sm:px-3.5 py-2 text-sm leading-relaxed break-words select-none",
                   msg.sender === "you" &&
@@ -208,10 +292,9 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                     "max-w-fit bg-transparent text-muted-foreground text-[11px] text-center italic px-3 py-1",
                   msg.deleted && "opacity-60 italic",
                   msg.pinned && !msg.deleted && "ring-1 ring-primary/30",
-                  longPressedId === msg.id && "ring-2 ring-primary/40"
+                  activeMenuId === msg.id && "ring-2 ring-primary/40"
                 )}
               >
-                {/* Pin indicator */}
                 {msg.pinned && !msg.deleted && msg.sender !== "system" && (
                   <Pin className="absolute -top-1.5 -right-1.5 h-3 w-3 text-primary" />
                 )}
@@ -225,7 +308,6 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                   </p>
                 )}
 
-                {/* Reply quote */}
                 {msg.replyTo && !msg.deleted && (
                   <button
                     onClick={() => scrollToMessage(msg.replyTo!.id)}
@@ -252,7 +334,6 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                 {msg.text && <FormattedText text={msg.text} />}
                 {msg.text && !msg.deleted && msg.sender !== "system" && <LinkPreview text={msg.text} />}
 
-                {/* Timestamp + read receipt */}
                 {msg.sender !== "system" && (
                   <p className={cn(
                     "text-[9px] mt-1 opacity-40 tabular-nums flex items-center gap-1",
@@ -273,74 +354,13 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
               </div>
             </SwipeableMessage>
 
-            {/* Context menu (right-click / long-press) */}
-            <AnimatePresence>
-              {contextMenuId === msg.id && msg.sender !== "system" && !msg.deleted && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className={cn(
-                    "absolute z-20 rounded-xl bg-card border border-border shadow-xl p-1 flex gap-0.5",
-                    msg.sender === "you" ? "right-0 top-full mt-1" : "left-0 top-full mt-1"
-                  )}
-                >
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(msg.text || "");
-                      setContextMenuId(null); setLongPressedId(null);
-                    }}
-                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <Copy className="h-3 w-3" /> Copy
-                  </button>
-                  <button
-                    onClick={() => { onReply?.(msg); setContextMenuId(null); setLongPressedId(null); }}
-                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <ReplyIcon className="h-3 w-3" /> Reply
-                  </button>
-                  <button
-                    onClick={() => { onPin?.(msg.id); setContextMenuId(null); setLongPressedId(null); }}
-                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <Pin className="h-3 w-3" /> {msg.pinned ? "Unpin" : "Pin"}
-                  </button>
-                  {msg.sender === "you" && (
-                    <button
-                      onClick={() => { onDelete?.(msg.id); setContextMenuId(null); setLongPressedId(null); }}
-                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <Trash2 className="h-3 w-3" /> Delete
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { onForward?.(msg); setContextMenuId(null); setLongPressedId(null); }}
-                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <Forward className="h-3 w-3" /> Forward
-                  </button>
-                  <button
-                    onClick={() => { setContextMenuId(null); setLongPressedId(null); }}
-                    className="flex items-center rounded-lg px-1.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary transition-colors"
-                  >
-                    ✕
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
+            {/* Reaction badges below bubble */}
             {msg.sender !== "system" && !msg.deleted && (
               <MessageReactions
                 messageId={msg.id}
                 reactions={msg.reactions}
-                onReact={(id, emoji) => {
-                  onReact(id, emoji);
-                  setLongPressedId(null);
-                }}
+                onReact={onReact}
                 isMine={msg.sender === "you"}
-                forceOpen={longPressedId === msg.id && contextMenuId !== msg.id}
-                onClose={() => setLongPressedId(null)}
               />
             )}
           </motion.div>

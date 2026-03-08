@@ -138,95 +138,11 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
       </AnimatePresence>
 
       <div className="mx-auto flex max-w-3xl gap-1 sm:gap-2 items-center">
-        {/* Collapsible tools on mobile - show only essential buttons */}
         <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
         <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
-        {/* Mobile more button */}
-        {isConnected && (
-          <button
-            onClick={() => setShowMobileTools(!showMobileTools)}
-            className="sm:hidden h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-          >
-            <Plus className={`h-4 w-4 transition-transform ${showMobileTools ? "rotate-45" : ""}`} />
-          </button>
-        )}
-        <div className="hidden sm:flex gap-1 items-center">
-          <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
-          <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
-          <LocationShareButton isConnected={isConnected} onSend={onSend} />
-        </div>
-
-        <AnimatePresence mode="wait">
-          {isRecording ? (
-            <motion.div
-              key="recording"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="flex-1 flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2.5"
-            >
-              <span className="h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
-              <span className="text-sm text-destructive font-medium tabular-nums">
-                {Math.floor(recordingDuration / 60)}:{String(recordingDuration % 60).padStart(2, "0")}
-              </span>
-              <span className="text-xs text-muted-foreground flex-1">Recording...</span>
-            </motion.div>
-          ) : (
-            <motion.input
-              key="input"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              type="text"
-              value={input}
-              onChange={(e) => handleChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder={isConnected ? "Type a message..." : "Connect to start chatting"}
-              disabled={!isConnected}
-              className="flex-1 min-w-0 rounded-xl border border-border bg-secondary/50 px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary/30 disabled:opacity-50 transition-all duration-200"
-            />
-          )}
-        </AnimatePresence>
-
-        {isConnected && !input.trim() && (
-          <Button
-            variant={isRecording ? "destructive" : "ghost"}
-            size="icon"
-            onClick={isRecording ? stopRecording : startRecording}
-            className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
-          >
-            {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-        )}
-
-        {(input.trim() || !isConnected) && (
-          <Button
-            variant="glow"
-            size="icon"
-            onClick={handleSend}
-            disabled={!isConnected || !input.trim()}
-            className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      {/* Mobile tools tray */}
-      <AnimatePresence>
-        {showMobileTools && isConnected && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="sm:hidden mx-auto max-w-3xl mt-1.5 flex gap-1 items-center justify-center"
-          >
-            <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
-            <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
-            <LocationShareButton isConnected={isConnected} onSend={onSend} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
+        <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
+        <LocationShareButton isConnected={isConnected} onSend={onSend} />
     </div>
   );
 };
