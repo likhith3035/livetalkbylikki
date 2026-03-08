@@ -122,7 +122,7 @@ const ChatPage = () => {
   useEffect(() => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
       setShowMatchCelebration(true);
-      setTimeout(() => setShowMatchCelebration(false), 2500);
+      setTimeout(() => setShowMatchCelebration(false), 4000);
     }
     prevStatusRef.current = status;
   }, [status]);
