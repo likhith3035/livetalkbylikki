@@ -3,6 +3,7 @@ import { Send, Mic, Square } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ImageUploadButton from "@/components/ImageUploadButton";
+import EmojiPicker from "@/components/chat/EmojiPicker";
 import type { ChatStatus } from "@/hooks/use-chat";
 import { useToast } from "@/hooks/use-toast";
 
@@ -84,6 +85,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping }: ChatInputProps) 
     <div className="fixed bottom-14 sm:bottom-16 left-0 right-0 glass-heavy z-40 px-3 sm:px-4 py-2.5 sm:py-3">
       <div className="mx-auto flex max-w-2xl gap-1.5 sm:gap-2 items-center">
         <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
+        <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
 
         <AnimatePresence mode="wait">
           {isRecording ? (
