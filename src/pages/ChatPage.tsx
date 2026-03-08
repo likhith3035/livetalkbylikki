@@ -6,6 +6,7 @@ import ChatMessageList from "@/components/chat/ChatMessageList";
 import ChatInput from "@/components/chat/ChatInput";
 import InterestBar from "@/components/chat/InterestBar";
 import VideoCallOverlay from "@/components/chat/VideoCallOverlay";
+import MatchCelebration from "@/components/chat/MatchCelebration";
 import { useChat } from "@/hooks/use-chat";
 import { useVideoCall } from "@/hooks/use-video-call";
 import { useSettings } from "@/contexts/SettingsContext";
