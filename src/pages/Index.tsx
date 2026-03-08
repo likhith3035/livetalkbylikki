@@ -22,6 +22,10 @@ const Index = () => {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Use published URL so shared links always work, not preview/editor URLs
+  const appOrigin = "https://ohmeglebylikki.lovable.app";
+  const getRoomUrl = (code: string) => `${appOrigin}/room/${code}`;
+
   const generateRoomCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
