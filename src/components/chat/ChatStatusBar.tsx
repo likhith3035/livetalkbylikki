@@ -1,4 +1,4 @@
-import { SkipForward, X, Tags, Video, Play, Download, Copy, Timer } from "lucide-react";
+import { SkipForward, X, Tags, Video, Phone, Play, Download, Copy, Timer } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
