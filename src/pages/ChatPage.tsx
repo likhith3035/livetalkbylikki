@@ -14,6 +14,7 @@ import { useVideoCall } from "@/hooks/use-video-call";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 
 interface InCallMessage {
   id: string;
