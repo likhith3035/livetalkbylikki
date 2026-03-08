@@ -141,6 +141,15 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
         {/* Collapsible tools on mobile - show only essential buttons */}
         <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
         <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
+        {/* Mobile more button */}
+        {isConnected && (
+          <button
+            onClick={() => setShowMobileTools(!showMobileTools)}
+            className="sm:hidden h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+          >
+            <Plus className={`h-4 w-4 transition-transform ${showMobileTools ? "rotate-45" : ""}`} />
+          </button>
+        )}
         <div className="hidden sm:flex gap-1 items-center">
           <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
           <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
