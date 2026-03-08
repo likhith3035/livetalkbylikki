@@ -131,12 +131,20 @@ export function useChat(callbacks?: ChatCallbacks) {
 
       channel
         .on("broadcast", { event: "message" }, (payload) => {
-          const data = payload.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string };
+          const data = payload.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string; replyTo?: Message["replyTo"] };
           if (data.senderId !== sessionId) {
             setStrangerTyping(false);
-            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId);
+            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId, data.replyTo);
             playSoundIfEnabled("messageReceived");
             notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
+            // Send read receipt
+            channel.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: data.messageId } });
+          }
+        })
+        .on("broadcast", { event: "read" }, (payload) => {
+          const data = payload.payload as { senderId: string; messageId: string };
+          if (data.senderId !== sessionId) {
+            setMessages((prev) => prev.map((msg) => msg.id === data.messageId ? { ...msg, read: true } : msg));
           }
         })
         .on("broadcast", { event: "typing" }, (payload) => {
