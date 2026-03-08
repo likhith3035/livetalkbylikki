@@ -357,6 +357,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
             cleanup();
           }
           break;
+        }
 
         case "webrtc:decline":
           setCallStatus("idle");
