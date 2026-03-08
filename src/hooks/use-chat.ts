@@ -155,8 +155,17 @@ export function useChat(callbacks?: ChatCallbacks) {
             notifyIfEnabled("Echo", "Stranger has disconnected.");
             leaveRoom();
           }
-        })
-        .subscribe();
+        });
+
+      // WebRTC signaling events
+      const webrtcEvents = ["webrtc:request", "webrtc:accept", "webrtc:decline", "webrtc:offer", "webrtc:answer", "webrtc:ice", "webrtc:end"];
+      webrtcEvents.forEach((evt) => {
+        channel.on("broadcast", { event: evt }, (payload) => {
+          callbacksRef.current?.onSignaling?.(evt, payload.payload as Record<string, unknown>);
+        });
+      });
+
+      channel.subscribe();
 
       roomChannelRef.current = channel;
     },
