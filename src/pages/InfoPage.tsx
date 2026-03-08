@@ -67,7 +67,7 @@ const FAQ = [
   { q: "Do I need to create an account?", a: "Nope! No email, no password, no phone number. Just open the website and start chatting. It's that simple." },
   { q: "Can people see who I am?", a: "No. You are completely anonymous. We don't collect your name, location, or any personal information. The stranger only sees your messages." },
   { q: "Are my messages saved anywhere?", a: "Never. Messages exist only while you're in the chat. The moment either person leaves, everything is permanently deleted. We can't recover them even if we wanted to." },
-  { q: "Is it safe for kids?", a: "Echo is designed for people 18 and older. We recommend parental guidance for younger users. You can always report or block inappropriate behavior." },
+  { q: "Is it safe for kids?", a: "L Chat is designed for people 18 and older. We recommend parental guidance for younger users. You can always report or block inappropriate behavior." },
   { q: "Can I use it on my phone?", a: "Absolutely! It works perfectly on any phone, tablet, or computer. Just open the website in your browser — no app download needed." },
   { q: "What if someone is being mean?", a: "You have full control. You can: 1) Tap \"Next\" to instantly find someone new, 2) Block them so they can never match with you again, or 3) Report them using the menu." },
   { q: "How does interest matching work?", a: "Before chatting, you can add topics you like (gaming, music, cooking, etc.). We'll try to connect you with people who share those interests. If no match is found, you'll still connect with someone random." },
