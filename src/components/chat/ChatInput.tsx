@@ -152,7 +152,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
         )}
         <div className="hidden sm:flex gap-1 items-center">
           <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
-          <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
+          <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
           <LocationShareButton isConnected={isConnected} onSend={onSend} />
         </div>
 
