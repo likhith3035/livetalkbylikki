@@ -35,7 +35,7 @@ const ChatPage = () => {
           <span
             className={cn(
               "h-2 w-2 rounded-full",
-              status === "connected" ? "bg-online" : status === "searching" ? "bg-yellow-500 animate-pulse" : "bg-muted-foreground"
+              status === "connected" ? "bg-online" : status === "searching" ? "bg-warning animate-pulse" : "bg-muted-foreground"
             )}
           />
           <span className="text-sm text-muted-foreground">
