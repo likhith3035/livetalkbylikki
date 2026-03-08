@@ -113,13 +113,14 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     return stream;
   }, []);
 
-  const startCall = useCallback(async () => {
+  const startCall = useCallback(async (audioOnly = false) => {
     if (!channelRef.current) return;
     setCallStatus("requesting");
+    setIsAudioOnly(audioOnly);
     channelRef.current.send({
       type: "broadcast",
       event: "webrtc:request",
-      payload: { senderId: sessionId },
+      payload: { senderId: sessionId, audioOnly },
     });
   }, [sessionId]);
 
