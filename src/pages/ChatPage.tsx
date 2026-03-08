@@ -135,7 +135,8 @@ const ChatPage = () => {
   useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
 
   const handleImageUpload = (url: string) => {
-    sendMessage("", url);
+    sendMessage("", url, replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.sender } : undefined);
+    setReplyingTo(null);
   };
 
   const handleCreateRoom = (): string => {
