@@ -300,4 +300,23 @@
   .chat-wallpaper-gradient {
     background: linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--accent) / 0.04), hsl(var(--primary) / 0.06));
   }
+
+  .chat-wallpaper-bubbles {
+    background-image: radial-gradient(circle at 20% 50%, currentColor 2px, transparent 2px),
+                      radial-gradient(circle at 80% 30%, currentColor 3px, transparent 3px),
+                      radial-gradient(circle at 50% 80%, currentColor 1.5px, transparent 1.5px);
+    background-size: 60px 60px;
+  }
+
+  .chat-wallpaper-stars {
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z' fill='currentColor' fill-opacity='0.3'/%3E%3C/svg%3E");
+    background-size: 40px 40px;
+  }
+
+  .chat-wallpaper-zigzag {
+    background-image: linear-gradient(135deg, currentColor 25%, transparent 25%),
+                      linear-gradient(225deg, currentColor 25%, transparent 25%);
+    background-size: 20px 10px;
+    background-position: 0 0, 10px 0;
+  }
 }
