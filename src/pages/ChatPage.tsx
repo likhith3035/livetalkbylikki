@@ -7,10 +7,12 @@ import ChatInput from "@/components/chat/ChatInput";
 import InterestBar from "@/components/chat/InterestBar";
 import VideoCallOverlay from "@/components/chat/VideoCallOverlay";
 import MatchCelebration from "@/components/chat/MatchCelebration";
+import ChatWallpaper from "@/components/chat/ChatWallpaper";
 import { useChat } from "@/hooks/use-chat";
 import { useVideoCall } from "@/hooks/use-video-call";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 interface InCallMessage {
   id: string;
