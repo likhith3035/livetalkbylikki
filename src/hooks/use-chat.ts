@@ -57,6 +57,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [strangerTyping, setStrangerTyping] = useState(false);
   const [autoReconnectCountdown, setAutoReconnectCountdown] = useState<number | null>(null);
   const [searchElapsed, setSearchElapsed] = useState(0);
+  const [privateRoomCode, setPrivateRoomCode] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const roomChannelRef = useRef<RealtimeChannel | null>(null);
   const roomIdRef = useRef<string | null>(null);
