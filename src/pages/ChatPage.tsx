@@ -7,10 +7,12 @@ import ChatInput from "@/components/chat/ChatInput";
 import InterestBar from "@/components/chat/InterestBar";
 import VideoCallOverlay from "@/components/chat/VideoCallOverlay";
 import MatchCelebration from "@/components/chat/MatchCelebration";
+import ChatWallpaper from "@/components/chat/ChatWallpaper";
 import { useChat } from "@/hooks/use-chat";
 import { useVideoCall } from "@/hooks/use-video-call";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 interface InCallMessage {
   id: string;
@@ -123,10 +125,12 @@ const ChatPage = () => {
     prevStatusRef.current = status;
   }, [status]);
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     setShowInterests(false);
     startChat();
-  };
+  }, [startChat]);
+
+  useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
 
   const handleImageUpload = (url: string) => {
     sendMessage("", url);
@@ -143,7 +147,8 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background">
+    <div className="flex min-h-[100dvh] flex-col bg-background relative">
+      <ChatWallpaper />
       <div className="lg:hidden">
         <Header onlineCount={onlineCount} />
       </div>
@@ -153,6 +158,7 @@ const ChatPage = () => {
         matchedInterests={matchedInterests}
         autoReconnectCountdown={autoReconnectCountdown}
         searchElapsed={searchElapsed}
+        messages={messages}
         onToggleInterests={() => setShowInterests(!showInterests)}
         showInterests={showInterests}
         onNext={nextChat}

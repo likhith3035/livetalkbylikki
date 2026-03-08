@@ -1,16 +1,20 @@
-import { SkipForward, X, Tags, Video, Play } from "lucide-react";
+import { SkipForward, X, Tags, Video, Play, Download, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
 import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
 import { cn } from "@/lib/utils";
 import type { ChatStatus } from "@/hooks/use-chat";
+import type { Message } from "@/hooks/use-chat";
+import { exportChatAsText, copyToClipboard, downloadAsFile } from "@/lib/chat-export";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatStatusBarProps {
   status: ChatStatus;
   matchedInterests: string[];
   autoReconnectCountdown: number | null;
   searchElapsed: number;
+  messages?: Message[];
   onToggleInterests: () => void;
   showInterests: boolean;
   onNext: () => void;
@@ -32,10 +36,26 @@ const statusMessages: Record<string, { text: string; hint?: string }> = {
 
 const ChatStatusBar = ({
   status, matchedInterests, autoReconnectCountdown, searchElapsed,
+  messages = [],
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
   onVideoCall, isVideoCallActive, onCreateRoom, onJoinRoom,
 }: ChatStatusBarProps) => {
   const statusInfo = statusMessages[status] || statusMessages.idle;
+  const { toast } = useToast();
+
+  const handleCopyChat = async () => {
+    if (messages.length === 0) return;
+    const text = exportChatAsText(messages);
+    const ok = await copyToClipboard(text);
+    toast({ title: ok ? "📋 Copied!" : "Failed to copy", description: ok ? "Chat copied to clipboard" : "Try downloading instead" });
+  };
+
+  const handleDownloadChat = () => {
+    if (messages.length === 0) return;
+    const text = exportChatAsText(messages);
+    downloadAsFile(text, `lchat-${Date.now()}.txt`);
+    toast({ title: "💾 Downloaded!", description: "Chat saved as text file" });
+  };
 
   return (
     <div className={cn(
@@ -119,6 +139,18 @@ const ChatStatusBar = ({
             <Video className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Video</span>
           </Button>
+        )}
+
+        {/* Export buttons */}
+        {messages.length > 0 && (status === "connected" || status === "disconnected") && (
+          <>
+            <Button variant="ghost" size="sm" onClick={handleCopyChat} className="gap-1 h-8 px-2 text-xs" title="Copy chat to clipboard">
+              <Copy className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleDownloadChat} className="gap-1 h-8 px-2 text-xs" title="Download chat as text">
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </>
         )}
 
         {(status === "connected" || status === "disconnected") && (
