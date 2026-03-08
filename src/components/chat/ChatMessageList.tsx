@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { Check, CheckCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
