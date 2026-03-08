@@ -275,6 +275,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
         localStreamRef.current?.addTrack(screenTrack);
         setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
         setIsScreenSharing(true);
+        // Notify remote
+        channelRef.current?.send({
+          type: "broadcast",
+          event: "webrtc:screenshare",
+          payload: { senderId: sessionId, sharing: true },
+        });
       } catch {
         // User cancelled screen share picker
       }
