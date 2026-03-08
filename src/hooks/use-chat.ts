@@ -29,10 +29,12 @@ export function useChat() {
   const onlineCount = useOnlineCount();
   const [interests, setInterests] = useState<string[]>([]);
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
+  const [strangerTyping, setStrangerTyping] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const roomChannelRef = useRef<RealtimeChannel | null>(null);
   const roomIdRef = useRef<string | null>(null);
   const interestsRef = useRef<string[]>([]);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     interestsRef.current = interests;
@@ -51,6 +53,8 @@ export function useChat() {
       roomChannelRef.current = null;
     }
     roomIdRef.current = null;
+    setStrangerTyping(false);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
   }, []);
 
   const joinRoom = useCallback(
@@ -64,7 +68,16 @@ export function useChat() {
         .on("broadcast", { event: "message" }, (payload) => {
           const data = payload.payload as { senderId: string; text: string };
           if (data.senderId !== sessionId) {
+            setStrangerTyping(false);
             addMessage("stranger", data.text);
+          }
+        })
+        .on("broadcast", { event: "typing" }, (payload) => {
+          const data = payload.payload as { senderId: string };
+          if (data.senderId !== sessionId) {
+            setStrangerTyping(true);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => setStrangerTyping(false), 3000);
           }
         })
         .on("broadcast", { event: "leave" }, (payload) => {
@@ -82,9 +95,20 @@ export function useChat() {
     [addMessage, leaveRoom]
   );
 
+  const sendTyping = useCallback(() => {
+    if (roomChannelRef.current) {
+      roomChannelRef.current.send({
+        type: "broadcast",
+        event: "typing",
+        payload: { senderId: sessionId },
+      });
+    }
+  }, []);
+
   const startChat = useCallback(() => {
     setMessages([]);
     setMatchedInterests([]);
+    setStrangerTyping(false);
     setStatus("searching");
     addMessage("system", "Looking for a stranger...");
 
@@ -224,11 +248,12 @@ export function useChat() {
         });
         roomChannelRef.current.unsubscribe();
       }
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, []);
 
   return {
-    messages, status, onlineCount, interests, matchedInterests,
-    setInterests, startChat, sendMessage, nextChat, stopChat,
+    messages, status, onlineCount, interests, matchedInterests, strangerTyping,
+    setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
   };
 }
