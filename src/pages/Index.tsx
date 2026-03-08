@@ -98,8 +98,8 @@ const Index = () => {
 
       <footer className="pb-20 text-center space-y-3">
         <div className="flex justify-center gap-8 text-sm text-muted-foreground">
-          <span className="cursor-pointer hover:text-foreground transition-colors">About</span>
-          <span className="cursor-pointer hover:text-foreground transition-colors">Safety</span>
+          <span className="cursor-pointer hover:text-foreground transition-colors" onClick={() => navigate("/info")}>About</span>
+          <span className="cursor-pointer hover:text-foreground transition-colors" onClick={() => navigate("/info")}>Safety</span>
           <span className="cursor-pointer hover:text-foreground transition-colors">Terms</span>
         </div>
         <p className="text-xs text-muted-foreground/60">© 2026 Echo Labs. Speak freely.</p>

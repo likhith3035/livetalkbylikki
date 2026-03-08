@@ -27,6 +27,7 @@ const App = () => (
             <Route path="/room/:code" element={<RoomPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/info" element={<InfoPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
