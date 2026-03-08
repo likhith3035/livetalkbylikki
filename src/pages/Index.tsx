@@ -320,6 +320,112 @@ const Index = () => {
         </div>
       </section>
 
+      {/* ═══════════ CONNECT WITH FRIEND ═══════════ */}
+      <section className="px-6 py-20 sm:py-28 relative overflow-hidden">
+        <div className="absolute inset-0 animated-gradient-bg opacity-30 pointer-events-none" />
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14 sm:mb-20"
+          >
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-5"
+            >
+              <Link2 className="h-3.5 w-3.5" /> Private Rooms
+            </motion.span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-display text-foreground leading-tight">
+              Chat with <span className="text-gradient">your friend</span>
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-lg mx-auto text-base sm:text-lg">
+              Create a private room and share the link — no sign-ups, no hassle.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-3 gap-6 sm:gap-0 relative">
+            {/* Connecting lines (desktop) */}
+            <div className="hidden sm:block absolute top-10 left-[calc(33.33%+8px)] right-[calc(33.33%+8px)] h-px bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40" />
+
+            {[
+              {
+                num: "1",
+                icon: Link2,
+                title: "Create a Room",
+                desc: 'Click "Invite a Friend" or use the Room button in chat to generate a unique 6-character code.',
+                color: "primary",
+              },
+              {
+                num: "2",
+                icon: Share2,
+                title: "Share the Link",
+                desc: "Send the room code or link via WhatsApp, Instagram, Telegram, or any way you like.",
+                color: "primary",
+              },
+              {
+                num: "3",
+                icon: MessageSquare,
+                title: "Start Chatting!",
+                desc: "Once your friend joins, you're instantly connected. Chat, call, play games — all private.",
+                color: "primary",
+              },
+            ].map((step, i) => (
+              <motion.div
+                key={step.num}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15, type: "spring", stiffness: 200 }}
+                className="relative text-center group px-4"
+              >
+                {/* Step number circle */}
+                <div className="relative mx-auto mb-5">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 border-2 border-primary/20 mx-auto group-hover:scale-110 group-hover:bg-primary/15 group-hover:border-primary/30 transition-all duration-500">
+                    <step.icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg shadow-primary/30">
+                    {step.num}
+                  </div>
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[260px] mx-auto">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-14"
+          >
+            <Button
+              variant="glow"
+              size="lg"
+              className="h-14 px-10 text-base font-semibold rounded-2xl gap-2.5 shadow-xl shadow-primary/20"
+              onClick={generateAndJoinRoom}
+            >
+              <Link2 className="h-5 w-5" />
+              Create a Private Room
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 px-8 text-base font-medium rounded-2xl gap-2.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300"
+              onClick={() => navigate("/chat")}
+            >
+              Or Chat with a Stranger
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ═══════════ TESTIMONIALS ═══════════ */}
       <section className="px-6 py-20 sm:py-28">
         <div className="max-w-5xl mx-auto">
