@@ -54,7 +54,23 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+
+      // Pick a supported MIME type (mp4 for Safari, webm for others)
+      const mimeType = MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : "";
+
+      if (!mimeType) {
+        toast({ title: "Voice messages not supported", description: "Your browser doesn't support audio recording.", variant: "destructive" });
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
       recordingDurationRef.current = 0;
@@ -71,12 +87,12 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
 
         if (chunksRef.current.length === 0 || dur === 0) return;
 
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        // Upload to storage
-        const fileName = `voice_${Date.now()}.webm`;
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const ext = mimeType.includes("mp4") ? "m4a" : "webm";
+        const fileName = `voice_${Date.now()}.${ext}`;
         const { data, error } = await supabase.storage
           .from("chat-images")
-          .upload(fileName, blob, { contentType: "audio/webm" });
+          .upload(fileName, blob, { contentType: mimeType });
 
         if (error) {
           toast({ title: "Upload failed", description: error.message, variant: "destructive" });
