@@ -97,7 +97,7 @@ const SettingsPage = () => {
             type="button"
             onClick={() =>
               toast({
-                title: "Echo",
+                title: "L Chat",
                 description: "v1.0 — Speak freely",
               })
             }
