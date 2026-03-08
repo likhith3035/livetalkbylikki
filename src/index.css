@@ -159,3 +159,8 @@
     border-radius: 0 0 4px 0;
   }
 }
+
+/* Video blur effect */
+.video-blur {
+  filter: blur(8px) brightness(1.05);
+}
