@@ -20,6 +20,7 @@ interface ChatCallbacks {
   soundEnabled: boolean;
   notificationsEnabled: boolean;
   autoReconnect: boolean;
+  onSignaling?: (event: string, payload: Record<string, unknown>) => void;
 }
 
 const getSessionId = () => {
@@ -154,8 +155,17 @@ export function useChat(callbacks?: ChatCallbacks) {
             notifyIfEnabled("Echo", "Stranger has disconnected.");
             leaveRoom();
           }
-        })
-        .subscribe();
+        });
+
+      // WebRTC signaling events
+      const webrtcEvents = ["webrtc:request", "webrtc:accept", "webrtc:decline", "webrtc:offer", "webrtc:answer", "webrtc:ice", "webrtc:end"];
+      webrtcEvents.forEach((evt) => {
+        channel.on("broadcast", { event: evt }, (payload) => {
+          callbacksRef.current?.onSignaling?.(evt, payload.payload as Record<string, unknown>);
+        });
+      });
+
+      channel.subscribe();
 
       roomChannelRef.current = channel;
     },
@@ -381,7 +391,8 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping,
-    autoReconnectCountdown,
+    autoReconnectCountdown, sessionId,
+    roomChannel: roomChannelRef.current,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger,
   };
