@@ -11,7 +11,7 @@ interface ChatInputProps {
   status: ChatStatus;
   onSend: (text: string, imageUrl?: string) => void;
   onImageUpload: (url: string) => void;
-  onTyping: () => void;
+  onTyping: (text?: string) => void;
 }
 
 const ChatInput = ({ status, onSend, onImageUpload, onTyping }: ChatInputProps) => {
