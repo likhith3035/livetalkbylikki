@@ -227,7 +227,7 @@ const InfoPage = () => {
         <motion.section id="settings" {...fadeUp} transition={{ delay: 0.25 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground">⚙️ Settings & preferences</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            You can customize Echo to work the way you like. Find these in the Settings page (tap the gear icon at the bottom).
+            You can customize L Chat to work the way you like. Find these in the Settings page (tap the gear icon at the bottom).
           </p>
           <div className="grid gap-3">
             {SETTINGS_INFO.map((item, i) => (
