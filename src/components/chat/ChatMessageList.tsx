@@ -42,10 +42,22 @@ const TIPS = [
 
 const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
+  const [longPressedId, setLongPressedId] = useState<string | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, strangerTyping]);
+
+  const handleTouchStart = useCallback((msgId: string) => {
+    longPressTimer.current = setTimeout(() => {
+      setLongPressedId((prev) => (prev === msgId ? null : msgId));
+    }, 500);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  }, []);
 
   if (messages.length === 0 && !strangerTyping) {
     return (
