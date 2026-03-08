@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useOnlineCount } from "./use-online-count";
 import { sounds } from "@/lib/sounds";
-import { sendNotification } from "@/lib/notifications";
+import { sendNotification, type NotificationType } from "@/lib/notifications";
 
 const getProfile = () => {
   try {
@@ -105,8 +105,8 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.soundEnabled) sounds[sound]();
   }, []);
 
-  const notifyIfEnabled = useCallback((title: string, body: string) => {
-    if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body);
+  const notifyIfEnabled = useCallback((title: string, body: string, type: NotificationType = "general") => {
+    if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body, type);
   }, []);
 
   const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
@@ -146,7 +146,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStrangerTyping(false);
             addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId, data.replyTo);
             playSoundIfEnabled("messageReceived");
-            notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
+            notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100), "message");
             // Send read receipt
             channel.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: data.messageId } });
           }
@@ -193,7 +193,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStatus("disconnected");
             addMessage("system", "Stranger has disconnected.");
             playSoundIfEnabled("disconnected");
-            notifyIfEnabled("L Chat", "Stranger has disconnected.");
+            notifyIfEnabled("L Chat", "Stranger has disconnected.", "disconnected");
             leaveRoom();
           }
         })
@@ -311,7 +311,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       } else {
         addMessage("system", "You are now connected with a stranger. Say hello!");
       }
-      notifyIfEnabled("L Chat", "Connected with a stranger!");
+      notifyIfEnabled("L Chat", "Connected with a stranger!", "connected");
       if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
       setSearchElapsed(0);
 
@@ -460,7 +460,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       setMessages([]);
       addMessage("system", "Connected! Say hello! 👋");
       playSoundIfEnabled("connected");
-      notifyIfEnabled("L Chat", "Your friend joined!");
+      notifyIfEnabled("L Chat", "Your friend joined!", "connected");
       if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
       setSearchElapsed(0);
       setTimeout(() => {
