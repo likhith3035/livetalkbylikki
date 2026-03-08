@@ -417,7 +417,7 @@ export function useChat(callbacks?: ChatCallbacks) {
           setMessages([]);
           addMessage("system", "Your friend has joined! Say hello!");
           playSoundIfEnabled("connected");
-          notifyIfEnabled("Echo", "Friend joined your room!");
+          notifyIfEnabled("L Chat", "Friend joined your room!");
           if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
           setSearchElapsed(0);
           roomChannel.unsubscribe();
