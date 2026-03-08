@@ -110,7 +110,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
   const isConnected = status === "connected";
 
   return (
-    <div className="fixed bottom-14 lg:bottom-0 left-0 lg:left-[220px] right-0 glass-heavy z-40 px-3 sm:px-4 py-2.5 sm:py-3">
+    <div className="fixed bottom-14 lg:bottom-0 left-0 lg:left-[220px] right-0 glass-heavy z-40 px-2 sm:px-4 py-2 sm:py-3">
       {/* Reply preview */}
       <AnimatePresence>
         {replyingTo && (
@@ -136,12 +136,15 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
         )}
       </AnimatePresence>
 
-      <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2 items-center">
+      <div className="mx-auto flex max-w-3xl gap-1 sm:gap-2 items-center">
+        {/* Collapsible tools on mobile - show only essential buttons */}
         <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
         <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
-        <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
-        <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
-        <LocationShareButton isConnected={isConnected} onSend={onSend} />
+        <div className="hidden sm:flex gap-1 items-center">
+          <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
+          <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
+          <LocationShareButton isConnected={isConnected} onSend={onSend} />
+        </div>
 
         <AnimatePresence mode="wait">
           {isRecording ? (
