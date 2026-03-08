@@ -98,13 +98,27 @@ const Index = () => {
         <FeatureBadges />
       </main>
 
-      <footer className="pb-20 text-center space-y-3">
+      <footer className="pb-20 text-center space-y-4">
         <div className="flex justify-center gap-8 text-sm text-muted-foreground">
           <span className="cursor-pointer hover:text-foreground transition-colors" onClick={() => navigate("/info")}>About</span>
           <span className="cursor-pointer hover:text-foreground transition-colors" onClick={() => navigate("/info")}>Safety</span>
           <span className="cursor-pointer hover:text-foreground transition-colors">Terms</span>
         </div>
-        <p className="text-xs text-muted-foreground/60">© 2026 L Chat. Developed by Likhith.</p>
+
+        {/* Social links */}
+        <div className="flex justify-center gap-4">
+          <a href="https://instagram.com/Lucky__likhith" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/60 border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all duration-200" aria-label="Instagram">
+            <Instagram className="h-4 w-4" />
+          </a>
+          <a href="https://www.linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/60 border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all duration-200" aria-label="LinkedIn">
+            <Linkedin className="h-4 w-4" />
+          </a>
+          <a href="mailto:kamilikhith@gmail.com" className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/60 border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all duration-200" aria-label="Email">
+            <Mail className="h-4 w-4" />
+          </a>
+        </div>
+
+        <p className="text-xs text-muted-foreground/60">© 2026 L Chat. Developed with 💜 by <a href="https://www.linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer" className="text-primary/70 hover:text-primary transition-colors">Likhith Kami</a></p>
       </footer>
 
       <BottomNav />
