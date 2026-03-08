@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import ChatStatusBar from "@/components/chat/ChatStatusBar";
@@ -7,8 +7,10 @@ import ChatInput from "@/components/chat/ChatInput";
 import InterestBar from "@/components/chat/InterestBar";
 import { useChat } from "@/hooks/use-chat";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useToast } from "@/hooks/use-toast";
 
 const ChatPage = () => {
+  const { toast } = useToast();
   const { settings } = useSettings();
 
   const chatCallbacks = useMemo(() => ({
@@ -24,7 +26,18 @@ const ChatPage = () => {
     reactToMessage, blockStranger,
   } = useChat(chatCallbacks);
 
+  const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
+
+  useEffect(() => {
+    if (status === "connected" && prevStatusRef.current !== "connected") {
+      toast({
+        title: "🟢 Connected!",
+        description: "You're matched with a stranger. Let's chat!",
+      });
+    }
+    prevStatusRef.current = status;
+  }, [status, toast]);
 
   const handleStart = () => {
     setShowInterests(false);
