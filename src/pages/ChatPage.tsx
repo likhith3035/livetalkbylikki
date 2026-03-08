@@ -175,6 +175,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         isVideoCallActive={callStatus !== "idle"}
         onCreateRoom={handleCreateRoom}
         onJoinRoom={handleJoinRoom}
+        disappearTimer={disappearTimer}
+        onSetDisappearTimer={setDisappearTimer}
       />
 
       <InterestBar
