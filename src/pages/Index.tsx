@@ -115,14 +115,14 @@ const Index = () => {
               variant="outline"
               size="lg"
               className="w-full h-12 text-sm font-medium rounded-2xl gap-2 border-primary/30 hover:border-primary/50"
-              onClick={generateRoomCode}
+              onClick={generateAndJoinRoom}
             >
               <Link2 className="h-4 w-4 text-primary" />
               Share Link to Chat with a Friend
             </Button>
           ) : (
-            <div className="space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-              <p className="text-xs font-medium text-muted-foreground text-center">Your private room code</p>
+            <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-xs font-semibold text-foreground text-center">🔗 Your private room is ready!</p>
               <div className="flex items-center gap-2 rounded-xl bg-secondary border border-border p-3">
                 <Hash className="h-4 w-4 text-primary shrink-0" />
                 <span className="font-mono text-lg font-bold tracking-widest text-foreground flex-1">
@@ -132,18 +132,25 @@ const Index = () => {
                   {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
-              <div className="flex gap-2">
-                <Button onClick={copyLink} variant="secondary" size="sm" className="flex-1 gap-1.5 text-xs">
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy Link
-                </Button>
-                <Button onClick={joinMyRoom} variant="glow" size="sm" className="flex-1 gap-1.5 text-xs">
-                  <ArrowRight className="h-3.5 w-3.5" />
-                  Enter Room
-                </Button>
+
+              {/* How to connect guide */}
+              <div className="space-y-1.5 rounded-xl bg-secondary/40 border border-border/50 p-3">
+                <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider">How to connect</p>
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <span className="text-xs">1️⃣</span> Share the link via any app below
+                  </p>
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <span className="text-xs">2️⃣</span> Tap <strong className="text-foreground">"Share & Enter Room"</strong>
+                  </p>
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <span className="text-xs">3️⃣</span> Your friend opens the link → you're connected!
+                  </p>
+                </div>
               </div>
+
               {/* Share via apps */}
-              <div className="flex items-center justify-center gap-3 pt-1">
+              <div className="flex items-center justify-center gap-3">
                 <span className="text-[10px] text-muted-foreground">Share via</span>
                 <a
                   href={`https://wa.me/?text=${encodeURIComponent(`Let's chat anonymously! Join me here: ${getRoomUrl(roomCode)}`)}`}
@@ -195,9 +202,12 @@ const Index = () => {
                   </button>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground text-center">
-                Share the link, then tap "Enter Room" to wait for your friend
-              </p>
+
+              {/* Main action: share & enter */}
+              <Button onClick={shareAndJoin} variant="glow" className="w-full gap-2 h-11">
+                <ArrowRight className="h-4 w-4" />
+                Share & Enter Room
+              </Button>
             </div>
           )}
         </motion.div>
