@@ -578,7 +578,6 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   // Disappearing messages timer
   const [disappearTimer, setDisappearTimer] = useState<number | null>(null);
-  const disappearTimerRef = useRef(disappearTimer);
   useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
 
   // Track messages ref for pin lookup
