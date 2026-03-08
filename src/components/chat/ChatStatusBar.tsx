@@ -48,7 +48,7 @@ const ChatStatusBar = ({
   status, matchedInterests, autoReconnectCountdown, searchElapsed,
   messages = [],
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
-  onVideoCall, isVideoCallActive, onCreateRoom, onJoinRoom,
+  onVideoCall, onAudioCall, isVideoCallActive, onCreateRoom, onJoinRoom,
   disappearTimer, onSetDisappearTimer,
   onSearchResult, onThemeChange,
 }: ChatStatusBarProps) => {
