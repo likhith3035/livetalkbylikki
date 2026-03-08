@@ -25,6 +25,10 @@ const LinkPreview = ({ text }: LinkPreviewProps) => {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(url, "_blank", "noopener,noreferrer");
+            }}
             className="flex items-center gap-2 rounded-lg bg-secondary/60 border border-border/50 px-2.5 py-1.5 text-[11px] text-primary hover:bg-secondary transition-colors group"
           >
             <ExternalLink className="h-3 w-3 shrink-0 opacity-60 group-hover:opacity-100" />
