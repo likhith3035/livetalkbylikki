@@ -25,6 +25,7 @@ interface ChatInputProps {
 
 const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId }: ChatInputProps) => {
   const [input, setInput] = useState("");
+  const [showMobileTools, setShowMobileTools] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const throttleRef = useRef<number>(0);
