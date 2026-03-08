@@ -446,27 +446,31 @@ const VideoCallOverlay = ({
             >
               {/* Top row: extra controls */}
               <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
-                <ControlButton
-                  onClick={onFlipCamera}
-                  active={false}
-                  icon={<SwitchCamera className="h-4 w-4" />}
-                  label="Flip"
-                  small
-                />
-                <ControlButton
-                  onClick={onToggleScreenShare}
-                  active={isScreenSharing}
-                  icon={isScreenSharing ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
-                  label={isScreenSharing ? "Stop" : "Share"}
-                  small
-                />
-                <ControlButton
-                  onClick={onToggleBlur}
-                  active={isBlurred}
-                  icon={<Sparkles className="h-4 w-4" />}
-                  label="Blur"
-                  small
-                />
+                {!isAudioOnly && (
+                  <>
+                    <ControlButton
+                      onClick={onFlipCamera}
+                      active={false}
+                      icon={<SwitchCamera className="h-4 w-4" />}
+                      label="Flip"
+                      small
+                    />
+                    <ControlButton
+                      onClick={onToggleScreenShare}
+                      active={isScreenSharing}
+                      icon={isScreenSharing ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
+                      label={isScreenSharing ? "Stop" : "Share"}
+                      small
+                    />
+                    <ControlButton
+                      onClick={onToggleBlur}
+                      active={isBlurred}
+                      icon={<Sparkles className="h-4 w-4" />}
+                      label="Blur"
+                      small
+                    />
+                  </>
+                )}
                 <ControlButton
                   onClick={() => setShowChat(!showChat)}
                   active={showChat}
@@ -474,13 +478,15 @@ const VideoCallOverlay = ({
                   label="Chat"
                   small
                 />
-                <ControlButton
-                  onClick={togglePiP}
-                  active={isPiP}
-                  icon={<PictureInPicture2 className="h-4 w-4" />}
-                  label="PiP"
-                  small
-                />
+                {!isAudioOnly && (
+                  <ControlButton
+                    onClick={togglePiP}
+                    active={isPiP}
+                    icon={<PictureInPicture2 className="h-4 w-4" />}
+                    label="PiP"
+                    small
+                  />
+                )}
               </div>
 
               {/* Main row */}
@@ -490,11 +496,13 @@ const VideoCallOverlay = ({
                   active={isMuted}
                   icon={isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                 />
-                <ControlButton
-                  onClick={onToggleCamera}
-                  active={isCameraOff}
-                  icon={isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-                />
+                {!isAudioOnly && (
+                  <ControlButton
+                    onClick={onToggleCamera}
+                    active={isCameraOff}
+                    icon={isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+                  />
+                )}
                 <button
                   onClick={onEndCall}
                   className="flex items-center justify-center h-14 w-14 rounded-full bg-destructive text-destructive-foreground shadow-lg active:bg-destructive/90 transition-colors"
