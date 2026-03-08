@@ -60,7 +60,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatG
   // Tic-Tac-Toe state — synced via broadcast
   const [board, setBoard] = useState<TicTacToeCell[]>(Array(9).fill(null));
   const [mySymbol, setMySymbol] = useState<"X" | "O" | null>(null);
-  const [currentTurn, setCurrentTurn] = useState<"X">("X");
+  const [currentTurn, setCurrentTurn] = useState<"X" | "O">("X");
   const winner = checkWinner(board);
   const isDraw = !winner && board.every((c) => c !== null);
 
