@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { Video, VideoOff, Mic, MicOff, PhoneOff, Phone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,20 +22,25 @@ const VideoCallOverlay = ({
   isMuted, isCameraOff,
   onToggleMute, onToggleCamera, onEndCall, onAccept, onDecline,
 }: VideoCallOverlayProps) => {
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useCallback(
+    (node: HTMLVideoElement | null) => {
+      if (node && localStream) {
+        node.srcObject = localStream;
+        node.play().catch(() => {});
+      }
+    },
+    [localStream]
+  );
 
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-    }
-  }, [localStream]);
-
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-    }
-  }, [remoteStream]);
+  const remoteVideoRef = useCallback(
+    (node: HTMLVideoElement | null) => {
+      if (node && remoteStream) {
+        node.srcObject = remoteStream;
+        node.play().catch(() => {});
+      }
+    },
+    [remoteStream]
+  );
 
   // Incoming call prompt
   if (callStatus === "incoming") {
