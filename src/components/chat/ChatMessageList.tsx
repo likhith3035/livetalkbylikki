@@ -20,7 +20,9 @@ interface ChatMessageListProps {
   onReply?: (message: Message) => void;
   onDelete?: (messageId: string) => void;
   onPin?: (messageId: string) => void;
+  onForward?: (message: Message) => void;
   disappearTimer?: number | null;
+  highlightMessageId?: string | null;
 }
 
 const messageVariants = {
