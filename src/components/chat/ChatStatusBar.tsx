@@ -36,10 +36,26 @@ const statusMessages: Record<string, { text: string; hint?: string }> = {
 
 const ChatStatusBar = ({
   status, matchedInterests, autoReconnectCountdown, searchElapsed,
+  messages = [],
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
   onVideoCall, isVideoCallActive, onCreateRoom, onJoinRoom,
 }: ChatStatusBarProps) => {
   const statusInfo = statusMessages[status] || statusMessages.idle;
+  const { toast } = useToast();
+
+  const handleCopyChat = async () => {
+    if (messages.length === 0) return;
+    const text = exportChatAsText(messages);
+    const ok = await copyToClipboard(text);
+    toast({ title: ok ? "📋 Copied!" : "Failed to copy", description: ok ? "Chat copied to clipboard" : "Try downloading instead" });
+  };
+
+  const handleDownloadChat = () => {
+    if (messages.length === 0) return;
+    const text = exportChatAsText(messages);
+    downloadAsFile(text, `lchat-${Date.now()}.txt`);
+    toast({ title: "💾 Downloaded!", description: "Chat saved as text file" });
+  };
 
   return (
     <div className={cn(
