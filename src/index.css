@@ -42,6 +42,17 @@
     --gradient-primary: linear-gradient(135deg, hsl(265 90% 50%), hsl(280 90% 60%));
     --gradient-button: linear-gradient(135deg, hsl(265 90% 45%), hsl(285 85% 55%));
     --shadow-glow: 0 0 30px hsl(265 90% 55% / 0.2);
+
+    /* Glass tokens */
+    --glass-bg: 260 25% 96% / 0.7;
+    --glass-border: 260 20% 85% / 0.5;
+    --glass-blur: 16px;
+
+    /* Bubble tokens */
+    --bubble-you: 265 90% 55%;
+    --bubble-you-foreground: 0 0% 100%;
+    --bubble-stranger: 260 20% 92%;
+    --bubble-stranger-foreground: 270 20% 20%;
   }
 
   /* ─── Dark Mode ─── */
@@ -79,6 +90,17 @@
     --gradient-primary: linear-gradient(135deg, hsl(265 90% 55%), hsl(280 90% 65%));
     --gradient-button: linear-gradient(135deg, hsl(265 90% 50%), hsl(285 85% 60%));
     --shadow-glow: 0 0 30px hsl(265 90% 60% / 0.3);
+
+    /* Glass tokens */
+    --glass-bg: 270 25% 12% / 0.6;
+    --glass-border: 270 20% 25% / 0.4;
+    --glass-blur: 20px;
+
+    /* Bubble tokens */
+    --bubble-you: 265 90% 55%;
+    --bubble-you-foreground: 0 0% 100%;
+    --bubble-stranger: 270 20% 18%;
+    --bubble-stranger-foreground: 0 0% 92%;
   }
 }
 
@@ -97,5 +119,43 @@
 @layer utilities {
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  .glass-heavy {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  .bubble-tail-right::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: -6px;
+    width: 12px;
+    height: 12px;
+    background: hsl(var(--bubble-you));
+    clip-path: polygon(0 0, 0 100%, 100% 100%);
+    border-radius: 0 0 0 4px;
+  }
+
+  .bubble-tail-left::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -6px;
+    width: 12px;
+    height: 12px;
+    background: hsl(var(--bubble-stranger));
+    clip-path: polygon(100% 0, 0 100%, 100% 100%);
+    border-radius: 0 0 4px 0;
   }
 }
