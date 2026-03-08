@@ -4,21 +4,23 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import InterestSelector from "@/components/InterestSelector";
+import TypingIndicator from "@/components/TypingIndicator";
 import { useChat } from "@/hooks/use-chat";
 import { cn } from "@/lib/utils";
 
 const ChatPage = () => {
   const {
-    messages, status, onlineCount, interests, matchedInterests,
-    setInterests, startChat, sendMessage, nextChat, stopChat,
+    messages, status, onlineCount, interests, matchedInterests, strangerTyping,
+    setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
   } = useChat();
   const [input, setInput] = useState("");
   const [showInterests, setShowInterests] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingThrottleRef = useRef<number>(0);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, strangerTyping]);
 
   const handleStart = () => {
     setShowInterests(false);
@@ -29,6 +31,16 @@ const ChatPage = () => {
     if (!input.trim()) return;
     sendMessage(input);
     setInput("");
+  };
+
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    // Throttle typing events to once per second
+    const now = Date.now();
+    if (now - typingThrottleRef.current > 1000) {
+      typingThrottleRef.current = now;
+      sendTyping();
+    }
   };
 
   return (
@@ -86,14 +98,13 @@ const ChatPage = () => {
         </div>
       </div>
 
-      {/* Interest selector (shown when idle) */}
+      {/* Interest selector */}
       {showInterests && status === "idle" && (
         <div className="border-b border-border px-5 py-4">
           <InterestSelector selected={interests} onChange={setInterests} />
         </div>
       )}
 
-      {/* Selected interests chips (when not idle) */}
       {interests.length > 0 && status !== "idle" && !showInterests && (
         <div className="flex items-center gap-2 border-b border-border px-5 py-2">
           <Tags className="h-3.5 w-3.5 text-muted-foreground" />
@@ -113,7 +124,7 @@ const ChatPage = () => {
           <div
             key={msg.id}
             className={cn(
-              "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
+              "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm animate-fade-in",
               msg.sender === "you" && "ml-auto bg-primary text-primary-foreground rounded-br-md",
               msg.sender === "stranger" && "bg-secondary text-secondary-foreground rounded-bl-md",
               msg.sender === "system" && "mx-auto max-w-fit bg-transparent text-muted-foreground text-xs text-center italic"
@@ -127,6 +138,7 @@ const ChatPage = () => {
             {msg.text}
           </div>
         ))}
+        {strangerTyping && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
 
@@ -136,7 +148,7 @@ const ChatPage = () => {
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder={status === "connected" ? "Type a message..." : "Connect to start chatting"}
             disabled={status !== "connected"}
