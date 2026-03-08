@@ -118,8 +118,11 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
                 )}
               >
                 {msg.sender !== "system" && (
-                  <p className="text-[10px] font-semibold opacity-60 mb-0.5 tracking-wide uppercase">
-                    {msg.sender === "you" ? "You" : "Stranger"}
+                  <p className="text-[10px] font-semibold opacity-60 mb-0.5 tracking-wide uppercase flex items-center gap-1">
+                    {msg.senderAvatar && <span className="text-xs">{msg.senderAvatar}</span>}
+                    {msg.sender === "you" 
+                      ? (msg.senderNickname?.trim() || "You") 
+                      : (msg.senderNickname?.trim() || "Stranger")}
                   </p>
                 )}
                 {msg.imageUrl && (

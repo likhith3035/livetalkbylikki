@@ -5,6 +5,14 @@ import { useOnlineCount } from "./use-online-count";
 import { sounds } from "@/lib/sounds";
 import { sendNotification } from "@/lib/notifications";
 
+const getProfile = () => {
+  try {
+    const raw = localStorage.getItem("lchat.profile");
+    if (raw) return JSON.parse(raw) as { nickname: string; avatar: string };
+  } catch {}
+  return { nickname: "", avatar: "😀" };
+};
+
 export interface Message {
   id: string;
   sender: "you" | "stranger" | "system";
@@ -12,6 +20,8 @@ export interface Message {
   imageUrl?: string;
   timestamp: Date;
   reactions: Record<string, string[]>; // emoji -> senderIds
+  senderNickname?: string;
+  senderAvatar?: string;
 }
 
 export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
@@ -87,10 +97,10 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body);
   }, []);
 
-  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string) => {
+  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string) => {
     setMessages((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), sender, text, imageUrl, timestamp: new Date(), reactions: {} },
+      { id: crypto.randomUUID(), sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar },
     ]);
   }, []);
 
@@ -115,10 +125,10 @@ export function useChat(callbacks?: ChatCallbacks) {
 
       channel
         .on("broadcast", { event: "message" }, (payload) => {
-          const data = payload.payload as { senderId: string; text: string; imageUrl?: string };
+          const data = payload.payload as { senderId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string };
           if (data.senderId !== sessionId) {
             setStrangerTyping(false);
-            addMessage("stranger", data.text, data.imageUrl);
+            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar);
             playSoundIfEnabled("messageReceived");
             notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
           }
@@ -325,12 +335,13 @@ export function useChat(callbacks?: ChatCallbacks) {
   const sendMessage = useCallback(
     (text: string, imageUrl?: string) => {
       if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
-      addMessage("you", text.trim(), imageUrl);
+      const p = getProfile();
+      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar);
       playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, text: text.trim(), imageUrl },
+        payload: { senderId: sessionId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar },
       });
     },
     [status, addMessage, playSoundIfEnabled]
