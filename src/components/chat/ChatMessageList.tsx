@@ -47,12 +47,7 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
               </p>
             )}
             {msg.imageUrl && (
-              <img
-                src={msg.imageUrl}
-                alt="Shared image"
-                className="max-w-full rounded-lg mb-1 max-h-48 sm:max-h-60 object-cover"
-                loading="lazy"
-              />
+              <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
             )}
             {msg.text && <span className="break-words">{msg.text}</span>}
           </div>
