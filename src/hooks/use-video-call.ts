@@ -128,7 +128,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     if (!channelRef.current) return;
     try {
       setCallStatus("connecting");
-      const stream = await getMedia();
+      const stream = await getMedia("user", isAudioOnly);
       const pc = createPeerConnection();
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
@@ -140,13 +140,13 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       channelRef.current.send({
         type: "broadcast",
         event: "webrtc:accept",
-        payload: { senderId: sessionId },
+        payload: { senderId: sessionId, audioOnly: isAudioOnly },
       });
     } catch {
       setCallStatus("idle");
       cleanup();
     }
-  }, [sessionId, getMedia, createPeerConnection, cleanup]);
+  }, [sessionId, isAudioOnly, getMedia, createPeerConnection, cleanup]);
 
   const declineCall = useCallback(() => {
     if (channelRef.current) {
