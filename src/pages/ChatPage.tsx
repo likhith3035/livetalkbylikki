@@ -102,22 +102,24 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     }
   }, [status, callStatus, cleanup]);
 
-  // Auto-join private room from URL
-  const joinedRoomRef = useRef(false);
-  useEffect(() => {
-    if (joinedRoomRef.current) return;
-    const pendingCode = sessionStorage.getItem("echo_join_room");
-    if (pendingCode && status === "idle") {
-      joinedRoomRef.current = true;
-      sessionStorage.removeItem("echo_join_room");
-      joinPrivateRoom(pendingCode);
-    }
-  }, [status, joinPrivateRoom]);
-
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const lastAutoJoinCodeRef = useRef<string | null>(null);
+
+  // Auto-join private room from URL/code
+  useEffect(() => {
+    const storedCode = sessionStorage.getItem("echo_join_room");
+    const pendingCode = (initialRoomCode || storedCode || "").toUpperCase();
+    if (!pendingCode) return;
+    if (lastAutoJoinCodeRef.current === pendingCode) return;
+
+    lastAutoJoinCodeRef.current = pendingCode;
+    sessionStorage.removeItem("echo_join_room");
+    setShowInterests(false);
+    joinPrivateRoom(pendingCode);
+  }, [initialRoomCode, joinPrivateRoom]);
 
   useEffect(() => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
