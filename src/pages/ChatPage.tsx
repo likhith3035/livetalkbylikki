@@ -191,6 +191,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         strangerTypingText={strangerTypingText}
         onReact={reactToMessage}
         onReply={(msg) => setReplyingTo(msg)}
+        onDelete={deleteMessage}
+        onPin={pinMessage}
+        disappearTimer={disappearTimer}
       />
 
       <ChatInput
