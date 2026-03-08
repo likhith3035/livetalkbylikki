@@ -197,6 +197,8 @@ const ChatPage = () => {
         onTyping={sendTyping}
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
+        roomChannel={roomChannel}
+        sessionId={sessionId}
       />
 
       <VideoCallOverlay
