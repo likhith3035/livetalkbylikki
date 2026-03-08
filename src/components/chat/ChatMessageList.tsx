@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer } from "lucide-react";
+import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -7,6 +7,7 @@ import MessageReactions from "@/components/MessageReactions";
 import ChatImage from "@/components/chat/ChatImage";
 import FormattedText from "@/components/chat/FormattedText";
 import SwipeableMessage from "@/components/chat/SwipeableMessage";
+import LinkPreview from "@/components/chat/LinkPreview";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Message } from "@/hooks/use-chat";
@@ -19,7 +20,9 @@ interface ChatMessageListProps {
   onReply?: (message: Message) => void;
   onDelete?: (messageId: string) => void;
   onPin?: (messageId: string) => void;
+  onForward?: (message: Message) => void;
   disappearTimer?: number | null;
+  highlightMessageId?: string | null;
 }
 
 const messageVariants = {
@@ -46,7 +49,7 @@ const TIPS = [
   "⏱️ Enable disappearing messages for privacy",
 ];
 
-const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact, onReply, onDelete, onPin, disappearTimer }: ChatMessageListProps) => {
+const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact, onReply, onDelete, onPin, onForward, disappearTimer, highlightMessageId }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
   const [longPressedId, setLongPressedId] = useState<string | null>(null);
   const [contextMenuId, setContextMenuId] = useState<string | null>(null);
@@ -55,6 +58,18 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, strangerTyping]);
+
+  // Scroll to highlighted search result
+  useEffect(() => {
+    if (highlightMessageId) {
+      const el = document.getElementById(`msg-${highlightMessageId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary/60");
+        setTimeout(() => el.classList.remove("ring-2", "ring-primary/60"), 2000);
+      }
+    }
+  }, [highlightMessageId]);
 
   const handleTouchStart = useCallback((msgId: string) => {
     longPressTimer.current = setTimeout(() => {
@@ -235,6 +250,7 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                   <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
                 ) : null}
                 {msg.text && <FormattedText text={msg.text} />}
+                {msg.text && !msg.deleted && msg.sender !== "system" && <LinkPreview text={msg.text} />}
 
                 {/* Timestamp + read receipt */}
                 {msg.sender !== "system" && (
@@ -289,6 +305,12 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                       <Trash2 className="h-3 w-3" /> Delete
                     </button>
                   )}
+                  <button
+                    onClick={() => { onForward?.(msg); setContextMenuId(null); setLongPressedId(null); }}
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <Forward className="h-3 w-3" /> Forward
+                  </button>
                   <button
                     onClick={() => { setContextMenuId(null); setLongPressedId(null); }}
                     className="flex items-center rounded-lg px-1.5 py-1.5 text-[11px] text-muted-foreground hover:bg-secondary transition-colors"

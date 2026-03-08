@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
 import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
+import ChatSearchBar from "@/components/chat/ChatSearchBar";
+import ChatThemePicker from "@/components/chat/ChatThemePicker";
+import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { cn } from "@/lib/utils";
 import type { ChatStatus } from "@/hooks/use-chat";
 import type { Message } from "@/hooks/use-chat";
@@ -27,6 +30,8 @@ interface ChatStatusBarProps {
   onJoinRoom: (code: string) => void;
   disappearTimer?: number | null;
   onSetDisappearTimer?: (t: number | null) => void;
+  onSearchResult?: (messageId: string | null) => void;
+  onThemeChange?: (theme: ChatTheme) => void;
 }
 
 const statusMessages: Record<string, { text: string; hint?: string }> = {
@@ -42,6 +47,7 @@ const ChatStatusBar = ({
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
   onVideoCall, isVideoCallActive, onCreateRoom, onJoinRoom,
   disappearTimer, onSetDisappearTimer,
+  onSearchResult, onThemeChange,
 }: ChatStatusBarProps) => {
   const statusInfo = statusMessages[status] || statusMessages.idle;
   const { toast } = useToast();
@@ -162,7 +168,13 @@ const ChatStatusBar = ({
               <Timer className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{disappearTimer ? `${disappearTimer}s` : ""}</span>
             </Button>
+            {onThemeChange && <ChatThemePicker onApply={onThemeChange} />}
           </>
+        )}
+
+        {/* Search */}
+        {messages.length > 0 && (status === "connected" || status === "disconnected") && onSearchResult && (
+          <ChatSearchBar messages={messages} onSearchResult={onSearchResult} />
         )}
 
         {/* Export buttons */}

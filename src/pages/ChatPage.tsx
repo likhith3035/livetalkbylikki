@@ -14,6 +14,7 @@ import { useVideoCall } from "@/hooks/use-video-call";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 
 interface InCallMessage {
   id: string;
@@ -107,6 +108,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [showInterests, setShowInterests] = useState(true);
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [searchHighlight, setSearchHighlight] = useState<string | null>(null);
   const lastAutoJoinCodeRef = useRef<string | null>(null);
 
   // Auto-join private room from URL/code
@@ -141,6 +143,19 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     sendMessage("", url, replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.sender } : undefined);
     setReplyingTo(null);
   };
+
+  const handleThemeChange = useCallback((theme: ChatTheme) => {
+    const root = document.documentElement;
+    root.style.setProperty("--bubble-you", theme.you);
+    root.style.setProperty("--bubble-you-foreground", theme.youFg);
+    root.style.setProperty("--bubble-stranger", theme.stranger);
+    root.style.setProperty("--bubble-stranger-foreground", theme.strangerFg);
+  }, []);
+
+  const handleForwardMessage = useCallback((msg: Message) => {
+    toast({ title: "📋 Message copied", description: "Start a new chat and paste it!" });
+    navigator.clipboard.writeText(msg.text || "📷 Image");
+  }, [toast]);
 
   const handleCreateRoom = (): string => {
     setShowInterests(false);
@@ -177,6 +192,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onJoinRoom={handleJoinRoom}
         disappearTimer={disappearTimer}
         onSetDisappearTimer={setDisappearTimer}
+        onSearchResult={setSearchHighlight}
+        onThemeChange={handleThemeChange}
       />
 
       <InterestBar
@@ -195,7 +212,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onReply={(msg) => setReplyingTo(msg)}
         onDelete={deleteMessage}
         onPin={pinMessage}
+        onForward={handleForwardMessage}
         disappearTimer={disappearTimer}
+        highlightMessageId={searchHighlight}
       />
 
       <ChatInput
