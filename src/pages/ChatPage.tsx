@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import type { Message } from "@/hooks/use-chat";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import ChatStatusBar from "@/components/chat/ChatStatusBar";
