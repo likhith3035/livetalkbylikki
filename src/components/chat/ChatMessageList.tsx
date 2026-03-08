@@ -59,6 +59,18 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, strangerTyping]);
 
+  // Scroll to highlighted search result
+  useEffect(() => {
+    if (highlightMessageId) {
+      const el = document.getElementById(`msg-${highlightMessageId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary/60");
+        setTimeout(() => el.classList.remove("ring-2", "ring-primary/60"), 2000);
+      }
+    }
+  }, [highlightMessageId]);
+
   const handleTouchStart = useCallback((msgId: string) => {
     longPressTimer.current = setTimeout(() => {
       setContextMenuId((prev) => (prev === msgId ? null : msgId));
