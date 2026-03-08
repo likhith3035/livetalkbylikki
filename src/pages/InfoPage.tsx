@@ -325,8 +325,8 @@ const InfoPage = () => {
           <h2 className="text-lg font-semibold text-foreground">🎉 Fun facts about L Chat</h2>
           <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20 p-5 space-y-3">
             {[
-              "🚀 Echo connects you in under 5 seconds (usually!)",
-              "🌍 People from all around the world use Echo every day",
+              "🚀 L Chat connects you in under 5 seconds (usually!)",
+              "🌍 People from all around the world use L Chat every day",
               "💬 You can send emojis, images, and even make video calls",
               "🔒 Zero data is stored — we literally can't read your chats",
               "📱 Works on any device with a web browser",
