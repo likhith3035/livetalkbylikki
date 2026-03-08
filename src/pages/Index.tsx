@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import FeatureBadges from "@/components/FeatureBadges";
 import BottomNav from "@/components/BottomNav";
-import { useChat } from "@/hooks/use-chat";
+import { useOnlineCount } from "@/hooks/use-online-count";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { onlineCount } = useChat();
+  const onlineCount = useOnlineCount();
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

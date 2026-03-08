@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useOnlineCount } from "./use-online-count";
 
 interface Message {
   id: string;
@@ -25,7 +26,7 @@ const sessionId = getSessionId();
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ChatStatus>("idle");
-  const [onlineCount, setOnlineCount] = useState(0);
+  const onlineCount = useOnlineCount();
   const [interests, setInterests] = useState<string[]>([]);
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -33,7 +34,6 @@ export function useChat() {
   const roomIdRef = useRef<string | null>(null);
   const interestsRef = useRef<string[]>([]);
 
-  // Keep ref in sync
   useEffect(() => {
     interestsRef.current = interests;
   }, [interests]);
@@ -43,26 +43,6 @@ export function useChat() {
       ...prev,
       { id: crypto.randomUUID(), sender, text, timestamp: new Date() },
     ]);
-  }, []);
-
-  // Track online presence
-  useEffect(() => {
-    const channel = supabase.channel("online-users", {
-      config: { presence: { key: sessionId } },
-    });
-
-    channel
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState();
-        setOnlineCount(Object.keys(state).length);
-      })
-      .subscribe(async (s) => {
-        if (s === "SUBSCRIBED") {
-          await channel.track({ online_at: new Date().toISOString() });
-        }
-      });
-
-    return () => { channel.unsubscribe(); };
   }, []);
 
   const leaveRoom = useCallback(() => {
@@ -123,7 +103,6 @@ export function useChat() {
 
       if (waitingUsers.length === 0) return;
 
-      // Score users by shared interests
       type Candidate = { id: string; shared: string[]; score: number };
       const candidates: Candidate[] = waitingUsers.map((uid) => {
         const presenceData = state[uid]?.[0] as { interests?: string[] } | undefined;
@@ -132,7 +111,6 @@ export function useChat() {
         return { id: uid, shared, score: shared.length };
       });
 
-      // Sort by most shared interests, then pick first
       candidates.sort((a, b) => b.score - a.score);
       const best = candidates[0];
 
