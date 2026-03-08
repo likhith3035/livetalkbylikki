@@ -5,6 +5,14 @@ import { useOnlineCount } from "./use-online-count";
 import { sounds } from "@/lib/sounds";
 import { sendNotification } from "@/lib/notifications";
 
+const getProfile = () => {
+  try {
+    const raw = localStorage.getItem("lchat.profile");
+    if (raw) return JSON.parse(raw) as { nickname: string; avatar: string };
+  } catch {}
+  return { nickname: "", avatar: "😀" };
+};
+
 export interface Message {
   id: string;
   sender: "you" | "stranger" | "system";
