@@ -320,7 +320,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
       localStreamRef.current.addTrack(videoTrack);
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
       setIsAudioOnly(false);
-      // Signal remote to expect video
+      onCallUpgraded?.();
       channelRef.current?.send({
         type: "broadcast",
         event: "webrtc:upgrade-video",
