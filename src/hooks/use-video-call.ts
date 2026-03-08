@@ -407,6 +407,15 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
           break;
         }
 
+        case "webrtc:state": {
+          const key = payload.key as string;
+          const value = payload.value as boolean;
+          if (key === "muted") setRemoteMuted(value);
+          else if (key === "cameraOff") setRemoteCameraOff(value);
+          else if (key === "blurred") setRemoteBlurred(value);
+          break;
+        }
+
         case "webrtc:end":
           cleanup();
           setCallStatus("idle");
