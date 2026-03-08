@@ -166,8 +166,13 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
               <MessageReactions
                 messageId={msg.id}
                 reactions={msg.reactions}
-                onReact={onReact}
+                onReact={(id, emoji) => {
+                  onReact(id, emoji);
+                  setLongPressedId(null);
+                }}
                 isMine={msg.sender === "you"}
+                forceOpen={longPressedId === msg.id}
+                onClose={() => setLongPressedId(null)}
               />
             )}
           </motion.div>
