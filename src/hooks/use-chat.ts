@@ -460,7 +460,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       setMessages([]);
       addMessage("system", "Connected! Say hello! 👋");
       playSoundIfEnabled("connected");
-      notifyIfEnabled("L Chat", "Your friend joined!");
+      notifyIfEnabled("L Chat", "Your friend joined!", "connected");
       if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
       setSearchElapsed(0);
       setTimeout(() => {
