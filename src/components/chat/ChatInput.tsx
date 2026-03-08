@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { Send, Mic, Square, X, Reply } from "lucide-react";
+import { Send, Mic, Square, X, Reply, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ImageUploadButton from "@/components/ImageUploadButton";
@@ -25,6 +25,7 @@ interface ChatInputProps {
 
 const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId }: ChatInputProps) => {
   const [input, setInput] = useState("");
+  const [showMobileTools, setShowMobileTools] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const throttleRef = useRef<number>(0);
@@ -110,7 +111,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
   const isConnected = status === "connected";
 
   return (
-    <div className="fixed bottom-14 lg:bottom-0 left-0 lg:left-[220px] right-0 glass-heavy z-40 px-3 sm:px-4 py-2.5 sm:py-3">
+    <div className="fixed bottom-14 lg:bottom-0 left-0 lg:left-[220px] right-0 glass-heavy z-40 px-2 sm:px-4 py-2 sm:py-3">
       {/* Reply preview */}
       <AnimatePresence>
         {replyingTo && (
@@ -136,12 +137,24 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
         )}
       </AnimatePresence>
 
-      <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2 items-center">
+      <div className="mx-auto flex max-w-3xl gap-1 sm:gap-2 items-center">
+        {/* Collapsible tools on mobile - show only essential buttons */}
         <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
         <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
-        <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
-        <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
-        <LocationShareButton isConnected={isConnected} onSend={onSend} />
+        {/* Mobile more button */}
+        {isConnected && (
+          <button
+            onClick={() => setShowMobileTools(!showMobileTools)}
+            className="sm:hidden h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+          >
+            <Plus className={`h-4 w-4 transition-transform ${showMobileTools ? "rotate-45" : ""}`} />
+          </button>
+        )}
+        <div className="hidden sm:flex gap-1 items-center">
+          <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
+          <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
+          <LocationShareButton isConnected={isConnected} onSend={onSend} />
+        </div>
 
         <AnimatePresence mode="wait">
           {isRecording ? (
@@ -198,6 +211,22 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
           </Button>
         )}
       </div>
+
+      {/* Mobile tools tray */}
+      <AnimatePresence>
+        {showMobileTools && isConnected && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="sm:hidden mx-auto max-w-3xl mt-1.5 flex gap-1 items-center justify-center"
+          >
+            <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
+            <ChatPolls isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} onSendMessage={onSend} />
+            <LocationShareButton isConnected={isConnected} onSend={onSend} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

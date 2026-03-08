@@ -70,11 +70,11 @@ const ChatStatusBar = ({
 
   return (
     <div className={cn(
-      "flex items-center justify-between border-b border-border/50 px-3 sm:px-5 py-2.5 gap-2 glass transition-all duration-300",
+      "flex items-center justify-between border-b border-border/50 px-2 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2 glass transition-all duration-300",
       status === "searching" && "search-shimmer"
     )}>
       {/* Status indicator */}
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
         <span
           className={cn(
             "h-2.5 w-2.5 rounded-full shrink-0 transition-colors duration-300",
@@ -119,7 +119,7 @@ const ChatStatusBar = ({
       </div>
 
       {/* Action buttons with labels */}
-      <div className="flex gap-1 sm:gap-1.5 items-center shrink-0">
+      <div className="flex gap-0.5 sm:gap-1.5 items-center shrink-0 overflow-x-auto max-w-[50vw] sm:max-w-none scrollbar-none">
         {status === "idle" && (
           <>
             <Button
