@@ -33,9 +33,9 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping }: ChatInputProps) 
   const handleChange = (value: string) => {
     setInput(value);
     const now = Date.now();
-    if (now - throttleRef.current > 1000) {
+    if (now - throttleRef.current > 500) {
       throttleRef.current = now;
-      onTyping();
+      onTyping(value);
     }
   };
 
