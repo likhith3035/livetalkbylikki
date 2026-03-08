@@ -25,7 +25,7 @@ const LocationShareButton = ({ isConnected, onSend }: LocationShareButtonProps) 
         const lat = latitude.toFixed(4);
         const lng = longitude.toFixed(4);
         const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        onSend(`📍 Shared location: ${lat}, ${lng}\n${mapsUrl}`);
+        onSend(`📍 Location shared!\nCoordinates: ${lat}, ${lng}\n🗺️ Open in Google Maps: ${mapsUrl}`);
         setLoading(false);
       },
       (err) => {
