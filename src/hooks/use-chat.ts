@@ -76,6 +76,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const matchedGuardRef = useRef(false);
   const callbacksRef = useRef(callbacks);
 
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
@@ -219,6 +220,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const startChat = useCallback(() => {
     clearReconnectTimer();
     if (searchTimerRef.current) clearInterval(searchTimerRef.current);
+    matchedGuardRef.current = false;
     setMessages([]);
     setMatchedInterests([]);
     setStrangerTyping(false);
@@ -245,7 +247,41 @@ export function useChat(callbacks?: ChatCallbacks) {
       config: { presence: { key: sessionId } },
     });
 
+    const handleMatched = (roomId: string, strangerId: string, sharedInterests: string[]) => {
+      // Guard: prevent double-match
+      if (matchedGuardRef.current) return;
+      matchedGuardRef.current = true;
+
+      if (blocked.includes(strangerId)) {
+        matchedGuardRef.current = false;
+        return;
+      }
+
+      joinRoom(roomId, strangerId);
+      setStatus("connected");
+      setMessages([]);
+      setMatchedInterests(sharedInterests);
+      playSoundIfEnabled("connected");
+
+      if (sharedInterests.length > 0) {
+        addMessage("system", `Matched! You both like: ${sharedInterests.join(", ")}`);
+      } else {
+        addMessage("system", "You are now connected with a stranger. Say hello!");
+      }
+      notifyIfEnabled("L Chat", "Connected with a stranger!");
+      if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
+      setSearchElapsed(0);
+
+      // Delay unsubscribe to ensure broadcast is delivered
+      setTimeout(() => {
+        matchChannel.unsubscribe();
+        channelRef.current = null;
+      }, 500);
+    };
+
     const findMatch = () => {
+      if (matchedGuardRef.current) return;
+
       const state = matchChannel.presenceState();
       const myInterests = interestsRef.current;
       const waitingUsers = Object.keys(state).filter(
@@ -268,30 +304,16 @@ export function useChat(callbacks?: ChatCallbacks) {
       const pair = [sessionId, best.id].sort();
       const roomId = `${pair[0]}_${pair[1]}`;
 
+      // Only the lexicographically first user initiates
       if (pair[0] === sessionId) {
         matchChannel.send({
           type: "broadcast",
           event: "matched",
           payload: { roomId, user1: pair[0], user2: pair[1], sharedInterests: best.shared },
         });
+        handleMatched(roomId, best.id, best.shared);
       }
-
-      joinRoom(roomId, best.id);
-      setStatus("connected");
-      setMessages([]);
-      setMatchedInterests(best.shared);
-      playSoundIfEnabled("connected");
-
-      if (best.shared.length > 0) {
-        addMessage("system", `Matched! You both like: ${best.shared.join(", ")}`);
-      } else {
-        addMessage("system", "You are now connected with a stranger. Say hello!");
-      }
-      notifyIfEnabled("L Chat", "Connected with a stranger!");
-      if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
-      setSearchElapsed(0);
-      matchChannel.unsubscribe();
-      channelRef.current = null;
+      // pair[1] waits for the broadcast instead of joining directly
     };
 
     matchChannel
@@ -300,24 +322,7 @@ export function useChat(callbacks?: ChatCallbacks) {
         const data = payload.payload as { roomId: string; user1: string; user2: string; sharedInterests: string[] };
         if (data.user1 === sessionId || data.user2 === sessionId) {
           const strangerId = data.user1 === sessionId ? data.user2 : data.user1;
-          if (blocked.includes(strangerId)) return;
-
-          joinRoom(data.roomId, strangerId);
-          setStatus("connected");
-          setMessages([]);
-          setMatchedInterests(data.sharedInterests || []);
-          playSoundIfEnabled("connected");
-
-          if (data.sharedInterests?.length > 0) {
-            addMessage("system", `Matched! You both like: ${data.sharedInterests.join(", ")}`);
-          } else {
-            addMessage("system", "You are now connected with a stranger. Say hello!");
-          }
-          notifyIfEnabled("L Chat", "Connected with a stranger!");
-          if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
-          setSearchElapsed(0);
-          matchChannel.unsubscribe();
-          channelRef.current = null;
+          handleMatched(data.roomId, strangerId, data.sharedInterests || []);
         }
       })
       .subscribe(async (s) => {
