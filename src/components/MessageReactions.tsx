@@ -45,10 +45,13 @@ const MessageReactions = ({ messageId, reactions, onReact, isMine, forceOpen, on
 
       {/* Reaction trigger */}
       <button
-        onClick={() => setShowPicker(!showPicker)}
+        onClick={() => {
+          if (forceOpen) { onClose?.(); } 
+          else { setShowPicker(!showPicker); }
+        }}
         className="mt-0.5 h-5 w-5 flex items-center justify-center rounded-full text-[10px] text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/60 transition-all"
       >
-        {showPicker ? "✕" : "＋"}
+        {isOpen ? "✕" : "＋"}
       </button>
 
       {/* Picker */}
