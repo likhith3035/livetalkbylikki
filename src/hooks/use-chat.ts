@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useOnlineCount } from "./use-online-count";
 import { sounds } from "@/lib/sounds";
-import { sendNotification } from "@/lib/notifications";
+import { sendNotification, type NotificationType } from "@/lib/notifications";
 
 const getProfile = () => {
   try {
