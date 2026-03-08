@@ -131,17 +131,38 @@ const ChatStatusBar = ({
         )}
 
         {status === "connected" && (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onVideoCall}
-            disabled={isVideoCallActive}
-            className="gap-1 h-8 px-2 sm:px-3 text-xs bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 hover:text-primary"
-            title="Start a video call with this person"
-          >
-            <Video className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Video</span>
-          </Button>
+          <>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onVideoCall}
+              disabled={isVideoCallActive}
+              className="gap-1 h-8 px-2 sm:px-3 text-xs bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 hover:text-primary"
+              title="Start a video call"
+            >
+              <Video className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Video</span>
+            </Button>
+            {/* Disappearing messages toggle */}
+            <Button
+              variant={disappearTimer ? "default" : "ghost"}
+              size="sm"
+              onClick={() => {
+                const timers = [null, 30, 60, 300];
+                const currentIdx = timers.indexOf(disappearTimer ?? null);
+                const next = timers[(currentIdx + 1) % timers.length];
+                onSetDisappearTimer?.(next);
+              }}
+              className={cn(
+                "gap-1 h-8 px-2 text-xs",
+                disappearTimer && "bg-primary/15 text-primary border border-primary/30"
+              )}
+              title={disappearTimer ? `Messages disappear after ${disappearTimer}s` : "Enable disappearing messages"}
+            >
+              <Timer className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{disappearTimer ? `${disappearTimer}s` : ""}</span>
+            </Button>
+          </>
         )}
 
         {/* Export buttons */}
