@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer } from "lucide-react";
+import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -7,6 +7,7 @@ import MessageReactions from "@/components/MessageReactions";
 import ChatImage from "@/components/chat/ChatImage";
 import FormattedText from "@/components/chat/FormattedText";
 import SwipeableMessage from "@/components/chat/SwipeableMessage";
+import LinkPreview from "@/components/chat/LinkPreview";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Message } from "@/hooks/use-chat";
