@@ -27,6 +27,7 @@ interface ChatStatusBarProps {
   onStart: () => void;
   onBlock: () => void;
   onVideoCall: () => void;
+  onAudioCall: () => void;
   isVideoCallActive: boolean;
   onCreateRoom: () => string;
   onJoinRoom: (code: string) => void;
