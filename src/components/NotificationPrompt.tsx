@@ -17,14 +17,14 @@ const NotificationPrompt = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Show prompt after PWA install or first visit in standalone mode
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     const alreadyAsked = localStorage.getItem("echo.notif_prompt_shown");
     const notifSupported = "Notification" in window;
 
     if (!notifSupported || alreadyAsked) return;
 
-    // After PWA install event
+    // After PWA install event — immediate prompt
     const onInstalled = () => {
       setTimeout(() => setShow(true), 1500);
     };
@@ -33,6 +33,16 @@ const NotificationPrompt = () => {
     // If already in standalone (PWA) and haven't asked yet
     if (isStandalone && Notification.permission === "default") {
       setTimeout(() => setShow(true), 2000);
+    }
+
+    // On mobile browser after a short delay (so they've seen the app first)
+    if (isMobile && !isStandalone && Notification.permission === "default") {
+      const visitCount = parseInt(localStorage.getItem("echo.visit_count") || "0", 10) + 1;
+      localStorage.setItem("echo.visit_count", String(visitCount));
+      // Ask on second visit
+      if (visitCount >= 2) {
+        setTimeout(() => setShow(true), 5000);
+      }
     }
 
     return () => window.removeEventListener("appinstalled", onInstalled);
