@@ -451,6 +451,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
         case "webrtc:upgrade-video": {
           // Remote upgraded to video — add local video track too
           setIsAudioOnly(false);
+          onCallUpgraded?.();
           try {
             const videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             const videoTrack = videoStream.getVideoTracks()[0];

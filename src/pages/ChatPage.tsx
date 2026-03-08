@@ -63,7 +63,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
     handleSignalingEvent, cleanup,
-  } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded });
+  } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded, onCallUpgraded });
 
   // Handle in-call chat messages via the room channel
   useEffect(() => {
