@@ -189,6 +189,22 @@ export function useChat(callbacks?: ChatCallbacks) {
             notifyIfEnabled("L Chat", "Stranger has disconnected.");
             leaveRoom();
           }
+        })
+        .on("broadcast", { event: "delete_msg" }, (payload) => {
+          const data = payload.payload as { senderId: string; messageId: string };
+          if (data.senderId !== sessionId) {
+            setMessages((prev) => prev.map((msg) =>
+              msg.id === data.messageId ? { ...msg, deleted: true, text: "🚫 This message was deleted", imageUrl: undefined } : msg
+            ));
+          }
+        })
+        .on("broadcast", { event: "pin_msg" }, (payload) => {
+          const data = payload.payload as { senderId: string; messageId: string; pinned: boolean };
+          if (data.senderId !== sessionId) {
+            setMessages((prev) => prev.map((msg) =>
+              msg.id === data.messageId ? { ...msg, pinned: data.pinned } : msg
+            ));
+          }
         });
 
       // WebRTC signaling events
