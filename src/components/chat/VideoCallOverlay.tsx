@@ -447,7 +447,16 @@ const VideoCallOverlay = ({
               onClick={(e) => e.stopPropagation()}
             >
               {/* Top row: extra controls */}
-              <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
+               <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
+                {isAudioOnly && onUpgradeToVideo && (
+                  <ControlButton
+                    onClick={onUpgradeToVideo}
+                    active={false}
+                    icon={<Video className="h-4 w-4" />}
+                    label="Video"
+                    small
+                  />
+                )}
                 {!isAudioOnly && (
                   <>
                     <ControlButton
