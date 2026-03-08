@@ -206,6 +206,8 @@ const ChatPage = () => {
         inCallMessages={inCallMessages}
       />
 
+      <MatchCelebration show={showMatchCelebration} matchedInterests={matchedInterests} />
+
       <BottomNav />
     </div>
   );
