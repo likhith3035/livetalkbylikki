@@ -114,6 +114,7 @@ const ChatStatusBar = ({
             </motion.div>
           )}
         </AnimatePresence>
+        {status === "connected" && <ChatMoodMeter messages={messages} />}
       </div>
 
       {/* Action buttons with labels */}
