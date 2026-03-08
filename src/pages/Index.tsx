@@ -1,10 +1,17 @@
 import { useNavigate } from "react-router-dom";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, ArrowRight, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import FeatureBadges from "@/components/FeatureBadges";
 import BottomNav from "@/components/BottomNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
+
+const STEPS = [
+  { emoji: "1️⃣", title: "Tap \"Start Chatting\"", desc: "We'll find a random stranger for you" },
+  { emoji: "2️⃣", title: "Say hello!", desc: "Type a message and hit send" },
+  { emoji: "3️⃣", title: "Next or stay", desc: "Click Next to meet someone new anytime" },
+];
 
 const Index = () => {
   const navigate = useNavigate();
@@ -14,29 +21,77 @@ const Index = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <Header onlineCount={onlineCount} />
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-10 px-6 pb-24">
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl font-bold font-display leading-tight text-foreground">
+      <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
+        {/* Hero */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="text-center space-y-4"
+        >
+          <h1 className="text-4xl sm:text-5xl font-bold font-display leading-tight text-foreground">
             Connect
             <br />
             Anonymously
           </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-sm mx-auto">
             No registration. No tracking.
             <br />
             Just real talk with real people.
           </p>
-        </div>
+        </motion.div>
 
-        <Button
-          variant="glow"
-          size="lg"
-          className="w-full max-w-sm h-16 text-lg font-semibold rounded-2xl"
-          onClick={() => navigate("/chat")}
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.15, type: "spring", stiffness: 300, damping: 25 }}
+          className="w-full max-w-sm"
         >
-          <MessageSquare className="h-5 w-5" />
-          Start Chatting
-        </Button>
+          <Button
+            variant="glow"
+            size="lg"
+            className="w-full h-14 sm:h-16 text-base sm:text-lg font-semibold rounded-2xl gap-2"
+            onClick={() => navigate("/chat")}
+          >
+            <MessageSquare className="h-5 w-5" />
+            Start Chatting
+            <ArrowRight className="h-4 w-4 ml-1" />
+          </Button>
+          <p className="text-center text-xs text-muted-foreground mt-2">
+            Free · No sign-up required · 100% anonymous
+          </p>
+        </motion.div>
+
+        {/* How it works */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
+          className="w-full max-w-sm space-y-3"
+        >
+          <div className="flex items-center gap-2 justify-center">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">How it works</h2>
+          </div>
+          <div className="space-y-2">
+            {STEPS.map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + i * 0.1 }}
+                className="flex items-start gap-3 rounded-xl bg-secondary/40 border border-border/50 px-4 py-3"
+              >
+                <span className="text-lg shrink-0">{step.emoji}</span>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{step.title}</p>
+                  <p className="text-xs text-muted-foreground">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
         <FeatureBadges />
       </main>
