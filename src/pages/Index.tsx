@@ -176,7 +176,7 @@ const Index = () => {
                       navigator.share({
                         title: "Let's chat anonymously!",
                         text: "Join me for an anonymous chat on L Chat",
-                        url: `${window.location.origin}/room/${roomCode}`,
+                        url: getRoomUrl(roomCode),
                       }).catch(() => {});
                     }}
                     className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/50 border border-border text-foreground hover:bg-accent transition-all"
