@@ -290,7 +290,12 @@ const VideoCallOverlay = ({
                   isScreenSharing ? "object-contain bg-black" : "object-cover",
                   isBlurred && "video-blur"
                 )}
-                style={{ transform: facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "none" }}
+                style={{
+                  transform: [
+                    facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "",
+                    isBlurred ? "scale(1.15)" : "",
+                  ].filter(Boolean).join(" ") || "none",
+                }}
               />
             ) : (
               <div className="flex h-full items-center justify-center bg-secondary">

@@ -85,7 +85,7 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 pb-36 sm:pb-40 space-y-1.5">
+    <div className="flex-1 overflow-y-auto px-3 sm:px-5 lg:px-8 py-4 pb-36 lg:pb-24 space-y-1.5 mx-auto w-full max-w-3xl">
       <AnimatePresence initial={false}>
         {messages.map((msg) => (
           <motion.div

@@ -14,7 +14,7 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
   const { pathname } = useLocation();
 
   return (
-    <nav ref={ref} className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-xl safe-area-bottom">
+    <nav ref={ref} className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-xl safe-area-bottom lg:hidden">
       <div className="mx-auto flex max-w-md justify-around py-1.5 sm:py-2">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
