@@ -335,12 +335,13 @@ export function useChat(callbacks?: ChatCallbacks) {
   const sendMessage = useCallback(
     (text: string, imageUrl?: string) => {
       if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
-      addMessage("you", text.trim(), imageUrl);
+      const p = getProfile();
+      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar);
       playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, text: text.trim(), imageUrl },
+        payload: { senderId: sessionId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar },
       });
     },
     [status, addMessage, playSoundIfEnabled]
