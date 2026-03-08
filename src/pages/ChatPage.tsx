@@ -42,6 +42,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     autoReconnectCountdown, sessionId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
+    deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
   } = useChat(chatCallbacks);
 
   const onCallEnded = useCallback(() => {
@@ -174,6 +175,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         isVideoCallActive={callStatus !== "idle"}
         onCreateRoom={handleCreateRoom}
         onJoinRoom={handleJoinRoom}
+        disappearTimer={disappearTimer}
+        onSetDisappearTimer={setDisappearTimer}
       />
 
       <InterestBar
@@ -190,6 +193,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         strangerTypingText={strangerTypingText}
         onReact={reactToMessage}
         onReply={(msg) => setReplyingTo(msg)}
+        onDelete={deleteMessage}
+        onPin={pinMessage}
+        disappearTimer={disappearTimer}
       />
 
       <ChatInput

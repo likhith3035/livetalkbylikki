@@ -19,11 +19,14 @@ export interface Message {
   text: string;
   imageUrl?: string;
   timestamp: Date;
-  reactions: Record<string, string[]>; // emoji -> senderIds
+  reactions: Record<string, string[]>;
   senderNickname?: string;
   senderAvatar?: string;
   read?: boolean;
   replyTo?: { id: string; text: string; sender: string };
+  deleted?: boolean;
+  pinned?: boolean;
+  disappearAt?: number; // unix ms when message auto-deletes
 }
 
 export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
@@ -81,6 +84,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const searchTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const matchedGuardRef = useRef(false);
   const callbacksRef = useRef(callbacks);
+  const disappearTimerRef = useRef<number | null>(null);
 
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
   useEffect(() => { interestsRef.current = interests; }, [interests]);
@@ -103,9 +107,11 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
     const id = existingId || crypto.randomUUID();
+    const dt = disappearTimerRef.current;
+    const disappearAt = dt && sender !== "system" ? Date.now() + dt * 1000 : undefined;
     setMessages((prev) => [
       ...prev,
-      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo },
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo, disappearAt },
     ]);
     return id;
   }, []);
@@ -185,6 +191,22 @@ export function useChat(callbacks?: ChatCallbacks) {
             playSoundIfEnabled("disconnected");
             notifyIfEnabled("L Chat", "Stranger has disconnected.");
             leaveRoom();
+          }
+        })
+        .on("broadcast", { event: "delete_msg" }, (payload) => {
+          const data = payload.payload as { senderId: string; messageId: string };
+          if (data.senderId !== sessionId) {
+            setMessages((prev) => prev.map((msg) =>
+              msg.id === data.messageId ? { ...msg, deleted: true, text: "🚫 This message was deleted", imageUrl: undefined } : msg
+            ));
+          }
+        })
+        .on("broadcast", { event: "pin_msg" }, (payload) => {
+          const data = payload.payload as { senderId: string; messageId: string; pinned: boolean };
+          if (data.senderId !== sessionId) {
+            setMessages((prev) => prev.map((msg) =>
+              msg.id === data.messageId ? { ...msg, pinned: data.pinned } : msg
+            ));
           }
         });
 
@@ -529,11 +551,59 @@ export function useChat(callbacks?: ChatCallbacks) {
     };
   }, []);
 
+  // Delete for everyone
+  const deleteMessage = useCallback((messageId: string) => {
+    setMessages((prev) => prev.map((msg) =>
+      msg.id === messageId ? { ...msg, deleted: true, text: "🚫 This message was deleted", imageUrl: undefined } : msg
+    ));
+    roomChannelRef.current?.send({
+      type: "broadcast",
+      event: "delete_msg",
+      payload: { senderId: sessionId, messageId },
+    });
+  }, []);
+
+  // Pin/unpin message
+  const pinMessage = useCallback((messageId: string) => {
+    setMessages((prev) => prev.map((msg) =>
+      msg.id === messageId ? { ...msg, pinned: !msg.pinned } : msg
+    ));
+    const msg = messagesRef.current?.find((m) => m.id === messageId);
+    roomChannelRef.current?.send({
+      type: "broadcast",
+      event: "pin_msg",
+      payload: { senderId: sessionId, messageId, pinned: !(msg?.pinned) },
+    });
+  }, []);
+
+  // Disappearing messages timer
+  const [disappearTimer, setDisappearTimer] = useState<number | null>(null);
+  useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
+
+  // Track messages ref for pin lookup
+  const messagesRef = useRef(messages);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  // Auto-delete expired disappearing messages
+  useEffect(() => {
+    if (!disappearTimer) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setMessages((prev) => prev.filter((msg) => {
+        if (msg.sender === "system") return true;
+        if (!msg.disappearAt) return true;
+        return msg.disappearAt > now;
+      }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [disappearTimer]);
+
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, searchElapsed, privateRoomCode,
     roomChannel: roomChannelRef.current,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
+    deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
   };
 }
