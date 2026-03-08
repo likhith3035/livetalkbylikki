@@ -25,13 +25,8 @@ interface ChatInputProps {
 
 const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId }: ChatInputProps) => {
   const [input, setInput] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
   const throttleRef = useRef<number>(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const recordingDurationRef = useRef(0);
+  const { toast } = useToast();
   const { toast } = useToast();
 
   const handleSend = () => {
