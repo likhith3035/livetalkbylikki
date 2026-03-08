@@ -42,7 +42,7 @@ const TESTIMONIALS = [
 
 const stagger = {
   container: { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } },
-  item: { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 25 } } },
+  item: { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 25 } } },
 };
 
 const Index = () => {
