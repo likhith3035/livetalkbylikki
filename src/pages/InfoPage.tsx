@@ -200,7 +200,7 @@ const InfoPage = () => {
         <motion.section id="features" {...fadeUp} transition={{ delay: 0.2 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground">✨ All features explained</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Here's everything you can do on Echo, explained in plain English.
+            Here's everything you can do on L Chat, explained in plain English.
           </p>
           <div className="space-y-3">
             {FEATURES.map((item, i) => (
