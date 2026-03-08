@@ -103,9 +103,9 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     return pc;
   }, [sessionId]);
 
-  const getMedia = useCallback(async (facing: "user" | "environment" = "user") => {
+  const getMedia = useCallback(async (facing: "user" | "environment" = "user", audioOnly = false) => {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: facing },
+      video: audioOnly ? false : { facingMode: facing },
       audio: true,
     });
     localStreamRef.current = stream;
