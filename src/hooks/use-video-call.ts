@@ -62,6 +62,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     setIsScreenSharing(false);
     setRemoteIsScreenSharing(false);
     setIsBlurred(false);
+    setIsAudioOnly(false);
     setFacingMode("user");
     setRemoteMuted(false);
     setRemoteCameraOff(false);
