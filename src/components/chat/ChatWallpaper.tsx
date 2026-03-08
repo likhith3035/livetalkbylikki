@@ -7,6 +7,9 @@ const wallpaperStyles: Record<ChatWallpaper, string> = {
   grid: "chat-wallpaper-grid",
   waves: "chat-wallpaper-waves",
   gradient: "chat-wallpaper-gradient",
+  bubbles: "chat-wallpaper-bubbles",
+  stars: "chat-wallpaper-stars",
+  zigzag: "chat-wallpaper-zigzag",
 };
 
 const ChatWallpaperBg = () => {
