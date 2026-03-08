@@ -12,6 +12,8 @@ export interface Message {
   imageUrl?: string;
   timestamp: Date;
   reactions: Record<string, string[]>; // emoji -> senderIds
+  senderNickname?: string;
+  senderAvatar?: string;
 }
 
 export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
