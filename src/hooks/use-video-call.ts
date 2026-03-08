@@ -375,6 +375,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
           break;
         }
 
+        case "webrtc:screenshare": {
+          const sharing = payload.sharing as boolean;
+          setRemoteIsScreenSharing(sharing);
+          break;
+        }
+
         case "webrtc:end":
           cleanup();
           setCallStatus("idle");
