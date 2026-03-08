@@ -180,12 +180,16 @@ const VideoCallOverlay = ({
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-card border border-border p-8 shadow-2xl max-w-xs w-full mx-4">
           <div className="relative">
             <div className="h-20 w-20 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center animate-pulse">
-              <Video className="h-8 w-8 text-primary" />
+              {isAudioOnly ? <Phone className="h-8 w-8 text-primary" /> : <Video className="h-8 w-8 text-primary" />}
             </div>
           </div>
           <div className="text-center space-y-1">
-            <p className="text-lg font-display font-semibold text-foreground">Incoming Video Call</p>
-            <p className="text-sm text-muted-foreground">Stranger wants to video chat</p>
+            <p className="text-lg font-display font-semibold text-foreground">
+              Incoming {isAudioOnly ? "Audio" : "Video"} Call
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Stranger wants to {isAudioOnly ? "voice" : "video"} chat
+            </p>
           </div>
           <div className="flex gap-4">
             <Button
