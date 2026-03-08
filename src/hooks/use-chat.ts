@@ -84,6 +84,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const searchTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const matchedGuardRef = useRef(false);
   const callbacksRef = useRef(callbacks);
+  const disappearTimerRef = useRef<number | null>(null);
 
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
   useEffect(() => { interestsRef.current = interests; }, [interests]);
