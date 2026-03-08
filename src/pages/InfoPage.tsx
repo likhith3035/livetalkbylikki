@@ -107,7 +107,7 @@ const InfoPage = () => {
         {/* Title */}
         <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold font-display text-foreground">
-            Everything about <span className="text-primary">Echo</span>
+            Everything about <span className="text-primary">L Chat</span>
           </h1>
           <p className="text-muted-foreground text-base">
             A super simple guide — no tech talk, we promise! 🤞
