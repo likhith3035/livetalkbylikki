@@ -71,38 +71,44 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
               msg.sender === "system" && "items-center"
             )}
           >
-            {/* Bubble */}
-            <div
-              className={cn(
-                "relative max-w-[82%] sm:max-w-[70%] px-3.5 py-2.5 text-sm",
-                msg.sender === "you" &&
-                  "bg-[hsl(var(--bubble-you))] text-[hsl(var(--bubble-you-foreground))] rounded-2xl rounded-br-sm bubble-tail-right shadow-md",
-                msg.sender === "stranger" &&
-                  "bg-[hsl(var(--bubble-stranger))] text-[hsl(var(--bubble-stranger-foreground))] rounded-2xl rounded-bl-sm bubble-tail-left shadow-sm",
-                msg.sender === "system" &&
-                  "max-w-fit bg-transparent text-muted-foreground text-[11px] text-center italic px-3 py-1"
-              )}
+            <SwipeableMessage
+              isMine={msg.sender === "you"}
+              disabled={msg.sender === "system"}
+              onSwipeRight={msg.sender === "stranger" ? () => onReact(msg.id, "❤️") : undefined}
             >
-              {msg.sender !== "system" && (
-                <p className="text-[10px] font-semibold opacity-60 mb-0.5 tracking-wide uppercase">
-                  {msg.sender === "you" ? "You" : "Stranger"}
-                </p>
-              )}
-              {msg.imageUrl && (
-                <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
-              )}
-              {msg.text && <span className="break-words leading-relaxed">{msg.text}</span>}
+              {/* Bubble */}
+              <div
+                className={cn(
+                  "relative max-w-[82%] sm:max-w-[70%] px-3.5 py-2.5 text-sm",
+                  msg.sender === "you" &&
+                    "bg-[hsl(var(--bubble-you))] text-[hsl(var(--bubble-you-foreground))] rounded-2xl rounded-br-sm bubble-tail-right shadow-md",
+                  msg.sender === "stranger" &&
+                    "bg-[hsl(var(--bubble-stranger))] text-[hsl(var(--bubble-stranger-foreground))] rounded-2xl rounded-bl-sm bubble-tail-left shadow-sm",
+                  msg.sender === "system" &&
+                    "max-w-fit bg-transparent text-muted-foreground text-[11px] text-center italic px-3 py-1"
+                )}
+              >
+                {msg.sender !== "system" && (
+                  <p className="text-[10px] font-semibold opacity-60 mb-0.5 tracking-wide uppercase">
+                    {msg.sender === "you" ? "You" : "Stranger"}
+                  </p>
+                )}
+                {msg.imageUrl && (
+                  <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
+                )}
+                {msg.text && <FormattedText text={msg.text} />}
 
-              {/* Timestamp */}
-              {msg.sender !== "system" && (
-                <p className={cn(
-                  "text-[9px] mt-1 opacity-40 tabular-nums",
-                  msg.sender === "you" ? "text-right" : "text-left"
-                )}>
-                  {format(msg.timestamp, "h:mm a")}
-                </p>
-              )}
-            </div>
+                {/* Timestamp */}
+                {msg.sender !== "system" && (
+                  <p className={cn(
+                    "text-[9px] mt-1 opacity-40 tabular-nums",
+                    msg.sender === "you" ? "text-right" : "text-left"
+                  )}>
+                    {format(msg.timestamp, "h:mm a")}
+                  </p>
+                )}
+              </div>
+            </SwipeableMessage>
 
             {msg.sender !== "system" && (
               <MessageReactions
