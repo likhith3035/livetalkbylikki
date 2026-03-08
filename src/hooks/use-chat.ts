@@ -20,6 +20,7 @@ interface ChatCallbacks {
   soundEnabled: boolean;
   notificationsEnabled: boolean;
   autoReconnect: boolean;
+  onSignaling?: (event: string, payload: Record<string, unknown>) => void;
 }
 
 const getSessionId = () => {
