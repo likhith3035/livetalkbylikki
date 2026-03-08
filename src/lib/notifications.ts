@@ -44,7 +44,8 @@ export function sendNotification(
 
   const config = NOTIFICATION_CONFIG[type] || NOTIFICATION_CONFIG.general;
 
-  const notifOptions: NotificationOptions = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const notifOptions: any = {
     body,
     icon: config.icon,
     tag: config.tag,
