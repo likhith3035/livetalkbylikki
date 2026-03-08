@@ -308,6 +308,28 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     }
   }, [isScreenSharing, facingMode]);
 
+  // Upgrade audio call to video
+  const upgradeToVideo = useCallback(async () => {
+    if (!pcRef.current || !localStreamRef.current) return;
+    try {
+      const videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      const videoTrack = videoStream.getVideoTracks()[0];
+      // Add video track to peer connection
+      pcRef.current.addTrack(videoTrack, localStreamRef.current);
+      localStreamRef.current.addTrack(videoTrack);
+      setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+      setIsAudioOnly(false);
+      // Signal remote to expect video
+      channelRef.current?.send({
+        type: "broadcast",
+        event: "webrtc:upgrade-video",
+        payload: { senderId: sessionId },
+      });
+    } catch {
+      // Camera access denied
+    }
+  }, [sessionId]);
+
   // Background blur toggle
   const toggleBlur = useCallback(() => {
     setIsBlurred((prev) => {
@@ -425,6 +447,23 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
           break;
         }
 
+        case "webrtc:upgrade-video": {
+          // Remote upgraded to video — add local video track too
+          setIsAudioOnly(false);
+          try {
+            const videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            const videoTrack = videoStream.getVideoTracks()[0];
+            if (pcRef.current && localStreamRef.current) {
+              pcRef.current.addTrack(videoTrack, localStreamRef.current);
+              localStreamRef.current.addTrack(videoTrack);
+              setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+            }
+          } catch {
+            // Camera not available on remote side
+          }
+          break;
+        }
+
         case "webrtc:end":
           cleanup();
           setCallStatus("idle");
@@ -467,6 +506,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     flipCamera,
     toggleScreenShare,
     toggleBlur,
+    upgradeToVideo,
     handleSignalingEvent,
     cleanup,
   };

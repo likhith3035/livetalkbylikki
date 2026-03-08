@@ -57,6 +57,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     remoteMuted, remoteCameraOff, remoteBlurred,
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
+    upgradeToVideo,
     handleSignalingEvent, cleanup,
   } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded });
 
@@ -252,6 +253,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onFlipCamera={flipCamera}
         onToggleScreenShare={toggleScreenShare}
         onToggleBlur={toggleBlur}
+        onUpgradeToVideo={upgradeToVideo}
         onSendInCallMessage={sendInCallMessage}
         inCallMessages={inCallMessages}
       />
