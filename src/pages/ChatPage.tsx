@@ -27,7 +27,7 @@ const ChatPage = () => {
 
   const {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping,
-    autoReconnectCountdown, sessionId, roomChannel,
+    autoReconnectCountdown, sessionId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger,
   } = useChat(chatCallbacks);
