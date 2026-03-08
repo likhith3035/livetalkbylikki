@@ -238,6 +238,7 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                   <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
                 ) : null}
                 {msg.text && <FormattedText text={msg.text} />}
+                {msg.text && !msg.deleted && msg.sender !== "system" && <LinkPreview text={msg.text} />}
 
                 {/* Timestamp + read receipt */}
                 {msg.sender !== "system" && (
