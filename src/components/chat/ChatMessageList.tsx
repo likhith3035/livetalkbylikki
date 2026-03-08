@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import TypingIndicator from "@/components/TypingIndicator";
 import MessageReactions from "@/components/MessageReactions";
+import ChatImage from "@/components/chat/ChatImage";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/hooks/use-chat";
 
