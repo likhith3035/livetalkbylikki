@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { Send, Mic, Square, X, Reply } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
