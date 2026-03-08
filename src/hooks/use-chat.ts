@@ -85,9 +85,13 @@ export function useChat(callbacks?: ChatCallbacks) {
   const matchedGuardRef = useRef(false);
   const callbacksRef = useRef(callbacks);
   const disappearTimerRef = useRef<number | null>(null);
+  const messagesRef = useRef<Message[]>([]);
+  const [disappearTimer, setDisappearTimer] = useState<number | null>(null);
 
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
   useEffect(() => { interestsRef.current = interests; }, [interests]);
+  useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const clearReconnectTimer = useCallback(() => {
     if (reconnectTimerRef.current) {
@@ -576,13 +580,7 @@ export function useChat(callbacks?: ChatCallbacks) {
     });
   }, []);
 
-  // Disappearing messages timer
-  const [disappearTimer, setDisappearTimer] = useState<number | null>(null);
-  useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
-
-  // Track messages ref for pin lookup
-  const messagesRef = useRef(messages);
-  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  // (disappearTimer and messagesRef moved to top of hook)
 
   // Auto-delete expired disappearing messages
   useEffect(() => {
