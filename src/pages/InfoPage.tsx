@@ -143,7 +143,7 @@ const InfoPage = () => {
             What is L Chat?
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Echo is a free website where you can chat with random strangers from all over the world. 
+            L Chat is a free website where you can chat with random strangers from all over the world. 
             You don't need to sign up, create an account, or give us any information at all. 
             Just open the page, tap a button, and you're instantly connected with someone new.
             When you're done, everything disappears — like it never happened.
