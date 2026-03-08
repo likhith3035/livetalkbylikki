@@ -105,8 +105,8 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.soundEnabled) sounds[sound]();
   }, []);
 
-  const notifyIfEnabled = useCallback((title: string, body: string) => {
-    if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body);
+  const notifyIfEnabled = useCallback((title: string, body: string, type: NotificationType = "general") => {
+    if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body, type);
   }, []);
 
   const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
