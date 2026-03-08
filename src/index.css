@@ -159,10 +159,9 @@
     border-radius: 0 0 4px 0;
   }
 
-  /* Video background blur effect */
+  /* Video background blur effect — filter only, transform handled inline */
   .video-blur {
     filter: blur(10px) saturate(1.5) brightness(1.1);
-    transform: scale(1.15);
   }
 
   /* Typing wave dots */
