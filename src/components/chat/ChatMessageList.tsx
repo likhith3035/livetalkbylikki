@@ -14,6 +14,7 @@ import type { Message } from "@/hooks/use-chat";
 interface ChatMessageListProps {
   messages: Message[];
   strangerTyping: boolean;
+  strangerTypingText?: string;
   onReact: (messageId: string, emoji: string) => void;
 }
 
