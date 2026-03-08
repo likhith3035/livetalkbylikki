@@ -29,7 +29,7 @@ const ChatPage = () => {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping,
     autoReconnectCountdown, sessionId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
-    reactToMessage, blockStranger,
+    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
   } = useChat(chatCallbacks);
 
   const onCallEnded = useCallback(() => {
@@ -42,17 +42,27 @@ const ChatPage = () => {
     toggleMute, toggleCamera, handleSignalingEvent, cleanup,
   } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded });
 
-  // Wire signaling handler
   useEffect(() => {
     signalingHandlerRef.current = handleSignalingEvent;
   }, [handleSignalingEvent]);
 
-  // Cleanup video on disconnect
   useEffect(() => {
     if (status !== "connected" && callStatus !== "idle") {
       cleanup();
     }
   }, [status, callStatus, cleanup]);
+
+  // Auto-join private room from URL
+  const joinedRoomRef = useRef(false);
+  useEffect(() => {
+    if (joinedRoomRef.current) return;
+    const pendingCode = sessionStorage.getItem("echo_join_room");
+    if (pendingCode && status === "idle") {
+      joinedRoomRef.current = true;
+      sessionStorage.removeItem("echo_join_room");
+      joinPrivateRoom(pendingCode);
+    }
+  }, [status, joinPrivateRoom]);
 
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
@@ -61,7 +71,7 @@ const ChatPage = () => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
       toast({
         title: "🟢 Connected!",
-        description: "You're matched with a stranger. Let's chat!",
+        description: "You're matched. Let's chat!",
       });
     }
     prevStatusRef.current = status;
@@ -74,6 +84,16 @@ const ChatPage = () => {
 
   const handleImageUpload = (url: string) => {
     sendMessage("", url);
+  };
+
+  const handleCreateRoom = (): string => {
+    setShowInterests(false);
+    return createPrivateRoom();
+  };
+
+  const handleJoinRoom = (code: string) => {
+    setShowInterests(false);
+    joinPrivateRoom(code);
   };
 
   return (
@@ -93,6 +113,8 @@ const ChatPage = () => {
         onBlock={blockStranger}
         onVideoCall={startCall}
         isVideoCallActive={callStatus !== "idle"}
+        onCreateRoom={handleCreateRoom}
+        onJoinRoom={handleJoinRoom}
       />
 
       <InterestBar
