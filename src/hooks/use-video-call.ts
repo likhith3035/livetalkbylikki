@@ -24,6 +24,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [remoteIsScreenSharing, setRemoteIsScreenSharing] = useState(false);
   const [isBlurred, setIsBlurred] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
@@ -55,6 +56,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     setIsMuted(false);
     setIsCameraOff(false);
     setIsScreenSharing(false);
+    setRemoteIsScreenSharing(false);
     setIsBlurred(false);
     setFacingMode("user");
     pendingCandidatesRef.current = [];
@@ -242,6 +244,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       localStreamRef.current?.addTrack(cameraTrack);
       setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
       setIsScreenSharing(false);
+      // Notify remote
+      channelRef.current?.send({
+        type: "broadcast",
+        event: "webrtc:screenshare",
+        payload: { senderId: sessionId, sharing: false },
+      });
     } else {
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -267,6 +275,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
         localStreamRef.current?.addTrack(screenTrack);
         setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
         setIsScreenSharing(true);
+        // Notify remote
+        channelRef.current?.send({
+          type: "broadcast",
+          event: "webrtc:screenshare",
+          payload: { senderId: sessionId, sharing: true },
+        });
       } catch {
         // User cancelled screen share picker
       }
@@ -361,6 +375,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
           break;
         }
 
+        case "webrtc:screenshare": {
+          const sharing = payload.sharing as boolean;
+          setRemoteIsScreenSharing(sharing);
+          break;
+        }
+
         case "webrtc:end":
           cleanup();
           setCallStatus("idle");
@@ -387,6 +407,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     isMuted,
     isCameraOff,
     isScreenSharing,
+    remoteIsScreenSharing,
     isBlurred,
     facingMode,
     startCall,

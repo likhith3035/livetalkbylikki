@@ -2,8 +2,9 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Video, VideoOff, Mic, MicOff, PhoneOff, Phone, X,
   Monitor, MonitorOff, SwitchCamera, Sparkles, MessageSquare, Send,
+  PictureInPicture2, Clock,
 } from "lucide-react";
-import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { VideoCallStatus } from "@/hooks/use-video-call";
@@ -22,6 +23,7 @@ interface VideoCallOverlayProps {
   isMuted: boolean;
   isCameraOff: boolean;
   isScreenSharing: boolean;
+  remoteIsScreenSharing: boolean;
   isBlurred: boolean;
   facingMode: "user" | "environment";
   onToggleMute: () => void;
@@ -36,9 +38,15 @@ interface VideoCallOverlayProps {
   inCallMessages?: InCallMessage[];
 }
 
+const formatDuration = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+};
+
 const VideoCallOverlay = ({
   callStatus, localStream, remoteStream,
-  isMuted, isCameraOff, isScreenSharing, isBlurred, facingMode,
+  isMuted, isCameraOff, isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
   onToggleMute, onToggleCamera, onEndCall, onAccept, onDecline,
   onFlipCamera, onToggleScreenShare, onToggleBlur,
   onSendInCallMessage, inCallMessages = [],
@@ -46,8 +54,12 @@ const VideoCallOverlay = ({
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [showControls, setShowControls] = useState(true);
+  const [callDuration, setCallDuration] = useState(0);
+  const [isPiP, setIsPiP] = useState(false);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const remoteVideoElRef = useRef<HTMLVideoElement | null>(null);
+  const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const localVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
@@ -61,6 +73,7 @@ const VideoCallOverlay = ({
 
   const remoteVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
+      remoteVideoElRef.current = node;
       if (node && remoteStream) {
         node.srcObject = remoteStream;
         node.play().catch(() => {});
@@ -68,6 +81,25 @@ const VideoCallOverlay = ({
     },
     [remoteStream]
   );
+
+  // Call duration timer
+  useEffect(() => {
+    if (callStatus === "active") {
+      setCallDuration(0);
+      durationTimerRef.current = setInterval(() => {
+        setCallDuration((d) => d + 1);
+      }, 1000);
+    } else {
+      if (durationTimerRef.current) {
+        clearInterval(durationTimerRef.current);
+        durationTimerRef.current = null;
+      }
+      setCallDuration(0);
+    }
+    return () => {
+      if (durationTimerRef.current) clearInterval(durationTimerRef.current);
+    };
+  }, [callStatus]);
 
   // Auto-hide controls after 4s
   useEffect(() => {
@@ -88,6 +120,13 @@ const VideoCallOverlay = ({
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [inCallMessages]);
 
+  // Listen for PiP exit
+  useEffect(() => {
+    const handlePiPExit = () => setIsPiP(false);
+    document.addEventListener("leavepictureinpicture", handlePiPExit);
+    return () => document.removeEventListener("leavepictureinpicture", handlePiPExit);
+  }, []);
+
   const handleTapScreen = () => {
     setShowControls(true);
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
@@ -99,6 +138,21 @@ const VideoCallOverlay = ({
     onSendInCallMessage?.(chatInput.trim());
     setChatInput("");
   };
+
+  // Browser Picture-in-Picture
+  const togglePiP = useCallback(async () => {
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsPiP(false);
+      } else if (remoteVideoElRef.current) {
+        await remoteVideoElRef.current.requestPictureInPicture();
+        setIsPiP(true);
+      }
+    } catch {
+      // PiP not supported or denied
+    }
+  }, []);
 
   // Incoming call prompt
   if (callStatus === "incoming") {
@@ -179,17 +233,33 @@ const VideoCallOverlay = ({
         onClick={handleTapScreen}
       >
         {/* Remote video (fullscreen) */}
-        <div className="flex-1 relative bg-muted overflow-hidden min-h-0">
+        <div className={cn(
+          "flex-1 relative overflow-hidden min-h-0",
+          remoteIsScreenSharing ? "bg-black" : "bg-muted"
+        )}>
           {remoteStream ? (
             <video
               ref={remoteVideoRef}
               autoPlay
               playsInline
-              className="h-full w-full object-cover"
+              className={cn(
+                "h-full w-full",
+                remoteIsScreenSharing ? "object-contain" : "object-cover"
+              )}
             />
           ) : (
             <div className="flex h-full items-center justify-center">
               <VideoOff className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30" />
+            </div>
+          )}
+
+          {/* Screen share indicator on remote */}
+          {remoteIsScreenSharing && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+              <div className="flex items-center gap-1.5 rounded-full bg-primary/90 text-primary-foreground px-3 py-1 text-xs font-medium shadow-lg">
+                <Monitor className="h-3.5 w-3.5" />
+                Stranger is sharing screen
+              </div>
             </div>
           )}
 
@@ -210,7 +280,8 @@ const VideoCallOverlay = ({
                 playsInline
                 muted
                 className={cn(
-                  "h-full w-full object-cover",
+                  "h-full w-full",
+                  isScreenSharing ? "object-contain bg-black" : "object-cover",
                   isBlurred && "video-blur"
                 )}
                 style={{ transform: facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "none" }}
@@ -229,7 +300,7 @@ const VideoCallOverlay = ({
             )}
           </motion.div>
 
-          {/* Status pill */}
+          {/* Status pill with timer */}
           <AnimatePresence>
             {showControls && (
               <motion.div
@@ -240,6 +311,10 @@ const VideoCallOverlay = ({
               >
                 <span className="h-2 w-2 rounded-full bg-online animate-pulse" />
                 <span className="text-xs font-medium text-foreground">Live</span>
+                <span className="text-[10px] text-muted-foreground tabular-nums flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {formatDuration(callDuration)}
+                </span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -305,7 +380,7 @@ const VideoCallOverlay = ({
               onClick={(e) => e.stopPropagation()}
             >
               {/* Top row: extra controls */}
-              <div className="flex items-center justify-center gap-3 pt-3 pb-1">
+              <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
                 <ControlButton
                   onClick={onFlipCamera}
                   active={false}
@@ -332,6 +407,13 @@ const VideoCallOverlay = ({
                   active={showChat}
                   icon={<MessageSquare className="h-4 w-4" />}
                   label="Chat"
+                  small
+                />
+                <ControlButton
+                  onClick={togglePiP}
+                  active={isPiP}
+                  icon={<PictureInPicture2 className="h-4 w-4" />}
+                  label="PiP"
                   small
                 />
               </div>

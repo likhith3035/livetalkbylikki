@@ -47,7 +47,7 @@ const ChatPage = () => {
 
   const {
     callStatus, localStream, remoteStream, isMuted, isCameraOff,
-    isScreenSharing, isBlurred, facingMode,
+    isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     handleSignalingEvent, cleanup,
@@ -191,6 +191,7 @@ const ChatPage = () => {
         isMuted={isMuted}
         isCameraOff={isCameraOff}
         isScreenSharing={isScreenSharing}
+        remoteIsScreenSharing={remoteIsScreenSharing}
         isBlurred={isBlurred}
         facingMode={facingMode}
         onToggleMute={toggleMute}
