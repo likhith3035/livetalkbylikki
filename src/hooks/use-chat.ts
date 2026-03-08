@@ -65,6 +65,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [interests, setInterests] = useState<string[]>([]);
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const [strangerTyping, setStrangerTyping] = useState(false);
+  const [strangerTypingText, setStrangerTypingText] = useState("");
   const [autoReconnectCountdown, setAutoReconnectCountdown] = useState<number | null>(null);
   const [searchElapsed, setSearchElapsed] = useState(0);
   const [privateRoomCode, setPrivateRoomCode] = useState<string | null>(null);
@@ -137,11 +138,15 @@ export function useChat(callbacks?: ChatCallbacks) {
           }
         })
         .on("broadcast", { event: "typing" }, (payload) => {
-          const data = payload.payload as { senderId: string };
+          const data = payload.payload as { senderId: string; text?: string };
           if (data.senderId !== sessionId) {
             setStrangerTyping(true);
+            setStrangerTypingText(data.text || "");
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-            typingTimeoutRef.current = setTimeout(() => setStrangerTyping(false), 3000);
+            typingTimeoutRef.current = setTimeout(() => {
+              setStrangerTyping(false);
+              setStrangerTypingText("");
+            }, 3000);
           }
         })
         .on("broadcast", { event: "reaction" }, (payload) => {
@@ -188,11 +193,11 @@ export function useChat(callbacks?: ChatCallbacks) {
     [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
   );
 
-  const sendTyping = useCallback(() => {
+  const sendTyping = useCallback((text?: string) => {
     roomChannelRef.current?.send({
       type: "broadcast",
       event: "typing",
-      payload: { senderId: sessionId },
+      payload: { senderId: sessionId, text: text?.slice(0, 50) },
     });
   }, []);
 
@@ -553,7 +558,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, []);
 
   return {
-    messages, status, onlineCount, interests, matchedInterests, strangerTyping,
+    messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, searchElapsed, privateRoomCode,
     roomChannel: roomChannelRef.current,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,

@@ -37,7 +37,7 @@ const ChatPage = () => {
   }), [settings.soundEffects, settings.notifications]);
 
   const {
-    messages, status, onlineCount, interests, matchedInterests, strangerTyping,
+    messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
@@ -182,6 +182,7 @@ const ChatPage = () => {
       <ChatMessageList
         messages={messages}
         strangerTyping={strangerTyping}
+        strangerTypingText={strangerTypingText}
         onReact={reactToMessage}
       />
 

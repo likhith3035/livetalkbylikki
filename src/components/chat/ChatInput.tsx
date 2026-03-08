@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ImageUploadButton from "@/components/ImageUploadButton";
 import EmojiPicker from "@/components/chat/EmojiPicker";
+import ChatGames from "@/components/chat/ChatGames";
 import type { ChatStatus } from "@/hooks/use-chat";
 import { useToast } from "@/hooks/use-toast";
 
@@ -11,7 +12,7 @@ interface ChatInputProps {
   status: ChatStatus;
   onSend: (text: string, imageUrl?: string) => void;
   onImageUpload: (url: string) => void;
-  onTyping: () => void;
+  onTyping: (text?: string) => void;
 }
 
 const ChatInput = ({ status, onSend, onImageUpload, onTyping }: ChatInputProps) => {
@@ -33,9 +34,9 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping }: ChatInputProps) 
   const handleChange = (value: string) => {
     setInput(value);
     const now = Date.now();
-    if (now - throttleRef.current > 1000) {
+    if (now - throttleRef.current > 500) {
       throttleRef.current = now;
-      onTyping();
+      onTyping(value);
     }
   };
 
@@ -86,6 +87,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping }: ChatInputProps) 
       <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2 items-center">
         <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
         <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
+        <ChatGames onSendMessage={onSend} isConnected={isConnected} />
 
         <AnimatePresence mode="wait">
           {isRecording ? (

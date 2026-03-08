@@ -14,6 +14,7 @@ import type { Message } from "@/hooks/use-chat";
 interface ChatMessageListProps {
   messages: Message[];
   strangerTyping: boolean;
+  strangerTypingText?: string;
   onReact: (messageId: string, emoji: string) => void;
 }
 
@@ -40,7 +41,7 @@ const TIPS = [
   "🎤 Hold the mic button to send voice messages",
 ];
 
-const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListProps) => {
+const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
   const [longPressedId, setLongPressedId] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -185,7 +186,7 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
         >
-          <TypingIndicator />
+          <TypingIndicator previewText={strangerTypingText} />
         </motion.div>
       )}
       <div ref={endRef} />
