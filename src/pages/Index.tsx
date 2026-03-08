@@ -22,6 +22,10 @@ const Index = () => {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Use published URL so shared links always work, not preview/editor URLs
+  const appOrigin = "https://ohmeglebylikki.lovable.app";
+  const getRoomUrl = (code: string) => `${appOrigin}/room/${code}`;
+
   const generateRoomCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
@@ -31,7 +35,7 @@ const Index = () => {
 
   const copyLink = async () => {
     if (!roomCode) return;
-    const url = `${window.location.origin}/room/${roomCode}`;
+    const url = getRoomUrl(roomCode);
     await navigator.clipboard.writeText(url);
     setCopied(true);
     toast({ title: "Link copied!", description: "Share it with your friend to connect directly." });
@@ -133,7 +137,7 @@ const Index = () => {
               <div className="flex items-center justify-center gap-3 pt-1">
                 <span className="text-[10px] text-muted-foreground">Share via</span>
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`Let's chat anonymously! Join me here: ${window.location.origin}/room/${roomCode}`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(`Let's chat anonymously! Join me here: ${getRoomUrl(roomCode)}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(142_70%_45%)]/10 border border-[hsl(142_70%_45%)]/20 text-[hsl(142_70%_45%)] hover:bg-[hsl(142_70%_45%)]/20 transition-all"
@@ -142,7 +146,7 @@ const Index = () => {
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 </a>
                 <a
-                  href={`https://www.instagram.com/direct/new/?text=${encodeURIComponent(`Let's chat anonymously! ${window.location.origin}/room/${roomCode}`)}`}
+                  href={`https://www.instagram.com/direct/new/?text=${encodeURIComponent(`Let's chat anonymously! ${getRoomUrl(roomCode)}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(330_70%_55%)]/10 border border-[hsl(330_70%_55%)]/20 text-[hsl(330_70%_55%)] hover:bg-[hsl(330_70%_55%)]/20 transition-all"
@@ -151,7 +155,7 @@ const Index = () => {
                   <Instagram className="h-4 w-4" />
                 </a>
                 <a
-                  href={`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(`${window.location.origin}/room/${roomCode}`)}`}
+                  href={`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(getRoomUrl(roomCode))}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(55_100%_50%)]/10 border border-[hsl(55_100%_50%)]/20 text-[hsl(55_80%_45%)] hover:bg-[hsl(55_100%_50%)]/20 transition-all"
@@ -160,7 +164,7 @@ const Index = () => {
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12.922-.237.195-.088.39-.137.584-.137.19 0 .375.056.535.168.39.272.39.72.343.96-.09.51-.45.814-.765 1.006-.39.24-.915.39-1.29.465-.12.03-.21.045-.27.06-.18.03-.36.12-.42.33-.03.12 0 .255.06.39.45.96 1.11 1.8 1.95 2.49.24.195.48.375.735.54.345.225.6.465.66.735.06.345-.21.645-.735.975-.645.39-1.425.57-1.875.63-.12.015-.195.03-.255.06-.09.045-.12.15-.165.3-.015.06-.03.135-.06.21-.09.3-.27.42-.69.42-.24 0-.54-.06-.87-.12-.54-.105-1.17-.225-1.92-.12-.675.09-1.29.48-1.95.9-.87.57-1.86 1.2-3.24 1.2s-2.37-.63-3.24-1.2c-.66-.42-1.275-.81-1.95-.9-.75-.105-1.38.015-1.92.12-.33.06-.63.12-.87.12-.39 0-.585-.105-.69-.42-.03-.075-.045-.15-.06-.21-.045-.15-.075-.255-.165-.3-.06-.03-.135-.045-.255-.06-.45-.06-1.23-.24-1.875-.63-.525-.33-.795-.63-.735-.975.06-.27.315-.51.66-.735.255-.165.495-.345.735-.54.84-.69 1.5-1.53 1.95-2.49.06-.135.09-.27.06-.39-.06-.21-.24-.3-.42-.33-.06-.015-.15-.03-.27-.06-.375-.075-.9-.225-1.29-.465-.315-.195-.675-.495-.765-1.005-.045-.24-.045-.69.345-.96.16-.112.345-.168.535-.168.195 0 .39.045.585.135.264.12.624.225.922.24.198 0 .327-.045.402-.09-.008-.165-.018-.33-.03-.51l-.003-.06c-.105-1.627-.225-3.654.3-4.848C5.862 1.07 9.217.793 10.207.793h1.999z"/></svg>
                 </a>
                 <a
-                  href={`mailto:?subject=${encodeURIComponent("Let's chat anonymously!")}&body=${encodeURIComponent(`Join me for an anonymous chat: ${window.location.origin}/room/${roomCode}`)}`}
+                  href={`mailto:?subject=${encodeURIComponent("Let's chat anonymously!")}&body=${encodeURIComponent(`Join me for an anonymous chat: ${getRoomUrl(roomCode)}`)}`}
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all"
                   title="Email"
                 >
@@ -172,7 +176,7 @@ const Index = () => {
                       navigator.share({
                         title: "Let's chat anonymously!",
                         text: "Join me for an anonymous chat on L Chat",
-                        url: `${window.location.origin}/room/${roomCode}`,
+                        url: getRoomUrl(roomCode),
                       }).catch(() => {});
                     }}
                     className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/50 border border-border text-foreground hover:bg-accent transition-all"

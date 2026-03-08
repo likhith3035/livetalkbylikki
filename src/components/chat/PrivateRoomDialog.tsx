@@ -38,7 +38,7 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
 
   const handleCopyLink = async () => {
     if (!createdCode) return;
-    const url = `${window.location.origin}/room/${createdCode}`;
+    const url = `https://ohmeglebylikki.lovable.app/room/${createdCode}`;
     await navigator.clipboard.writeText(url);
     setCopied(true);
     toast({ title: "Link copied!", description: "Share it with your friend." });
