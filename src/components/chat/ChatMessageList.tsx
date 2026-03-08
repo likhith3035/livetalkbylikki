@@ -186,7 +186,7 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
         >
-          <TypingIndicator />
+          <TypingIndicator previewText={strangerTypingText} />
         </motion.div>
       )}
       <div ref={endRef} />
