@@ -1,8 +1,19 @@
-import { useRef, useEffect, useCallback } from "react";
-import { Video, VideoOff, Mic, MicOff, PhoneOff, Phone, X } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  Video, VideoOff, Mic, MicOff, PhoneOff, Phone, X,
+  Monitor, MonitorOff, SwitchCamera, Sparkles, MessageSquare, Send,
+} from "lucide-react";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { VideoCallStatus } from "@/hooks/use-video-call";
+
+interface InCallMessage {
+  id: string;
+  text: string;
+  sender: "you" | "stranger";
+  timestamp: Date;
+}
 
 interface VideoCallOverlayProps {
   callStatus: VideoCallStatus;
@@ -10,18 +21,34 @@ interface VideoCallOverlayProps {
   remoteStream: MediaStream | null;
   isMuted: boolean;
   isCameraOff: boolean;
+  isScreenSharing: boolean;
+  isBlurred: boolean;
+  facingMode: "user" | "environment";
   onToggleMute: () => void;
   onToggleCamera: () => void;
   onEndCall: () => void;
   onAccept: () => void;
   onDecline: () => void;
+  onFlipCamera: () => void;
+  onToggleScreenShare: () => void;
+  onToggleBlur: () => void;
+  onSendInCallMessage?: (text: string) => void;
+  inCallMessages?: InCallMessage[];
 }
 
 const VideoCallOverlay = ({
   callStatus, localStream, remoteStream,
-  isMuted, isCameraOff,
+  isMuted, isCameraOff, isScreenSharing, isBlurred, facingMode,
   onToggleMute, onToggleCamera, onEndCall, onAccept, onDecline,
+  onFlipCamera, onToggleScreenShare, onToggleBlur,
+  onSendInCallMessage, inCallMessages = [],
 }: VideoCallOverlayProps) => {
+  const [showChat, setShowChat] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [showControls, setShowControls] = useState(true);
+  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
   const localVideoRef = useCallback(
     (node: HTMLVideoElement | null) => {
       if (node && localStream) {
@@ -41,6 +68,37 @@ const VideoCallOverlay = ({
     },
     [remoteStream]
   );
+
+  // Auto-hide controls after 4s
+  useEffect(() => {
+    if (callStatus !== "active") return;
+    const resetTimer = () => {
+      setShowControls(true);
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+      controlsTimerRef.current = setTimeout(() => setShowControls(false), 4000);
+    };
+    resetTimer();
+    return () => {
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    };
+  }, [callStatus]);
+
+  // Scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [inCallMessages]);
+
+  const handleTapScreen = () => {
+    setShowControls(true);
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    controlsTimerRef.current = setTimeout(() => setShowControls(false), 4000);
+  };
+
+  const handleSendChat = () => {
+    if (!chatInput.trim()) return;
+    onSendInCallMessage?.(chatInput.trim());
+    setChatInput("");
+  };
 
   // Incoming call prompt
   if (callStatus === "incoming") {
@@ -115,7 +173,11 @@ const VideoCallOverlay = ({
   // Active call
   if (callStatus === "active") {
     return (
-      <div className="fixed inset-0 z-[90] bg-background flex flex-col animate-fade-in" style={{ height: "100dvh" }}>
+      <div
+        className="fixed inset-0 z-[90] bg-background flex flex-col animate-fade-in"
+        style={{ height: "100dvh" }}
+        onClick={handleTapScreen}
+      >
         {/* Remote video (fullscreen) */}
         <div className="flex-1 relative bg-muted overflow-hidden min-h-0">
           {remoteStream ? (
@@ -131,69 +193,204 @@ const VideoCallOverlay = ({
             </div>
           )}
 
-          {/* Local video (PiP) */}
-          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 xs:w-28 xs:h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-10">
+          {/* Draggable Local video (PiP) */}
+          <motion.div
+            drag
+            dragMomentum={false}
+            dragElastic={0.1}
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 xs:w-28 xs:h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none"
+            onClick={(e) => e.stopPropagation()}
+            whileDrag={{ scale: 1.05 }}
+            onDoubleClick={(e) => { e.stopPropagation(); onFlipCamera(); }}
+          >
             {localStream && !isCameraOff ? (
               <video
                 ref={localVideoRef}
                 autoPlay
                 playsInline
                 muted
-                className="h-full w-full object-cover"
-                style={{ transform: "scaleX(-1)" }}
+                className={cn(
+                  "h-full w-full object-cover",
+                  isBlurred && "video-blur"
+                )}
+                style={{ transform: facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "none" }}
               />
             ) : (
               <div className="flex h-full items-center justify-center bg-secondary">
                 <VideoOff className="h-6 w-6 text-muted-foreground" />
               </div>
             )}
-          </div>
+            {isScreenSharing && (
+              <div className="absolute bottom-1 left-1 right-1 flex items-center justify-center">
+                <span className="text-[9px] bg-primary/80 text-primary-foreground rounded px-1.5 py-0.5 font-medium">
+                  Screen
+                </span>
+              </div>
+            )}
+          </motion.div>
 
           {/* Status pill */}
-          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 rounded-full bg-card/80 backdrop-blur-sm border border-border px-3 py-1.5">
-            <span className="h-2 w-2 rounded-full bg-online animate-pulse" />
-            <span className="text-xs font-medium text-foreground">Live</span>
-          </div>
+          <AnimatePresence>
+            {showControls && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 rounded-full bg-card/80 backdrop-blur-sm border border-border px-3 py-1.5 z-10"
+              >
+                <span className="h-2 w-2 rounded-full bg-online animate-pulse" />
+                <span className="text-xs font-medium text-foreground">Live</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* In-call chat overlay */}
+          <AnimatePresence>
+            {showChat && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="absolute bottom-4 left-3 right-3 sm:left-4 sm:right-4 z-30 max-w-sm"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Messages */}
+                <div className="max-h-40 overflow-y-auto mb-2 space-y-1 scrollbar-thin">
+                  {inCallMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "text-xs px-2.5 py-1.5 rounded-lg max-w-[80%] w-fit",
+                        msg.sender === "you"
+                          ? "ml-auto bg-primary/80 text-primary-foreground"
+                          : "bg-card/80 backdrop-blur-sm text-foreground border border-border/50"
+                      )}
+                    >
+                      {msg.text}
+                    </div>
+                  ))}
+                  <div ref={chatEndRef} />
+                </div>
+                {/* Input */}
+                <div className="flex gap-1.5">
+                  <input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSendChat()}
+                    placeholder="Type a message..."
+                    className="flex-1 rounded-lg border border-border/50 bg-card/80 backdrop-blur-sm px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring/50"
+                  />
+                  <button
+                    onClick={handleSendChat}
+                    disabled={!chatInput.trim()}
+                    className="rounded-lg bg-primary px-2.5 py-2 text-primary-foreground disabled:opacity-40"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-center gap-5 py-5 sm:py-6 bg-card border-t border-border safe-area-bottom px-4">
-          <button
-            onClick={onToggleMute}
-            className={cn(
-              "flex flex-col items-center justify-center h-14 w-14 rounded-full border transition-colors",
-              isMuted
-                ? "bg-destructive/20 border-destructive/30 text-destructive"
-                : "bg-secondary border-border text-foreground active:bg-secondary/80"
-            )}
-          >
-            {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-          </button>
+        <AnimatePresence>
+          {showControls && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="bg-card border-t border-border safe-area-bottom px-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Top row: extra controls */}
+              <div className="flex items-center justify-center gap-3 pt-3 pb-1">
+                <ControlButton
+                  onClick={onFlipCamera}
+                  active={false}
+                  icon={<SwitchCamera className="h-4 w-4" />}
+                  label="Flip"
+                  small
+                />
+                <ControlButton
+                  onClick={onToggleScreenShare}
+                  active={isScreenSharing}
+                  icon={isScreenSharing ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
+                  label={isScreenSharing ? "Stop" : "Share"}
+                  small
+                />
+                <ControlButton
+                  onClick={onToggleBlur}
+                  active={isBlurred}
+                  icon={<Sparkles className="h-4 w-4" />}
+                  label="Blur"
+                  small
+                />
+                <ControlButton
+                  onClick={() => setShowChat(!showChat)}
+                  active={showChat}
+                  icon={<MessageSquare className="h-4 w-4" />}
+                  label="Chat"
+                  small
+                />
+              </div>
 
-          <button
-            onClick={onToggleCamera}
-            className={cn(
-              "flex flex-col items-center justify-center h-14 w-14 rounded-full border transition-colors",
-              isCameraOff
-                ? "bg-destructive/20 border-destructive/30 text-destructive"
-                : "bg-secondary border-border text-foreground active:bg-secondary/80"
-            )}
-          >
-            {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-          </button>
-
-          <button
-            onClick={onEndCall}
-            className="flex items-center justify-center h-14 w-14 rounded-full bg-destructive text-destructive-foreground shadow-lg active:bg-destructive/90 transition-colors"
-          >
-            <PhoneOff className="h-5 w-5" />
-          </button>
-        </div>
+              {/* Main row */}
+              <div className="flex items-center justify-center gap-5 py-3 sm:py-4">
+                <ControlButton
+                  onClick={onToggleMute}
+                  active={isMuted}
+                  icon={isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                />
+                <ControlButton
+                  onClick={onToggleCamera}
+                  active={isCameraOff}
+                  icon={isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+                />
+                <button
+                  onClick={onEndCall}
+                  className="flex items-center justify-center h-14 w-14 rounded-full bg-destructive text-destructive-foreground shadow-lg active:bg-destructive/90 transition-colors"
+                >
+                  <PhoneOff className="h-5 w-5" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
 
   return null;
 };
+
+// Helper control button
+const ControlButton = ({
+  onClick, active, icon, label, small,
+}: {
+  onClick: () => void;
+  active: boolean;
+  icon: React.ReactNode;
+  label?: string;
+  small?: boolean;
+}) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "flex flex-col items-center justify-center rounded-full border transition-colors",
+      small ? "h-10 w-10" : "h-14 w-14",
+      active
+        ? "bg-primary/20 border-primary/30 text-primary"
+        : "bg-secondary border-border text-foreground active:bg-secondary/80"
+    )}
+    title={label}
+  >
+    {icon}
+    {label && small && (
+      <span className="text-[8px] mt-0.5 font-medium leading-none opacity-70">{label}</span>
+    )}
+  </button>
+);
 
 export default VideoCallOverlay;

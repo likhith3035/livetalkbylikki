@@ -23,9 +23,13 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isBlurred, setIsBlurred] = useState(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const channelRef = useRef(channel);
 
@@ -42,10 +46,17 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
     }
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current = null;
+    }
     setLocalStream(null);
     setRemoteStream(null);
     setIsMuted(false);
     setIsCameraOff(false);
+    setIsScreenSharing(false);
+    setIsBlurred(false);
+    setFacingMode("user");
     pendingCandidatesRef.current = [];
   }, []);
 
@@ -82,8 +93,11 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     return pc;
   }, [sessionId]);
 
-  const getMedia = useCallback(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  const getMedia = useCallback(async (facing: "user" | "environment" = "user") => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing },
+      audio: true,
+    });
     localStreamRef.current = stream;
     setLocalStream(stream);
     return stream;
@@ -92,7 +106,6 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
   const startCall = useCallback(async () => {
     if (!channelRef.current) return;
     setCallStatus("requesting");
-
     channelRef.current.send({
       type: "broadcast",
       event: "webrtc:request",
@@ -102,15 +115,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
 
   const acceptCall = useCallback(async () => {
     if (!channelRef.current) return;
-
     try {
       setCallStatus("connecting");
       const stream = await getMedia();
       const pc = createPeerConnection();
-
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // Process any queued candidates
       for (const c of pendingCandidatesRef.current) {
         await pc.addIceCandidate(new RTCIceCandidate(c));
       }
@@ -169,6 +179,103 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
         setIsCameraOff(!videoTrack.enabled);
       }
     }
+  }, []);
+
+  // Flip camera (front/back)
+  const flipCamera = useCallback(async () => {
+    if (!localStreamRef.current || !pcRef.current) return;
+    const newFacing = facingMode === "user" ? "environment" : "user";
+    try {
+      // Stop old video track
+      const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
+      oldVideoTrack?.stop();
+
+      // Get new stream with flipped camera
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacing },
+        audio: false,
+      });
+      const newVideoTrack = newStream.getVideoTracks()[0];
+
+      // Replace track in peer connection
+      const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
+      if (sender && newVideoTrack) {
+        await sender.replaceTrack(newVideoTrack);
+      }
+
+      // Update local stream
+      if (oldVideoTrack) {
+        localStreamRef.current.removeTrack(oldVideoTrack);
+      }
+      localStreamRef.current.addTrack(newVideoTrack);
+      setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+      setFacingMode(newFacing);
+    } catch {
+      // Camera flip not supported
+    }
+  }, [facingMode]);
+
+  // Screen sharing
+  const toggleScreenShare = useCallback(async () => {
+    if (!pcRef.current) return;
+
+    if (isScreenSharing) {
+      // Stop screen sharing, restore camera
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((t) => t.stop());
+        screenStreamRef.current = null;
+      }
+      const cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode },
+        audio: false,
+      });
+      const cameraTrack = cameraStream.getVideoTracks()[0];
+      const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
+      if (sender && cameraTrack) {
+        await sender.replaceTrack(cameraTrack);
+      }
+      // Update local stream
+      const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+      if (oldVideoTrack && localStreamRef.current) {
+        localStreamRef.current.removeTrack(oldVideoTrack);
+      }
+      localStreamRef.current?.addTrack(cameraTrack);
+      setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
+      setIsScreenSharing(false);
+    } else {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        screenStreamRef.current = screenStream;
+        const screenTrack = screenStream.getVideoTracks()[0];
+
+        const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
+        if (sender && screenTrack) {
+          await sender.replaceTrack(screenTrack);
+        }
+
+        // When user stops sharing via browser UI
+        screenTrack.onended = () => {
+          toggleScreenShare();
+        };
+
+        // Update local stream for preview
+        const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+        if (oldVideoTrack && localStreamRef.current) {
+          localStreamRef.current.removeTrack(oldVideoTrack);
+          oldVideoTrack.stop();
+        }
+        localStreamRef.current?.addTrack(screenTrack);
+        setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
+        setIsScreenSharing(true);
+      } catch {
+        // User cancelled screen share picker
+      }
+    }
+  }, [isScreenSharing, facingMode]);
+
+  // Background blur toggle
+  const toggleBlur = useCallback(() => {
+    setIsBlurred((prev) => !prev);
   }, []);
 
   // Handle signaling events
@@ -269,6 +376,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     return () => {
       if (pcRef.current) pcRef.current.close();
       if (localStreamRef.current) localStreamRef.current.getTracks().forEach((t) => t.stop());
+      if (screenStreamRef.current) screenStreamRef.current.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
@@ -278,12 +386,18 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
     remoteStream,
     isMuted,
     isCameraOff,
+    isScreenSharing,
+    isBlurred,
+    facingMode,
     startCall,
     acceptCall,
     declineCall,
     endCall,
     toggleMute,
     toggleCamera,
+    flipCamera,
+    toggleScreenShare,
+    toggleBlur,
     handleSignalingEvent,
     cleanup,
   };
