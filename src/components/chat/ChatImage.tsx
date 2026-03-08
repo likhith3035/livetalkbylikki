@@ -20,7 +20,7 @@ const ChatImage = ({ src, isMine }: ChatImageProps) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `echo-image-${Date.now()}.${blob.type.split("/")[1] || "png"}`;
+      a.download = `lchat-image-${Date.now()}.${blob.type.split("/")[1] || "png"}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
