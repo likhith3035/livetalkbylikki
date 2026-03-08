@@ -27,6 +27,9 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
   const [remoteIsScreenSharing, setRemoteIsScreenSharing] = useState(false);
   const [isBlurred, setIsBlurred] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [remoteMuted, setRemoteMuted] = useState(false);
+  const [remoteCameraOff, setRemoteCameraOff] = useState(false);
+  const [remoteBlurred, setRemoteBlurred] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
