@@ -11,7 +11,6 @@ interface Message {
 
 type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
 
-// Generate a unique anonymous ID per session
 const getSessionId = () => {
   let id = sessionStorage.getItem("echo_session_id");
   if (!id) {
@@ -27,10 +26,17 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ChatStatus>("idle");
   const [onlineCount, setOnlineCount] = useState(0);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const roomChannelRef = useRef<RealtimeChannel | null>(null);
   const roomIdRef = useRef<string | null>(null);
-  const presenceChannelRef = useRef<RealtimeChannel | null>(null);
+  const interestsRef = useRef<string[]>([]);
+
+  // Keep ref in sync
+  useEffect(() => {
+    interestsRef.current = interests;
+  }, [interests]);
 
   const addMessage = useCallback((sender: Message["sender"], text: string) => {
     setMessages((prev) => [
@@ -50,17 +56,13 @@ export function useChat() {
         const state = channel.presenceState();
         setOnlineCount(Object.keys(state).length);
       })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
+      .subscribe(async (s) => {
+        if (s === "SUBSCRIBED") {
           await channel.track({ online_at: new Date().toISOString() });
         }
       });
 
-    presenceChannelRef.current = channel;
-
-    return () => {
-      channel.unsubscribe();
-    };
+    return () => { channel.unsubscribe(); };
   }, []);
 
   const leaveRoom = useCallback(() => {
@@ -102,62 +104,88 @@ export function useChat() {
 
   const startChat = useCallback(() => {
     setMessages([]);
+    setMatchedInterests([]);
     setStatus("searching");
     addMessage("system", "Looking for a stranger...");
 
-    // Clean up previous matchmaking channel
     if (channelRef.current) {
       channelRef.current.unsubscribe();
     }
 
-    // Use a matchmaking channel
     const matchChannel = supabase.channel("matchmaking", {
       config: { presence: { key: sessionId } },
     });
 
+    const findMatch = () => {
+      const state = matchChannel.presenceState();
+      const myInterests = interestsRef.current;
+      const waitingUsers = Object.keys(state).filter((id) => id !== sessionId);
+
+      if (waitingUsers.length === 0) return;
+
+      // Score users by shared interests
+      type Candidate = { id: string; shared: string[]; score: number };
+      const candidates: Candidate[] = waitingUsers.map((uid) => {
+        const presenceData = state[uid]?.[0] as { interests?: string[] } | undefined;
+        const theirInterests: string[] = presenceData?.interests || [];
+        const shared = myInterests.filter((i) => theirInterests.includes(i));
+        return { id: uid, shared, score: shared.length };
+      });
+
+      // Sort by most shared interests, then pick first
+      candidates.sort((a, b) => b.score - a.score);
+      const best = candidates[0];
+
+      const pair = [sessionId, best.id].sort();
+      const roomId = `${pair[0]}_${pair[1]}`;
+
+      if (pair[0] === sessionId) {
+        matchChannel.send({
+          type: "broadcast",
+          event: "matched",
+          payload: { roomId, user1: pair[0], user2: pair[1], sharedInterests: best.shared },
+        });
+      }
+
+      joinRoom(roomId);
+      setStatus("connected");
+      setMessages([]);
+      setMatchedInterests(best.shared);
+
+      if (best.shared.length > 0) {
+        addMessage("system", `Matched! You both like: ${best.shared.join(", ")}`);
+      } else {
+        addMessage("system", "You are now connected with a stranger. Say hello!");
+      }
+      matchChannel.unsubscribe();
+      channelRef.current = null;
+    };
+
     matchChannel
-      .on("presence", { event: "sync" }, () => {
-        const state = matchChannel.presenceState();
-        const waitingUsers = Object.keys(state).filter((id) => id !== sessionId);
-
-        if (waitingUsers.length > 0) {
-          // Sort to ensure both users agree on the same room
-          const pair = [sessionId, waitingUsers[0]].sort();
-          const roomId = `${pair[0]}_${pair[1]}`;
-
-          // The "first" user in sorted order initiates the match
-          if (pair[0] === sessionId) {
-            // Broadcast match to the other user
-            matchChannel.send({
-              type: "broadcast",
-              event: "matched",
-              payload: { roomId, user1: pair[0], user2: pair[1] },
-            });
-          }
-
-          // Both join the room
-          joinRoom(roomId);
-          setStatus("connected");
-          setMessages([]);
-          addMessage("system", "You are now connected with a stranger. Say hello!");
-          matchChannel.unsubscribe();
-          channelRef.current = null;
-        }
-      })
+      .on("presence", { event: "sync" }, findMatch)
       .on("broadcast", { event: "matched" }, (payload) => {
-        const data = payload.payload as { roomId: string; user1: string; user2: string };
+        const data = payload.payload as { roomId: string; user1: string; user2: string; sharedInterests: string[] };
         if (data.user1 === sessionId || data.user2 === sessionId) {
           joinRoom(data.roomId);
           setStatus("connected");
           setMessages([]);
-          addMessage("system", "You are now connected with a stranger. Say hello!");
+          setMatchedInterests(data.sharedInterests || []);
+
+          if (data.sharedInterests?.length > 0) {
+            addMessage("system", `Matched! You both like: ${data.sharedInterests.join(", ")}`);
+          } else {
+            addMessage("system", "You are now connected with a stranger. Say hello!");
+          }
           matchChannel.unsubscribe();
           channelRef.current = null;
         }
       })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await matchChannel.track({ waiting_since: new Date().toISOString() });
+      .subscribe(async (s) => {
+        if (s === "SUBSCRIBED") {
+          await matchChannel.track({
+            waiting_since: new Date().toISOString(),
+            interests: interestsRef.current,
+          });
         }
       });
 
@@ -203,10 +231,10 @@ export function useChat() {
       channelRef.current = null;
     }
     setStatus("disconnected");
+    setMatchedInterests([]);
     addMessage("system", "You have disconnected.");
   }, [addMessage, leaveRoom]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (channelRef.current) channelRef.current.unsubscribe();
@@ -221,5 +249,8 @@ export function useChat() {
     };
   }, []);
 
-  return { messages, status, onlineCount, startChat, sendMessage, nextChat, stopChat };
+  return {
+    messages, status, onlineCount, interests, matchedInterests,
+    setInterests, startChat, sendMessage, nextChat, stopChat,
+  };
 }

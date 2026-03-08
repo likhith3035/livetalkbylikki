@@ -1,23 +1,29 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, SkipForward, X } from "lucide-react";
+import { Send, SkipForward, X, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import InterestSelector from "@/components/InterestSelector";
 import { useChat } from "@/hooks/use-chat";
 import { cn } from "@/lib/utils";
 
 const ChatPage = () => {
-  const { messages, status, onlineCount, startChat, sendMessage, nextChat, stopChat } = useChat();
+  const {
+    messages, status, onlineCount, interests, matchedInterests,
+    setInterests, startChat, sendMessage, nextChat, stopChat,
+  } = useChat();
   const [input, setInput] = useState("");
+  const [showInterests, setShowInterests] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
+  const handleStart = () => {
+    setShowInterests(false);
     startChat();
-  }, []);
+  };
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -44,8 +50,22 @@ const ChatPage = () => {
             {status === "connected" && "Connected with Stranger"}
             {status === "disconnected" && "Disconnected"}
           </span>
+          {matchedInterests.length > 0 && status === "connected" && (
+            <div className="flex gap-1 ml-2">
+              {matchedInterests.map((i) => (
+                <span key={i} className="rounded-full bg-primary/20 border border-primary/30 px-2 py-0.5 text-[10px] text-primary">
+                  {i}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
+          {status === "idle" && (
+            <Button variant="ghost" size="sm" onClick={() => setShowInterests(!showInterests)} className="gap-1.5">
+              <Tags className="h-3.5 w-3.5" />
+            </Button>
+          )}
           {(status === "connected" || status === "disconnected") && (
             <Button variant="secondary" size="sm" onClick={nextChat} className="gap-1.5">
               <SkipForward className="h-3.5 w-3.5" />
@@ -59,12 +79,33 @@ const ChatPage = () => {
             </Button>
           )}
           {(status === "idle" || status === "disconnected") && (
-            <Button variant="glow" size="sm" onClick={startChat}>
+            <Button variant="glow" size="sm" onClick={handleStart}>
               Start
             </Button>
           )}
         </div>
       </div>
+
+      {/* Interest selector (shown when idle) */}
+      {showInterests && status === "idle" && (
+        <div className="border-b border-border px-5 py-4">
+          <InterestSelector selected={interests} onChange={setInterests} />
+        </div>
+      )}
+
+      {/* Selected interests chips (when not idle) */}
+      {interests.length > 0 && status !== "idle" && !showInterests && (
+        <div className="flex items-center gap-2 border-b border-border px-5 py-2">
+          <Tags className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex gap-1.5 flex-wrap">
+            {interests.map((i) => (
+              <span key={i} className="rounded-full bg-secondary border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
+                {i}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 pb-40 space-y-3">
