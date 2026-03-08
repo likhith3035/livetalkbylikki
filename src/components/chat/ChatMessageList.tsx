@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
 import MessageReactions from "@/components/MessageReactions";
 import ChatImage from "@/components/chat/ChatImage";
@@ -31,6 +32,13 @@ const messageVariants = {
   },
 };
 
+const TIPS = [
+  "💡 Use **bold** and *italic* in messages",
+  "👆 Swipe a message right to ❤️ react",
+  "😀 Tap the smiley to open the emoji picker",
+  "🎤 Hold the mic button to send voice messages",
+];
+
 const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -45,10 +53,31 @@ const ChatMessageList = ({ messages, strangerTyping, onReact }: ChatMessageListP
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="text-center space-y-3"
+          className="text-center space-y-4 max-w-xs"
         >
-          <div className="text-5xl">💬</div>
-          <p className="text-sm text-muted-foreground">Start a chat to begin talking with strangers</p>
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
+            <MessageSquare className="h-7 w-7 text-primary" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-foreground">No messages yet</h3>
+            <p className="text-sm text-muted-foreground">
+              Hit <strong>Start</strong> above to get matched with a random stranger
+            </p>
+          </div>
+          <div className="space-y-1.5 pt-2">
+            {TIPS.map((tip, i) => (
+              <motion.p
+                key={i}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.1 }}
+                className="text-[11px] text-muted-foreground/70 flex items-center gap-1.5"
+              >
+                <ArrowRight className="h-2.5 w-2.5 shrink-0 text-primary/50" />
+                <FormattedText text={tip} />
+              </motion.p>
+            ))}
+          </div>
         </motion.div>
       </div>
     );

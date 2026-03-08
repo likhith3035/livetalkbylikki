@@ -15,20 +15,36 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
 
   return (
     <nav ref={ref} className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-xl safe-area-bottom">
-      <div className="mx-auto flex max-w-md justify-around py-2 sm:py-3">
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            to={item.path}
-            className={cn(
-              "flex flex-col items-center gap-1 text-muted-foreground transition-colors",
-              pathname === item.path && "text-primary"
-            )}
-            aria-label={item.label}
-          >
-            <item.icon className="h-5 w-5" />
-          </Link>
-        ))}
+      <div className="mx-auto flex max-w-md justify-around py-1.5 sm:py-2">
+        {navItems.map((item) => {
+          const isActive = pathname === item.path;
+          return (
+            <Link
+              key={item.label}
+              to={item.path}
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200",
+                isActive
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              aria-label={item.label}
+            >
+              <div className={cn(
+                "flex items-center justify-center h-7 w-7 rounded-lg transition-colors",
+                isActive && "bg-primary/15"
+              )}>
+                <item.icon className="h-[18px] w-[18px]" />
+              </div>
+              <span className={cn(
+                "text-[10px] font-medium leading-none",
+                isActive && "font-semibold"
+              )}>
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
@@ -37,4 +53,3 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
 BottomNav.displayName = "BottomNav";
 
 export default BottomNav;
-
