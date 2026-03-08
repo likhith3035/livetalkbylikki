@@ -58,29 +58,35 @@ const VideoCallOverlay = ({
   const [isPiP, setIsPiP] = useState(false);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const localVideoElRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoElRef = useRef<HTMLVideoElement | null>(null);
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const localVideoRef = useCallback(
-    (node: HTMLVideoElement | null) => {
-      if (node && localStream) {
-        node.srcObject = localStream;
-        node.play().catch(() => {});
-      }
-    },
-    [localStream]
-  );
+  // Stable ref callbacks — only store the element, never re-assign srcObject here
+  const localVideoRef = useCallback((node: HTMLVideoElement | null) => {
+    localVideoElRef.current = node;
+  }, []);
 
-  const remoteVideoRef = useCallback(
-    (node: HTMLVideoElement | null) => {
-      remoteVideoElRef.current = node;
-      if (node && remoteStream) {
-        node.srcObject = remoteStream;
-        node.play().catch(() => {});
-      }
-    },
-    [remoteStream]
-  );
+  const remoteVideoRef = useCallback((node: HTMLVideoElement | null) => {
+    remoteVideoElRef.current = node;
+  }, []);
+
+  // Set srcObject via effect — only runs when the stream actually changes
+  useEffect(() => {
+    const el = localVideoElRef.current;
+    if (el && localStream && el.srcObject !== localStream) {
+      el.srcObject = localStream;
+      el.play().catch(() => {});
+    }
+  }, [localStream]);
+
+  useEffect(() => {
+    const el = remoteVideoElRef.current;
+    if (el && remoteStream && el.srcObject !== remoteStream) {
+      el.srcObject = remoteStream;
+      el.play().catch(() => {});
+    }
+  }, [remoteStream]);
 
   // Call duration timer
   useEffect(() => {
