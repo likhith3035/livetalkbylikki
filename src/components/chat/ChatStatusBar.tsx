@@ -1,10 +1,13 @@
-import { SkipForward, X, Tags, Video, Play } from "lucide-react";
+import { SkipForward, X, Tags, Video, Play, Download, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
 import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
 import { cn } from "@/lib/utils";
 import type { ChatStatus } from "@/hooks/use-chat";
+import type { Message } from "@/hooks/use-chat";
+import { exportChatAsText, copyToClipboard, downloadAsFile } from "@/lib/chat-export";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatStatusBarProps {
   status: ChatStatus;
