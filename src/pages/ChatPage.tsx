@@ -147,7 +147,7 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background">
+    <div className="flex min-h-[100dvh] flex-col bg-background relative z-0">
       <ChatWallpaper />
       <div className="lg:hidden">
         <Header onlineCount={onlineCount} />

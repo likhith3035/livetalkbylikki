@@ -16,7 +16,7 @@ const ChatWallpaperBg = () => {
   return (
     <div
       className={cn(
-        "pointer-events-none fixed inset-0 z-0 opacity-[0.04] dark:opacity-[0.06]",
+        "pointer-events-none fixed inset-0 -z-10 opacity-[0.04] dark:opacity-[0.06]",
         wallpaperStyles[settings.chatWallpaper]
       )}
       aria-hidden
