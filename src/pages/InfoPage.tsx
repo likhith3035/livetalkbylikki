@@ -118,7 +118,7 @@ const InfoPage = () => {
         <motion.nav {...fadeUp} transition={{ delay: 0.08 }} className="rounded-2xl bg-card border border-border/50 p-5 space-y-2">
           <p className="text-sm font-semibold text-foreground mb-3">📑 Jump to a section</p>
           {[
-            { id: "what", label: "What is Echo?" },
+            { id: "what", label: "What is L Chat?" },
             { id: "howto", label: "How to use it" },
             { id: "features", label: "All features explained" },
             { id: "settings", label: "Settings & preferences" },
