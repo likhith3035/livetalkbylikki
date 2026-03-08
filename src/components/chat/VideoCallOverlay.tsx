@@ -126,8 +126,8 @@ const VideoCallOverlay = ({
             </div>
           )}
 
-          {/* Local video (PiP) — larger on mobile */}
-          <div className="absolute bottom-3 right-3 sm:top-4 sm:right-4 sm:bottom-auto w-28 h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted">
+          {/* Local video (PiP) */}
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 xs:w-28 xs:h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-10">
             {localStream && !isCameraOff ? (
               <video
                 ref={localVideoRef}
