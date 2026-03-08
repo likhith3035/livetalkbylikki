@@ -446,6 +446,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
 
   return {
     callStatus,
+    isAudioOnly,
     localStream,
     remoteStream,
     isMuted,
