@@ -176,9 +176,11 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                   </button>
                 )}
 
-                {msg.imageUrl && (
+                {msg.imageUrl && msg.imageUrl.endsWith(".webm") ? (
+                  <audio controls src={msg.imageUrl} className="max-w-[200px] my-1" />
+                ) : msg.imageUrl ? (
                   <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
-                )}
+                ) : null}
                 {msg.text && <FormattedText text={msg.text} />}
 
                 {/* Timestamp + read receipt */}
