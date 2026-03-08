@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import ChatStatusBar from "@/components/chat/ChatStatusBar";
@@ -7,6 +7,7 @@ import ChatInput from "@/components/chat/ChatInput";
 import InterestBar from "@/components/chat/InterestBar";
 import { useChat } from "@/hooks/use-chat";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useToast } from "@/hooks/use-toast";
 
 const ChatPage = () => {
   const { settings } = useSettings();
