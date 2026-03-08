@@ -106,9 +106,11 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
     const id = existingId || crypto.randomUUID();
+    const dt = disappearTimerRef.current;
+    const disappearAt = dt && sender !== "system" ? Date.now() + dt * 1000 : undefined;
     setMessages((prev) => [
       ...prev,
-      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo },
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo, disappearAt },
     ]);
     return id;
   }, []);
