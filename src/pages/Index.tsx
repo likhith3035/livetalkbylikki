@@ -19,7 +19,9 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header onlineCount={onlineCount} />
+      <div className="lg:hidden">
+        <Header onlineCount={onlineCount} />
+      </div>
 
       <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pb-24">
         {/* Hero */}

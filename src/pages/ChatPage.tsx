@@ -144,7 +144,9 @@ const ChatPage = () => {
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
-      <Header onlineCount={onlineCount} />
+      <div className="lg:hidden">
+        <Header onlineCount={onlineCount} />
+      </div>
 
       <ChatStatusBar
         status={status}
