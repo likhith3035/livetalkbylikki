@@ -307,8 +307,16 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
 
   // Background blur toggle
   const toggleBlur = useCallback(() => {
-    setIsBlurred((prev) => !prev);
-  }, []);
+    setIsBlurred((prev) => {
+      const next = !prev;
+      channelRef.current?.send({
+        type: "broadcast",
+        event: "webrtc:state",
+        payload: { senderId: sessionId, key: "blurred", value: next },
+      });
+      return next;
+    });
+  }, [sessionId]);
 
   // Handle signaling events
   const handleSignalingEvent = useCallback(
