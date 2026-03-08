@@ -62,16 +62,24 @@ const VideoCallOverlay = ({
   const remoteVideoElRef = useRef<HTMLVideoElement | null>(null);
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Stable ref callbacks — only store the element, never re-assign srcObject here
+  // Ref callbacks — assign stream immediately when element mounts
   const localVideoRef = useCallback((node: HTMLVideoElement | null) => {
     localVideoElRef.current = node;
-  }, []);
+    if (node && localStream && node.srcObject !== localStream) {
+      node.srcObject = localStream;
+      node.play().catch(() => {});
+    }
+  }, [localStream]);
 
   const remoteVideoRef = useCallback((node: HTMLVideoElement | null) => {
     remoteVideoElRef.current = node;
-  }, []);
+    if (node && remoteStream && node.srcObject !== remoteStream) {
+      node.srcObject = remoteStream;
+      node.play().catch(() => {});
+    }
+  }, [remoteStream]);
 
-  // Set srcObject via effect — only runs when the stream actually changes
+  // Also update when streams change (element already mounted)
   useEffect(() => {
     const el = localVideoElRef.current;
     if (el && localStream && el.srcObject !== localStream) {
