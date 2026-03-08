@@ -187,7 +187,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onStop={stopChat}
         onStart={handleStart}
         onBlock={blockStranger}
-        onVideoCall={startCall}
+        onVideoCall={() => startCall(false)}
+        onAudioCall={() => startCall(true)}
         isVideoCallActive={callStatus !== "idle"}
         onCreateRoom={handleCreateRoom}
         onJoinRoom={handleJoinRoom}
