@@ -244,6 +244,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded }: UseVideoCallOp
       localStreamRef.current?.addTrack(cameraTrack);
       setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
       setIsScreenSharing(false);
+      // Notify remote
+      channelRef.current?.send({
+        type: "broadcast",
+        event: "webrtc:screenshare",
+        payload: { senderId: sessionId, sharing: false },
+      });
     } else {
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
