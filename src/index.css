@@ -5,7 +5,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 @layer base {
+  /* ─── Light Mode ─── */
   :root {
+    --background: 260 30% 97%;
+    --foreground: 270 30% 12%;
+
+    --card: 260 25% 94%;
+    --card-foreground: 270 30% 12%;
+
+    --popover: 260 25% 94%;
+    --popover-foreground: 270 30% 12%;
+
+    --primary: 265 90% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 260 20% 90%;
+    --secondary-foreground: 270 20% 25%;
+
+    --muted: 260 15% 92%;
+    --muted-foreground: 260 10% 45%;
+
+    --accent: 265 80% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 260 15% 85%;
+    --input: 260 15% 85%;
+    --ring: 265 90% 55%;
+    --warning: 45 90% 50%;
+
+    --radius: 0.75rem;
+
+    --online: 142 70% 45%;
+    --gradient-primary: linear-gradient(135deg, hsl(265 90% 50%), hsl(280 90% 60%));
+    --gradient-button: linear-gradient(135deg, hsl(265 90% 45%), hsl(285 85% 55%));
+    --shadow-glow: 0 0 30px hsl(265 90% 55% / 0.2);
+  }
+
+  /* ─── Dark Mode ─── */
+  .dark {
     --background: 270 30% 8%;
     --foreground: 0 0% 95%;
 
@@ -35,8 +75,6 @@
     --ring: 265 90% 60%;
     --warning: 45 90% 50%;
 
-    --radius: 0.75rem;
-
     --online: 142 70% 50%;
     --gradient-primary: linear-gradient(135deg, hsl(265 90% 55%), hsl(280 90% 65%));
     --gradient-button: linear-gradient(135deg, hsl(265 90% 50%), hsl(285 85% 60%));
@@ -51,5 +89,6 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }

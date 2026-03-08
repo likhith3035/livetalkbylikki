@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Send, SkipForward, X, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -6,13 +6,22 @@ import BottomNav from "@/components/BottomNav";
 import InterestSelector from "@/components/InterestSelector";
 import TypingIndicator from "@/components/TypingIndicator";
 import { useChat } from "@/hooks/use-chat";
+import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 
 const ChatPage = () => {
+  const { settings } = useSettings();
+
+  const chatCallbacks = useMemo(() => ({
+    soundEnabled: settings.soundEffects,
+    notificationsEnabled: settings.notifications,
+  }), [settings.soundEffects, settings.notifications]);
+
   const {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
-  } = useChat();
+  } = useChat(chatCallbacks);
+
   const [input, setInput] = useState("");
   const [showInterests, setShowInterests] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,7 +44,6 @@ const ChatPage = () => {
 
   const handleInputChange = (value: string) => {
     setInput(value);
-    // Throttle typing events to once per second
     const now = Date.now();
     if (now - typingThrottleRef.current > 1000) {
       typingThrottleRef.current = now;

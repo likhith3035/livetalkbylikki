@@ -1,80 +1,37 @@
-import React, { useEffect, useState } from "react";
-import { Moon, Volume2, Bell, Info } from "lucide-react";
+import { Moon, Sun, Volume2, Bell, Info } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineCount } from "@/hooks/use-online-count";
-
-type SettingsState = {
-  darkMode: boolean;
-  soundEffects: boolean;
-  notifications: boolean;
-};
-
-const DEFAULT_SETTINGS: SettingsState = {
-  darkMode: true,
-  soundEffects: false,
-  notifications: false,
-};
+import { useSettings } from "@/contexts/SettingsContext";
 
 const SettingsPage = () => {
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
-  const [settings, setSettings] = useState<SettingsState>(() => {
-    if (typeof window === "undefined") return DEFAULT_SETTINGS;
+  const { settings, updateSetting } = useSettings();
 
-    return {
-      darkMode: localStorage.getItem("echo.darkMode")
-        ? localStorage.getItem("echo.darkMode") === "true"
-        : DEFAULT_SETTINGS.darkMode,
-      soundEffects: localStorage.getItem("echo.soundEffects") === "true",
-      notifications: localStorage.getItem("echo.notifications") === "true",
-    };
-  });
+  const handleToggle = async (key: keyof typeof settings, checked: boolean) => {
+    if (key === "notifications" && checked) {
+      if (!("Notification" in window)) {
+        toast({
+          title: "Not supported",
+          description: "Your browser does not support notifications.",
+        });
+        return;
+      }
 
-  useEffect(() => {
-    localStorage.setItem("echo.darkMode", String(settings.darkMode));
-    localStorage.setItem("echo.soundEffects", String(settings.soundEffects));
-    localStorage.setItem("echo.notifications", String(settings.notifications));
-
-    if (settings.darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [settings]);
-
-  const handleToggle = async (key: keyof SettingsState, checked: boolean) => {
-    if (key !== "notifications") {
-      setSettings((prev) => ({ ...prev, [key]: checked }));
-      return;
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        toast({
+          title: "Permission required",
+          description: "Allow notifications in your browser settings first.",
+        });
+        return;
+      }
     }
 
-    if (!checked) {
-      setSettings((prev) => ({ ...prev, notifications: false }));
-      return;
-    }
-
-    if (!("Notification" in window)) {
-      toast({
-        title: "Notifications not supported",
-        description: "Your browser does not support notifications.",
-      });
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-      toast({
-        title: "Permission required",
-        description: "Allow notifications in your browser settings first.",
-      });
-      setSettings((prev) => ({ ...prev, notifications: false }));
-      return;
-    }
-
-    setSettings((prev) => ({ ...prev, notifications: true }));
+    updateSetting(key, checked);
   };
 
   return (
@@ -87,9 +44,15 @@ const SettingsPage = () => {
         <div className="space-y-2">
           <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/40 px-4 py-4">
             <div className="flex items-center gap-3">
-              <Moon className="h-5 w-5 text-muted-foreground" />
+              {settings.darkMode ? (
+                <Moon className="h-5 w-5 text-muted-foreground" />
+              ) : (
+                <Sun className="h-5 w-5 text-muted-foreground" />
+              )}
               <div>
-                <p className="text-sm font-medium text-foreground">Dark Mode</p>
+                <p className="text-sm font-medium text-foreground">
+                  {settings.darkMode ? "Dark Mode" : "Light Mode"}
+                </p>
                 <p className="text-xs text-muted-foreground">Theme preference</p>
               </div>
             </div>
@@ -105,7 +68,7 @@ const SettingsPage = () => {
               <Volume2 className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium text-foreground">Sound Effects</p>
-                <p className="text-xs text-muted-foreground">Message notifications</p>
+                <p className="text-xs text-muted-foreground">Connect & message sounds</p>
               </div>
             </div>
             <Switch
@@ -120,7 +83,7 @@ const SettingsPage = () => {
               <Bell className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium text-foreground">Notifications</p>
-                <p className="text-xs text-muted-foreground">Browser alerts</p>
+                <p className="text-xs text-muted-foreground">Alerts when tab is inactive</p>
               </div>
             </div>
             <Switch
@@ -157,4 +120,3 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
-
