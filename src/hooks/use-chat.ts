@@ -65,6 +65,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [interests, setInterests] = useState<string[]>([]);
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const [strangerTyping, setStrangerTyping] = useState(false);
+  const [strangerTypingText, setStrangerTypingText] = useState("");
   const [autoReconnectCountdown, setAutoReconnectCountdown] = useState<number | null>(null);
   const [searchElapsed, setSearchElapsed] = useState(0);
   const [privateRoomCode, setPrivateRoomCode] = useState<string | null>(null);
