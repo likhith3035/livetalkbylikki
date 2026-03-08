@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ImageUploadButton from "@/components/ImageUploadButton";
 import EmojiPicker from "@/components/chat/EmojiPicker";
+import ChatGames from "@/components/chat/ChatGames";
 import type { ChatStatus } from "@/hooks/use-chat";
 import { useToast } from "@/hooks/use-toast";
 
