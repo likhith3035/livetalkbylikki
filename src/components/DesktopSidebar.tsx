@@ -1,6 +1,9 @@
-import { Home, MessageSquare, User, Settings, Info } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, Moon, Sun } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import OnlineBadge from "@/components/OnlineBadge";
+import { useOnlineCount } from "@/hooks/use-online-count";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const navItems = [
   { icon: Home, path: "/", label: "Home" },
@@ -12,6 +15,8 @@ const navItems = [
 
 const DesktopSidebar = () => {
   const { pathname } = useLocation();
+  const onlineCount = useOnlineCount();
+  const { settings, updateSetting } = useSettings();
 
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col border-r border-border bg-card/50 backdrop-blur-xl z-40">
@@ -21,6 +26,11 @@ const DesktopSidebar = () => {
           <MessageSquare className="h-5 w-5 text-primary-foreground" />
         </div>
         <span className="font-display text-lg font-bold text-foreground">L Chat</span>
+      </div>
+
+      {/* Online count */}
+      <div className="px-4 pt-4 pb-2">
+        <OnlineBadge count={onlineCount} />
       </div>
 
       {/* Nav */}
@@ -45,8 +55,18 @@ const DesktopSidebar = () => {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-4 py-4 border-t border-border/50">
+      {/* Theme toggle + footer */}
+      <div className="px-4 py-4 border-t border-border/50 space-y-3">
+        <button
+          onClick={() => updateSetting("darkMode", !settings.darkMode)}
+          className={cn(
+            "flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+            "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+          )}
+        >
+          {settings.darkMode ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
+          {settings.darkMode ? "Dark Mode" : "Light Mode"}
+        </button>
         <p className="text-[10px] text-muted-foreground/50 text-center">© 2026 L Chat</p>
       </div>
     </aside>
