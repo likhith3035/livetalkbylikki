@@ -131,7 +131,7 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 sm:px-5 lg:px-8 py-4 pb-36 lg:pb-24 space-y-1.5 mx-auto w-full max-w-3xl">
+    <div className="flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 pb-40 lg:pb-24 space-y-1.5 mx-auto w-full max-w-3xl">
       {/* Pinned messages bar */}
       <AnimatePresence>
         {pinnedMessages.length > 0 && (
