@@ -98,11 +98,13 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body);
   }, []);
 
-  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string) => {
+  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string) => {
+    const id = existingId || crypto.randomUUID();
     setMessages((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar },
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar },
     ]);
+    return id;
   }, []);
 
   const leaveRoom = useCallback(() => {
