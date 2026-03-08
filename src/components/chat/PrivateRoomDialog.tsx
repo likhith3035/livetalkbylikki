@@ -34,12 +34,6 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
   const handleCreate = () => {
     const code = onCreateRoom();
     setCreatedCode(code);
-    // Auto-copy the link
-    const url = `https://ohmeglebylikki.lovable.app/room/${code}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
   };
 
   const handleCopyLink = async () => {
@@ -107,12 +101,7 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
                 Generate Room Link
               </Button>
             ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 rounded-xl bg-online/10 border border-online/20 px-3 py-2">
-                  <Check className="h-4 w-4 text-online shrink-0" />
-                  <p className="text-xs font-medium text-foreground">Link copied to clipboard!</p>
-                </div>
-
+              <div className="space-y-2">
                 <div className="flex items-center gap-2 rounded-lg bg-secondary border border-border p-3">
                   <Hash className="h-4 w-4 text-primary shrink-0" />
                   <span className="font-mono text-lg font-bold tracking-widest text-foreground flex-1">
@@ -122,34 +111,13 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
                     {copied ? <Check className="h-4 w-4 text-online" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
-
-                <div className="rounded-xl bg-primary/5 border border-primary/15 p-3 space-y-2">
-                  <p className="text-xs font-semibold text-foreground">📋 How to connect:</p>
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] text-muted-foreground flex items-start gap-2">
-                      <span className="font-bold text-primary shrink-0">1.</span>
-                      Send the <strong className="text-foreground">copied link</strong> to your friend via WhatsApp, Instagram, or any app
-                    </p>
-                    <p className="text-[11px] text-muted-foreground flex items-start gap-2">
-                      <span className="font-bold text-primary shrink-0">2.</span>
-                      Or tell them to go to L Chat → <strong className="text-foreground">Room</strong> → enter code <strong className="text-foreground font-mono">{createdCode}</strong>
-                    </p>
-                    <p className="text-[11px] text-muted-foreground flex items-start gap-2">
-                      <span className="font-bold text-primary shrink-0">3.</span>
-                      You'll be <strong className="text-foreground">automatically connected</strong> when they join!
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={handleCopyLink} variant="secondary" className="flex-1 gap-2 text-xs">
-                    <Copy className="h-3.5 w-3.5" />
-                    Copy Link Again
-                  </Button>
-                  <Button onClick={() => handleOpenChange(false)} variant="glow" className="flex-1 gap-2 text-xs">
-                    Done — Waiting
-                  </Button>
-                </div>
+                <Button onClick={handleCopyLink} variant="secondary" className="w-full gap-2 text-xs">
+                  <Copy className="h-3.5 w-3.5" />
+                  Copy Full Link
+                </Button>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Share the link or code with your friend. You'll be connected when they join!
+                </p>
               </div>
             )}
           </div>

@@ -165,15 +165,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   const handleCreateRoom = (): string => {
     setShowInterests(false);
-    const code = createPrivateRoom();
-    const url = `https://ohmeglebylikki.lovable.app/room/${code}`;
-    navigator.clipboard.writeText(url).then(() => {
-      toast({
-        title: "🔗 Room created! Link copied",
-        description: `Share the link or code "${code}" with your friend. They'll be connected instantly when they join.`,
-      });
-    });
-    return code;
+    return createPrivateRoom();
   };
 
   const handleJoinRoom = (code: string) => {
