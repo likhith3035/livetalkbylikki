@@ -42,6 +42,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     autoReconnectCountdown, sessionId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
+    deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
   } = useChat(chatCallbacks);
 
   const onCallEnded = useCallback(() => {
