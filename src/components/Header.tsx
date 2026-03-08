@@ -17,7 +17,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount }, ref) => {
         <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
           <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
         </div>
-        <span className="font-display text-base sm:text-lg font-bold text-foreground">Echo</span>
+        <span className="font-display text-base sm:text-lg font-bold text-foreground">L Chat</span>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">

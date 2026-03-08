@@ -479,7 +479,7 @@ export function useChat(callbacks?: ChatCallbacks) {
           setMessages([]);
           addMessage("system", "Connected to room! Say hello!");
           playSoundIfEnabled("connected");
-          notifyIfEnabled("Echo", "Connected to room!");
+          notifyIfEnabled("L Chat", "Connected to room!");
           if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
           setSearchElapsed(0);
           roomChannel.unsubscribe();
