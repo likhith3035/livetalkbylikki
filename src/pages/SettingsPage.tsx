@@ -97,7 +97,7 @@ const SettingsPage = () => {
             type="button"
             onClick={() =>
               toast({
-                title: "Echo",
+                title: "L Chat",
                 description: "v1.0 — Speak freely",
               })
             }
@@ -106,7 +106,7 @@ const SettingsPage = () => {
             <div className="flex items-center gap-3">
               <Info className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium text-foreground">About Echo</p>
+                <p className="text-sm font-medium text-foreground">About L Chat</p>
                 <p className="text-xs text-muted-foreground">App information</p>
               </div>
             </div>

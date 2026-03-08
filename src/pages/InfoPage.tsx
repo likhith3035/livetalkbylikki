@@ -67,7 +67,7 @@ const FAQ = [
   { q: "Do I need to create an account?", a: "Nope! No email, no password, no phone number. Just open the website and start chatting. It's that simple." },
   { q: "Can people see who I am?", a: "No. You are completely anonymous. We don't collect your name, location, or any personal information. The stranger only sees your messages." },
   { q: "Are my messages saved anywhere?", a: "Never. Messages exist only while you're in the chat. The moment either person leaves, everything is permanently deleted. We can't recover them even if we wanted to." },
-  { q: "Is it safe for kids?", a: "Echo is designed for people 18 and older. We recommend parental guidance for younger users. You can always report or block inappropriate behavior." },
+  { q: "Is it safe for kids?", a: "L Chat is designed for people 18 and older. We recommend parental guidance for younger users. You can always report or block inappropriate behavior." },
   { q: "Can I use it on my phone?", a: "Absolutely! It works perfectly on any phone, tablet, or computer. Just open the website in your browser — no app download needed." },
   { q: "What if someone is being mean?", a: "You have full control. You can: 1) Tap \"Next\" to instantly find someone new, 2) Block them so they can never match with you again, or 3) Report them using the menu." },
   { q: "How does interest matching work?", a: "Before chatting, you can add topics you like (gaming, music, cooking, etc.). We'll try to connect you with people who share those interests. If no match is found, you'll still connect with someone random." },
@@ -107,7 +107,7 @@ const InfoPage = () => {
         {/* Title */}
         <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold font-display text-foreground">
-            Everything about <span className="text-primary">Echo</span>
+            Everything about <span className="text-primary">L Chat</span>
           </h1>
           <p className="text-muted-foreground text-base">
             A super simple guide — no tech talk, we promise! 🤞
@@ -118,7 +118,7 @@ const InfoPage = () => {
         <motion.nav {...fadeUp} transition={{ delay: 0.08 }} className="rounded-2xl bg-card border border-border/50 p-5 space-y-2">
           <p className="text-sm font-semibold text-foreground mb-3">📑 Jump to a section</p>
           {[
-            { id: "what", label: "What is Echo?" },
+            { id: "what", label: "What is L Chat?" },
             { id: "howto", label: "How to use it" },
             { id: "features", label: "All features explained" },
             { id: "settings", label: "Settings & preferences" },
@@ -140,10 +140,10 @@ const InfoPage = () => {
         <motion.section id="what" {...fadeUp} transition={{ delay: 0.1 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <HelpCircle className="h-5 w-5 text-primary" />
-            What is Echo?
+            What is L Chat?
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Echo is a free website where you can chat with random strangers from all over the world. 
+            L Chat is a free website where you can chat with random strangers from all over the world. 
             You don't need to sign up, create an account, or give us any information at all. 
             Just open the page, tap a button, and you're instantly connected with someone new.
             When you're done, everything disappears — like it never happened.
@@ -200,7 +200,7 @@ const InfoPage = () => {
         <motion.section id="features" {...fadeUp} transition={{ delay: 0.2 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground">✨ All features explained</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Here's everything you can do on Echo, explained in plain English.
+            Here's everything you can do on L Chat, explained in plain English.
           </p>
           <div className="space-y-3">
             {FEATURES.map((item, i) => (
@@ -227,7 +227,7 @@ const InfoPage = () => {
         <motion.section id="settings" {...fadeUp} transition={{ delay: 0.25 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground">⚙️ Settings & preferences</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            You can customize Echo to work the way you like. Find these in the Settings page (tap the gear icon at the bottom).
+            You can customize L Chat to work the way you like. Find these in the Settings page (tap the gear icon at the bottom).
           </p>
           <div className="grid gap-3">
             {SETTINGS_INFO.map((item, i) => (
@@ -322,11 +322,11 @@ const InfoPage = () => {
 
         {/* ─── Section: Fun facts ─── */}
         <motion.section {...fadeUp} transition={{ delay: 0.5 }} className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">🎉 Fun facts about Echo</h2>
+          <h2 className="text-lg font-semibold text-foreground">🎉 Fun facts about L Chat</h2>
           <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20 p-5 space-y-3">
             {[
-              "🚀 Echo connects you in under 5 seconds (usually!)",
-              "🌍 People from all around the world use Echo every day",
+              "🚀 L Chat connects you in under 5 seconds (usually!)",
+              "🌍 People from all around the world use L Chat every day",
               "💬 You can send emojis, images, and even make video calls",
               "🔒 Zero data is stored — we literally can't read your chats",
               "📱 Works on any device with a web browser",
@@ -359,7 +359,7 @@ const InfoPage = () => {
         {/* Footer note */}
         <div className="text-center pb-4">
           <p className="text-[11px] text-muted-foreground/50">
-            Made with ❤️ by Echo Labs · © 2026
+            Made with ❤️ by L Chat · © 2026
           </p>
         </div>
       </main>

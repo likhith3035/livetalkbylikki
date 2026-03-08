@@ -12,7 +12,7 @@ export function sendNotification(title: string, body: string) {
     const notification = new Notification(title, {
       body,
       icon: "/favicon.ico",
-      tag: "echo-chat", // Replaces existing notification instead of stacking
+      tag: "lchat", // Replaces existing notification instead of stacking
       silent: true, // We handle our own sounds
     });
 

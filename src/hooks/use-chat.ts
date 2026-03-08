@@ -120,7 +120,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStrangerTyping(false);
             addMessage("stranger", data.text, data.imageUrl);
             playSoundIfEnabled("messageReceived");
-            notifyIfEnabled("Echo", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
+            notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100));
           }
         })
         .on("broadcast", { event: "typing" }, (payload) => {
@@ -155,7 +155,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStatus("disconnected");
             addMessage("system", "Stranger has disconnected.");
             playSoundIfEnabled("disconnected");
-            notifyIfEnabled("Echo", "Stranger has disconnected.");
+            notifyIfEnabled("L Chat", "Stranger has disconnected.");
             leaveRoom();
           }
         });
@@ -277,7 +277,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       } else {
         addMessage("system", "You are now connected with a stranger. Say hello!");
       }
-      notifyIfEnabled("Echo", "Connected with a stranger!");
+      notifyIfEnabled("L Chat", "Connected with a stranger!");
       if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
       setSearchElapsed(0);
       matchChannel.unsubscribe();
@@ -303,7 +303,7 @@ export function useChat(callbacks?: ChatCallbacks) {
           } else {
             addMessage("system", "You are now connected with a stranger. Say hello!");
           }
-          notifyIfEnabled("Echo", "Connected with a stranger!");
+          notifyIfEnabled("L Chat", "Connected with a stranger!");
           if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
           setSearchElapsed(0);
           matchChannel.unsubscribe();
@@ -417,7 +417,7 @@ export function useChat(callbacks?: ChatCallbacks) {
           setMessages([]);
           addMessage("system", "Your friend has joined! Say hello!");
           playSoundIfEnabled("connected");
-          notifyIfEnabled("Echo", "Friend joined your room!");
+          notifyIfEnabled("L Chat", "Friend joined your room!");
           if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
           setSearchElapsed(0);
           roomChannel.unsubscribe();
@@ -432,7 +432,7 @@ export function useChat(callbacks?: ChatCallbacks) {
           setMessages([]);
           addMessage("system", "Connected to room! Say hello!");
           playSoundIfEnabled("connected");
-          notifyIfEnabled("Echo", "Connected to room!");
+          notifyIfEnabled("L Chat", "Connected to room!");
           if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
           setSearchElapsed(0);
           roomChannel.unsubscribe();
@@ -479,7 +479,7 @@ export function useChat(callbacks?: ChatCallbacks) {
           setMessages([]);
           addMessage("system", "Connected to room! Say hello!");
           playSoundIfEnabled("connected");
-          notifyIfEnabled("Echo", "Connected to room!");
+          notifyIfEnabled("L Chat", "Connected to room!");
           if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
           setSearchElapsed(0);
           roomChannel.unsubscribe();
