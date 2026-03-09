@@ -123,14 +123,16 @@ const Index = () => {
           </motion.div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold font-display leading-[1.05] tracking-tight text-foreground">
-            Talk to{" "}
-            <span className="text-gradient">Anyone</span>
-            <br />
-            <span className="text-gradient">Anonymously</span>
+            <span className="text-gradient">OhMegle</span>
+            {" "}by Likki
           </h1>
 
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            No sign-ups. No tracking. Just real conversations with real people from around the world.
+          <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground/80 font-medium max-w-2xl mx-auto">
+            The #1 Omegle Alternative — Chat Anonymously with Strangers
+          </p>
+
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
+            No sign-ups. No tracking. Just real conversations with real people from around the world. OhMegle 2 brings back everything you loved — better, safer, and faster.
           </p>
 
           <motion.div
@@ -517,7 +519,7 @@ const Index = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
               <MessageSquare className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-display text-lg font-bold text-foreground">L Chat</span>
+            <span className="font-display text-lg font-bold text-foreground">OhMegle by Likki</span>
           </div>
 
           <div className="flex items-center gap-8 text-sm text-muted-foreground">
@@ -538,8 +540,14 @@ const Index = () => {
             </a>
           </div>
         </div>
-        <p className="text-center text-xs text-muted-foreground/50 mt-8">
-          © 2026 L Chat. Developed with 💜 by{" "}
+
+        {/* SEO footer text */}
+        <p className="text-center text-xs text-muted-foreground/40 mt-6 max-w-2xl mx-auto leading-relaxed">
+          OhMegle by Likki — the best Omegle 2 alternative for anonymous chatting. Meet strangers, make friends, play games. OhMegle is free, private, and works on any device.
+        </p>
+
+        <p className="text-center text-xs text-muted-foreground/50 mt-4">
+          © 2026 OhMegle by Likki. Developed with 💜 by{" "}
           <a href="https://www.linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors">Likhith Kami</a>
         </p>
       </footer>
