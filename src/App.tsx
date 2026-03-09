@@ -13,6 +13,7 @@ import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import Index from "./pages/Index";
 import ChatPage from "./pages/ChatPage";
 import RoomPage from "./pages/RoomPage";
+import GroupChatPage from "./pages/GroupChatPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import InfoPage from "./pages/InfoPage";
@@ -50,6 +51,8 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/room/:code" element={<RoomPage />} />
+          <Route path="/group" element={<GroupChatPage />} />
+          <Route path="/group/:code" element={<GroupChatPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/info" element={<InfoPage />} />

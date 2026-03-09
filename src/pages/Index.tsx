@@ -17,6 +17,7 @@ const FEATURES = [
   { icon: Lock, title: "End-to-End Secure", desc: "Your conversations are fully encrypted and never stored on servers." },
   { icon: EyeOff, title: "Zero Data Collection", desc: "No accounts, no tracking, no cookies. Complete digital privacy." },
   { icon: Zap, title: "Instant Matching", desc: "Get paired with a stranger in seconds based on shared interests." },
+  { icon: Users, title: "Group Chat", desc: "Create or join group rooms with up to 50 people. Public or private — you set the limits!" },
   { icon: Video, title: "Audio & Video Calls", desc: "Switch to voice or video mid-chat with one tap. Screen sharing included." },
   { icon: Gamepad2, title: "Built-in Games", desc: "Play Truth or Dare, Tic-Tac-Toe, and more while chatting." },
   { icon: Heart, title: "Reactions & Emojis", desc: "React to messages with ❤️ 😂 🔥 and more — just like Instagram DMs." },
