@@ -15,6 +15,9 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Zap, Shield, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface InCallMessage {
   id: string;
