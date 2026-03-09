@@ -13,7 +13,6 @@ import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import Index from "./pages/Index";
 import ChatPage from "./pages/ChatPage";
 import RoomPage from "./pages/RoomPage";
-import GroupChatPage from "./pages/GroupChatPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import InfoPage from "./pages/InfoPage";
