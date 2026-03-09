@@ -5,11 +5,12 @@ import { Sparkles, Users } from "lucide-react";
 interface MatchCelebrationProps {
   show: boolean;
   matchedInterests: string[];
+  onDismiss?: () => void;
 }
 
 const EMOJIS = ["🎉", "✨", "🔥", "💜", "⚡", "🌟", "🎊", "💫"];
 
-const MatchCelebration = ({ show, matchedInterests }: MatchCelebrationProps) => {
+const MatchCelebration = ({ show, matchedInterests, onDismiss }: MatchCelebrationProps) => {
   const [particles, setParticles] = useState<Array<{ id: number; emoji: string; x: number; delay: number }>>([]);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ const MatchCelebration = ({ show, matchedInterests }: MatchCelebrationProps) => 
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
           className="fixed inset-0 z-[100] flex items-center justify-center"
+          onClick={onDismiss}
         >
           {/* Background overlay */}
           <motion.div
@@ -56,7 +58,7 @@ const MatchCelebration = ({ show, matchedInterests }: MatchCelebrationProps) => 
                 x: (Math.random() - 0.5) * 300,
               }}
               transition={{ duration: 2, delay: p.delay, ease: "easeOut" }}
-              className="absolute text-3xl"
+              className="absolute text-3xl pointer-events-none"
               style={{ left: `${p.x}%`, bottom: "35%" }}
             >
               {p.emoji}
@@ -70,9 +72,10 @@ const MatchCelebration = ({ show, matchedInterests }: MatchCelebrationProps) => 
             exit={{ scale: 0.8, opacity: 0, y: -20 }}
             transition={{ type: "spring", stiffness: 300, damping: 22 }}
             className="relative"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Pulse rings */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <span className="match-ring absolute h-24 w-24 rounded-full border-2 border-primary/40" />
               <span className="match-ring absolute h-24 w-24 rounded-full border-2 border-primary/25" style={{ animationDelay: "0.3s" }} />
               <span className="match-ring absolute h-24 w-24 rounded-full border-2 border-primary/15" style={{ animationDelay: "0.6s" }} />
@@ -129,7 +132,7 @@ const MatchCelebration = ({ show, matchedInterests }: MatchCelebrationProps) => 
                 transition={{ delay: 0.6 }}
                 className="text-xs text-muted-foreground"
               >
-                Say hello! 👋
+                Tap anywhere to start chatting 👋
               </motion.p>
             </div>
           </motion.div>
