@@ -283,11 +283,11 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                 onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
                 onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
                 className={cn(
-                  "relative max-w-[78%] sm:max-w-[70%] px-3 sm:px-3.5 py-2 text-sm leading-relaxed break-words select-none",
+                  "relative max-w-[82%] sm:max-w-[72%] break-words select-none",
                   msg.sender === "you" &&
-                    "bg-[hsl(var(--bubble-you))] text-[hsl(var(--bubble-you-foreground))] rounded-2xl rounded-br-md shadow-md min-w-[60px]",
+                    "bg-[hsl(var(--bubble-you))] text-[hsl(var(--bubble-you-foreground))] rounded-[22px] rounded-br-md shadow-lg min-w-[72px] px-4 sm:px-5 py-2.5 sm:py-3 text-[15px] sm:text-base leading-relaxed",
                   msg.sender === "stranger" &&
-                    "bg-[hsl(var(--bubble-stranger))] text-[hsl(var(--bubble-stranger-foreground))] rounded-2xl rounded-bl-md shadow-sm min-w-[60px]",
+                    "bg-[hsl(var(--bubble-stranger))] text-[hsl(var(--bubble-stranger-foreground))] rounded-[22px] rounded-bl-md shadow-sm min-w-[60px] px-3.5 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-[15px] leading-relaxed",
                   msg.sender === "system" &&
                     "max-w-fit bg-transparent text-muted-foreground text-[11px] text-center italic px-3 py-1",
                   msg.deleted && "opacity-60 italic",
