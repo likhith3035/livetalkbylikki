@@ -53,7 +53,7 @@ interface ChatContextValue {
   isScreenSharing: boolean;
   remoteIsScreenSharing: boolean;
   isBlurred: boolean;
-  facingMode: string;
+  facingMode: "user" | "environment";
   remoteMuted: boolean;
   remoteCameraOff: boolean;
   remoteBlurred: boolean;
