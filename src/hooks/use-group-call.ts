@@ -7,6 +7,8 @@ const ICE_SERVERS: RTCConfiguration = {
         { urls: "stun:stun.l.google.com:19302" },
         { urls: "stun:stun1.l.google.com:19302" },
         { urls: "stun:stun2.l.google.com:19302" },
+        { urls: "stun:stun3.l.google.com:19302" },
+        { urls: "stun:stun4.l.google.com:19302" },
     ],
 };
 
@@ -29,6 +31,7 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
     const localStreamRef = useRef<MediaStream | null>(null);
 
     const cleanupPeer = useCallback((peerId: string) => {
+        console.log(`[WebRTC] Cleaning up peer: ${peerId}`);
         if (pcRef.current[peerId]) {
             pcRef.current[peerId].close();
             delete pcRef.current[peerId];
@@ -42,6 +45,7 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
     }, []);
 
     const cleanupAll = useCallback(() => {
+        console.log("[WebRTC] Cleaning up ALL connections");
         Object.keys(pcRef.current).forEach(cleanupPeer);
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -56,10 +60,14 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
 
     const createPeerConnection = useCallback(
         (peerId: string) => {
+            console.log(`[WebRTC] Creating PC for peer: ${peerId}`);
+            if (pcRef.current[peerId]) {
+                pcRef.current[peerId].close();
+            }
+
             const pc = new RTCPeerConnection(ICE_SERVERS);
             pcRef.current[peerId] = pc;
 
-            // Add local tracks to new peer
             if (localStreamRef.current) {
                 localStreamRef.current.getTracks().forEach((track) => {
                     pc.addTrack(track, localStreamRef.current!);
@@ -67,6 +75,7 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
             }
 
             pc.ontrack = (event) => {
+                console.log(`[WebRTC] Received track from ${peerId}`);
                 setRemoteStreams((prev) => ({
                     ...prev,
                     [peerId]: event.streams[0],
@@ -84,7 +93,9 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
             };
 
             pc.onconnectionstatechange = () => {
+                console.log(`[WebRTC] Connection status for ${peerId}: ${pc.connectionState}`);
                 if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
+                    // Attempt simple cleanup - let presence or a new 'join' trigger a retry
                     cleanupPeer(peerId);
                 }
             };
@@ -98,11 +109,12 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
         async (payload: any) => {
             const { senderId, targetId, offer, answer, candidate } = payload;
 
-            // Ignore messages not specifically targeted to us (unless it's a general state update)
-            if (targetId && targetId !== userId) return;
+            // Strict target check
+            if (targetId !== userId) return;
 
             try {
                 if (offer) {
+                    console.log(`[WebRTC] Handing OFFER from ${senderId}`);
                     const pc = createPeerConnection(senderId);
                     await pc.setRemoteDescription(new RTCSessionDescription(offer));
                     const localAnswer = await pc.createAnswer();
@@ -116,6 +128,7 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
                 }
 
                 if (answer) {
+                    console.log(`[WebRTC] Handling ANSWER from ${senderId}`);
                     const pc = pcRef.current[senderId];
                     if (pc) {
                         await pc.setRemoteDescription(new RTCSessionDescription(answer));
@@ -129,7 +142,7 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
                     }
                 }
             } catch (err) {
-                console.error("Signaling error:", err);
+                console.error("[WebRTC] Signaling error:", err);
             }
         },
         [userId, createPeerConnection]
@@ -137,12 +150,14 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
 
     const initializeCall = useCallback(async () => {
         try {
-            // 1. Get Camera/Mic
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            console.log("[WebRTC] Initializing Call...");
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { max: 30 } },
+                audio: true
+            });
             localStreamRef.current = stream;
             setLocalStream(stream);
 
-            // 2. Join Supabase Channel
             const channel = supabase.channel(`group_room:${roomId}`, {
                 config: { presence: { key: userId } },
             });
@@ -161,11 +176,11 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
 
                     setParticipants(pIds);
 
-                    // For every participant already in the room that we don't have a connection with, we create an offer.
-                    // To prevent crossing offers, we only initiate if our ID > their ID lexicographically.
+                    // Standard Mesh Logic: IDs determine who initiates to avoid collisions
                     pIds.forEach(async (peerId) => {
                         if (peerId !== userId && !pcRef.current[peerId]) {
                             if (userId > peerId) {
+                                console.log(`[WebRTC] Initiating call to ${peerId}`);
                                 const pc = createPeerConnection(peerId);
                                 const localOffer = await pc.createOffer();
                                 await pc.setLocalDescription(localOffer);
@@ -187,12 +202,13 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
                 .on("broadcast", { event: "webrtc:ice" }, ({ payload }) => handleSignaling(payload))
                 .subscribe(async (status) => {
                     if (status === "SUBSCRIBED") {
-                        await channel.track({ online_at: new Date().toISOString() });
+                        console.log("[WebRTC] Subscribed to signaling channel");
+                        await channel.track({ online_at: new Date().toISOString(), status: 'online' });
                     }
                 });
 
         } catch (err: any) {
-            console.error(err);
+            console.error("[WebRTC] Failed to initialize:", err);
             setError("Failed to access camera/microphone.");
         }
     }, [roomId, userId, maxMembers, createPeerConnection, handleSignaling, cleanupPeer, cleanupAll]);
@@ -204,20 +220,20 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
 
     const toggleMute = () => {
         if (localStreamRef.current) {
-            const audioTrack = localStreamRef.current.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                setIsMuted(!audioTrack.enabled);
+            const track = localStreamRef.current.getAudioTracks()[0];
+            if (track) {
+                track.enabled = !track.enabled;
+                setIsMuted(!track.enabled);
             }
         }
     };
 
     const toggleCamera = () => {
         if (localStreamRef.current) {
-            const videoTrack = localStreamRef.current.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                setIsCameraOff(!videoTrack.enabled);
+            const track = localStreamRef.current.getVideoTracks()[0];
+            if (track) {
+                track.enabled = !track.enabled;
+                setIsCameraOff(!track.enabled);
             }
         }
     };
