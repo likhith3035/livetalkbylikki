@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import DesktopSidebar from "@/components/DesktopSidebar";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import NotificationPrompt from "@/components/NotificationPrompt";
+import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import Index from "./pages/Index";
 import ChatPage from "./pages/ChatPage";
 import RoomPage from "./pages/RoomPage";
@@ -68,6 +69,7 @@ const App = () => (
           <DesktopSidebar />
           <PwaInstallBanner />
           <NotificationPrompt />
+          <FeedbackSharePopup />
           <div className="lg:pl-[220px]">
             <AnimatedRoutes />
           </div>
