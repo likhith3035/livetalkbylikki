@@ -123,14 +123,16 @@ const Index = () => {
           </motion.div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold font-display leading-[1.05] tracking-tight text-foreground">
-            Talk to{" "}
-            <span className="text-gradient">Anyone</span>
-            <br />
-            <span className="text-gradient">Anonymously</span>
+            <span className="text-gradient">OhMegle</span>
+            {" "}by Likki
           </h1>
 
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            No sign-ups. No tracking. Just real conversations with real people from around the world.
+          <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground/80 font-medium max-w-2xl mx-auto">
+            The #1 Omegle Alternative — Chat Anonymously with Strangers
+          </p>
+
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
+            No sign-ups. No tracking. Just real conversations with real people from around the world. OhMegle 2 brings back everything you loved — better, safer, and faster.
           </p>
 
           <motion.div
