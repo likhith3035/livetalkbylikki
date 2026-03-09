@@ -548,7 +548,7 @@ const Index = () => {
 
         <p className="text-center text-xs text-muted-foreground/50 mt-4">
           © 2026 OhMegle by Likki. Developed with 💜 by{" "}
-          <a href="https://www.linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors">Likhith</a>
+          <a href="https://www.instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors">Likhith</a>
         </p>
       </footer>
 
