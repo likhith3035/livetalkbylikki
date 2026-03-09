@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import { AnimatePresence, motion } from "framer-motion";
 import DesktopSidebar from "@/components/DesktopSidebar";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
@@ -66,13 +67,15 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <DesktopSidebar />
-          <PwaInstallBanner />
-          <NotificationPrompt />
-          <FeedbackSharePopup />
-          <div className="lg:pl-[220px]">
-            <AnimatedRoutes />
-          </div>
+          <ChatProvider>
+            <DesktopSidebar />
+            <PwaInstallBanner />
+            <NotificationPrompt />
+            <FeedbackSharePopup />
+            <div className="lg:pl-[220px]">
+              <AnimatedRoutes />
+            </div>
+          </ChatProvider>
         </BrowserRouter>
       </TooltipProvider>
     </SettingsProvider>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { Message } from "@/hooks/use-chat";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -9,109 +9,28 @@ import InterestBar from "@/components/chat/InterestBar";
 import VideoCallOverlay from "@/components/chat/VideoCallOverlay";
 import MatchCelebration from "@/components/chat/MatchCelebration";
 import ChatWallpaper from "@/components/chat/ChatWallpaper";
-import { useChat } from "@/hooks/use-chat";
-import { useVideoCall } from "@/hooks/use-video-call";
-import { useSettings } from "@/contexts/SettingsContext";
-import { useToast } from "@/hooks/use-toast";
+import { useChatContext } from "@/contexts/ChatContext";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Zap, Shield, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface InCallMessage {
-  id: string;
-  text: string;
-  sender: "you" | "stranger";
-  timestamp: Date;
-}
-
 const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
-  const { toast } = useToast();
-  const { settings } = useSettings();
-  const signalingHandlerRef = useRef<((event: string, payload: Record<string, unknown>) => void) | null>(null);
-  const [inCallMessages, setInCallMessages] = useState<InCallMessage[]>([]);
-
-  const chatCallbacks = useMemo(() => ({
-    soundEnabled: settings.soundEffects,
-    notificationsEnabled: settings.notifications,
-    autoReconnect: true,
-    onSignaling: (event: string, payload: Record<string, unknown>) => {
-      signalingHandlerRef.current?.(event, payload);
-    },
-  }), [settings.soundEffects, settings.notifications]);
-
   const {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
-    autoReconnectCountdown, sessionId, roomChannel, searchElapsed,
+    autoReconnectCountdown, sessionId, roomChannel, searchElapsed, disappearTimer,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
-    deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
-  } = useChat(chatCallbacks);
-
-  const onCallEnded = useCallback(() => {
-    toast({ title: "📞 Call ended", description: "Video call has ended." });
-    setInCallMessages([]);
-  }, [toast]);
-
-  const onCallUpgraded = useCallback(() => {
-    toast({ title: "🎥 Upgraded to video", description: "The call has been upgraded to video." });
-  }, [toast]);
-
-  const {
+    deleteMessage, pinMessage, setDisappearTimer,
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
     remoteMuted, remoteCameraOff, remoteBlurred,
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
-    handleSignalingEvent, cleanup,
-  } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded, onCallUpgraded });
-
-  // Handle in-call chat messages via the room channel
-  useEffect(() => {
-    if (!roomChannel) return;
-    const handler = roomChannel.on("broadcast", { event: "incall_chat" }, (payload) => {
-      const data = payload.payload as { senderId: string; text: string };
-      if (data.senderId !== sessionId) {
-        setInCallMessages((prev) => [...prev, {
-          id: crypto.randomUUID(),
-          text: data.text,
-          sender: "stranger",
-          timestamp: new Date(),
-        }]);
-      }
-    });
-    return () => {
-      // Channel cleanup handled by useChat
-    };
-  }, [roomChannel, sessionId]);
-
-  const sendInCallMessage = useCallback((text: string) => {
-    if (!roomChannel) return;
-    setInCallMessages((prev) => [...prev, {
-      id: crypto.randomUUID(),
-      text,
-      sender: "you",
-      timestamp: new Date(),
-    }]);
-    roomChannel.send({
-      type: "broadcast",
-      event: "incall_chat",
-      payload: { senderId: sessionId, text },
-    });
-  }, [roomChannel, sessionId]);
-
-  useEffect(() => {
-    signalingHandlerRef.current = handleSignalingEvent;
-  }, [handleSignalingEvent]);
-
-  useEffect(() => {
-    if (status !== "connected" && callStatus !== "idle") {
-      cleanup();
-      setInCallMessages([]);
-    }
-  }, [status, callStatus, cleanup]);
+    inCallMessages, sendInCallMessage,
+  } = useChatContext();
 
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
@@ -162,9 +81,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }, []);
 
   const handleForwardMessage = useCallback((msg: Message) => {
-    toast({ title: "📋 Message copied", description: "Start a new chat and paste it!" });
     navigator.clipboard.writeText(msg.text || "📷 Image");
-  }, [toast]);
+  }, []);
 
   const handleCreateRoom = (): string => {
     setShowInterests(false);
@@ -302,7 +220,11 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         inCallMessages={inCallMessages}
       />
 
-      <MatchCelebration show={showMatchCelebration} matchedInterests={matchedInterests} />
+      <MatchCelebration
+        show={showMatchCelebration}
+        matchedInterests={matchedInterests}
+        onDismiss={() => setShowMatchCelebration(false)}
+      />
 
       <BottomNav />
     </div>
