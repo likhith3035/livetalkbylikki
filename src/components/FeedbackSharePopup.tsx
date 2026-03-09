@@ -41,7 +41,7 @@ const FeedbackSharePopup = () => {
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch {}
-    }, 15000); // 15 second delay — non-intrusive
+    }, 180000); // 3 minutes (180 seconds)
 
     return () => clearTimeout(timer);
   }, []);
