@@ -69,6 +69,7 @@ const App = () => (
           <DesktopSidebar />
           <PwaInstallBanner />
           <NotificationPrompt />
+          <FeedbackSharePopup />
           <div className="lg:pl-[220px]">
             <AnimatedRoutes />
           </div>
