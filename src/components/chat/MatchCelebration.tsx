@@ -34,7 +34,7 @@ const MatchCelebration = ({ show, matchedInterests }: MatchCelebrationProps) => 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center"
+          className="fixed inset-0 z-[100] flex items-center justify-center"
         >
           {/* Background overlay */}
           <motion.div
