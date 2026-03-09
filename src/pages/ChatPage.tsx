@@ -214,18 +214,55 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         isActive={status !== "idle" && !showInterests}
       />
 
-      <ChatMessageList
-        messages={messages}
-        strangerTyping={strangerTyping}
-        strangerTypingText={strangerTypingText}
-        onReact={reactToMessage}
-        onReply={(msg) => setReplyingTo(msg)}
-        onDelete={deleteMessage}
-        onPin={pinMessage}
-        onForward={handleForwardMessage}
-        disappearTimer={disappearTimer}
-        highlightMessageId={searchHighlight}
-      />
+      {status === "idle" ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="flex flex-col items-center gap-5"
+          >
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <MessageSquare className="h-8 w-8 text-primary" />
+            </div>
+            <Button
+              variant="glow"
+              size="lg"
+              onClick={handleStart}
+              className="h-14 px-10 text-lg font-semibold rounded-2xl gap-2 shadow-xl shadow-primary/20"
+            >
+              Start Chat <ArrowRight className="h-5 w-5" />
+            </Button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col items-center gap-2 text-center max-w-xs"
+          >
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">How it works</p>
+            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground/70">
+              <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-primary/60 shrink-0" /> Press Start → get matched instantly</span>
+              <span className="flex items-center gap-1.5"><MessageSquare className="h-3 w-3 text-primary/60 shrink-0" /> Chat via text, images, or video</span>
+              <span className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-primary/60 shrink-0" /> 100% anonymous · no data saved</span>
+            </div>
+          </motion.div>
+        </div>
+      ) : (
+        <ChatMessageList
+          messages={messages}
+          strangerTyping={strangerTyping}
+          strangerTypingText={strangerTypingText}
+          onReact={reactToMessage}
+          onReply={(msg) => setReplyingTo(msg)}
+          onDelete={deleteMessage}
+          onPin={pinMessage}
+          onForward={handleForwardMessage}
+          disappearTimer={disappearTimer}
+          highlightMessageId={searchHighlight}
+        />
+      )}
 
       <ChatInput
         status={status}
