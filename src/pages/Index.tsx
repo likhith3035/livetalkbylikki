@@ -519,7 +519,7 @@ const Index = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
               <MessageSquare className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-display text-lg font-bold text-foreground">L Chat</span>
+            <span className="font-display text-lg font-bold text-foreground">OhMegle by Likki</span>
           </div>
 
           <div className="flex items-center gap-8 text-sm text-muted-foreground">
@@ -540,8 +540,14 @@ const Index = () => {
             </a>
           </div>
         </div>
-        <p className="text-center text-xs text-muted-foreground/50 mt-8">
-          © 2026 L Chat. Developed with 💜 by{" "}
+
+        {/* SEO footer text */}
+        <p className="text-center text-xs text-muted-foreground/40 mt-6 max-w-2xl mx-auto leading-relaxed">
+          OhMegle by Likki — the best Omegle 2 alternative for anonymous chatting. Meet strangers, make friends, play games. OhMegle is free, private, and works on any device.
+        </p>
+
+        <p className="text-center text-xs text-muted-foreground/50 mt-4">
+          © 2026 OhMegle by Likki. Developed with 💜 by{" "}
           <a href="https://www.linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors">Likhith Kami</a>
         </p>
       </footer>
