@@ -76,6 +76,12 @@ const FEATURES_DETAILED = [
     details: "Room codes are case-insensitive and designed to be easy to read aloud or type. The room URL can be shared directly (ohmeglebylikki.lovable.app/room/ABCDEF) for one-tap joining.",
   },
   {
+    icon: Users, title: "Group Chat 👥", category: "Social",
+    desc: "Create or join group rooms with up to 50 people! Set your own participant limits, choose between public (anyone can find and join) or private (code-only access) rooms. See who's in the room, send messages to everyone, and react to each other's messages. Perfect for group discussions, community hangouts, and meeting multiple strangers at once!",
+    tech: "Uses Supabase Realtime presence channels to track room members in real-time. Each room is a dedicated broadcast channel with presence state. Public rooms are announced via a shared lobby channel for discoverability.",
+    details: "Room creators can set a max member limit (2-50). Members see a live participant list with join/leave notifications. Messages show sender names with color-coded bubbles. The lobby auto-discovers public rooms via Realtime broadcast events.",
+  },
+  {
     icon: Image, title: "Send Images 📷", category: "Media",
     desc: "Tap the camera/image icon to send a picture. Share photos, screenshots, memes, artwork — anything visual! Images are displayed inline with a lightbox zoom feature. Supports JPG, PNG, GIF, and WebP formats.",
     tech: "File upload handled via Supabase Storage buckets with public URLs. Images are compressed client-side before upload. The ChatImage component renders with lazy loading and lightbox zoom.",
