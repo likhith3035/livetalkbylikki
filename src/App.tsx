@@ -50,8 +50,6 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/room/:code" element={<RoomPage />} />
-          <Route path="/group" element={<GroupChatPage />} />
-          <Route path="/group/:code" element={<GroupChatPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/info" element={<InfoPage />} />
