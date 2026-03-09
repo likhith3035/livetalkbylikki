@@ -5,7 +5,6 @@ import ReportBlockMenu from "@/components/ReportBlockMenu";
 import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
 import ChatSearchBar from "@/components/chat/ChatSearchBar";
 import ChatThemePicker from "@/components/chat/ChatThemePicker";
-import ChatMoodMeter from "@/components/chat/ChatMoodMeter";
 import ChatTimer from "@/components/chat/ChatTimer";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { cn } from "@/lib/utils";
@@ -116,11 +115,10 @@ const ChatStatusBar = ({
             </motion.div>
           )}
         </AnimatePresence>
-        {status === "connected" && <ChatMoodMeter messages={messages} />}
       </div>
 
       {/* Action buttons with labels */}
-      <div className="flex gap-0.5 sm:gap-1.5 items-center shrink-0 overflow-x-auto max-w-[50vw] sm:max-w-none scrollbar-none">
+      <div className="flex gap-0.5 sm:gap-1.5 items-center shrink-0 overflow-x-auto max-w-[65vw] sm:max-w-none scrollbar-none">
         {status === "idle" && (
           <>
             <Button
@@ -138,6 +136,44 @@ const ChatStatusBar = ({
               onJoinRoom={onJoinRoom}
             />
           </>
+        )}
+
+        {/* ALWAYS VISIBLE ACTIONS (Next / Stop) */}
+        {(status === "connected" || status === "disconnected") && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onNext}
+            className="gap-1 h-8 px-2 sm:px-3 text-xs"
+            title="Skip to a new stranger"
+          >
+            <SkipForward className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Next</span>
+          </Button>
+        )}
+        {status === "connected" && (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={onStop}
+            className="gap-1 h-8 px-2 sm:px-3 text-xs"
+            title="End this conversation"
+          >
+            <X className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Stop</span>
+          </Button>
+        )}
+        {status === "disconnected" && autoReconnectCountdown && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onStop}
+            className="gap-1 h-8 px-2 sm:px-3 text-xs text-muted-foreground"
+            title="Cancel auto-reconnect"
+          >
+            <X className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Cancel</span>
+          </Button>
         )}
 
         {status === "connected" && (
@@ -205,44 +241,9 @@ const ChatStatusBar = ({
           </>
         )}
 
-        {(status === "connected" || status === "disconnected") && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onNext}
-            className="gap-1 h-8 px-2 sm:px-3 text-xs"
-            title="Skip to a new stranger"
-          >
-            <SkipForward className="h-3.5 w-3.5" />
-            Next
-          </Button>
-        )}
-        {status === "connected" && (
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={onStop}
-            className="gap-1 h-8 px-2 sm:px-3 text-xs"
-            title="End this conversation"
-          >
-            <X className="h-3.5 w-3.5" />
-            Stop
-          </Button>
-        )}
+        {/* Removed Stop and Next from here, moved to top */}
         {status === "connected" && (
           <ReportBlockMenu onBlock={onBlock} />
-        )}
-        {status === "disconnected" && autoReconnectCountdown && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onStop}
-            className="gap-1 h-8 px-2 sm:px-3 text-xs text-muted-foreground"
-            title="Cancel auto-reconnect"
-          >
-            <X className="h-3.5 w-3.5" />
-            Cancel
-          </Button>
         )}
         {(status === "idle" || (status === "disconnected" && !autoReconnectCountdown)) && (
           <Button

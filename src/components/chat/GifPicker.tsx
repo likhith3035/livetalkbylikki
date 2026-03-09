@@ -74,9 +74,6 @@ const GifPicker = ({ isConnected, onSendGif }: GifPickerProps) => {
     const url = gif.media_formats.gif?.url || gif.media_formats.tinygif?.url;
     if (url) {
       onSendGif(url);
-      setOpen(false);
-      setQuery("");
-      setResults([]);
     }
   };
 

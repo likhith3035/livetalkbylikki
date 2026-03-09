@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +18,8 @@ import RoomPage from "./pages/RoomPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import InfoPage from "./pages/InfoPage";
+import GroupSetupPage from "./pages/GroupSetupPage";
+import GroupRoomPage from "./pages/GroupRoomPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +54,8 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/room/:code" element={<RoomPage />} />
+          <Route path="/group" element={<GroupSetupPage />} />
+          <Route path="/group/:id" element={<GroupRoomPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/info" element={<InfoPage />} />
@@ -60,26 +66,56 @@ const AnimatedRoutes = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <SettingsProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ChatProvider>
-            <DesktopSidebar />
-            <PwaInstallBanner />
-            <NotificationPrompt />
-            <FeedbackSharePopup />
-            <div className="lg:pl-[220px]">
-              <AnimatedRoutes />
-            </div>
-          </ChatProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </SettingsProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    // Ping Supabase to make sure it's awake before showing the app
+    const checkConnection = async () => {
+      try {
+        // Quick, lightweight call to wake it up if needed.
+        // auth.getSession() is incredibly fast, doesn't require tables, and cleanly wakes up the database.
+        await supabase.auth.getSession();
+      } catch (e) {
+        // Ignore errors if table doesn't exist, the goal is just hitting the API to wake it up
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    checkConnection();
+  }, []);
+
+  if (!isReady) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-muted-foreground animate-pulse text-sm">Waking up servers, please wait...</p>
+      </div>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SettingsProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ChatProvider>
+              <DesktopSidebar />
+              <PwaInstallBanner />
+              <NotificationPrompt />
+              <FeedbackSharePopup />
+              <div className="lg:pl-[220px]">
+                <AnimatedRoutes />
+              </div>
+            </ChatProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SettingsProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

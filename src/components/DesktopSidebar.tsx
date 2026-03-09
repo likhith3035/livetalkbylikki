@@ -1,4 +1,4 @@
-import { Home, MessageSquare, User, Settings, Info, Moon, Sun } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Users } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import OnlineBadge from "@/components/OnlineBadge";
@@ -8,6 +8,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 const navItems = [
   { icon: Home, path: "/", label: "Home" },
   { icon: MessageSquare, path: "/chat", label: "Chat" },
+  { icon: Users, path: "/group", label: "Group" },
   { icon: User, path: "/profile", label: "Profile" },
   { icon: Settings, path: "/settings", label: "Settings" },
   { icon: Info, path: "/info", label: "About" },

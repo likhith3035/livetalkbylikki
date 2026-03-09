@@ -1,11 +1,12 @@
 import { forwardRef } from "react";
-import { Home, MessageSquare, User, Settings, Info } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, Users } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: Home, path: "/", label: "Home" },
   { icon: MessageSquare, path: "/chat", label: "Chat" },
+  { icon: Users, path: "/group", label: "Group" },
   { icon: Info, path: "/info", label: "Info" },
   { icon: User, path: "/profile", label: "Profile" },
   { icon: Settings, path: "/settings", label: "Settings" },

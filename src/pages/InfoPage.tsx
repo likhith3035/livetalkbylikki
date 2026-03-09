@@ -295,7 +295,7 @@ const InfoPage = () => {
             The complete guide to every feature, how it works, and the technology behind it 🔧
           </p>
           <p className="text-sm text-muted-foreground/70 leading-relaxed">
-            OhMegle by Likki is a modern, feature-rich anonymous chat platform built for genuine human connections. 
+            OhMegle by Likki is a modern, feature-rich anonymous chat platform built for genuine human connections.
             Whether you want quick text chats, video calls, or fun games with strangers — this guide covers everything you need to know.
           </p>
         </motion.div>
