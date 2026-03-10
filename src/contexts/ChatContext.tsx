@@ -129,7 +129,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     upgradeToVideo,
     handleSignalingEvent, cleanup,
     supportsScreenShare,
-  } = videoCall;
+  } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded, onCallUpgraded });
 
   // Handle in-call chat messages via the room channel
   useEffect(() => {
