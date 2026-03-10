@@ -23,8 +23,8 @@ export default defineConfig(({ mode }) => ({
         importScripts: ["sw-custom.js"],
       },
       manifest: {
-        name: "L Chat - Anonymous Chat",
-        short_name: "L Chat",
+        name: "LiveTalk – Talk to Anyone Instantly",
+        short_name: "LiveTalk",
         description: "Chat anonymously with strangers. No signup, no tracking.",
         theme_color: "#7c3aed",
         background_color: "#0a0a0f",
