@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { Shield, Moon, Sun } from "lucide-react";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
+import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -13,10 +14,8 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount }, ref) => {
 
   return (
     <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 glass">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
-          <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
-        </div>
+      <div className="flex items-center gap-3">
+        <Logo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md hover:scale-105 transition-transform" />
         <span className="font-display text-base sm:text-lg font-bold text-foreground">LiveTalk</span>
       </div>
 
