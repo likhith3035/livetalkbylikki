@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { Shield, Moon, Sun } from "lucide-react";
+import { Link } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Logo } from "@/components/Logo";
@@ -14,10 +15,10 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount }, ref) => {
 
   return (
     <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 glass">
-      <div className="flex items-center gap-3">
-        <Logo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
-        <span className="font-display text-base sm:text-lg font-bold text-foreground">LiveTalk</span>
-      </div>
+      <Link to="/" className="flex items-center gap-3 group">
+        <Logo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md group-hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
+        <span className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors">LiveTalk</span>
+      </Link>
 
       <div className="flex items-center gap-2 sm:gap-3">
         <button
