@@ -40,8 +40,13 @@ const SafetyCenterPage = () => {
 
                 {/* Hero Section */}
                 <motion.section {...fadeUp} className="space-y-4">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
-                        <Shield className="h-3.5 w-3.5" /> Safety & Trust
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
+                            <Shield className="h-3.5 w-3.5" /> Safety & Trust
+                        </div>
+                        <div className="inline-flex items-center gap-2 rounded-full bg-destructive/10 px-4 py-1.5 text-xs font-semibold text-destructive uppercase tracking-wider">
+                            18+ Only
+                        </div>
                     </div>
                     <h1 className="text-4xl sm:text-5xl font-bold font-display text-foreground leading-[1.1]">
                         Safety Center <br />

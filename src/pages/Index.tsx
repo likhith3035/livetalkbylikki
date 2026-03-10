@@ -143,6 +143,10 @@ const Index = () => {
             No sign-ups. No tracking. Just real conversations with real people from around the world. LiveTalk 2 brings back everything you loved — better, safer, and faster.
           </p>
 
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <span className="px-3 py-1 bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-bold uppercase rounded-lg tracking-widest">Adults Only 18+</span>
+          </div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
