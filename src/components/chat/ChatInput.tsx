@@ -8,6 +8,7 @@ import EmojiPicker from "@/components/chat/EmojiPicker";
 import ChatGames from "@/components/chat/ChatGames";
 import GifPicker from "@/components/chat/GifPicker";
 import LocationShareButton from "@/components/chat/LocationShareButton";
+import Icebreakers from "@/components/chat/Icebreakers";
 import type { ChatStatus, Message } from "@/hooks/use-chat";
 
 interface ChatInputProps {
@@ -75,6 +76,10 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="mx-auto max-w-3xl mb-2 sm:mb-3">
+          <Icebreakers onSelect={(text) => onSend(text)} disabled={!isConnected} />
+        </div>
 
         <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2 items-center">
           <div className="flex items-center gap-0.5">

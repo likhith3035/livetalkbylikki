@@ -27,6 +27,14 @@ const playTone = (frequency: number, duration: number, type: OscillatorType = "s
   }
 };
 
+export const haptics = {
+  vibrate: (pattern: number | number[]) => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  },
+};
+
 export const sounds = {
   /** Two-tone ascending chime when stranger connects */
   connected: () => {

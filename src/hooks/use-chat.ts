@@ -2,14 +2,14 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useOnlineCount } from "./use-online-count";
-import { sounds } from "@/lib/sounds";
+import { sounds, haptics } from "@/lib/sounds";
 import { sendNotification, type NotificationType } from "@/lib/notifications";
 
 const getProfile = () => {
   try {
     const raw = localStorage.getItem("lchat.profile");
     if (raw) return JSON.parse(raw) as { nickname: string; avatar: string };
-  } catch {}
+  } catch { }
   return { nickname: "", avatar: "😀" };
 };
 
@@ -146,6 +146,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             setStrangerTyping(false);
             addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId, data.replyTo);
             playSoundIfEnabled("messageReceived");
+            if (callbacksRef.current?.soundEnabled) haptics.vibrate(50);
             notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100), "message");
             // Send read receipt
             channel.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: data.messageId } });
@@ -305,6 +306,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       setMessages([]);
       setMatchedInterests(sharedInterests);
       playSoundIfEnabled("connected");
+      if (callbacksRef.current?.soundEnabled) haptics.vibrate([100, 50, 100]);
 
       if (sharedInterests.length > 0) {
         addMessage("system", `Matched! You both like: ${sharedInterests.join(", ")}`);

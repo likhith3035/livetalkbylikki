@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gamepad2, X, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,33 +11,6 @@ interface ChatGamesProps {
   roomChannel?: RealtimeChannel | null;
   sessionId?: string;
 }
-
-const TRUTH_OR_DARE = {
-  truths: [
-    "What's the most embarrassing thing that happened to you?",
-    "What's your biggest secret?",
-    "What's the weirdest dream you've had?",
-    "What's the last lie you told?",
-    "What's your guilty pleasure?",
-    "What's your biggest fear?",
-    "Have you ever stalked someone online?",
-    "What's the most childish thing you still do?",
-    "What's the worst date you've been on?",
-    "What's something you've never told anyone?",
-  ],
-  dares: [
-    "Send a selfie right now 📸",
-    "Type your last message with your eyes closed",
-    "Say something in a different language",
-    "Make up a poem about me in 30 seconds",
-    "Tell me your phone password hint 🤫",
-    "Type the alphabet backwards",
-    "Send a voice message singing any song 🎤",
-    "Change your nickname to something funny",
-    "Send 10 emojis that describe your day",
-    "Tell a joke and make me laugh 😂",
-  ],
-};
 
 type TicTacToeCell = "X" | "O" | null;
 
@@ -55,7 +28,7 @@ const checkWinner = (board: TicTacToeCell[]): TicTacToeCell => {
 
 const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatGamesProps) => {
   const [showGames, setShowGames] = useState(false);
-  const [activeGame, setActiveGame] = useState<"none" | "ttt" | "tod">("none");
+  const [activeGame, setActiveGame] = useState<"none" | "ttt">("none");
 
   // Tic-Tac-Toe state
   const [board, setBoard] = useState<TicTacToeCell[]>(Array(9).fill(null));
@@ -98,7 +71,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatG
       }
     });
 
-    return () => {};
+    return () => { };
   }, [roomChannel, sessionId]);
 
   const handleCellClick = (i: number) => {
@@ -135,16 +108,6 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatG
     roomChannel?.send({ type: "broadcast", event: "ttt_reset", payload: { senderId: sessionId } });
   };
 
-  const handleTruth = useCallback(() => {
-    const q = TRUTH_OR_DARE.truths[Math.floor(Math.random() * TRUTH_OR_DARE.truths.length)];
-    onSendMessage(`🎯 Truth: ${q}`);
-  }, [onSendMessage]);
-
-  const handleDare = useCallback(() => {
-    const d = TRUTH_OR_DARE.dares[Math.floor(Math.random() * TRUTH_OR_DARE.dares.length)];
-    onSendMessage(`🔥 Dare: ${d}`);
-  }, [onSendMessage]);
-
   if (!isConnected) return null;
 
   const isMyTurn = mySymbol === currentTurn;
@@ -173,31 +136,26 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatG
               <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                 <Gamepad2 className="h-3.5 w-3.5 text-primary" /> Games
               </span>
-              <button onClick={() => { setShowGames(false); if (activeGame !== "ttt" || !mySymbol) setActiveGame("none"); }} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => {
+                  setShowGames(false);
+                  if (activeGame !== "ttt" || !mySymbol) setActiveGame("none");
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
 
             {activeGame === "none" && (
               <div className="space-y-1.5">
-                <button onClick={() => setActiveGame("tod")} className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors">
-                  <p className="text-sm font-medium text-foreground">🎯 Truth or Dare</p>
-                  <p className="text-[10px] text-muted-foreground">Random questions & challenges</p>
-                </button>
-                <button onClick={startTTT} className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors">
+                <button
+                  onClick={startTTT}
+                  className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors"
+                >
                   <p className="text-sm font-medium text-foreground">❌⭕ Tic-Tac-Toe</p>
                   <p className="text-[10px] text-muted-foreground">Play with your stranger!</p>
                 </button>
-              </div>
-            )}
-
-            {activeGame === "tod" && (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Button onClick={handleTruth} variant="secondary" size="sm" className="flex-1 text-xs gap-1">🎯 Truth</Button>
-                  <Button onClick={handleDare} variant="secondary" size="sm" className="flex-1 text-xs gap-1">🔥 Dare</Button>
-                </div>
-                <button onClick={() => setActiveGame("none")} className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center">← Back</button>
               </div>
             )}
 
@@ -205,21 +163,47 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatG
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-muted-foreground">
-                    {winner ? `${winner === mySymbol ? "You win" : "They win"}! 🎉` : isDraw ? "Draw! 🤝" : mySymbol ? isMyTurn ? `Your turn (${mySymbol})` : `Their turn (${currentTurn})` : "Waiting..."}
+                    {winner
+                      ? `${winner === mySymbol ? "You win" : "They win"}! 🎉`
+                      : isDraw
+                        ? "Draw! 🤝"
+                        : mySymbol
+                          ? isMyTurn
+                            ? `Your turn (${mySymbol})`
+                            : `Their turn (${currentTurn})`
+                          : "Waiting..."}
                   </span>
-                  <button onClick={resetTTT} className="text-muted-foreground hover:text-foreground"><RotateCcw className="h-3 w-3" /></button>
+                  <button onClick={resetTTT} className="text-muted-foreground hover:text-foreground">
+                    <RotateCcw className="h-3 w-3" />
+                  </button>
                 </div>
                 <div className="grid grid-cols-3 gap-1">
                   {board.map((cell, i) => (
-                    <button key={i} onClick={() => handleCellClick(i)} disabled={!isMyTurn || !!winner || !!cell}
-                      className={cn("h-12 rounded-lg border border-border bg-secondary/40 text-lg font-bold transition-all",
+                    <button
+                      key={i}
+                      onClick={() => handleCellClick(i)}
+                      disabled={!isMyTurn || !!winner || !!cell}
+                      className={cn(
+                        "h-12 rounded-lg border border-border bg-secondary/40 text-lg font-bold transition-all",
                         !cell && !winner && isMyTurn && "hover:bg-secondary cursor-pointer",
                         (!isMyTurn || !!cell) && !winner && "cursor-not-allowed opacity-70",
-                        cell === "X" && "text-primary", cell === "O" && "text-destructive"
-                      )}>{cell}</button>
+                        cell === "X" && "text-primary",
+                        cell === "O" && "text-destructive"
+                      )}
+                    >
+                      {cell}
+                    </button>
                   ))}
                 </div>
-                <button onClick={() => { setActiveGame("none"); setMySymbol(null); }} className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center">← Back</button>
+                <button
+                  onClick={() => {
+                    setActiveGame("none");
+                    setMySymbol(null);
+                  }}
+                  className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center"
+                >
+                  ← Back
+                </button>
               </div>
             )}
           </motion.div>
