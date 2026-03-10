@@ -1,73 +1,100 @@
-# Welcome to your Lovable project
+<p align="center">
+  <img src="public/hero-banner.png" alt="Livetalk Hero Banner" width="100%">
+</p>
 
-## Project info
+<h1 align="center">🌐 Livetalk</h1>
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+<p align="center">
+  <strong>Connect with the world, one conversation at a time.</strong><br>
+  A modern, secure, and lightning-fast real-time video and text chat platform.
+</p>
 
-## How can I edit this code?
+<p align="center">
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/Supabase-181818?style=for-the-badge&logo=supabase&logoColor=3ECF8E" alt="Supabase">
+  <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white" alt="Framer Motion">
+</p>
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## ✨ Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- 🎥 **Real-time Video Chat**: High-quality, low-latency video streaming for seamless connections.
+- 💬 **Instant Text Messaging**: Chat with strangers or friends with real-time typing indicators and message reactions.
+- 🎭 **Interest-based Matching**: Find people who share your passions by selecting your interests.
+- 🛡️ **Safety First**: Built-in reporting and blocking systems to ensure a respectful environment.
+- 📱 **PWA Ready**: Install Livetalk on your home screen for a native app-like experience.
+- 🌓 **Dark Mode**: Sleek, modern interface that's easy on the eyes, day or night.
+- ⚙️ **Customizable Profiles**: Personalize your experience with custom avatars and display names.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Node.js** (v18 or higher)
+- **npm** or **bun**
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/likhith3035/ohmegle.git
+   cd ohmegle
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   bun install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Set up Environment Variables:**
+   Create a `.env` file in the root directory and add your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   # or
+   bun dev
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+   Open [http://localhost:5173](http://localhost:5173) in your browser to see the app.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS & shadcn/ui
+- **Backend/Auth**: Supabase
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Routing**: React Router DOM
+
+## 📁 Project Structure
+
+```text
+src/
+├── components/     # Reusable UI components (Radix/shadcn)
+├── contexts/       # React Contexts for global state
+├── hooks/          # Custom React hooks
+├── integrations/   # Third-party service integrations
+├── lib/            # Utility functions and configurations
+├── pages/          # Full page components and layouts
+└── App.tsx         # Main application entry point
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+<p align="center">
+  Made with ❤️ by the Livetalk Team
+</p>
