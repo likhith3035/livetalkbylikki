@@ -62,7 +62,7 @@ const Index = () => {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const appOrigin = "https://LiveTalkbylikki.lovable.app";
+  const appOrigin = "https://LiveTalkbylikki.netlify.app";
   const getRoomUrl = (code: string) => `${appOrigin}/room/${code}`;
 
   const generateAndJoinRoom = () => {

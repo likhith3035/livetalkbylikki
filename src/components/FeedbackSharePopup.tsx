@@ -40,7 +40,7 @@ const FeedbackSharePopup = () => {
         }
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch {}
+      } catch { }
     }, 180000); // 3 minutes (180 seconds)
 
     return () => clearTimeout(timer);
@@ -57,7 +57,7 @@ const FeedbackSharePopup = () => {
         if (markType === "feedback") state.lastFeedback = state.visits;
         if (markType === "share") state.lastShare = state.visits;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch {}
+      } catch { }
     }
   };
 
@@ -74,14 +74,14 @@ const FeedbackSharePopup = () => {
   };
 
   const shareApp = async () => {
-    const url = "https://LiveTalkbylikki.lovable.app";
+    const url = "https://LiveTalkbylikki.netlify.app";
     const text = "Check out LiveTalk — anonymous chat with strangers! 🔥";
 
     if (navigator.share) {
       try {
         await navigator.share({ title: "LiveTalk by Likki", text, url });
         toast({ title: "Thanks for sharing! 🙌" });
-      } catch {}
+      } catch { }
     } else {
       await navigator.clipboard.writeText(`${text} ${url}`);
       toast({ title: "Link copied!", description: "Share it with your friends!" });

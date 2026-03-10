@@ -29,7 +29,7 @@ const WHAT_IS = [
 ];
 
 const HOW_TO = [
-  { step: "1", title: "Open LiveTalk", desc: "Just visit LiveTalkbylikki.lovable.app on any device. That's all — nothing to install, download, or configure! Works on any browser." },
+  { step: "1", title: "Open LiveTalk", desc: "Just visit LiveTalkbylikki.netlify.app on any device. That's all — nothing to install, download, or configure! Works on any browser." },
   { step: "2", title: 'Tap "Start Chatting"', desc: "Hit the big glowing button on the home page. Our matching system immediately starts looking for someone to connect you with." },
   { step: "3", title: "Wait a moment", desc: "Usually takes just 2-5 seconds. You'll see a \"Searching...\" animation while we find the perfect match. Add interests to get matched with like-minded people!" },
   { step: "4", title: "Say hello! 👋", desc: "Once connected, you'll see a celebration popup. Type your message in the box at the bottom and tap Send. The stranger sees it instantly!" },
@@ -74,7 +74,7 @@ const FEATURES_DETAILED = [
     icon: Users, title: "Private Rooms 🔒", category: "Matching",
     desc: "Create a private room with a unique 6-letter code. Share the code with your friend via WhatsApp, Instagram, or any app. They enter the code and join your room directly — no random matching involved.",
     tech: "Generates a random 6-character alphanumeric code (excluding ambiguous characters like 0/O/1/I). Uses a dedicated Supabase Realtime channel per room code. Both users subscribe to the same channel for direct messaging.",
-    details: "Room codes are case-insensitive and designed to be easy to read aloud or type. The room URL can be shared directly (LiveTalkbylikki.lovable.app/room/ABCDEF) for one-tap joining.",
+    details: "Room codes are case-insensitive and designed to be easy to read aloud or type. The room URL can be shared directly (LiveTalkbylikki.netlify.app/room/ABCDEF) for one-tap joining.",
   },
   {
     icon: Image, title: "Send Images 📷", category: "Media",
@@ -210,7 +210,8 @@ const FAQ = [
   { q: "What does the 'online' counter show?", a: "It shows how many people are currently on LiveTalk. More people online = faster matching! The count updates in real-time." },
   { q: "Can I use LiveTalk on multiple devices?", a: "Yes! Since there's no account, you can open LiveTalk on any device independently. Each device gets its own separate chat sessions." },
   { q: "Is LiveTalk better than Omegle?", a: "LiveTalk is built as a modern alternative to Omegle with better features, a beautiful UI, no ads, built-in games, reactions, GIFs, video calls, and a focus on privacy. It's what Omegle should have been!" },
-  { q: "Who built LiveTalk?", a: "LiveTalk was designed and developed by Likhith (Likki) as a passion project. It's built with modern web technologies like React, TypeScript, and Supabase." },
+  { q: "Who built LiveTalk?", a: "LiveTalk was designed and developed by Likhith Kami (Likki) as a passion project. It's built with modern, high-performance web technologies to ensure your privacy and safety." },
+  { q: "What is the tech stack of LiveTalk?", a: "LiveTalk uses a professional 'Pro-Level' stack: TypeScript for reliable code, React 18 for the user interface, Vite for lightning-fast speeds, Tailwind CSS for the premium design, and Supabase / WebRTC for instant real-time messaging and video calls. This ensures a seamless, secure experience on any device." },
 ];
 
 const COMPARISON = [
