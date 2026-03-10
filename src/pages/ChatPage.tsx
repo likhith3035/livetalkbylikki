@@ -31,6 +31,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
     inCallMessages, sendInCallMessage,
+    supportsScreenShare,
   } = useChatContext();
 
   useSEO({ title: "Anonymous Chat – LiveTalk", description: "Start chatting anonymously with strangers on LiveTalk. No registration required. Text, video, games and more." });
@@ -221,6 +222,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onUpgradeToVideo={upgradeToVideo}
         onSendInCallMessage={sendInCallMessage}
         inCallMessages={inCallMessages}
+        supportsScreenShare={supportsScreenShare}
       />
 
       <MatchCelebration

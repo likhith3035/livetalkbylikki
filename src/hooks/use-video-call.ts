@@ -114,6 +114,8 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
     return stream;
   }, []);
 
+  const supportsScreenShare = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+
   const startCall = useCallback(async (audioOnly = false) => {
     if (!channelRef.current) return;
     setCallStatus("requesting");
@@ -511,5 +513,6 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
     upgradeToVideo,
     handleSignalingEvent,
     cleanup,
+    supportsScreenShare,
   };
 }

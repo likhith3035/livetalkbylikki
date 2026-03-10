@@ -57,6 +57,7 @@ interface ChatContextValue {
   remoteMuted: boolean;
   remoteCameraOff: boolean;
   remoteBlurred: boolean;
+  supportsScreenShare: boolean;
 
   // Video call actions
   startCall: (audioOnly: boolean) => void;
@@ -119,8 +120,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     toast({ title: "🎥 Upgraded to video", description: "The call has been upgraded to video." });
   }, [toast]);
 
-  const videoCall = useVideoCall({ sessionId, channel: roomChannel, onCallEnded, onCallUpgraded });
-
   const {
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
@@ -129,6 +128,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
     handleSignalingEvent, cleanup,
+    supportsScreenShare,
   } = videoCall;
 
   // Handle in-call chat messages via the room channel
@@ -205,6 +205,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
     inCallMessages, sendInCallMessage,
+    supportsScreenShare,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

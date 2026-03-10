@@ -41,6 +41,7 @@ interface VideoCallOverlayProps {
   onUpgradeToVideo?: () => void;
   onSendInCallMessage?: (text: string) => void;
   inCallMessages?: InCallMessage[];
+  supportsScreenShare?: boolean;
 }
 
 const formatDuration = (seconds: number) => {
@@ -57,6 +58,7 @@ const VideoCallOverlay = ({
   onFlipCamera, onToggleScreenShare, onToggleBlur,
   onUpgradeToVideo,
   onSendInCallMessage, inCallMessages = [],
+  supportsScreenShare = false,
 }: VideoCallOverlayProps) => {
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -74,7 +76,7 @@ const VideoCallOverlay = ({
     localVideoElRef.current = node;
     if (node && localStream && node.srcObject !== localStream) {
       node.srcObject = localStream;
-      node.play().catch(() => {});
+      node.play().catch(() => { });
     }
   }, [localStream]);
 
@@ -82,7 +84,7 @@ const VideoCallOverlay = ({
     remoteVideoElRef.current = node;
     if (node && remoteStream && node.srcObject !== remoteStream) {
       node.srcObject = remoteStream;
-      node.play().catch(() => {});
+      node.play().catch(() => { });
     }
   }, [remoteStream]);
 
@@ -91,7 +93,7 @@ const VideoCallOverlay = ({
     const el = localVideoElRef.current;
     if (el && localStream && el.srcObject !== localStream) {
       el.srcObject = localStream;
-      el.play().catch(() => {});
+      el.play().catch(() => { });
     }
   }, [localStream]);
 
@@ -99,7 +101,7 @@ const VideoCallOverlay = ({
     const el = remoteVideoElRef.current;
     if (el && remoteStream && el.srcObject !== remoteStream) {
       el.srcObject = remoteStream;
-      el.play().catch(() => {});
+      el.play().catch(() => { });
     }
   }, [remoteStream]);
 
@@ -253,7 +255,7 @@ const VideoCallOverlay = ({
   if (callStatus === "active") {
     return (
       <div
-        className="fixed inset-0 z-[90] bg-background flex flex-col animate-fade-in"
+        className="fixed inset-0 lg:left-[220px] z-[90] bg-background flex flex-col animate-fade-in"
         style={{ height: "100dvh" }}
         onClick={handleTapScreen}
       >
@@ -325,46 +327,46 @@ const VideoCallOverlay = ({
 
           {/* Draggable Local video (PiP) - only for video calls */}
           {!isAudioOnly && (
-          <motion.div
-            drag
-            dragMomentum={false}
-            dragElastic={0.1}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 xs:w-28 xs:h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none"
-            onClick={(e) => e.stopPropagation()}
-            whileDrag={{ scale: 1.05 }}
-            onDoubleClick={(e) => { e.stopPropagation(); onFlipCamera(); }}
-          >
-            {localStream && !isCameraOff ? (
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className={cn(
-                  "h-full w-full",
-                  isScreenSharing ? "object-contain bg-black" : "object-cover",
-                  isBlurred && "video-blur"
-                )}
-                style={{
-                  transform: [
-                    facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "",
-                    isBlurred ? "scale(1.15)" : "",
-                  ].filter(Boolean).join(" ") || "none",
-                }}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center bg-secondary">
-                <VideoOff className="h-6 w-6 text-muted-foreground" />
-              </div>
-            )}
-            {isScreenSharing && (
-              <div className="absolute bottom-1 left-1 right-1 flex items-center justify-center">
-                <span className="text-[9px] bg-primary/80 text-primary-foreground rounded px-1.5 py-0.5 font-medium">
-                  Screen
-                </span>
-              </div>
-            )}
-          </motion.div>
+            <motion.div
+              drag
+              dragMomentum={false}
+              dragElastic={0.1}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 xs:w-28 xs:h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none"
+              onClick={(e) => e.stopPropagation()}
+              whileDrag={{ scale: 1.05 }}
+              onDoubleClick={(e) => { e.stopPropagation(); onFlipCamera(); }}
+            >
+              {localStream && !isCameraOff ? (
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={cn(
+                    "h-full w-full",
+                    isScreenSharing ? "object-contain bg-black" : "object-cover",
+                    isBlurred && "video-blur"
+                  )}
+                  style={{
+                    transform: [
+                      facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "",
+                      isBlurred ? "scale(1.15)" : "",
+                    ].filter(Boolean).join(" ") || "none",
+                  }}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-secondary">
+                  <VideoOff className="h-6 w-6 text-muted-foreground" />
+                </div>
+              )}
+              {isScreenSharing && (
+                <div className="absolute bottom-1 left-1 right-1 flex items-center justify-center">
+                  <span className="text-[9px] bg-primary/80 text-primary-foreground rounded px-1.5 py-0.5 font-medium">
+                    Screen
+                  </span>
+                </div>
+              )}
+            </motion.div>
           )}
 
           {/* Status pill with timer */}
@@ -447,7 +449,7 @@ const VideoCallOverlay = ({
               onClick={(e) => e.stopPropagation()}
             >
               {/* Top row: extra controls */}
-               <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
+              <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
                 {isAudioOnly && onUpgradeToVideo && (
                   <ControlButton
                     onClick={onUpgradeToVideo}
@@ -466,13 +468,15 @@ const VideoCallOverlay = ({
                       label="Flip"
                       small
                     />
-                    <ControlButton
-                      onClick={onToggleScreenShare}
-                      active={isScreenSharing}
-                      icon={isScreenSharing ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
-                      label={isScreenSharing ? "Stop" : "Share"}
-                      small
-                    />
+                    {supportsScreenShare && (
+                      <ControlButton
+                        onClick={onToggleScreenShare}
+                        active={isScreenSharing}
+                        icon={isScreenSharing ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
+                        label={isScreenSharing ? "Stop" : "Share"}
+                        small
+                      />
+                    )}
                     <ControlButton
                       onClick={onToggleBlur}
                       active={isBlurred}
