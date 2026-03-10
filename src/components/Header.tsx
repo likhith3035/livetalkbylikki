@@ -15,7 +15,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount }, ref) => {
   return (
     <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 glass">
       <div className="flex items-center gap-3">
-        <Logo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md hover:scale-105 transition-transform" />
+        <Logo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
         <span className="font-display text-base sm:text-lg font-bold text-foreground">LiveTalk</span>
       </div>
 

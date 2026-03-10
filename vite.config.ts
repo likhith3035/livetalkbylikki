@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "LiveTalk – Talk to Anyone Instantly",
         short_name: "LiveTalk",
-        description: "Chat anonymously with strangers. No signup, no tracking.",
+        description: "LiveTalk by Likki – The #1 Omegle alternative for anonymous text and video chat with strangers worldwide. No signup, no tracking, 100% free.",
         theme_color: "#7c3aed",
         background_color: "#0a0a0f",
         display: "standalone",

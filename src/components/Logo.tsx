@@ -1,7 +1,15 @@
 import { SVGProps } from "react";
 
 export const Logo = (props: SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg
+        viewBox="0 0 120 120"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="LiveTalk Logo"
+        {...props}
+    >
+        <title>LiveTalk - Anonymous Chat</title>
         {/* Heart Background */}
         <path
             d="M 60 100 
