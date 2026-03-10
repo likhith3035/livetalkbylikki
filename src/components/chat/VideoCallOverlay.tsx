@@ -65,6 +65,7 @@ const VideoCallOverlay = ({
   const [showControls, setShowControls] = useState(true);
   const [callDuration, setCallDuration] = useState(0);
   const [isPiP, setIsPiP] = useState(false);
+  const [isLocalMain, setIsLocalMain] = useState(false); // WhatsApp-style swap
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const localVideoElRef = useRef<HTMLVideoElement | null>(null);
@@ -275,27 +276,52 @@ const VideoCallOverlay = ({
               )}
             </div>
           ) : (
-            <>
-              {remoteStream ? (
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className={cn(
-                    "h-full w-full",
-                    remoteIsScreenSharing ? "object-contain" : "object-cover"
-                  )}
-                />
+            <div className="h-full w-full">
+              {isLocalMain ? (
+                localStream && !isCameraOff ? (
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={cn(
+                      "h-full w-full object-cover",
+                      isBlurred && "video-blur"
+                    )}
+                    style={{
+                      transform: [
+                        facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "",
+                        isBlurred ? "scale(1.15)" : "",
+                      ].filter(Boolean).join(" ") || "none",
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <VideoOff className="h-12 w-12 text-muted-foreground/30" />
+                  </div>
+                )
               ) : (
-                <div className="flex h-full items-center justify-center">
-                  <VideoOff className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30" />
-                </div>
+                remoteStream ? (
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className={cn(
+                      "h-full w-full",
+                      remoteIsScreenSharing ? "object-contain" : "object-cover"
+                    )}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <VideoOff className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/30" />
+                  </div>
+                )
               )}
-            </>
+            </div>
           )}
 
           {/* Remote state indicators */}
-          {(remoteMuted || remoteCameraOff || remoteBlurred) && (
+          {(remoteMuted || remoteCameraOff || remoteBlurred) && !isLocalMain && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
               {remoteMuted && (
                 <div className="flex items-center gap-1 rounded-full bg-card/80 backdrop-blur-sm border border-border px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
@@ -316,7 +342,7 @@ const VideoCallOverlay = ({
           )}
 
           {/* Screen share indicator on remote */}
-          {!isAudioOnly && remoteIsScreenSharing && (
+          {!isAudioOnly && remoteIsScreenSharing && !isLocalMain && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
               <div className="flex items-center gap-1.5 rounded-full bg-primary/90 text-primary-foreground px-3 py-1 text-xs font-medium shadow-lg">
                 <Monitor className="h-3.5 w-3.5" />
@@ -325,47 +351,71 @@ const VideoCallOverlay = ({
             </div>
           )}
 
-          {/* Draggable Local video (PiP) - only for video calls */}
+          {/* Draggable PiP video - only for video calls */}
           {!isAudioOnly && (
             <motion.div
               drag
               dragMomentum={false}
               dragElastic={0.1}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 xs:w-28 xs:h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none"
-              onClick={(e) => e.stopPropagation()}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 xs:w-28 xs:h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none ring-1 ring-white/10"
+              onClick={(e) => { e.stopPropagation(); setIsLocalMain(!isLocalMain); }}
               whileDrag={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onDoubleClick={(e) => { e.stopPropagation(); onFlipCamera(); }}
             >
-              {localStream && !isCameraOff ? (
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className={cn(
-                    "h-full w-full",
-                    isScreenSharing ? "object-contain bg-black" : "object-cover",
-                    isBlurred && "video-blur"
-                  )}
-                  style={{
-                    transform: [
-                      facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "",
-                      isBlurred ? "scale(1.15)" : "",
-                    ].filter(Boolean).join(" ") || "none",
-                  }}
-                />
+              {!isLocalMain ? (
+                localStream && !isCameraOff ? (
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={cn(
+                      "h-full w-full",
+                      isScreenSharing ? "object-contain bg-black" : "object-cover",
+                      isBlurred && "video-blur"
+                    )}
+                    style={{
+                      transform: [
+                        facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "",
+                        isBlurred ? "scale(1.15)" : "",
+                      ].filter(Boolean).join(" ") || "none",
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-secondary">
+                    <VideoOff className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )
               ) : (
-                <div className="flex h-full items-center justify-center bg-secondary">
-                  <VideoOff className="h-6 w-6 text-muted-foreground" />
-                </div>
+                remoteStream ? (
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className={cn(
+                      "h-full w-full object-cover",
+                      remoteIsScreenSharing && "object-contain bg-black"
+                    )}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-secondary">
+                    <VideoOff className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )
               )}
-              {isScreenSharing && (
+              {((!isLocalMain && isScreenSharing) || (isLocalMain && remoteIsScreenSharing)) && (
                 <div className="absolute bottom-1 left-1 right-1 flex items-center justify-center">
                   <span className="text-[9px] bg-primary/80 text-primary-foreground rounded px-1.5 py-0.5 font-medium">
                     Screen
                   </span>
                 </div>
               )}
+              <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full bg-black/20 backdrop-blur-md">
+                  <PictureInPicture2 className="h-3 w-3 text-white" />
+                </Button>
+              </div>
             </motion.div>
           )}
 
@@ -466,6 +516,13 @@ const VideoCallOverlay = ({
                       active={false}
                       icon={<SwitchCamera className="h-4 w-4" />}
                       label="Flip"
+                      small
+                    />
+                    <ControlButton
+                      onClick={() => setIsLocalMain(!isLocalMain)}
+                      active={isLocalMain}
+                      icon={<PictureInPicture2 className="h-4 w-4 rotate-180" />}
+                      label="Swap"
                       small
                     />
                     {supportsScreenShare && (
