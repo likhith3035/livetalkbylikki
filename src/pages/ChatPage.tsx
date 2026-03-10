@@ -9,7 +9,6 @@ import InterestBar from "@/components/chat/InterestBar";
 import VideoCallOverlay from "@/components/chat/VideoCallOverlay";
 import MatchCelebration from "@/components/chat/MatchCelebration";
 import ChatWallpaper from "@/components/chat/ChatWallpaper";
-import MeshBackground from "@/components/MeshBackground";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
@@ -82,9 +81,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     root.style.setProperty("--bubble-you-foreground", theme.youFg);
     root.style.setProperty("--bubble-stranger", theme.stranger);
     root.style.setProperty("--bubble-stranger-foreground", theme.strangerFg);
-    // Mesh colors derived from theme
-    root.style.setProperty("--mesh-blob-1", theme.you);
-    root.style.setProperty("--mesh-blob-2", theme.stranger);
   }, []);
 
   const handleForwardMessage = useCallback((msg: Message) => {
@@ -103,7 +99,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background relative z-0">
-      <MeshBackground />
       <ChatWallpaper />
       <div className="lg:hidden">
         <Header onlineCount={onlineCount} />
