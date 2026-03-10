@@ -9,7 +9,6 @@ import { Logo } from "@/components/Logo";
 const navItems = [
   { icon: Home, path: "/", label: "Home" },
   { icon: MessageSquare, path: "/chat", label: "Chat" },
-  { icon: Users, path: "/group", label: "Group" },
   { icon: User, path: "/profile", label: "Profile" },
   { icon: Settings, path: "/settings", label: "Settings" },
   { icon: Info, path: "/info", label: "About" },

@@ -100,12 +100,7 @@ const FEATURES_DETAILED = [
     tech: "Uses the same WebRTC infrastructure as video calls but requests audio-only media streams. Upgrade to video adds a video track to the existing peer connection without reconnecting.",
     details: "Audio calls show a minimal UI with waveform visualization. The call quality adapts to network conditions automatically using WebRTC's built-in bandwidth estimation.",
   },
-  {
-    icon: Users, title: "Group Chat 👨‍👩‍👧‍👦", category: "Communication",
-    desc: "Hang out with multiple friends in a single room! Create a group chat, share the unique link with up to 4 other friends, and enjoy real-time messaging together. Set passwords to keep the room secure.",
-    tech: "Powered by Supabase Realtime broadcast channels for group messaging. Users track presence state to manage active members. All messages stay within the designated group room channel.",
-    details: "Group rooms are limited to 5 concurrent online members for optimal experience. Group names can be anything, and the rooms automatically handle presence tracking and sync.",
-  },
+
   {
     icon: SkipForward, title: "Next / Skip ⏭️", category: "Navigation",
     desc: "Not vibing with this person? Tap \"Next\" — instantly disconnect and connect to someone new. No awkward goodbyes needed! You can also use the keyboard shortcut Ctrl+N.",
@@ -229,7 +224,6 @@ const COMPARISON = [
   { feature: "Disappearing Messages", LiveTalk: true, others: false },
   { feature: "Interest Matching", LiveTalk: true, others: true },
   { feature: "Private Rooms", LiveTalk: true, others: false },
-  { feature: "Group Chats", LiveTalk: true, others: false },
   { feature: "Chat Themes", LiveTalk: true, others: false },
   { feature: "No Ads", LiveTalk: true, others: false },
   { feature: "PWA Support", LiveTalk: true, others: false },

@@ -4,6 +4,5 @@
 User-agent: *
 Allow: /
 Disallow: /room/
-Disallow: /group/
 
 Sitemap: https://livetalkbylikki.netlify.app/sitemap.xml

@@ -18,8 +18,6 @@ import RoomPage from "./pages/RoomPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import InfoPage from "./pages/InfoPage";
-import GroupSetupPage from "./pages/GroupSetupPage";
-import GroupRoomPage from "./pages/GroupRoomPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,9 +52,8 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/room/:code" element={<RoomPage />} />
-          <Route path="/group" element={<GroupSetupPage />} />
-          <Route path="/group/:id" element={<GroupRoomPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/info" element={<InfoPage />} />
           <Route path="*" element={<NotFound />} />

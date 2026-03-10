@@ -58,7 +58,7 @@ const Index = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
-  useSEO({ title: "LiveTalk – Talk to Anyone Instantly", description: "LiveTalk by Likki – Free anonymous chat with strangers. No signup, no tracking. Video calls, text chat, group chat, games & more." });
+  useSEO({ title: "LiveTalk – Talk to Anyone Instantly", description: "LiveTalk by Likki – Free anonymous chat with strangers. No signup, no tracking. Video calls, text chat, games & more." });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
