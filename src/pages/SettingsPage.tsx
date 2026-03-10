@@ -12,7 +12,7 @@ const SettingsPage = () => {
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
   const { settings, updateSetting } = useSettings();
-  useSEO({ title: "Settings", description: "Customize your LiveTalk experience — themes, wallpapers, sound, notifications and more." });
+  useSEO({ title: "Settings – LiveTalk", description: "Customize your LiveTalk experience — themes, wallpapers, sound, notifications and more." });
 
   const handleToggle = async (key: "darkMode" | "soundEffects" | "notifications", checked: boolean) => {
     if (key === "notifications" && checked) {
