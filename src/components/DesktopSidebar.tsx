@@ -1,4 +1,4 @@
-import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Users } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Users, Shield } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import OnlineBadge from "@/components/OnlineBadge";
