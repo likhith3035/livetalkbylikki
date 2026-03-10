@@ -610,6 +610,24 @@ const InfoPage = () => {
           </div>
         </motion.section>
 
+        {/* ─── Safety CTA ─── */}
+        <motion.div {...fadeUp} transition={{ delay: 0.5 }} className="pt-4">
+          <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 space-y-4 text-center">
+            <Shield className="h-10 w-10 text-primary mx-auto" />
+            <h3 className="text-xl font-bold font-display">Your Safety is Our Priority</h3>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              Learn how to stay 100% protected while chatting anonymously. Visit our safety guide.
+            </p>
+            <button
+              onClick={() => navigate("/safety")}
+              className="inline-flex items-center gap-2 rounded-xl bg-secondary border border-border px-6 py-2.5 text-xs font-bold hover:bg-secondary/80 transition-all hover:scale-105"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              Visit Safety Center
+            </button>
+          </div>
+        </motion.div>
+
         {/* ─── CTA ─── */}
         <motion.div {...fadeUp} transition={{ delay: 0.55 }} className="text-center space-y-3 py-6">
           <Sparkles className="h-6 w-6 text-primary mx-auto" />

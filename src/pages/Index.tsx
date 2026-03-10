@@ -530,8 +530,8 @@ const Index = () => {
 
           <div className="flex items-center gap-8 text-sm text-muted-foreground">
             <Link to="/info" className="hover:text-foreground transition-colors duration-200">About</Link>
-            <Link to="/info" className="hover:text-foreground transition-colors duration-200">Safety</Link>
-            <Link to="/info" className="hover:text-foreground transition-colors duration-200">Terms</Link>
+            <Link to="/safety" className="hover:text-foreground transition-colors duration-200">Safety Center</Link>
+            <Link to="/info" className="hover:text-foreground transition-colors duration-200">Help & FAQ</Link>
           </div>
 
           <div className="flex items-center gap-3">

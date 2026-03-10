@@ -17,6 +17,7 @@ import ChatPage from "./pages/ChatPage";
 import RoomPage from "./pages/RoomPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import SafetyCenterPage from "./pages/SafetyCenterPage";
 import InfoPage from "./pages/InfoPage";
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +56,7 @@ const AnimatedRoutes = () => {
           <Route path="/profile" element={<ProfilePage />} />
 
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/safety" element={<SafetyCenterPage />} />
           <Route path="/info" element={<InfoPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
