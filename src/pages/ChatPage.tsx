@@ -195,6 +195,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onCancelReply={() => setReplyingTo(null)}
         roomChannel={roomChannel}
         sessionId={sessionId}
+        hasMessages={messages.length > 0}
       />
 
       <VideoCallOverlay

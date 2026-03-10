@@ -21,9 +21,10 @@ interface ChatInputProps {
   roomChannel?: RealtimeChannel | null;
   sessionId?: string;
   hideGames?: boolean;
+  hasMessages?: boolean;
 }
 
-const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId, hideGames }: ChatInputProps) => {
+const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId, hideGames, hasMessages }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const throttleRef = useRef<number>(0);
@@ -77,9 +78,11 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
           )}
         </AnimatePresence>
 
-        <div className="mx-auto max-w-3xl mb-2 sm:mb-3">
-          <Icebreakers onSelect={(text) => onSend(text)} disabled={!isConnected} />
-        </div>
+        {!hasMessages && (
+          <div className="mx-auto max-w-3xl mb-2 sm:mb-3">
+            <Icebreakers onSelect={(text) => onSend(text)} disabled={!isConnected} />
+          </div>
+        )}
 
         <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2 items-center">
           <div className="flex items-center gap-0.5">
