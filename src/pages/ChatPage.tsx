@@ -33,7 +33,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     inCallMessages, sendInCallMessage,
   } = useChatContext();
 
-  useSEO({ title: "Chat with Strangers", description: "Start chatting anonymously with strangers on LiveTalk. No registration required. Text, video, games and more." });
+  useSEO({ title: "Anonymous Chat – LiveTalk", description: "Start chatting anonymously with strangers on LiveTalk. No registration required. Text, video, games and more." });
 
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);
