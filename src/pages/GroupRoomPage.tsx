@@ -9,6 +9,7 @@ import { useGroupChat } from "@/hooks/use-group-chat";
 import ChatMessageList from "@/components/chat/ChatMessageList";
 import ChatInput from "@/components/chat/ChatInput";
 import type { Message } from "@/hooks/use-chat";
+import { useSEO } from "@/hooks/use-seo";
 
 const GroupRoomPage = () => {
     const { id } = useParams();
@@ -18,6 +19,7 @@ const GroupRoomPage = () => {
 
     const roomName = searchParams.get("n") || "Group Room";
     const maxMembers = parseInt(searchParams.get("m") || "5", 10);
+    useSEO({ title: `Group: ${roomName}`, description: `Join the "${roomName}" group chat on LiveTalk. Anonymous group conversation with up to ${maxMembers} members.` });
     const encodedPassword = searchParams.get("p");
 
     const [isAuthenticated, setIsAuthenticated] = useState(!encodedPassword);

@@ -6,10 +6,12 @@ import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { Button } from "@/components/ui/button";
+import { useSEO } from "@/hooks/use-seo";
 
 const GroupSetupPage = () => {
     const navigate = useNavigate();
     const onlineCount = useOnlineCount();
+    useSEO({ title: "Group Chat – Create or Join", description: "Create or join a group chat on LiveTalk. Chat with up to 5 friends in a private room. No signup required." });
 
     const [activeTab, setActiveTab] = useState<"create" | "join">("create");
     const [roomName, setRoomName] = useState("");

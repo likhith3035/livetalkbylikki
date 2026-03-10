@@ -15,6 +15,7 @@ import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Zap, Shield, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSEO } from "@/hooks/use-seo";
 
 const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const {
@@ -31,6 +32,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     upgradeToVideo,
     inCallMessages, sendInCallMessage,
   } = useChatContext();
+
+  useSEO({ title: "Chat with Strangers", description: "Start chatting anonymously with strangers on LiveTalk. No registration required. Text, video, games and more." });
 
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);

@@ -13,6 +13,7 @@ import BottomNav from "@/components/BottomNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/Logo";
+import { useSEO } from "@/hooks/use-seo";
 
 const FEATURES = [
   { icon: Lock, title: "End-to-End Secure", desc: "Your conversations are fully encrypted and never stored on servers." },
@@ -57,6 +58,7 @@ const Index = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
+  useSEO({ title: "LiveTalk – Talk to Anyone Instantly", description: "LiveTalk by Likki – Free anonymous chat with strangers. No signup, no tracking. Video calls, text chat, group chat, games & more." });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 

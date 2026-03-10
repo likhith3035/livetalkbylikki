@@ -1,16 +1,9 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# LiveTalk - Talk to Anyone Instantly
+# https://livetalkbylikki.netlify.app
 
 User-agent: *
 Allow: /
+Disallow: /room/
+Disallow: /group/
 
-Sitemap: https://ohmeglebylikki.lovable.app/sitemap.xml
+Sitemap: https://livetalkbylikki.netlify.app/sitemap.xml

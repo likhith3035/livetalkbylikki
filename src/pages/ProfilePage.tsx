@@ -7,10 +7,12 @@ import { useOnlineCount } from "@/hooks/use-online-count";
 import { useProfile } from "@/hooks/use-profile";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSEO } from "@/hooks/use-seo";
 
 const ProfilePage = () => {
   const onlineCount = useOnlineCount();
   const { profile, displayName, updateNickname, updateAvatar, AVATAR_OPTIONS } = useProfile();
+  useSEO({ title: "My Profile", description: "Manage your LiveTalk profile — set your nickname and choose a fun avatar for your anonymous chats." });
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile.nickname);
   const [showAvatars, setShowAvatars] = useState(false);

@@ -6,11 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSettings, CHAT_THEMES, CHAT_WALLPAPERS, type ChatTheme, type ChatWallpaper } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
+import { useSEO } from "@/hooks/use-seo";
 
 const SettingsPage = () => {
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
   const { settings, updateSetting } = useSettings();
+  useSEO({ title: "Settings", description: "Customize your LiveTalk experience — themes, wallpapers, sound, notifications and more." });
 
   const handleToggle = async (key: "darkMode" | "soundEffects" | "notifications", checked: boolean) => {
     if (key === "notifications" && checked) {
@@ -130,14 +132,14 @@ const SettingsPage = () => {
           <section className="space-y-2">
             <button
               type="button"
-              onClick={() => toast({ title: "L Chat", description: "v1.1 — Speak freely" })}
+              onClick={() => toast({ title: "LiveTalk", description: "v2.0 — Talk to Anyone Instantly" })}
               className="flex w-full items-center justify-between rounded-xl border border-border bg-secondary/40 px-4 py-4 text-left"
             >
               <div className="flex items-center gap-3">
                 <Info className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">About L Chat</p>
-                  <p className="text-xs text-muted-foreground">v1.1 — By Likhith Kami</p>
+                  <p className="text-sm font-medium text-foreground">About LiveTalk</p>
+                  <p className="text-xs text-muted-foreground">v2.0 — By Likhith Kami</p>
                 </div>
               </div>
             </button>

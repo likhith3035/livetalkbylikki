@@ -1,8 +1,10 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { useSEO } from "@/hooks/use-seo";
 
 const NotFound = () => {
   const location = useLocation();
+  useSEO({ title: "404 - Page Not Found", description: "The page you are looking for does not exist on LiveTalk." });
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
