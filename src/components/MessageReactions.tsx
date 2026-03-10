@@ -1,6 +1,7 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import EmojiBurst from "@/components/EmojiBurst";
 
 const EMOJI_OPTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
@@ -12,19 +13,35 @@ interface MessageReactionsProps {
 }
 
 const MessageReactions = ({ messageId, reactions, onReact, isMine }: MessageReactionsProps) => {
+  const [burstEmoji, setBurstEmoji] = useState<string | null>(null);
   const hasReactions = Object.values(reactions).some((arr) => arr.length > 0);
 
-  if (!hasReactions) return null;
+  const handleReact = (emoji: string) => {
+    setBurstEmoji(emoji);
+    onReact(messageId, emoji);
+  };
+
+  if (!hasReactions && !burstEmoji) return null;
 
   return (
-    <div className={cn("flex gap-1 mt-1", isMine ? "justify-end" : "justify-start")}>
+    <div className={cn("flex gap-1 mt-1 relative", isMine ? "justify-end" : "justify-start")}>
+      <AnimatePresence>
+        {burstEmoji && (
+          <EmojiBurst
+            key={`${messageId}-${burstEmoji}`}
+            emoji={burstEmoji}
+            onComplete={() => setBurstEmoji(null)}
+          />
+        )}
+      </AnimatePresence>
+
       {Object.entries(reactions).map(([emoji, senders]) =>
         senders.length > 0 ? (
           <motion.button
             key={emoji}
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            onClick={() => onReact(messageId, emoji)}
+            onClick={() => handleReact(emoji)}
             className="flex items-center gap-0.5 rounded-full bg-secondary/80 border border-border px-1.5 py-0.5 text-xs hover:bg-secondary active:scale-95 transition-all"
           >
             <span>{emoji}</span>
