@@ -3,13 +3,33 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export type VideoCallStatus = "idle" | "requesting" | "incoming" | "connecting" | "active";
 
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
+const getIceServers = (): RTCConfiguration => {
+  const defaultServers: RTCIceServer[] = [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
     { urls: "stun:stun2.l.google.com:19302" },
-  ],
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" },
+    { urls: "stun:global.stun.twilio.com:3478" },
+  ];
+
+  try {
+    const customServers = import.meta.env.VITE_ICE_SERVERS;
+    if (customServers) {
+      const parsed = JSON.parse(customServers);
+      if (Array.isArray(parsed)) {
+        console.log("WebRTC: Using custom ICE servers from environment");
+        return { iceServers: [...parsed, ...defaultServers] };
+      }
+    }
+  } catch (e) {
+    console.error("WebRTC: Failed to parse VITE_ICE_SERVERS", e);
+  }
+
+  return { iceServers: defaultServers };
 };
+
+const ICE_CONFIG = getIceServers();
 
 interface UseVideoCallOptions {
   sessionId: string;
@@ -44,6 +64,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
   }, [channel]);
 
   const cleanup = useCallback(() => {
+    console.log("WebRTC: Cleaning up call...");
     if (pcRef.current) {
       pcRef.current.close();
       pcRef.current = null;
@@ -72,17 +93,20 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
   }, []);
 
   const createPeerConnection = useCallback(() => {
-    const pc = new RTCPeerConnection(ICE_SERVERS);
+    console.log("WebRTC: Creating PeerConnection...", ICE_CONFIG);
+    const pc = new RTCPeerConnection(ICE_CONFIG);
     const remote = new MediaStream();
     setRemoteStream(remote);
 
     pc.ontrack = (e) => {
+      console.log("WebRTC: Received remote track", e.track.kind);
       e.streams[0]?.getTracks().forEach((track) => remote.addTrack(track));
       setRemoteStream(new MediaStream(remote.getTracks()));
     };
 
     pc.onicecandidate = (e) => {
       if (e.candidate && channelRef.current) {
+        console.log("WebRTC: Sending ICE candidate");
         channelRef.current.send({
           type: "broadcast",
           event: "webrtc:ice",
@@ -92,12 +116,20 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
     };
 
     pc.oniceconnectionstatechange = () => {
+      console.log("WebRTC: ICE Connection State:", pc.iceConnectionState);
       if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
         setCallStatus("active");
       }
       if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "closed") {
-        endCall();
+        console.warn("WebRTC: Connection state changed to:", pc.iceConnectionState);
+        if (pc.iceConnectionState === "failed") {
+          endCall();
+        }
       }
+    };
+
+    pc.onsignalingstatechange = () => {
+      console.log("WebRTC: Signaling State:", pc.signalingState);
     };
 
     pcRef.current = pc;

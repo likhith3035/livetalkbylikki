@@ -112,11 +112,13 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   } = chatHook;
 
   const onCallEnded = useCallback(() => {
-    toast({ title: "📞 Call ended", description: "Video call has ended." });
+    console.log("ChatContext: Call ended");
+    toast({ title: "📞 Call ended", description: "Video call session has closed." });
     setInCallMessages([]);
   }, [toast]);
 
   const onCallUpgraded = useCallback(() => {
+    console.log("ChatContext: Call upgraded to video");
     toast({ title: "🎥 Upgraded to video", description: "The call has been upgraded to video." });
   }, [toast]);
 
@@ -130,6 +132,21 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     handleSignalingEvent, cleanup,
     supportsScreenShare,
   } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded, onCallUpgraded });
+
+  // Signaling handler with error boundary
+  const safeHandleSignaling = useCallback(async (event: string, payload: Record<string, unknown>) => {
+    try {
+      await handleSignalingEvent(event, payload);
+    } catch (error) {
+      console.error(`ChatContext: Signaling error for event ${event}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Connection Error",
+        description: "Failed to establish video connection. Please try again.",
+      });
+      cleanup();
+    }
+  }, [handleSignalingEvent, cleanup, toast]);
 
   // Handle in-call chat messages via the room channel
   useEffect(() => {
@@ -163,8 +180,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, [roomChannel, sessionId]);
 
   useEffect(() => {
-    signalingHandlerRef.current = handleSignalingEvent;
-  }, [handleSignalingEvent]);
+    signalingHandlerRef.current = safeHandleSignaling;
+  }, [safeHandleSignaling]);
 
   useEffect(() => {
     if (status !== "connected" && callStatus !== "idle") {
