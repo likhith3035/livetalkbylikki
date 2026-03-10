@@ -581,6 +581,34 @@ const InfoPage = () => {
           </div>
         </motion.section>
 
+        {/* ─── Section: Developer ─── */}
+        <motion.section id="developer" {...fadeUp} transition={{ delay: 0.5 }} className="space-y-4 scroll-mt-20">
+          <h2 className="text-lg font-semibold text-foreground">👨‍💻 About the Developer</h2>
+          <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-background to-accent/5 border border-primary/20 p-6 space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center text-3xl border-2 border-primary/30">
+                👨‍💻
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground">Likhith Kami</h3>
+                <p className="text-sm text-primary font-medium">Full Stack Developer & Designer</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              LiveTalk was envisioned and built by <strong>Likhith Kami</strong> (Likki) as a passion project to provide a modern, safe, and feature-rich alternative to legacy anonymous chat platforms.
+              With a focus on privacy and user experience, Likhith utilized cutting-edge technologies like <strong>React, TypeScript, and WebRTC</strong> to create a seamless real-time environment.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors">
+                <Smile className="h-3.5 w-3.5 text-primary" /> Instagram
+              </a>
+              <a href="https://linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors">
+                <Users className="h-3.5 w-3.5 text-primary" /> LinkedIn
+              </a>
+            </div>
+          </div>
+        </motion.section>
+
         {/* ─── CTA ─── */}
         <motion.div {...fadeUp} transition={{ delay: 0.55 }} className="text-center space-y-3 py-6">
           <Sparkles className="h-6 w-6 text-primary mx-auto" />

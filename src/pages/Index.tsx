@@ -130,6 +130,11 @@ const Index = () => {
             {" "}by Likki
           </h1>
 
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground/60 font-medium tracking-wide uppercase">
+            <span>Developed with 💜 by</span>
+            <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="text-primary/80 hover:text-primary transition-colors hover:underline decoration-primary/30 underline-offset-4">Likhith Kami</a>
+          </div>
+
           <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground/80 font-medium max-w-2xl mx-auto">
             The #1 Omegle Alternative — Chat Anonymously with Strangers
           </p>
