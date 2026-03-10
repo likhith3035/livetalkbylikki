@@ -15,7 +15,7 @@ const SafetyCenterPage = () => {
     const onlineCount = useOnlineCount();
 
     useSEO({
-        title: "Safety Center – Anonymous Chat & Online Safety Guide",
+        title: "Safety Center – LiveTalk",
         description: "Your guide to staying safe on LiveTalk and across the internet. Learn about anonymous chat safety, privacy tips, and how we protect our community."
     });
 

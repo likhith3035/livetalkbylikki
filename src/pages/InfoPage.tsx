@@ -272,7 +272,7 @@ const ExpandableDetail = ({ details }: { details: string }) => {
 const InfoPage = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
-  useSEO({ title: "About LiveTalk – Features, Safety & FAQ", description: "Everything about LiveTalk – features, how to use, safety tips, FAQ, and why LiveTalk is the best Omegle alternative." });
+  useSEO({ title: "Help & FAQ – LiveTalk", description: "Everything about LiveTalk – features, how to use, safety tips, FAQ, and why LiveTalk is the best Omegle alternative." });
 
   const categories = [...new Set(FEATURES_DETAILED.map((f) => f.category))];
 
