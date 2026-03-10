@@ -19,9 +19,10 @@ interface ChatInputProps {
   onCancelReply?: () => void;
   roomChannel?: RealtimeChannel | null;
   sessionId?: string;
+  hideGames?: boolean;
 }
 
-const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId }: ChatInputProps) => {
+const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId, hideGames }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const throttleRef = useRef<number>(0);
@@ -79,7 +80,7 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
           <div className="flex items-center gap-0.5">
             <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
             <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
-            <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />
+            {!hideGames && <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />}
             <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
             <LocationShareButton isConnected={isConnected} onSend={onSend} />
           </div>

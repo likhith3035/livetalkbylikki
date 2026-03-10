@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 type PopupType = "feedback" | "share";
 
-const STORAGE_KEY = "ohmegle_popup_state";
+const STORAGE_KEY = "LiveTalk_popup_state";
 const FEEDBACK_EMAIL = "kamilikhith@gmail.com";
 
 // Show after certain intervals (in page visits)
@@ -66,20 +66,20 @@ const FeedbackSharePopup = () => {
       toast({ title: "Please add a rating or message" });
       return;
     }
-    const subject = encodeURIComponent(`OhMegle Feedback — ${"⭐".repeat(rating || 3)}`);
-    const body = encodeURIComponent(`Rating: ${"⭐".repeat(rating)}\n\n${feedback}\n\n— Sent from OhMegle`);
+    const subject = encodeURIComponent(`LiveTalk Feedback — ${"⭐".repeat(rating || 3)}`);
+    const body = encodeURIComponent(`Rating: ${"⭐".repeat(rating)}\n\n${feedback}\n\n— Sent from LiveTalk`);
     window.open(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`, "_blank");
     toast({ title: "Thanks for your feedback! 💜" });
     dismiss("feedback");
   };
 
   const shareApp = async () => {
-    const url = "https://ohmeglebylikki.lovable.app";
-    const text = "Check out OhMegle — anonymous chat with strangers! 🔥";
+    const url = "https://LiveTalkbylikki.lovable.app";
+    const text = "Check out LiveTalk — anonymous chat with strangers! 🔥";
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: "OhMegle by Likki", text, url });
+        await navigator.share({ title: "LiveTalk by Likki", text, url });
         toast({ title: "Thanks for sharing! 🙌" });
       } catch {}
     } else {
@@ -113,7 +113,7 @@ const FeedbackSharePopup = () => {
                   <MessageSquare className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Enjoying OhMegle?</p>
+                  <p className="text-sm font-semibold text-foreground">Enjoying LiveTalk?</p>
                   <p className="text-xs text-muted-foreground">We'd love your feedback</p>
                 </div>
               </div>
@@ -155,7 +155,7 @@ const FeedbackSharePopup = () => {
                   <Share2 className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Love OhMegle?</p>
+                  <p className="text-sm font-semibold text-foreground">Love LiveTalk?</p>
                   <p className="text-xs text-muted-foreground">Share it with friends!</p>
                 </div>
               </div>

@@ -17,22 +17,22 @@ import { useOnlineCount } from "@/hooks/use-online-count";
 /* ─── DATA ─── */
 
 const WHAT_IS = [
-  { icon: MessageSquare, title: "Chat with strangers", desc: "Talk to random people from around the world. No account, no signup — just open and chat. OhMegle connects you with real humans instantly for genuine conversations." },
+  { icon: MessageSquare, title: "Chat with strangers", desc: "Talk to random people from around the world. No account, no signup — just open and chat. LiveTalk connects you with real humans instantly for genuine conversations." },
   { icon: EyeOff, title: "100% Anonymous", desc: "We never ask for your name, email, phone number, or anything. Nobody knows who you are. Your identity is completely hidden — even from us. Chat freely without any trace." },
   { icon: Trash2, title: "Chats disappear forever", desc: "The moment you leave a chat, all messages are gone permanently. We don't save anything on any server. No logs, no backups, no archives — your conversations exist only in the moment." },
   { icon: Shield, title: "Safe & encrypted", desc: "Your messages are protected with encryption. Only you and the stranger can read them. We use modern security protocols to ensure your privacy at every step." },
   { icon: Globe, title: "Works everywhere", desc: "Use it on your phone, tablet, laptop, or computer. No app to download — just a website. Works on Chrome, Safari, Firefox, Edge, and any modern browser." },
   { icon: Wifi, title: "Real-time connection", desc: "Messages appear instantly. No delays, no refreshing needed. Our real-time infrastructure ensures sub-second message delivery worldwide." },
-  { icon: UserCheck, title: "No registration required", desc: "Unlike most platforms, OhMegle requires zero registration. No email verification, no phone number, no social login. Just open and start chatting immediately." },
-  { icon: Fingerprint, title: "Zero digital footprint", desc: "OhMegle doesn't use cookies for tracking, doesn't store IP addresses, and doesn't create user profiles. Your visit leaves absolutely no digital footprint." },
+  { icon: UserCheck, title: "No registration required", desc: "Unlike most platforms, LiveTalk requires zero registration. No email verification, no phone number, no social login. Just open and start chatting immediately." },
+  { icon: Fingerprint, title: "Zero digital footprint", desc: "LiveTalk doesn't use cookies for tracking, doesn't store IP addresses, and doesn't create user profiles. Your visit leaves absolutely no digital footprint." },
 ];
 
 const HOW_TO = [
-  { step: "1", title: "Open OhMegle", desc: "Just visit ohmeglebylikki.lovable.app on any device. That's all — nothing to install, download, or configure! Works on any browser." },
+  { step: "1", title: "Open LiveTalk", desc: "Just visit LiveTalkbylikki.lovable.app on any device. That's all — nothing to install, download, or configure! Works on any browser." },
   { step: "2", title: 'Tap "Start Chatting"', desc: "Hit the big glowing button on the home page. Our matching system immediately starts looking for someone to connect you with." },
   { step: "3", title: "Wait a moment", desc: "Usually takes just 2-5 seconds. You'll see a \"Searching...\" animation while we find the perfect match. Add interests to get matched with like-minded people!" },
   { step: "4", title: "Say hello! 👋", desc: "Once connected, you'll see a celebration popup. Type your message in the box at the bottom and tap Send. The stranger sees it instantly!" },
-  { step: "5", title: "Use all the features", desc: "Send images, GIFs, react with emojis, play games, start video calls, share location, and more. OhMegle is packed with features to make every conversation fun." },
+  { step: "5", title: "Use all the features", desc: "Send images, GIFs, react with emojis, play games, start video calls, share location, and more. LiveTalk is packed with features to make every conversation fun." },
   { step: "6", title: "Keep chatting or move on", desc: "Enjoying the conversation? Great! Want someone new? Tap \"Next\" anytime to instantly connect with a different stranger." },
   { step: "7", title: "Create private rooms", desc: "Want to chat with a specific friend? Create a private room, share the 6-letter code, and chat securely without random matching." },
   { step: "8", title: "Done? Just leave", desc: "Close the page or tap Stop. Everything disappears automatically. No cleanup needed — your chat history is gone forever." },
@@ -65,7 +65,7 @@ const FEATURES_DETAILED = [
   },
   {
     icon: Globe, title: "Interest Matching 🎯", category: "Matching",
-    desc: "Before starting a chat, add topics you like — music, gaming, movies, coding, sports, anime, and more. OhMegle tries to match you with someone who shares your interests. Matched interests are highlighted when you connect!",
+    desc: "Before starting a chat, add topics you like — music, gaming, movies, coding, sports, anime, and more. LiveTalk tries to match you with someone who shares your interests. Matched interests are highlighted when you connect!",
     tech: "Interests are stored as tags and sent during the matchmaking handshake via Supabase Realtime broadcast. The matching algorithm compares arrays to find common interests and prioritizes users with the most overlap.",
     details: "The system scores each potential match based on shared interest count. Users with the most matching interests get connected first. If no interest matches are found, you're connected to a random user instead.",
   },
@@ -73,7 +73,7 @@ const FEATURES_DETAILED = [
     icon: Users, title: "Private Rooms 🔒", category: "Matching",
     desc: "Create a private room with a unique 6-letter code. Share the code with your friend via WhatsApp, Instagram, or any app. They enter the code and join your room directly — no random matching involved.",
     tech: "Generates a random 6-character alphanumeric code (excluding ambiguous characters like 0/O/1/I). Uses a dedicated Supabase Realtime channel per room code. Both users subscribe to the same channel for direct messaging.",
-    details: "Room codes are case-insensitive and designed to be easy to read aloud or type. The room URL can be shared directly (ohmeglebylikki.lovable.app/room/ABCDEF) for one-tap joining.",
+    details: "Room codes are case-insensitive and designed to be easy to read aloud or type. The room URL can be shared directly (LiveTalkbylikki.lovable.app/room/ABCDEF) for one-tap joining.",
   },
   {
     icon: Image, title: "Send Images 📷", category: "Media",
@@ -98,6 +98,12 @@ const FEATURES_DETAILED = [
     desc: "Prefer voice-only? Start an audio call for a lighter, more private experience. Audio calls use less bandwidth and can be upgraded to video anytime during the conversation.",
     tech: "Uses the same WebRTC infrastructure as video calls but requests audio-only media streams. Upgrade to video adds a video track to the existing peer connection without reconnecting.",
     details: "Audio calls show a minimal UI with waveform visualization. The call quality adapts to network conditions automatically using WebRTC's built-in bandwidth estimation.",
+  },
+  {
+    icon: Users, title: "Group Chat 👨‍👩‍👧‍👦", category: "Communication",
+    desc: "Hang out with multiple friends in a single room! Create a group chat, share the unique link with up to 4 other friends, and enjoy real-time messaging together. Set passwords to keep the room secure.",
+    tech: "Powered by Supabase Realtime broadcast channels for group messaging. Users track presence state to manage active members. All messages stay within the designated group room channel.",
+    details: "Group rooms are limited to 5 concurrent online members for optimal experience. Group names can be anything, and the rooms automatically handle presence tracking and sync.",
   },
   {
     icon: SkipForward, title: "Next / Skip ⏭️", category: "Navigation",
@@ -173,8 +179,8 @@ const TECH_STACK = [
 const SETTINGS_INFO = [
   { icon: Moon, title: "Dark Mode 🌙", desc: "Switch between light and dark mode. Dark mode is easier on your eyes at night, saves battery on OLED screens, and looks sleek! The theme persists across sessions." },
   { icon: Volume2, title: "Sound Effects 🔊", desc: "Toggle sounds for sending/receiving messages, connecting with strangers, and call notifications. Each event has a unique, subtle sound effect." },
-  { icon: Bell, title: "Browser Notifications 🔔", desc: "Get a desktop/mobile notification when someone messages you, even if OhMegle is in another tab or minimized. Never miss a message!" },
-  { icon: Zap, title: "Auto-Reconnect ⚡", desc: "When a stranger disconnects, OhMegle automatically finds you a new person within 5 seconds. No need to tap anything — seamless continuous chatting!" },
+  { icon: Bell, title: "Browser Notifications 🔔", desc: "Get a desktop/mobile notification when someone messages you, even if LiveTalk is in another tab or minimized. Never miss a message!" },
+  { icon: Zap, title: "Auto-Reconnect ⚡", desc: "When a stranger disconnects, LiveTalk automatically finds you a new person within 5 seconds. No need to tap anything — seamless continuous chatting!" },
 ];
 
 const SAFETY = [
@@ -194,38 +200,39 @@ const KEYBOARD_SHORTCUTS = [
 ];
 
 const FAQ = [
-  { q: "Is OhMegle really free?", a: "Yes! 100% free, forever. No hidden fees, no premium plans, no subscriptions, no in-app purchases. Every feature is available to everyone." },
-  { q: "Do I need to create an account?", a: "Nope! No email, no password, no phone number, no social login. Just open OhMegle and start chatting. It literally takes 3 seconds." },
+  { q: "Is LiveTalk really free?", a: "Yes! 100% free, forever. No hidden fees, no premium plans, no subscriptions, no in-app purchases. Every feature is available to everyone." },
+  { q: "Do I need to create an account?", a: "Nope! No email, no password, no phone number, no social login. Just open LiveTalk and start chatting. It literally takes 3 seconds." },
   { q: "Can people see who I am?", a: "Absolutely not. You are completely anonymous. We don't collect any personal information, and there's no way for the stranger to find out your identity." },
   { q: "Are my messages saved anywhere?", a: "Never. Messages exist only in your browser while you're in the chat. When either person leaves, everything is permanently and irreversibly deleted. No server logs, no backups." },
-  { q: "Is OhMegle safe for minors?", a: "OhMegle is designed for users 18 and older. We strongly recommend parental guidance for younger users. Parents should be aware that users chat with random strangers." },
-  { q: "Can I use it on my phone?", a: "Yes! OhMegle works perfectly on any phone, tablet, or computer. Just open your browser and visit the website. You can even install it as an app on your home screen!" },
+  { q: "Is LiveTalk safe for minors?", a: "LiveTalk is designed for users 18 and older. We strongly recommend parental guidance for younger users. Parents should be aware that users chat with random strangers." },
+  { q: "Can I use it on my phone?", a: "Yes! LiveTalk works perfectly on any phone, tablet, or computer. Just open your browser and visit the website. You can even install it as an app on your home screen!" },
   { q: "What if someone is being mean or inappropriate?", a: "You have several options: tap \"Next\" to skip to a new person, use \"Block\" to prevent rematching, or tap \"Report\" in the menu to flag their behavior." },
-  { q: "How does interest matching work?", a: "Before chatting, add topics you're interested in (like music, gaming, movies). OhMegle's algorithm tries to connect you with someone who shares the most interests. If no match is found, you'll be connected randomly." },
+  { q: "How does interest matching work?", a: "Before chatting, add topics you're interested in (like music, gaming, movies). LiveTalk's algorithm tries to connect you with someone who shares the most interests. If no match is found, you'll be connected randomly." },
   { q: "What's a private room?", a: "A private room lets you chat with a specific person using a unique 6-letter code. Create a room, share the code with your friend, and they join directly. No random strangers — just you two!" },
   { q: "How do video calls work?", a: "Once connected with a stranger, tap the video or audio call button. The other person receives a request and can accept or decline. Calls are peer-to-peer (direct between browsers) for maximum privacy." },
   { q: "Why did the stranger disconnect?", a: "People can leave anytime — that's the nature of anonymous chatting. Don't take it personally! Tap \"Next\" for a new match, or enable auto-reconnect in settings to be matched automatically." },
-  { q: "What does the 'online' counter show?", a: "It shows how many people are currently on OhMegle. More people online = faster matching! The count updates in real-time." },
-  { q: "Can I use OhMegle on multiple devices?", a: "Yes! Since there's no account, you can open OhMegle on any device independently. Each device gets its own separate chat sessions." },
-  { q: "Is OhMegle better than Omegle?", a: "OhMegle is built as a modern alternative to Omegle with better features, a beautiful UI, no ads, built-in games, reactions, GIFs, video calls, and a focus on privacy. It's what Omegle should have been!" },
-  { q: "Who built OhMegle?", a: "OhMegle was designed and developed by Likhith (Likki) as a passion project. It's built with modern web technologies like React, TypeScript, and Supabase." },
+  { q: "What does the 'online' counter show?", a: "It shows how many people are currently on LiveTalk. More people online = faster matching! The count updates in real-time." },
+  { q: "Can I use LiveTalk on multiple devices?", a: "Yes! Since there's no account, you can open LiveTalk on any device independently. Each device gets its own separate chat sessions." },
+  { q: "Is LiveTalk better than Omegle?", a: "LiveTalk is built as a modern alternative to Omegle with better features, a beautiful UI, no ads, built-in games, reactions, GIFs, video calls, and a focus on privacy. It's what Omegle should have been!" },
+  { q: "Who built LiveTalk?", a: "LiveTalk was designed and developed by Likhith (Likki) as a passion project. It's built with modern web technologies like React, TypeScript, and Supabase." },
 ];
 
 const COMPARISON = [
-  { feature: "Anonymous Chat", ohmegle: true, others: true },
-  { feature: "No Registration", ohmegle: true, others: false },
-  { feature: "Video Calls", ohmegle: true, others: true },
-  { feature: "Text Formatting", ohmegle: true, others: false },
-  { feature: "Message Reactions", ohmegle: true, others: false },
-  { feature: "GIF Support", ohmegle: true, others: false },
-  { feature: "Built-in Games", ohmegle: true, others: false },
-  { feature: "Disappearing Messages", ohmegle: true, others: false },
-  { feature: "Interest Matching", ohmegle: true, others: true },
-  { feature: "Private Rooms", ohmegle: true, others: false },
-  { feature: "Chat Themes", ohmegle: true, others: false },
-  { feature: "No Ads", ohmegle: true, others: false },
-  { feature: "PWA Support", ohmegle: true, others: false },
-  { feature: "Dark Mode", ohmegle: true, others: false },
+  { feature: "Anonymous Chat", LiveTalk: true, others: true },
+  { feature: "No Registration", LiveTalk: true, others: false },
+  { feature: "Video Calls", LiveTalk: true, others: true },
+  { feature: "Text Formatting", LiveTalk: true, others: false },
+  { feature: "Message Reactions", LiveTalk: true, others: false },
+  { feature: "GIF Support", LiveTalk: true, others: false },
+  { feature: "Built-in Games", LiveTalk: true, others: false },
+  { feature: "Disappearing Messages", LiveTalk: true, others: false },
+  { feature: "Interest Matching", LiveTalk: true, others: true },
+  { feature: "Private Rooms", LiveTalk: true, others: false },
+  { feature: "Group Chats", LiveTalk: true, others: false },
+  { feature: "Chat Themes", LiveTalk: true, others: false },
+  { feature: "No Ads", LiveTalk: true, others: false },
+  { feature: "PWA Support", LiveTalk: true, others: false },
+  { feature: "Dark Mode", LiveTalk: true, others: false },
 ];
 
 const fadeUp = {
@@ -289,13 +296,13 @@ const InfoPage = () => {
         {/* Title */}
         <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="space-y-3">
           <h1 className="text-3xl sm:text-4xl font-bold font-display text-foreground">
-            Everything about <span className="text-primary">OhMegle</span>
+            Everything about <span className="text-primary">LiveTalk</span>
           </h1>
           <p className="text-muted-foreground text-base">
             The complete guide to every feature, how it works, and the technology behind it 🔧
           </p>
           <p className="text-sm text-muted-foreground/70 leading-relaxed">
-            OhMegle by Likki is a modern, feature-rich anonymous chat platform built for genuine human connections.
+            LiveTalk by Likki is a modern, feature-rich anonymous chat platform built for genuine human connections.
             Whether you want quick text chats, video calls, or fun games with strangers — this guide covers everything you need to know.
           </p>
         </motion.div>
@@ -304,10 +311,10 @@ const InfoPage = () => {
         <motion.nav {...fadeUp} transition={{ delay: 0.08 }} className="rounded-2xl bg-card border border-border/50 p-5 space-y-2">
           <p className="text-sm font-semibold text-foreground mb-3">📑 Jump to a section</p>
           {[
-            { id: "what", label: "What is OhMegle?" },
+            { id: "what", label: "What is LiveTalk?" },
             { id: "howto", label: "How to use it" },
             { id: "features", label: "All features (detailed)" },
-            { id: "comparison", label: "OhMegle vs Others" },
+            { id: "comparison", label: "LiveTalk vs Others" },
             { id: "tech", label: "Technology stack" },
             { id: "settings", label: "Settings & preferences" },
             { id: "safety", label: "Safety tips" },
@@ -324,14 +331,14 @@ const InfoPage = () => {
           ))}
         </motion.nav>
 
-        {/* ─── Section: What is OhMegle ─── */}
+        {/* ─── Section: What is LiveTalk ─── */}
         <motion.section id="what" {...fadeUp} transition={{ delay: 0.1 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <HelpCircle className="h-5 w-5 text-primary" />
-            What is OhMegle?
+            What is LiveTalk?
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            OhMegle is a free, open website where you can chat with random strangers from all over the world.
+            LiveTalk is a free, open website where you can chat with random strangers from all over the world.
             No sign up, no account, no download — just open the page, tap a button, and you're instantly connected
             with a real person. When you're done, everything disappears forever. It's the modern successor to Omegle,
             built with better technology, more features, and a strong focus on your privacy and safety.
@@ -359,7 +366,7 @@ const InfoPage = () => {
 
         {/* ─── Section: How to use ─── */}
         <motion.section id="howto" {...fadeUp} transition={{ delay: 0.15 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground">📱 How to use OhMegle (step by step)</h2>
+          <h2 className="text-lg font-semibold text-foreground">📱 How to use LiveTalk (step by step)</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Follow these simple steps. It takes less than 10 seconds to start chatting! No technical knowledge required.
           </p>
@@ -388,7 +395,7 @@ const InfoPage = () => {
         <motion.section id="features" {...fadeUp} transition={{ delay: 0.2 }} className="space-y-6 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground">✨ All features explained</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Every feature in OhMegle explained in detail — how it works for you, the technology powering it, and extra details when you tap "Learn more".
+            Every feature in LiveTalk explained in detail — how it works for you, the technology powering it, and extra details when you tap "Learn more".
           </p>
 
           {categories.map((cat) => (
@@ -424,15 +431,15 @@ const InfoPage = () => {
         <motion.section id="comparison" {...fadeUp} transition={{ delay: 0.22 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Star className="h-5 w-5 text-primary" />
-            OhMegle vs Other Platforms
+            LiveTalk vs Other Platforms
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            See how OhMegle compares to other anonymous chat platforms. We built every feature you wished Omegle had.
+            See how LiveTalk compares to other anonymous chat platforms. We built every feature you wished Omegle had.
           </p>
           <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
             <div className="grid grid-cols-3 gap-0 text-center border-b border-border/30 bg-secondary/40 px-3 py-2.5">
               <span className="text-[11px] font-semibold text-foreground text-left">Feature</span>
-              <span className="text-[11px] font-bold text-primary">OhMegle</span>
+              <span className="text-[11px] font-bold text-primary">LiveTalk</span>
               <span className="text-[11px] font-semibold text-muted-foreground">Others</span>
             </div>
             {COMPARISON.map((row, i) => (
@@ -441,7 +448,7 @@ const InfoPage = () => {
                 className={`grid grid-cols-3 gap-0 text-center px-3 py-2 ${i !== COMPARISON.length - 1 ? "border-b border-border/20" : ""}`}
               >
                 <span className="text-[11px] text-foreground text-left">{row.feature}</span>
-                <span className="text-[13px]">{row.ohmegle ? "✅" : "❌"}</span>
+                <span className="text-[13px]">{row.LiveTalk ? "✅" : "❌"}</span>
                 <span className="text-[13px]">{row.others ? "✅" : "❌"}</span>
               </div>
             ))}
@@ -455,7 +462,7 @@ const InfoPage = () => {
             Technology Stack
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            The cutting-edge technologies used to build OhMegle. Everything runs in your browser — no app download needed, no server processing your data.
+            The cutting-edge technologies used to build LiveTalk. Everything runs in your browser — no app download needed, no server processing your data.
           </p>
           <div className="grid gap-3">
             {TECH_STACK.map((item, i) => (
@@ -482,7 +489,7 @@ const InfoPage = () => {
         <motion.section id="settings" {...fadeUp} transition={{ delay: 0.3 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground">⚙️ Settings & preferences</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Customize your OhMegle experience from the Settings page (tap the gear icon at the bottom navigation bar).
+            Customize your LiveTalk experience from the Settings page (tap the gear icon at the bottom navigation bar).
           </p>
           <div className="grid gap-3">
             {SETTINGS_INFO.map((item, i) => (
@@ -509,7 +516,7 @@ const InfoPage = () => {
         <motion.section id="safety" {...fadeUp} transition={{ delay: 0.35 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground">🛡️ Safety tips</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Your safety matters. Follow these guidelines to have a great experience on OhMegle.
+            Your safety matters. Follow these guidelines to have a great experience on LiveTalk.
           </p>
           <div className="space-y-3">
             {SAFETY.map((item, i) => (
@@ -560,7 +567,7 @@ const InfoPage = () => {
         <motion.section id="faq" {...fadeUp} transition={{ delay: 0.45 }} className="space-y-4 scroll-mt-20">
           <h2 className="text-lg font-semibold text-foreground">❓ Common questions</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Got questions? Here are answers to the most frequently asked questions about OhMegle.
+            Got questions? Here are answers to the most frequently asked questions about LiveTalk.
           </p>
           <div className="space-y-2">
             {FAQ.map((item, i) => (
@@ -595,7 +602,7 @@ const InfoPage = () => {
         {/* Footer */}
         <div className="text-center pb-4">
           <p className="text-[11px] text-muted-foreground/50">
-            Developed by Likhith · © 2026 OhMegle by Likki
+            Developed by Likhith · © 2026 LiveTalk by Likki
           </p>
         </div>
       </main>

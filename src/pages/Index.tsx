@@ -59,7 +59,7 @@ const Index = () => {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const appOrigin = "https://ohmeglebylikki.lovable.app";
+  const appOrigin = "https://LiveTalkbylikki.lovable.app";
   const getRoomUrl = (code: string) => `${appOrigin}/room/${code}`;
 
   const generateAndJoinRoom = () => {
@@ -123,7 +123,7 @@ const Index = () => {
           </motion.div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold font-display leading-[1.05] tracking-tight text-foreground">
-            <span className="text-gradient">OhMegle</span>
+            <span className="text-gradient">LiveTalk</span>
             {" "}by Likki
           </h1>
 
@@ -132,7 +132,7 @@ const Index = () => {
           </p>
 
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            No sign-ups. No tracking. Just real conversations with real people from around the world. OhMegle 2 brings back everything you loved — better, safer, and faster.
+            No sign-ups. No tracking. Just real conversations with real people from around the world. LiveTalk 2 brings back everything you loved — better, safer, and faster.
           </p>
 
           <motion.div
@@ -519,7 +519,7 @@ const Index = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
               <MessageSquare className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-display text-lg font-bold text-foreground">OhMegle by Likki</span>
+            <span className="font-display text-lg font-bold text-foreground">LiveTalk by Likki</span>
           </div>
 
           <div className="flex items-center gap-8 text-sm text-muted-foreground">
@@ -543,11 +543,11 @@ const Index = () => {
 
         {/* SEO footer text */}
         <p className="text-center text-xs text-muted-foreground/40 mt-6 max-w-2xl mx-auto leading-relaxed">
-          OhMegle by Likki — the best Omegle 2 alternative for anonymous chatting. Meet strangers, make friends, play games. OhMegle is free, private, and works on any device.
+          LiveTalk by Likki — the best Omegle 2 alternative for anonymous chatting. Meet strangers, make friends, play games. LiveTalk is free, private, and works on any device.
         </p>
 
         <p className="text-center text-xs text-muted-foreground/50 mt-4">
-          © 2026 OhMegle by Likki. Developed with 💜 by{" "}
+          © 2026 LiveTalk by Likki. Developed with 💜 by{" "}
           <a href="https://www.instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors">Likhith</a>
         </p>
       </footer>
