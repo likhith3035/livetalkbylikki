@@ -15,26 +15,34 @@ export function useOnlineCount() {
   const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
+    // Safety check: if Firebase is not properly initialized, don't crash
+    if (!db) return;
+
     const sessionId = getSessionId();
     const presenceRef = ref(db, `presence/${sessionId}`);
     const countRef = ref(db, "presence");
     const connectedRef = ref(db, ".info/connected");
 
-    // Handle user's presence
+    // Handle user's presence state
     const unsubscribeConnected = onValue(connectedRef, (snap) => {
       if (snap.val() === true) {
-        // We are connected (or reconnected)
-        // Remove this node when we disconnect
-        onDisconnect(presenceRef).remove();
+        // Set up automatic cleanup on disconnect
+        onDisconnect(presenceRef).remove().catch(() => {
+          /* fail silently */
+        });
         
-        // Add this user to presence
+        // Mark user as online
         set(presenceRef, {
           online_at: serverTimestamp(),
+        }).catch(err => {
+          if (err.message.includes("permission_denied")) {
+            console.warn("[Firebase] Presence permission denied. Please check your Security Rules.");
+          }
         });
       }
     });
 
-    // Monitor total count
+    // Monitor total online count
     const unsubscribeCount = onValue(countRef, (snap) => {
       if (snap.exists()) {
         const count = Object.keys(snap.val()).length;
@@ -42,13 +50,17 @@ export function useOnlineCount() {
       } else {
         setOnlineCount(0);
       }
+    }, (error) => {
+      if (error.message.includes("permission_denied")) {
+        console.warn("[Firebase] Online count read permission denied. Please check your Security Rules.");
+      }
     });
 
     return () => {
       unsubscribeConnected();
       unsubscribeCount();
-      // Explicitly remove presence on unmount
-      set(presenceRef, null);
+      // Explicitly remove presence on unmount for faster cleanup
+      set(presenceRef, null).catch(() => {});
     };
   }, []);
 
