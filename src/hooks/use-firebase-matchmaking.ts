@@ -1,0 +1,126 @@
+import { useState, useRef, useCallback, useEffect } from "react";
+import { db } from "@/lib/firebase";
+import { ref, onValue, set, onDisconnect, serverTimestamp, runTransaction, off, remove } from "firebase/database";
+
+interface MatchmakingOptions {
+  sessionId: string;
+  interests: string[];
+  onMatched: (roomId: string, strangerId: string, sharedInterests: string[]) => void;
+}
+
+export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: MatchmakingOptions) {
+  const [status, setStatus] = useState<"idle" | "searching">("idle");
+  const matchedGuardRef = useRef(false);
+  const searchCodeRef = useRef<string | null>(null);
+
+  const findMatch = useCallback(async () => {
+    if (matchedGuardRef.current || status !== "searching") return;
+
+    const lobbyRef = ref(db, "lobby");
+    
+    onValue(lobbyRef, (snapshot) => {
+      if (!snapshot.exists() || matchedGuardRef.current) return;
+      
+      const users = snapshot.val();
+      const waitingIds = Object.keys(users).filter(id => {
+        const isMe = id === sessionId;
+        const sameCode = (users[id]?.code || null) === searchCodeRef.current;
+        return !isMe && sameCode;
+      });
+      
+      if (waitingIds.length === 0) return;
+
+      let matchedUserId = waitingIds[0];
+      let shared: string[] = [];
+
+      if (!searchCodeRef.current) {
+        const candidates = waitingIds.map(uid => {
+          const theirInterests = users[uid].interests || [];
+          const sharedInterests = interests.filter(i => theirInterests.includes(i));
+          return { id: uid, shared: sharedInterests, score: sharedInterests.length };
+        });
+        candidates.sort((a, b) => b.score - a.score);
+        matchedUserId = candidates[0].id;
+        shared = candidates[0].shared;
+      }
+
+      const pair = [sessionId, matchedUserId].sort();
+      const matchId = searchCodeRef.current ? `private_${searchCodeRef.current}` : `match_${pair[0]}_${pair[1]}`;
+      const matchRef = ref(db, `matches/${matchId}`);
+
+      if (pair[0] === sessionId) {
+        runTransaction(matchRef, (currentData) => {
+          if (currentData === null) {
+            return {
+              user1: pair[0],
+              user2: pair[1],
+              sharedInterests: shared,
+              roomId: matchId,
+              createdAt: serverTimestamp()
+            };
+          }
+          return;
+        });
+      }
+    }, { onlyOnce: false });
+  }, [sessionId, interests, status]);
+
+  const startSearch = useCallback((code: string | null = null) => {
+    matchedGuardRef.current = false;
+    searchCodeRef.current = code;
+    setStatus("searching");
+    
+    const myLobbyRef = ref(db, `lobby/${sessionId}`);
+    set(myLobbyRef, {
+      interests,
+      code,
+      joinedAt: serverTimestamp()
+    });
+    
+    // Ensure cleanup on sudden disconnect
+    onDisconnect(myLobbyRef).remove();
+  }, [sessionId, interests]);
+
+  const stopSearch = useCallback(() => {
+    setStatus("idle");
+    const myLobbyRef = ref(db, `lobby/${sessionId}`);
+    remove(myLobbyRef);
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (status !== "searching") return;
+
+    const matchesRef = ref(db, "matches");
+    const handleMatch = (snapshot: any) => {
+      if (!snapshot.exists() || matchedGuardRef.current) return;
+      
+      const allMatches = snapshot.val();
+      for (const mId in allMatches) {
+        const match = allMatches[mId];
+        if (match.user1 === sessionId || match.user2 === sessionId) {
+          matchedGuardRef.current = true;
+          const strangerId = match.user1 === sessionId ? match.user2 : match.user1;
+          
+          // EVIDENT CLEANUP: Remove from lobby and remove the match entry immediately
+          remove(ref(db, `lobby/${sessionId}`));
+          remove(ref(db, `matches/${mId}`));
+          
+          onMatched(match.roomId, strangerId, match.sharedInterests || []);
+          setStatus("idle");
+          break;
+        }
+      }
+    };
+
+    onValue(matchesRef, handleMatch);
+    return () => off(matchesRef, "value", handleMatch);
+  }, [status, sessionId, onMatched]);
+
+  useEffect(() => {
+    if (status === "searching") {
+      findMatch();
+    }
+  }, [status, findMatch]);
+
+  return { status, startSearch, stopSearch };
+}

@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export type VideoCallStatus = "idle" | "requesting" | "incoming" | "connecting" | "active";
 
@@ -33,12 +32,12 @@ const ICE_CONFIG = getIceServers();
 
 interface UseVideoCallOptions {
   sessionId: string;
-  channel: RealtimeChannel | null;
+  sendSignalingEvent: (event: string, payload: any) => void;
   onCallEnded?: () => void;
   onCallUpgraded?: () => void;
 }
 
-export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }: UseVideoCallOptions) {
+export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCallUpgraded }: UseVideoCallOptions) {
   const [callStatus, setCallStatus] = useState<VideoCallStatus>("idle");
   const [isAudioOnly, setIsAudioOnly] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -57,11 +56,11 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
-  const channelRef = useRef(channel);
+  const sendSignalingEventRef = useRef(sendSignalingEvent);
 
   useEffect(() => {
-    channelRef.current = channel;
-  }, [channel]);
+    sendSignalingEventRef.current = sendSignalingEvent;
+  }, [sendSignalingEvent]);
 
   const cleanup = useCallback(() => {
     console.log("WebRTC: Cleaning up call...");
@@ -105,13 +104,9 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
     };
 
     pc.onicecandidate = (e) => {
-      if (e.candidate && channelRef.current) {
+      if (e.candidate) {
         console.log("WebRTC: Sending ICE candidate");
-        channelRef.current.send({
-          type: "broadcast",
-          event: "webrtc:ice",
-          payload: { senderId: sessionId, candidate: e.candidate.toJSON() },
-        });
+        sendSignalingEventRef.current("webrtc:ice", { senderId: sessionId, candidate: e.candidate.toJSON() });
       }
     };
 
@@ -149,18 +144,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
   const supportsScreenShare = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 
   const startCall = useCallback(async (audioOnly = false) => {
-    if (!channelRef.current) return;
     setCallStatus("requesting");
     setIsAudioOnly(audioOnly);
-    channelRef.current.send({
-      type: "broadcast",
-      event: "webrtc:request",
-      payload: { senderId: sessionId, audioOnly },
-    });
+    sendSignalingEventRef.current("webrtc:request", { senderId: sessionId, audioOnly });
   }, [sessionId]);
 
   const acceptCall = useCallback(async () => {
-    if (!channelRef.current) return;
     try {
       setCallStatus("connecting");
       const stream = await getMedia("user", isAudioOnly);
@@ -172,11 +161,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
       }
       pendingCandidatesRef.current = [];
 
-      channelRef.current.send({
-        type: "broadcast",
-        event: "webrtc:accept",
-        payload: { senderId: sessionId, audioOnly: isAudioOnly },
-      });
+      sendSignalingEventRef.current("webrtc:accept", { senderId: sessionId, audioOnly: isAudioOnly });
     } catch {
       setCallStatus("idle");
       cleanup();
@@ -184,24 +169,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
   }, [sessionId, isAudioOnly, getMedia, createPeerConnection, cleanup]);
 
   const declineCall = useCallback(() => {
-    if (channelRef.current) {
-      channelRef.current.send({
-        type: "broadcast",
-        event: "webrtc:decline",
-        payload: { senderId: sessionId },
-      });
-    }
+    sendSignalingEventRef.current("webrtc:decline", { senderId: sessionId });
     setCallStatus("idle");
   }, [sessionId]);
 
   const endCall = useCallback(() => {
-    if (channelRef.current) {
-      channelRef.current.send({
-        type: "broadcast",
-        event: "webrtc:end",
-        payload: { senderId: sessionId },
-      });
-    }
+    sendSignalingEventRef.current("webrtc:end", { senderId: sessionId });
     cleanup();
     setCallStatus("idle");
     onCallEnded?.();
@@ -214,11 +187,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
         audioTrack.enabled = !audioTrack.enabled;
         const muted = !audioTrack.enabled;
         setIsMuted(muted);
-        channelRef.current?.send({
-          type: "broadcast",
-          event: "webrtc:state",
-          payload: { senderId: sessionId, key: "muted", value: muted },
-        });
+        sendSignalingEventRef.current("webrtc:state", { senderId: sessionId, key: "muted", value: muted });
       }
     }
   }, [sessionId]);
@@ -230,11 +199,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
         videoTrack.enabled = !videoTrack.enabled;
         const off = !videoTrack.enabled;
         setIsCameraOff(off);
-        channelRef.current?.send({
-          type: "broadcast",
-          event: "webrtc:state",
-          payload: { senderId: sessionId, key: "cameraOff", value: off },
-        });
+        sendSignalingEventRef.current("webrtc:state", { senderId: sessionId, key: "cameraOff", value: off });
       }
     }
   }, [sessionId]);
@@ -301,11 +266,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
       setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
       setIsScreenSharing(false);
       // Notify remote
-      channelRef.current?.send({
-        type: "broadcast",
-        event: "webrtc:screenshare",
-        payload: { senderId: sessionId, sharing: false },
-      });
+      sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: false });
     } else {
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -332,16 +293,12 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
         setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
         setIsScreenSharing(true);
         // Notify remote
-        channelRef.current?.send({
-          type: "broadcast",
-          event: "webrtc:screenshare",
-          payload: { senderId: sessionId, sharing: true },
-        });
+        sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: true });
       } catch {
         // User cancelled screen share picker
       }
     }
-  }, [isScreenSharing, facingMode]);
+  }, [isScreenSharing, facingMode, sessionId]);
 
   // Upgrade audio call to video
   const upgradeToVideo = useCallback(async () => {
@@ -355,11 +312,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
       setIsAudioOnly(false);
       onCallUpgraded?.();
-      channelRef.current?.send({
-        type: "broadcast",
-        event: "webrtc:upgrade-video",
-        payload: { senderId: sessionId },
-      });
+      sendSignalingEventRef.current("webrtc:upgrade-video", { senderId: sessionId });
     } catch {
       // Camera access denied
     }
@@ -369,11 +322,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
   const toggleBlur = useCallback(() => {
     setIsBlurred((prev) => {
       const next = !prev;
-      channelRef.current?.send({
-        type: "broadcast",
-        event: "webrtc:state",
-        payload: { senderId: sessionId, key: "blurred", value: next },
-      });
+      sendSignalingEventRef.current("webrtc:state", { senderId: sessionId, key: "blurred", value: next });
       return next;
     });
   }, [sessionId]);
@@ -404,11 +353,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
 
-            channelRef.current?.send({
-              type: "broadcast",
-              event: "webrtc:offer",
-              payload: { senderId: sessionId, offer: pc.localDescription?.toJSON() },
-            });
+            sendSignalingEventRef.current("webrtc:offer", { senderId: sessionId, offer: pc.localDescription?.toJSON() });
           } catch {
             setCallStatus("idle");
             cleanup();
@@ -435,11 +380,7 @@ export function useVideoCall({ sessionId, channel, onCallEnded, onCallUpgraded }
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
 
-          channelRef.current?.send({
-            type: "broadcast",
-            event: "webrtc:answer",
-            payload: { senderId: sessionId, answer: pc.localDescription?.toJSON() },
-          });
+          sendSignalingEventRef.current("webrtc:answer", { senderId: sessionId, answer: pc.localDescription?.toJSON() });
           break;
         }
 

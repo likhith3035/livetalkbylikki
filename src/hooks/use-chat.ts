@@ -4,6 +4,8 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useOnlineCount } from "./use-online-count";
 import { sounds, haptics } from "@/lib/sounds";
 import { sendNotification, type NotificationType } from "@/lib/notifications";
+import { useFirebaseMatchmaking } from "./use-firebase-matchmaking";
+import { useFirebaseSignaling } from "./use-firebase-signaling";
 
 const getProfile = () => {
   try {
@@ -93,6 +95,25 @@ export function useChat(callbacks?: ChatCallbacks) {
   useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
 
+  // Firebase integration
+  const onMatched = useCallback((roomId: string, strangerId: string, sharedInterests: string[]) => {
+    joinRoom(roomId, strangerId, sharedInterests);
+  }, []);
+
+  const { startSearch: startFirebaseSearch, stopSearch: stopFirebaseSearch } = useFirebaseMatchmaking({
+    sessionId,
+    interests,
+    onMatched
+  });
+
+  const { sendEvent: sendFirebaseSignalingEvent } = useFirebaseSignaling({
+    sessionId,
+    roomId: roomIdRef.current,
+    onEvent: (event, payload) => {
+      callbacksRef.current?.onSignaling?.(event, payload);
+    }
+  });
+
   const clearReconnectTimer = useCallback(() => {
     if (reconnectTimerRef.current) {
       clearInterval(reconnectTimerRef.current);
@@ -129,14 +150,30 @@ export function useChat(callbacks?: ChatCallbacks) {
     strangerIdRef.current = null;
     setStrangerTyping(false);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-  }, []);
+    stopFirebaseSearch();
+  }, [stopFirebaseSearch]);
 
   const joinRoom = useCallback(
-    (roomId: string, strangerId: string) => {
+    (roomId: string, strangerId: string, sharedInterests: string[] = []) => {
       leaveRoom();
       roomIdRef.current = roomId;
       strangerIdRef.current = strangerId;
+      setStatus("connected");
+      setMessages([]);
+      setMatchedInterests(sharedInterests);
+      playSoundIfEnabled("connected");
+      if (callbacksRef.current?.soundEnabled) haptics.vibrate([100, 50, 100]);
 
+      if (sharedInterests.length > 0) {
+        addMessage("system", `Matched! You both like: ${sharedInterests.join(", ")}`);
+      } else {
+        addMessage("system", "You are now connected with a stranger. Say hello!");
+      }
+      notifyIfEnabled("L Chat", "Connected with a stranger!", "connected");
+      if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
+      setSearchElapsed(0);
+
+      // Supabase is still used for CHAT MESSAGES
       const channel = supabase.channel(`room:${roomId}`);
 
       channel
@@ -215,19 +252,10 @@ export function useChat(callbacks?: ChatCallbacks) {
           }
         });
 
-      // WebRTC signaling events
-      const webrtcEvents = ["webrtc:request", "webrtc:accept", "webrtc:decline", "webrtc:offer", "webrtc:answer", "webrtc:ice", "webrtc:end", "webrtc:screenshare", "webrtc:state"];
-      webrtcEvents.forEach((evt) => {
-        channel.on("broadcast", { event: evt }, (payload) => {
-          callbacksRef.current?.onSignaling?.(evt, payload.payload as Record<string, unknown>);
-        });
-      });
-
       channel.subscribe();
-
       roomChannelRef.current = channel;
     },
-    [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
+    [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled, stopFirebaseSearch]
   );
 
   const sendTyping = useCallback((text?: string) => {
@@ -261,7 +289,7 @@ export function useChat(callbacks?: ChatCallbacks) {
     });
   }, []);
 
-  const startChat = useCallback(() => {
+  const startChat = useCallback((code: string | null = null) => {
     clearReconnectTimer();
     if (searchTimerRef.current) clearInterval(searchTimerRef.current);
     matchedGuardRef.current = false;
@@ -270,7 +298,7 @@ export function useChat(callbacks?: ChatCallbacks) {
     setStrangerTyping(false);
     setStatus("searching");
     setSearchElapsed(0);
-    addMessage("system", "Looking for a stranger...");
+    addMessage("system", code ? `Joining room ${code} (via Firebase)...` : "Looking for a stranger (using Firebase Lobby)...");
 
     // Track search time
     const startTime = Date.now();
@@ -284,103 +312,8 @@ export function useChat(callbacks?: ChatCallbacks) {
       }
     }, 1000);
 
-    if (channelRef.current) channelRef.current.unsubscribe();
-
-    const blocked = getBlockedIds();
-    const matchChannel = supabase.channel("matchmaking", {
-      config: { presence: { key: sessionId } },
-    });
-
-    const handleMatched = (roomId: string, strangerId: string, sharedInterests: string[]) => {
-      // Guard: prevent double-match
-      if (matchedGuardRef.current) return;
-      matchedGuardRef.current = true;
-
-      if (blocked.includes(strangerId)) {
-        matchedGuardRef.current = false;
-        return;
-      }
-
-      joinRoom(roomId, strangerId);
-      setStatus("connected");
-      setMessages([]);
-      setMatchedInterests(sharedInterests);
-      playSoundIfEnabled("connected");
-      if (callbacksRef.current?.soundEnabled) haptics.vibrate([100, 50, 100]);
-
-      if (sharedInterests.length > 0) {
-        addMessage("system", `Matched! You both like: ${sharedInterests.join(", ")}`);
-      } else {
-        addMessage("system", "You are now connected with a stranger. Say hello!");
-      }
-      notifyIfEnabled("L Chat", "Connected with a stranger!", "connected");
-      if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
-      setSearchElapsed(0);
-
-      // Delay unsubscribe to ensure broadcast is delivered
-      setTimeout(() => {
-        matchChannel.unsubscribe();
-        channelRef.current = null;
-      }, 500);
-    };
-
-    const findMatch = () => {
-      if (matchedGuardRef.current) return;
-
-      const state = matchChannel.presenceState();
-      const myInterests = interestsRef.current;
-      const waitingUsers = Object.keys(state).filter(
-        (id) => id !== sessionId && !blocked.includes(id)
-      );
-
-      if (waitingUsers.length === 0) return;
-
-      type Candidate = { id: string; shared: string[]; score: number };
-      const candidates: Candidate[] = waitingUsers.map((uid) => {
-        const presenceData = state[uid]?.[0] as { interests?: string[] } | undefined;
-        const theirInterests: string[] = presenceData?.interests || [];
-        const shared = myInterests.filter((i) => theirInterests.includes(i));
-        return { id: uid, shared, score: shared.length };
-      });
-
-      candidates.sort((a, b) => b.score - a.score);
-      const best = candidates[0];
-
-      const pair = [sessionId, best.id].sort();
-      const roomId = `${pair[0]}_${pair[1]}`;
-
-      // Only the lexicographically first user initiates
-      if (pair[0] === sessionId) {
-        matchChannel.send({
-          type: "broadcast",
-          event: "matched",
-          payload: { roomId, user1: pair[0], user2: pair[1], sharedInterests: best.shared },
-        });
-        handleMatched(roomId, best.id, best.shared);
-      }
-      // pair[1] waits for the broadcast instead of joining directly
-    };
-
-    matchChannel
-      .on("presence", { event: "sync" }, findMatch)
-      .on("broadcast", { event: "matched" }, (payload) => {
-        const data = payload.payload as { roomId: string; user1: string; user2: string; sharedInterests: string[] };
-        if (data.user1 === sessionId || data.user2 === sessionId) {
-          const strangerId = data.user1 === sessionId ? data.user2 : data.user1;
-          handleMatched(data.roomId, strangerId, data.sharedInterests || []);
-        }
-      })
-      .subscribe(async (s) => {
-        if (s === "SUBSCRIBED") {
-          await matchChannel.track({
-            waiting_since: new Date().toISOString(),
-            interests: interestsRef.current,
-          });
-        }
-      });
-
-    channelRef.current = matchChannel;
-  }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled, clearReconnectTimer]);
+    startFirebaseSearch(code);
+  }, [addMessage, clearReconnectTimer, startFirebaseSearch]);
 
   const sendMessage = useCallback(
     (text: string, imageUrl?: string, replyTo?: Message["replyTo"]) => {
@@ -435,82 +368,11 @@ export function useChat(callbacks?: ChatCallbacks) {
     stopChat();
   }, [stopChat]);
 
-  // Private room: join by code (works for both creator and joiner)
   const joinPrivateRoom = useCallback((code: string) => {
-    clearReconnectTimer();
-    if (searchTimerRef.current) clearInterval(searchTimerRef.current);
-    matchedGuardRef.current = false;
-    setMessages([]);
-    setMatchedInterests([]);
-    setStrangerTyping(false);
-    setStatus("searching");
-    setSearchElapsed(0);
     setPrivateRoomCode(code);
-    addMessage("system", `Joining room ${code}... Waiting for your friend.`);
+    startChat(code); 
+  }, [startChat]);
 
-    if (channelRef.current) channelRef.current.unsubscribe();
-
-    const privateChannel = supabase.channel(`private:${code}`, {
-      config: { presence: { key: sessionId } },
-    });
-
-    const handleMatch = (roomId: string, strangerId: string) => {
-      if (matchedGuardRef.current) return;
-      matchedGuardRef.current = true;
-      joinRoom(roomId, strangerId);
-      setStatus("connected");
-      setMessages([]);
-      addMessage("system", "Connected! Say hello! 👋");
-      playSoundIfEnabled("connected");
-      notifyIfEnabled("L Chat", "Your friend joined!", "connected");
-      if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
-      setSearchElapsed(0);
-      setTimeout(() => {
-        privateChannel.unsubscribe();
-        channelRef.current = null;
-      }, 500);
-    };
-
-    const tryMatch = () => {
-      if (matchedGuardRef.current) return;
-      const state = privateChannel.presenceState();
-      const userIds = Object.keys(state).filter((id) => id !== sessionId);
-      if (userIds.length === 0) return;
-
-      const strangerId = userIds[0];
-      const privateRoomId = `private_${code}`;
-      const pair = [sessionId, strangerId].sort();
-
-      // Only the lexicographically first user broadcasts the match
-      if (pair[0] === sessionId) {
-        privateChannel.send({
-          type: "broadcast",
-          event: "room_matched",
-          payload: { roomId: privateRoomId, creator: sessionId, joiner: strangerId },
-        });
-        handleMatch(privateRoomId, strangerId);
-      }
-    };
-
-    privateChannel
-      .on("presence", { event: "sync" }, tryMatch)
-      .on("broadcast", { event: "room_matched" }, (payload) => {
-        const data = payload.payload as { roomId: string; creator: string; joiner: string };
-        if (data.joiner === sessionId || data.creator === sessionId) {
-          const strangerId = data.creator === sessionId ? data.joiner : data.creator;
-          handleMatch(data.roomId, strangerId);
-        }
-      })
-      .subscribe(async (s) => {
-        if (s === "SUBSCRIBED") {
-          await privateChannel.track({ joined_at: new Date().toISOString() });
-        }
-      });
-
-    channelRef.current = privateChannel;
-  }, [addMessage, joinRoom, playSoundIfEnabled, notifyIfEnabled, clearReconnectTimer]);
-
-  // Private room: create (generates code then uses joinPrivateRoom)
   const createPrivateRoom = useCallback((): string => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
@@ -519,7 +381,7 @@ export function useChat(callbacks?: ChatCallbacks) {
     return code;
   }, [joinPrivateRoom]);
 
-  // Auto-reconnect countdown (only for random chat, not private rooms)
+  // Auto-reconnect countdown
   useEffect(() => {
     if (status === "disconnected" && callbacksRef.current?.autoReconnect && !privateRoomCode) {
       let count = 5;
@@ -537,12 +399,10 @@ export function useChat(callbacks?: ChatCallbacks) {
       clearReconnectTimer();
     }
     return () => clearReconnectTimer();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, startChat, privateRoomCode, clearReconnectTimer]);
 
   useEffect(() => {
     return () => {
-      if (channelRef.current) channelRef.current.unsubscribe();
       if (roomChannelRef.current) {
         roomChannelRef.current.send({
           type: "broadcast",
@@ -554,10 +414,10 @@ export function useChat(callbacks?: ChatCallbacks) {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       if (reconnectTimerRef.current) clearInterval(reconnectTimerRef.current);
       if (searchTimerRef.current) clearInterval(searchTimerRef.current);
+      stopFirebaseSearch();
     };
-  }, []);
+  }, [stopFirebaseSearch]);
 
-  // Delete for everyone
   const deleteMessage = useCallback((messageId: string) => {
     setMessages((prev) => prev.map((msg) =>
       msg.id === messageId ? { ...msg, deleted: true, text: "🚫 This message was deleted", imageUrl: undefined } : msg
@@ -569,7 +429,6 @@ export function useChat(callbacks?: ChatCallbacks) {
     });
   }, []);
 
-  // Pin/unpin message
   const pinMessage = useCallback((messageId: string) => {
     setMessages((prev) => prev.map((msg) =>
       msg.id === messageId ? { ...msg, pinned: !msg.pinned } : msg
@@ -582,9 +441,6 @@ export function useChat(callbacks?: ChatCallbacks) {
     });
   }, []);
 
-  // (disappearTimer and messagesRef moved to top of hook)
-
-  // Auto-delete expired disappearing messages
   useEffect(() => {
     if (!disappearTimer) return;
     const interval = setInterval(() => {
@@ -605,5 +461,6 @@ export function useChat(callbacks?: ChatCallbacks) {
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
+    sendSignalingEvent: sendFirebaseSignalingEvent
   };
 }

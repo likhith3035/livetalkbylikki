@@ -109,6 +109,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
+    sendSignalingEvent,
   } = chatHook;
 
   const onCallEnded = useCallback(() => {
@@ -131,7 +132,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     upgradeToVideo,
     handleSignalingEvent, cleanup,
     supportsScreenShare,
-  } = useVideoCall({ sessionId, channel: roomChannel, onCallEnded, onCallUpgraded });
+  } = useVideoCall({ 
+    sessionId, 
+    sendSignalingEvent, 
+    onCallEnded, 
+    onCallUpgraded 
+  });
 
   // Signaling handler with error boundary
   const safeHandleSignaling = useCallback(async (event: string, payload: Record<string, unknown>) => {
@@ -148,7 +154,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [handleSignalingEvent, cleanup, toast]);
 
-  // Handle in-call chat messages via the room channel
+  // Handle in-call chat messages via the room channel (Supabase)
   useEffect(() => {
     if (!roomChannel) return;
     roomChannel.on("broadcast", { event: "incall_chat" }, (payload) => {
