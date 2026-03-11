@@ -33,13 +33,20 @@ export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: Matc
       let matchedUserId = waitingIds[0];
       let shared: string[] = [];
 
+      // PRIORITY MATCHING: If searching globally, find the user with the MOST shared interests
       if (!searchCodeRef.current) {
         const candidates = waitingIds.map(uid => {
           const theirInterests = users[uid].interests || [];
-          const sharedInterests = interests.filter(i => theirInterests.includes(i));
+          const sharedInterests = interests.filter(i => 
+            theirInterests.some((ti: string) => ti.toLowerCase().trim() === i.toLowerCase().trim())
+          );
           return { id: uid, shared: sharedInterests, score: sharedInterests.length };
         });
+
+        // Sort by number of shared interests (highest first)
         candidates.sort((a, b) => b.score - a.score);
+        
+        // If multiple candidates have same score, we still get the best one
         matchedUserId = candidates[0].id;
         shared = candidates[0].shared;
       }
@@ -76,8 +83,6 @@ export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: Matc
       code,
       joinedAt: serverTimestamp()
     });
-    
-    // Ensure cleanup on sudden disconnect
     onDisconnect(myLobbyRef).remove();
   }, [sessionId, interests]);
 
@@ -101,7 +106,6 @@ export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: Matc
           matchedGuardRef.current = true;
           const strangerId = match.user1 === sessionId ? match.user2 : match.user1;
           
-          // EVIDENT CLEANUP: Remove from lobby and remove the match entry immediately
           remove(ref(db, `lobby/${sessionId}`));
           remove(ref(db, `matches/${mId}`));
           
