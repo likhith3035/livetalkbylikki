@@ -5,107 +5,92 @@
 <h1 align="center">✨ Livetalk by Likki ✨</h1>
 
 <p align="center">
-  <strong>The Ultimate Omegle 2 Alternative — Where Privacy Meets Fun.</strong><br>
-  A feature-rich, high-performance, and anonymous video & text chat platform built with modern tech.
+  <strong>The #1 Omegle Alternative — Where Privacy Meets Premium Human Connection.</strong><br>
+  A high-performance, hybrid-powered anonymous video & text chat platform.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
   <img src="https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase">
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/WebRTC-333333?style=for-the-badge&logo=webrtc&logoColor=white" alt="WebRTC">
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
-  <img src="https://img.shields.io/badge/Supabase_Realtime-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
-  <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white" alt="Framer Motion">
 </p>
 
 ---
 
 ## 🚀 Why Livetalk?
 
-In a world of data tracking and complex sign-ups, **Livetalk** brings back the raw, spontaneous, and private nature of the internet. No accounts. No logs. Just instant human connection across the globe.
+Livetalk reimagines the spontaneous nature of the early internet with modern security and a premium feel. No accounts. No logs. Just instant connection.
 
-### 🌟 Exclusive Features
+### 🌟 Key Features
 
 | Feature | Description |
 | :--- | :--- |
-| 🎥 **HD Video Calls** | One-tap switch from text to high-latency video chat with peer-to-peer security. |
-| 🎮 **In-Chat Games** | Play **Tic-Tac-Toe** directly with your match. |
-| 🛡️ **Stealth Mode** | Zero logs. End-to-end encryption. Disappearing messages (30s to 5m). |
-| 🌈 **Dynamic Themes** | Transform your UI with **Ocean**, **Sunset**, **Neon**, and **Midnight** themes. |
-| 📊 **Real-time Polls** | Create instant polls to break the ice or settle debates mid-conversation. |
-| 🎭 **Mood Meter** | Express yourself visually with a real-time mood indicator for your match. |
-| 📍 **Interest Match** | Find people who share your passions for tech, music, games, or art. |
-| 📱 **Full PWA Support** | Install it on your iOS or Android home screen for a native app feel. |
+| ⚡ **Instant Match** | Powered by Firebase RTDB. No cold starts, just click and chat. |
+| 🎥 **HD Video Calls** | Crystal clear peer-to-peer video with low-latency signaling. |
+| 🛡️ **Zero-Log Privacy** | Aggressive transient data policy. Your metadata is wiped instantly. |
+| 🎮 **In-Chat Games** | Play Tic-Tac-Toe mid-conversation without leaving the app. |
+| 🌈 **Glassmorphic Themes** | Choose between **Ocean**, **Sunset**, **Neon**, and **Midnight**. |
+| 🎭 **Mood Meter** | Share your vibe visually with a real-time interactive meter. |
+| 📍 **Smart Interests** | Advanced matchmaking that prioritizes your passions. |
+| 📱 **PWA Ready** | Install as a native app on iOS & Android for the full mobile experience. |
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Hybrid Architecture
 
-Livetalk is engineered for speed, scalability, and smoothness.
+Livetalk uses a unique **Dual-Backend Strategy** for maximum performance:
 
-- **Frontend Core**: [React 18](https://reactjs.org/) & [TypeScript](https://www.typescriptlang.org/) for robust, type-safe development.
-- **Build System**: [Vite](https://vitejs.dev/) — Lightning-fast HMR and optimized builds.
-- **Real-time Engine**: [Supabase Realtime](https://supabase.com/realtime) handles the messaging, presence, and match orchestrations.
-- **Micro-Animations**: [Framer Motion](https://www.framer.com/motion/) powers silky-smooth transitions and spring-based interactions.
-- **Styling Architecture**: [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/) for a sleek, responsive, and accessible interface.
-- **Icons & Graphics**: [Lucide React](https://lucide.dev/) for a consistent, modern iconography.
+- **Firebase (Matchmaking & Signaling)**: Handles transient, real-time events. Pairing and WebRTC handshakes happen in milliseconds, not seconds.
+- **Supabase (Real-time Messaging)**: Orchestrates the core chat engine, message persistence, and reactions.
 
----
-
-## 📂 Project Architecture
-
-```text
-src/
-├── components/
-│   ├── chat/        # 💠 Core engine: Games, Polls, Video, Mood Meter
-│   ├── ui/          # 🎨 Polished primitive components (Radix + Tailwind)
-│   └── common/      # ⚙️ Helper components like Header, Logo, BottomNav
-├── contexts/        # 🧠 Global state (Chat context, Auth context)
-├── hooks/           # 🎣 Custom logic: use-online-count, use-match, use-seo
-├── integrations/    # 🔗 Supabase, Tenor, and Giphy connectors
-├── pages/           # 📄 Route layouts: Index, Chat, SafetyCenter, Profile
-└── lib/             # 🛠️ Shared utilities and theme definitions
+```mermaid
+graph TD
+    UserA[User A] <--> FB[(Firebase RTDB)]
+    UserB[User B] <--> FB
+    UserA <--> SB{Supabase Real-time}
+    UserB <--> SB
+    FB -- Match Found --> SB
+    UserA <-->|P2P Video| UserB
 ```
 
 ---
 
-## 🚦 Getting Started (Development)
+## 🚦 Installation & Setup
 
-### 1. Requirements
-Ensure you have **Node.js v18+** and **npm** installed.
-
-### 2. Setup
+### 1. Clone & Install
 ```bash
-# Clone the repo
 git clone https://github.com/likhith3035/ohmegle.git
 cd ohmegle
-
-# Install dependencies (highly recommend bun for speed)
 npm install
-# or
-bun install
 ```
 
-### 3. Environment Config
-Rename `.env.example` to `.env` and fill in your Supabase details:
-```env
-VITE_SUPABASE_URL=your_project_url
-VITE_SUPABASE_ANON_KEY=your_public_anon_key
+### 2. Environment Setup
+Copy the example file and fill in your own credentials:
+```bash
+cp .env.example .env
+```
+Fill in your `VITE_SUPABASE_*` and `VITE_FIREBASE_*` keys in the `.env` file.
+
+### 3. Firebase Console Configuration
+To ensure matchmaking works, set your **Realtime Database Rules** to allow transient signaling:
+```json
+{
+  "rules": {
+    "presence": { ".read": true, "$user_id": { ".write": "true" } },
+    "lobby": { ".read": true, "$user_id": { ".write": "true" } },
+    "matches": { ".read": true, "$match_id": { ".write": "true" } },
+    "rooms": { ".read": true, "$room_id": { ".write": "true" } }
+  }
+}
 ```
 
-### 4. Ignite!
+### 4. Run Development Server
 ```bash
 npm run dev
 ```
-
----
-
-## 🗺️ Roadmap & Future Vision
-
-- [ ] **AI Voice Modulation** - Change your voice in real-time during calls.
-- [ ] **AR Filters** - Snapchat-like filters for anonymous video chatting.
-- [ ] **Squad Rooms** - Small group chats for 3-5 people based on topics.
-- [ ] **Global Translator** - Real-time message translation for cross-border chats.
 
 ---
 
