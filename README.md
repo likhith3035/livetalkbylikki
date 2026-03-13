@@ -23,7 +23,11 @@ Livetalk is built to bring back the raw, spontaneous, and private human connecti
 
 ---
 
-## 🤝 How Matchmaking Works
+## 🤝 How Matchmaking & Connection Flow
+
+<p align="center">
+  <img src="docs/assets/matching.png" alt="Matchmaking Visual" width="80%" style="border-radius: 15px;">
+</p>
 
 Experience a seamless connection flow powered by our **Hybrid-Logic Engine**. 
 
@@ -44,7 +48,7 @@ sequenceDiagram
 ```
 
 ### 2. The Smart Handshake
-Once matched, a private **Signaling Channel** is created. This is where the magic happens: users exchange encrypted "handshake" data (ICE Candidates) via Firebase to find the fastest direct path to each other.
+Once matched, a private **Signaling Channel** is created. Users exchange encrypted "handshake" data (ICE Candidates) via Firebase to find the fastest direct path to each other.
 
 ```mermaid
 graph LR
@@ -65,6 +69,10 @@ The moment you connect:
 
 ## 🌟 Premium Features
 
+<p align="center">
+  <img src="docs/assets/features.png" alt="Features Gallery" width="90%" style="border-radius: 15px;">
+</p>
+
 | Feature | Description | Technical Edge |
 | :--- | :--- | :--- |
 | ⚡ **Instant Match** | Connect with strangers across the globe in milliseconds. | Firebase RTDB optimized lobby. |
@@ -80,9 +88,30 @@ The moment you connect:
 
 ## 🛡️ Privacy & Security First
 
+<p align="center">
+  <img src="docs/assets/security.png" alt="Security Visual" width="60%" style="border-radius: 15px;">
+</p>
+
 - **Stateless Design**: We don't use databases for message history. Once you refresh or disconnect, the chat is gone forever.
 - **Transient Signaling**: Firebase keys are only held in memory during the matchmaking phase and wiped the moment the connection is established.
 - **Environment Isolation**: Critical API keys are managed via `.env` files to prevent exposure in open-source clones.
+
+---
+
+## 📂 Project Structure
+
+```text
+src/
+├── components/
+│   ├── chat/        # 💠 Core engine: Games, Polls, Video, Mood Meter
+│   ├── ui/          # 🎨 Polished primitive components (Tailwind + Radix)
+│   └── common/      # ⚙️ Shared UI: Headers, Logos, Navigation
+├── contexts/        # 🧠 Global State: Chat, Auth, Themes
+├── hooks/           # 🎣 Custom Logic: Matchmaking, Signaling, SEO
+├── integrations/    # 🔗 Connectors: Supabase, Firebase, Giphy
+├── lib/             # 🛠️ Utilities: Haptics, Sound Engine, Theme Tokens
+└── pages/           # 📄 Route Layouts: Index, Chat, Safety, Profile
+```
 
 ---
 
@@ -113,15 +142,6 @@ cp .env.example .env
 ```bash
 npm run dev
 ```
-
----
-
-## 🗺️ Future Roadmap
-
-- [ ] **AI Voice Modulation** - Real-time voice effects during calls.
-- [ ] **Global Translator** - Instant translation for international matches.
-- [ ] **Augmented Reality** - Snapchat-style face filters during video calls.
-- [ ] **Squad Rooms** - Topic-based group chats for 3-5 people.
 
 ---
 
