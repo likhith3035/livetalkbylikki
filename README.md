@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>The #1 Omegle Alternative — Where Privacy Meets Premium Human Connection.</strong><br>
-  A high-performance, hybrid-powered anonymous video & text chat platform.
+  A high-performance, hybrid-powered anonymous video & text chat platform engineered for the modern web.
 </p>
 
 <p align="center">
@@ -16,81 +16,94 @@
   <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
   <img src="https://img.shields.io/badge/WebRTC-333333?style=for-the-badge&logo=webrtc&logoColor=white" alt="WebRTC">
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind">
 </p>
 
 ---
 
-## 🚀 Why Livetalk?
+## 🚀 The Vision
 
-Livetalk reimagines the spontaneous nature of the early internet with modern security and a premium feel. No accounts. No logs. Just instant connection.
+Livetalk is built to bring back the raw, spontaneous, and private human connections of the early internet, but with the speed and elegance of the modern era. No accounts, no trackers, no historical logs. Just you and a stranger, connecting instantly.
 
-### 🌟 Key Features
+### 🌟 Premium Features
 
-| Feature | Description |
-| :--- | :--- |
-| ⚡ **Instant Match** | Powered by Firebase RTDB. No cold starts, just click and chat. |
-| 🎥 **HD Video Calls** | Crystal clear peer-to-peer video with low-latency signaling. |
-| 🛡️ **Zero-Log Privacy** | Aggressive transient data policy. Your metadata is wiped instantly. |
-| 🎮 **In-Chat Games** | Play Tic-Tac-Toe mid-conversation without leaving the app. |
-| 🌈 **Glassmorphic Themes** | Choose between **Ocean**, **Sunset**, **Neon**, and **Midnight**. |
-| 🎭 **Mood Meter** | Share your vibe visually with a real-time interactive meter. |
-| 📍 **Smart Interests** | Advanced matchmaking that prioritizes your passions. |
-| 📱 **PWA Ready** | Install as a native app on iOS & Android for the full mobile experience. |
+| Feature | Description | Technical Edge |
+| :--- | :--- | :--- |
+| ⚡ **Instant Match** | Connect with strangers across the globe in milliseconds. | Firebase RTDB optimized lobby. |
+| 🎥 **HD Video Calls** | One-tap switch from text to high-latency video chat. | P2P WebRTC with Firebase signaling. |
+| 🛡️ **Zero-Log Privacy** | Your data only exists as long as your conversation does. | Aggressive transient data policy. |
+| 🎮 **In-Chat Games** | Break the ice with built-in games like Tic-Tac-Toe. | Real-time state syncing. |
+| 🌈 **Glassmorphic UI** | Stunning themes like **Ocean**, **Sunset**, and **Midnight**. | Tailwind CSS + Framer Motion. |
+| 🎭 **Mood Meter** | Express yourself with a real-time reactive mood indicator. | Live Supabase presence sync. |
+| 📍 **Interest Match** | Find people who share your specific passions. | Weighted interest pairing logic. |
+| 📱 **Full PWA Support** | Desktop-class experience on iOS and Android. | Service Worker optimization. |
 
 ---
 
-## 🛠️ Hybrid Architecture
+## 🛠️ High-Performance Architecture
 
-Livetalk uses a unique **Dual-Backend Strategy** for maximum performance:
+Livetalk leverages a **Hybrid Backend Architecture** to eliminate "cold start" latency and ensure maximum privacy.
 
-- **Firebase (Matchmaking & Signaling)**: Handles transient, real-time events. Pairing and WebRTC handshakes happen in milliseconds, not seconds.
-- **Supabase (Real-time Messaging)**: Orchestrates the core chat engine, message persistence, and reactions.
+- **Orchestration**: **Firebase Realtime Database** handles the high-frequency, transient data like matchmaking nodes and ICE signaling. 
+- **Communication**: **Supabase Realtime** powers the robust chat engine, typing indicators, and message broadcasting.
+- **P2P Streaming**: **WebRTC** connections are established directly between browsers, ensuring your video calls never touch a server.
 
 ```mermaid
-graph TD
-    UserA[User A] <--> FB[(Firebase RTDB)]
-    UserB[User B] <--> FB
-    UserA <--> SB{Supabase Real-time}
+graph LR
+    UserA["👤 User A"] <--> FB[("🔥 Firebase (Transient)")]
+    UserB["👤 User B"] <--> FB
+    UserA <--> SB{"⚡ Supabase (Chat Engine)"}
     UserB <--> SB
-    FB -- Match Found --> SB
-    UserA <-->|P2P Video| UserB
+    FB -. "Quick Handshake" .-> SB
+    UserA <== "Direct HD Video Stream" ==> UserB
 ```
+
+---
+
+## 🛡️ Privacy & Security First
+
+- **Stateless Design**: We don't use databases for message history. Once you refresh or disconnect, the chat is gone forever.
+- **Transient Signaling**: Firebase keys are only held in memory during the matchmaking phase and wiped the moment the connection is established.
+- **Environment Isolation**: Critical API keys are managed via `.env` files to prevent exposure in open-source clones.
 
 ---
 
 ## 🚦 Installation & Setup
 
-### 1. Clone & Install
+### 1. Prerequisite
+Ensure you have **Node.js 18+** and a package manager installed.
+
+### 2. Fast Track Setup
 ```bash
+# Clone the repository
 git clone https://github.com/likhith3035/ohmegle.git
 cd ohmegle
-npm install
-```
 
-### 2. Environment Setup
-Copy the example file and fill in your own credentials:
-```bash
+# Install dependencies
+npm install
+
+# Setup environment variables
 cp .env.example .env
 ```
-Fill in your `VITE_SUPABASE_*` and `VITE_FIREBASE_*` keys in the `.env` file.
 
-### 3. Firebase Console Configuration
-To ensure matchmaking works, set your **Realtime Database Rules** to allow transient signaling:
-```json
-{
-  "rules": {
-    "presence": { ".read": true, "$user_id": { ".write": "true" } },
-    "lobby": { ".read": true, "$user_id": { ".write": "true" } },
-    "matches": { ".read": true, "$match_id": { ".write": "true" } },
-    "rooms": { ".read": true, "$room_id": { ".write": "true" } }
-  }
-}
-```
+### 3. Backend Configuration
+- **Supabase**: Create a new project and add your URL/Anon Key to `.env`.
+- **Firebase**: Enable **Realtime Database** and set location to `us-central1`. 
+- **Security Rules**: Copy the rules from [DEVELOPMENT.md](./DEVELOPMENT.md) into your Firebase console.
 
-### 4. Run Development Server
+### 4. Launch
 ```bash
 npm run dev
 ```
+
+---
+
+## 🗺️ Future Roadmap
+
+- [ ] **AI Voice Modulation** - Real-time voice effects during calls.
+- [ ] **Global Translator** - Instant translation for international matches.
+- [ ] **Augmented Reality** - Snapchat-style face filters during video calls.
+- [ ] **Squad Rooms** - Topic-based group chats for 3-5 people.
 
 ---
 
@@ -98,17 +111,20 @@ npm run dev
 
 Developed with 💜 by **Likhith Kami**.
 
-<a href="https://instagram.com/Lucky__likhith" target="_blank">
-  <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram">
-</a>
-<a href="https://www.linkedin.com/in/likhith-kami/" target="_blank">
-  <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn">
-</a>
-<a href="mailto:kamilikhith@gmail.com">
-  <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email">
-</a>
+<div align="center">
+  <a href="https://instagram.com/Lucky__likhith" target="_blank">
+    <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram">
+  </a>
+  <a href="https://www.linkedin.com/in/likhith-kami/" target="_blank">
+    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn">
+  </a>
+  <a href="mailto:kamilikhith@gmail.com">
+    <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email">
+  </a>
+</div>
 
 <p align="center">
-  <i>"Connecting the world, one private conversation at a time."</i><br>
-  <b>© 2026 Livetalk. All rights reserved.</b>
+  <br>
+  <i>"Redefining human connection, one private conversation at a time."</i><br>
+  <b>© 2026 Livetalk. Open Source. MIT License.</b>
 </p>
