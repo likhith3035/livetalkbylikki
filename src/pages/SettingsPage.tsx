@@ -12,7 +12,11 @@ const SettingsPage = () => {
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
   const { settings, updateSetting } = useSettings();
-  useSEO({ title: "Settings – LiveTalk", description: "Customize your LiveTalk experience — themes, wallpapers, sound, notifications and more." });
+  useSEO({ 
+    title: "Settings – LiveTalk", 
+    description: "Customize your LiveTalk experience — themes, wallpapers, sound, notifications and more.",
+    keywords: "chat settings, dark mode chat, chat themes, message notifications, customize LiveTalk"
+  });
 
   const handleToggle = async (key: "darkMode" | "soundEffects" | "notifications", checked: boolean) => {
     if (key === "notifications" && checked) {

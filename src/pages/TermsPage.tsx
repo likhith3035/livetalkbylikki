@@ -11,7 +11,8 @@ const TermsPage = () => {
   const onlineCount = useOnlineCount();
   useSEO({ 
     title: "Terms of Service", 
-    description: "Read the Terms of Service for LiveTalk by Likki. User rules, age requirements, and community guidelines for anonymous chatting." 
+    description: "Read the Terms of Service for LiveTalk by Likki. User rules, age requirements, and community guidelines for anonymous chatting.",
+    keywords: "terms of service, user agreement, community guidelines, chat rules, 18+ chat terms"
   });
 
   const fadeUp = {

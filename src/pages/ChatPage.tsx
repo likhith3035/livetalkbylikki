@@ -35,9 +35,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     supportsScreenShare,
   } = useChatContext();
 
-  useSEO({ 
-    title: "Anonymous Text & Video Chat", 
-    description: "Start chatting anonymously with strangers on LiveTalk by Likki. No registration, no tracking. Text, video, games and more." 
+  useSEO({
+    title: "Anonymous Text & Video Chat",
+    description: "Start chatting anonymously with strangers on LiveTalk by Likki. No registration, no tracking. Text, video, games and more. Connect instantly with random people for text, image, or video conversations.",
+    keywords: "random chat, video chat, chat with strangers, anonymous video chat, talk to strangers online, Omegle alternative chat, free online chat, instant chat, stranger chat, live talk, likki chat"
   });
 
   const prevStatusRef = useRef(status);

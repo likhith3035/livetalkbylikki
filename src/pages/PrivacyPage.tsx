@@ -11,7 +11,8 @@ const PrivacyPage = () => {
   const onlineCount = useOnlineCount();
   useSEO({ 
     title: "Privacy Policy", 
-    description: "Learn how LiveTalk by Likki protects your privacy. We store zero data, use no tracking, and ensure 100% anonymous conversations." 
+    description: "Learn how LiveTalk by Likki protects your privacy. We store zero data, use no tracking, and ensure 100% anonymous conversations.",
+    keywords: "privacy policy, data privacy, anonymous chat privacy, zero data collection, encrypted chat policy"
   });
 
   const fadeUp = {

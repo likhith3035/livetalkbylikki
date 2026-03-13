@@ -1,8 +1,4 @@
-# LiveTalk - Talk to Anyone Instantly
-# https://livetalkbylikki.netlify.app
-
 User-agent: *
 Allow: /
-Disallow: /room/
 
 Sitemap: https://livetalkbylikki.netlify.app/sitemap.xml

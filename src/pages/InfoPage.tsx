@@ -274,7 +274,8 @@ const InfoPage = () => {
   const onlineCount = useOnlineCount();
   useSEO({ 
     title: "Help, FAQ & Tech Stack", 
-    description: "Learn everything about LiveTalk by Likki – features, how to use, safety tips, FAQ, and the modern tech stack behind the best Omegle alternative." 
+    description: "Learn everything about LiveTalk by Likki – features, how to use, safety tips, FAQ, and the modern tech stack behind the best Omegle alternative.",
+    keywords: "LiveTalk FAQ, how to use LiveTalk, LiveTalk features, anonymous chat tech stack, Omegle vs LiveTalk, random chat help"
   });
 
   const categories = [...new Set(FEATURES_DETAILED.map((f) => f.category))];

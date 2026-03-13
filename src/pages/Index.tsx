@@ -58,7 +58,11 @@ const Index = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
-  useSEO({ title: "LiveTalk by Likki – Talk to Anyone Instantly", description: "LiveTalk by Likki – Free anonymous chat with strangers. No signup, no tracking. Video calls, text chat, games & more. Developed by Likhith Kami (Likki)." });
+  useSEO({ 
+    title: "LiveTalk by Likki – Talk to Anyone Instantly", 
+    description: "Connect instantly with people worldwide. Anonymous 18+ text and video chat with zero registration required. The #1 Omegle alternative.",
+    keywords: "livetalk, livetalkbylikki, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat, free chat, talk to strangers, likki, likhith kami"
+  });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 

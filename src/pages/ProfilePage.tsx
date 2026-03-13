@@ -12,7 +12,11 @@ import { useSEO } from "@/hooks/use-seo";
 const ProfilePage = () => {
   const onlineCount = useOnlineCount();
   const { profile, displayName, updateNickname, updateAvatar, AVATAR_OPTIONS } = useProfile();
-  useSEO({ title: "My Profile – LiveTalk", description: "Manage your LiveTalk profile — set your nickname and choose a fun avatar for your anonymous chats." });
+  useSEO({ 
+    title: "My Profile – LiveTalk", 
+    description: "Manage your LiveTalk profile — set your nickname and choose a fun avatar for your anonymous chats.",
+    keywords: "chat profile, anonymous nickname, chat avatar, personalize chat, LiveTalk profile"
+  });
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile.nickname);
   const [showAvatars, setShowAvatars] = useState(false);
