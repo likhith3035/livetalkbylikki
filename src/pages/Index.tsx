@@ -12,7 +12,7 @@ import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useToast } from "@/hooks/use-toast";
-import { Logo } from "@/components/Logo";
+import { BrandLogo } from "@/components/BrandLogo";
 import { useSEO } from "@/hooks/use-seo";
 
 const FEATURES = [
@@ -528,7 +528,7 @@ const Index = () => {
       <footer className="border-t border-border/30 px-6 py-10 pb-24 lg:pb-10 bg-card/10">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
-            <Logo className="h-10 w-10 drop-shadow-md" />
+            <BrandLogo className="h-10 w-10 drop-shadow-md" />
             <span className="font-display text-lg font-bold text-foreground">LiveTalk by Likki</span>
           </div>
 

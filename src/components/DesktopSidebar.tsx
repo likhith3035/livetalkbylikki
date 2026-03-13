@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Logo } from "@/components/Logo";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const navItems = [
   { icon: Home, path: "/", label: "Home" },
@@ -24,7 +24,7 @@ const DesktopSidebar = () => {
     <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col border-r border-border bg-card/50 backdrop-blur-xl z-40">
       {/* Logo */}
       <Link to="/" className="flex items-center gap-3 px-5 py-5 border-b border-border/50 group">
-        <Logo className="h-10 w-10 drop-shadow-md group-hover:scale-105 transition-transform" />
+        <BrandLogo className="h-10 w-10 drop-shadow-md group-hover:scale-105 transition-transform" />
         <span className="font-display text-lg font-bold text-foreground group-hover:text-primary transition-colors">LiveTalk</span>
       </Link>
 
