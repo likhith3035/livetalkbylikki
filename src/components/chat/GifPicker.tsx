@@ -10,7 +10,7 @@ interface GifPickerProps {
 
 // Use Tenor's free anonymous API (no key needed for limited use)
 const TENOR_API = "https://tenor.googleapis.com/v2";
-const TENOR_KEY = "AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCYQ"; // Tenor public web key
+const TENOR_KEY = import.meta.env.VITE_TENOR_API_KEY;
 
 interface TenorResult {
   id: string;

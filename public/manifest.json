@@ -1,0 +1,49 @@
+{
+  "name": "LiveTalk by Likki",
+  "short_name": "LiveTalk",
+  "description": "Connect instantly with people worldwide. Anonymous text and video chat with zero registration required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "communication", "entertainment"],
+  "screenshots": [
+    {
+      "src": "/hero-banner.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "LiveTalk Landing Page"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Chatting",
+      "short_name": "Start",
+      "description": "Start a new anonymous chat",
+      "url": "/chat",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Safety Center",
+      "short_name": "Safety",
+      "description": "Learn how to stay safe",
+      "url": "/safety",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    }
+  ]
+}

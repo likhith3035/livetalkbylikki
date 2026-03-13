@@ -34,7 +34,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     supportsScreenShare,
   } = useChatContext();
 
-  useSEO({ title: "Anonymous Chat – LiveTalk", description: "Start chatting anonymously with strangers on LiveTalk. No registration required. Text, video, games and more." });
+  useSEO({ 
+    title: "Anonymous Text & Video Chat", 
+    description: "Start chatting anonymously with strangers on LiveTalk by Likki. No registration, no tracking. Text, video, games and more." 
+  });
 
   const prevStatusRef = useRef(status);
   const [showInterests, setShowInterests] = useState(true);

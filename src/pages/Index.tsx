@@ -58,7 +58,7 @@ const Index = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
-  useSEO({ title: "LiveTalk – Talk to Anyone Instantly", description: "LiveTalk by Likki – Free anonymous chat with strangers. No signup, no tracking. Video calls, text chat, games & more." });
+  useSEO({ title: "LiveTalk by Likki – Talk to Anyone Instantly", description: "LiveTalk by Likki – Free anonymous chat with strangers. No signup, no tracking. Video calls, text chat, games & more. Developed by Likhith Kami (Likki)." });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -558,8 +558,15 @@ const Index = () => {
 
         <p className="text-center text-xs text-muted-foreground/50 mt-4">
           © 2026 LiveTalk by Likki. Developed with 💜 by{" "}
-          <a href="https://www.instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors">Likhith</a>
+          <a href="https://www.instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer me" className="flex items-center gap-1.5 hover:text-primary transition-colors">
+Likhith Kami (Likki)</a>
         </p>
+
+        <div className="flex justify-center gap-4 mt-2 text-[10px] text-muted-foreground/40">
+          <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
+          <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
+          <a href="/info" className="hover:text-primary transition-colors">About</a>
+        </div>
       </footer>
 
       <BottomNav />

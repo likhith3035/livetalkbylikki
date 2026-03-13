@@ -5,7 +5,7 @@ interface SEOProps {
     description?: string;
 }
 
-const BASE_TITLE = "LiveTalk";
+const BASE_TITLE = "LiveTalk by Likki";
 
 /**
  * Sets the document title and meta description for each page.

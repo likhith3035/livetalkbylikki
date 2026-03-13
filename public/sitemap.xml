@@ -2,37 +2,46 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://livetalkbylikki.netlify.app/</loc>
-    <lastmod>2026-03-10</lastmod>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://livetalkbylikki.netlify.app/chat</loc>
-    <lastmod>2026-03-10</lastmod>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://livetalkbylikki.netlify.app/info</loc>
-    <lastmod>2026-03-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-03-12</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://livetalkbylikki.netlify.app/privacy</loc>
+    <lastmod>2026-03-12</lastmod>
+    <priority>0.50</priority>
+  </url>
+  <url>
+    <loc>https://livetalkbylikki.netlify.app/terms</loc>
+    <lastmod>2026-03-12</lastmod>
+    <priority>0.50</priority>
   </url>
   <url>
     <loc>https://livetalkbylikki.netlify.app/safety</loc>
-    <lastmod>2026-03-10</lastmod>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://livetalkbylikki.netlify.app/profile</loc>
-    <lastmod>2026-03-10</lastmod>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://livetalkbylikki.netlify.app/settings</loc>
-    <lastmod>2026-03-10</lastmod>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

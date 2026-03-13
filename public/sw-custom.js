@@ -2,7 +2,7 @@
 // This file is injected into the service worker via vite-plugin-pwa
 
 self.addEventListener("notificationclick", (event) => {
-  const e = event as NotificationEvent;
+  const e = event;
   e.notification.close();
 
   const url = e.notification.data?.url || "/chat";
@@ -12,7 +12,7 @@ self.addEventListener("notificationclick", (event) => {
 
   // Focus existing window or open new one
   e.waitUntil(
-    (self as unknown as ServiceWorkerGlobalScope).clients
+    self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clients) => {
         // Try to focus an existing window
@@ -24,7 +24,7 @@ self.addEventListener("notificationclick", (event) => {
           }
         }
         // Open a new window
-        return (self as unknown as ServiceWorkerGlobalScope).clients.openWindow(url);
+        return self.clients.openWindow(url);
       })
   );
 });

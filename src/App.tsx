@@ -19,6 +19,8 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import SafetyCenterPage from "./pages/SafetyCenterPage";
 import InfoPage from "./pages/InfoPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +60,8 @@ const AnimatedRoutes = () => {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/safety" element={<SafetyCenterPage />} />
           <Route path="/info" element={<InfoPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>

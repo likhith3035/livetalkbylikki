@@ -272,7 +272,10 @@ const ExpandableDetail = ({ details }: { details: string }) => {
 const InfoPage = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
-  useSEO({ title: "Help & FAQ – LiveTalk", description: "Everything about LiveTalk – features, how to use, safety tips, FAQ, and why LiveTalk is the best Omegle alternative." });
+  useSEO({ 
+    title: "Help, FAQ & Tech Stack", 
+    description: "Learn everything about LiveTalk by Likki – features, how to use, safety tips, FAQ, and the modern tech stack behind the best Omegle alternative." 
+  });
 
   const categories = [...new Set(FEATURES_DETAILED.map((f) => f.category))];
 
@@ -317,6 +320,8 @@ const InfoPage = () => {
             { id: "safety", label: "Safety tips" },
             { id: "shortcuts", label: "Keyboard shortcuts" },
             { id: "faq", label: "Common questions" },
+            { id: "story", label: "The Developer Story" },
+            { id: "browsers", label: "Privacy Browser Optimization" },
           ].map((item) => (
             <a
               key={item.id}
@@ -600,12 +605,51 @@ const InfoPage = () => {
               With a focus on privacy and user experience, Likhith utilized cutting-edge technologies like <strong>React, TypeScript, and WebRTC</strong> to create a seamless real-time environment.
             </p>
             <div className="flex gap-3 pt-2">
-              <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors">
+              <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer me" className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors">
                 <Smile className="h-3.5 w-3.5 text-primary" /> Instagram
               </a>
-              <a href="https://linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors">
+              <a href="https://linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer me" className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors">
                 <Users className="h-3.5 w-3.5 text-primary" /> LinkedIn
               </a>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ─── Section: Developer Story ─── */}
+        <motion.section id="story" {...fadeUp} transition={{ delay: 0.52 }} className="space-y-4 scroll-mt-20">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Heart className="h-5 w-5 text-primary" />
+            The Story Behind LiveTalk
+          </h2>
+          <div className="rounded-2xl bg-secondary/30 border border-border/50 p-6 space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              LiveTalk started with a simple observation: the internet was losing its spark of spontaneous, safe human connection. Legacy platforms became cluttered with ads, bots, and tracking.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              <strong>Likhith Kami</strong> set out to build something different—a professional, "Pro-Level" communication tool that respects your privacy. By using <strong>WebRTC</strong> for direct peer-to-peer connections and <strong>Supabase</strong> for secure signaling, LiveTalk ensures that your conversations remain yours alone. This isn't just a website; it's a commitment to a cleaner, safer internet.
+            </p>
+          </div>
+        </motion.section>
+
+        {/* ─── Section: Privacy Browsers & Brave ─── */}
+        <motion.section id="browsers" {...fadeUp} transition={{ delay: 0.54 }} className="space-y-4 scroll-mt-20">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            Optimized for Privacy
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            LiveTalk is specifically engineered to work flawlessly on privacy-focused environments like <strong>Brave Browser</strong>, Firefox with strict protection, and Tor.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-4 rounded-xl bg-card border border-border/50 text-center">
+              <Shield className="h-5 w-5 text-primary mx-auto mb-2" />
+              <p className="text-[11px] font-bold text-foreground">Zero Fingerprinting</p>
+              <p className="text-[10px] text-muted-foreground">No tracking scripts or cookies.</p>
+            </div>
+            <div className="p-4 rounded-xl bg-card border border-border/50 text-center">
+              <Lock className="h-5 w-5 text-primary mx-auto mb-2" />
+              <p className="text-[11px] font-bold text-foreground">Ad-Free Experience</p>
+              <p className="text-[10px] text-muted-foreground">Clean UI without distractions.</p>
             </div>
           </div>
         </motion.section>
@@ -645,8 +689,12 @@ const InfoPage = () => {
         {/* Footer */}
         <div className="text-center pb-4">
           <p className="text-[11px] text-muted-foreground/50">
-            Developed by Likhith · © 2026 LiveTalk by Likki
+            Developed by <strong>Likhith Kami (Likki)</strong> · © 2026 LiveTalk by Likki
           </p>
+          <div className="flex justify-center gap-4 mt-1 text-[10px] text-muted-foreground/40">
+            <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
+            <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
+          </div>
         </div>
       </main>
 
