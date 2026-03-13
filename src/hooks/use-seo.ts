@@ -9,7 +9,7 @@ interface SEOProps {
 
 const BASE_TITLE = "LiveTalk by Likki";
 const DEFAULT_DESC = "Connect instantly with people worldwide. Anonymous 18+ text and video chat with zero registration required. The #1 Omegle alternative.";
-const DEFAULT_KEYWORDS = "likkitalk, likkichat, livetalk, live talk, livetalk chat, livetalk app, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat strangers, talk to strangers, likhith kami, likki";
+const DEFAULT_KEYWORDS = "likkimeet, likkitalk, likkichat, livetalk, live talk, livetalk chat, livetalk app, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat strangers, talk to strangers, likhith kami, likki";
 const DEFAULT_IMAGE = "https://livetalkbylikki.netlify.app/logo.png";
 
 /**

@@ -61,7 +61,7 @@ const Index = () => {
   useSEO({ 
     title: "LiveTalk by Likki – Talk to Anyone Instantly", 
     description: "Connect instantly with people worldwide. Anonymous 18+ text and video chat with zero registration required. The #1 Omegle alternative.",
-    keywords: "likkitalk, livetalk, livetalkbylikki, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat, free chat, talk to strangers, likki, likhith kami"
+    keywords: "likkimeet, likkitalk, livetalk, livetalkbylikki, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat, free chat, talk to strangers, likki, likhith kami"
   });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
