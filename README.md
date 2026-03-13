@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="public/hero-banner.png" alt="Livetalk Hero" width="100%" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-</p>
-
 <h1 align="center">✨ Livetalk by Likki ✨</h1>
 
 <p align="center">
@@ -25,7 +21,49 @@
 
 Livetalk is built to bring back the raw, spontaneous, and private human connections of the early internet, but with the speed and elegance of the modern era. No accounts, no trackers, no historical logs. Just you and a stranger, connecting instantly.
 
-### 🌟 Premium Features
+---
+
+## 🤝 How Matchmaking Works
+
+Experience a seamless connection flow powered by our **Hybrid-Logic Engine**. 
+
+### 1. The Matchmaking Pulse
+When you click "Start", our system places you in a high-speed **Lobby** on Firebase. It instantly scans for other waiting users and prioritizes those with **Shared Interests**.
+
+```mermaid
+sequenceDiagram
+    participant UA as 👤 User A
+    participant FB as 🔥 Firebase Lobby
+    participant UB as 👤 User B
+    
+    UA->>FB: Enter Lobby (Interests: Tech, Music)
+    UB->>FB: Enter Lobby (Interests: Tech, Gaming)
+    Note over FB: Engine detects shared interest: "Tech"
+    FB-->>UA: Match Found! (Stranger: User B)
+    FB-->>UB: Match Found! (Stranger: User A)
+```
+
+### 2. The Smart Handshake
+Once matched, a private **Signaling Channel** is created. This is where the magic happens: users exchange encrypted "handshake" data (ICE Candidates) via Firebase to find the fastest direct path to each other.
+
+```mermaid
+graph LR
+    A["👤 User A"] -- "1. Send Offer" --> F[("🔥 Firebase Signaling")]
+    F -- "2. Receive Offer" --> B["👤 User B"]
+    B -- "3. Send Answer" --> F
+    F -- "4. Receive Answer" --> A
+    A <== "5. Direct WebRTC P2P Connection" ==> B
+```
+
+### 3. Live Interaction
+The moment you connect:
+- **Video/Audio**: Streamed directly between you and the stranger (Peer-to-Peer).
+- **Text Chat**: Handled by **Supabase Realtime** for lightning-fast message delivery and reactions.
+- **Privacy Assurance**: All transient data in Firebase is **deleted the nanosecond** you are connected.
+
+---
+
+## 🌟 Premium Features
 
 | Feature | Description | Technical Edge |
 | :--- | :--- | :--- |
@@ -37,26 +75,6 @@ Livetalk is built to bring back the raw, spontaneous, and private human connecti
 | 🎭 **Mood Meter** | Express yourself with a real-time reactive mood indicator. | Live Supabase presence sync. |
 | 📍 **Interest Match** | Find people who share your specific passions. | Weighted interest pairing logic. |
 | 📱 **Full PWA Support** | Desktop-class experience on iOS and Android. | Service Worker optimization. |
-
----
-
-## 🛠️ High-Performance Architecture
-
-Livetalk leverages a **Hybrid Backend Architecture** to eliminate "cold start" latency and ensure maximum privacy.
-
-- **Orchestration**: **Firebase Realtime Database** handles the high-frequency, transient data like matchmaking nodes and ICE signaling. 
-- **Communication**: **Supabase Realtime** powers the robust chat engine, typing indicators, and message broadcasting.
-- **P2P Streaming**: **WebRTC** connections are established directly between browsers, ensuring your video calls never touch a server.
-
-```mermaid
-graph LR
-    UserA["👤 User A"] <--> FB[("🔥 Firebase (Transient)")]
-    UserB["👤 User B"] <--> FB
-    UserA <--> SB{"⚡ Supabase (Chat Engine)"}
-    UserB <--> SB
-    FB -. "Quick Handshake" .-> SB
-    UserA <== "Direct HD Video Stream" ==> UserB
-```
 
 ---
 
