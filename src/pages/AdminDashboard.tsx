@@ -505,7 +505,7 @@ const AdminDashboard = () => {
                               <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground opacity-50 font-bold">No pending appeals.</td></tr>
                             ) : appeals.map((a) => (
                               <tr key={a.uid} className="hover:bg-muted/10 transition-colors group">
-                                <td className="px-4 py-3 font-medium text-white/80">
+                                <td className="px-4 py-3 font-medium text-foreground/90">
                                   {a.reason}
                                 </td>
                                 <td className="px-4 py-3 font-mono opacity-60">{a.uid.slice(0, 12)}...</td>
