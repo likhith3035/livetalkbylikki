@@ -5,11 +5,12 @@ import { ref, onValue, set, onDisconnect, serverTimestamp, runTransaction, off, 
 interface MatchmakingOptions {
   sessionId: string;
   stableId: string;
+  userName: string;
   interests: string[];
-  onMatched: (roomId: string, strangerId: string, strangerStableId: string, sharedInterests: string[]) => void;
+  onMatched: (roomId: string, strangerId: string, strangerStableId: string, strangerName: string, sharedInterests: string[]) => void;
 }
 
-export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatched }: MatchmakingOptions) {
+export function useFirebaseMatchmaking({ sessionId, stableId, userName, interests, onMatched }: MatchmakingOptions) {
   const [status, setStatus] = useState<"idle" | "searching">("idle");
   const matchedGuardRef = useRef(false);
   const searchCodeRef = useRef<string | null>(null);
@@ -64,6 +65,8 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
               user2: pair[1],
               stable1: pair[0] === sessionId ? stableId : users[matchedUserId].stableId,
               stable2: pair[1] === sessionId ? stableId : users[matchedUserId].stableId,
+              name1: pair[0] === sessionId ? userName : users[matchedUserId].userName || "Stranger",
+              name2: pair[1] === sessionId ? userName : users[matchedUserId].userName || "Stranger",
               sharedInterests: shared,
               roomId: matchId,
               createdAt: serverTimestamp()
@@ -93,13 +96,14 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
     set(myLobbyRef, {
       interests,
       stableId,
+      userName,
       code,
       joinedAt: serverTimestamp()
     }).catch(err => {
       console.error("[Matchmaking] Failed to join lobby:", err);
     });
     onDisconnect(myLobbyRef).remove();
-  }, [sessionId, stableId, interests]);
+  }, [sessionId, stableId, interests, userName]);
 
   const stopSearch = useCallback(() => {
     setStatus("idle");
@@ -123,11 +127,12 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
           matchedGuardRef.current = true;
           const strangerId = match.user1 === sessionId ? match.user2 : match.user1;
           const strangerStableId = match.user1 === sessionId ? match.stable2 : match.stable1;
+          const strangerName = match.user1 === sessionId ? match.name2 : match.name1;
           
           remove(ref(db, `lobby/${sessionId}`)).catch(() => {});
           remove(ref(db, `matches/${mId}`)).catch(() => {});
           
-          onMatched(match.roomId, strangerId, strangerStableId, match.sharedInterests || []);
+          onMatched(match.roomId, strangerId, strangerStableId, strangerName || "Stranger", match.sharedInterests || []);
           setStatus("idle");
           break;
         }

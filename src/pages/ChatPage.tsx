@@ -25,10 +25,8 @@ import { useSettings } from "@/contexts/SettingsContext";
 const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
-    autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed, disappearTimer,
-    setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
-    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
-    deleteMessage, pinMessage, setDisappearTimer,
+    deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
+    userName, setUserName, strangerName,
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
     remoteMuted, remoteCameraOff, remoteBlurred,
@@ -36,7 +34,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
     inCallMessages, sendInCallMessage,
-    supportsScreenShare,
+    supportsScreenShare, 
+    autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed,
+    setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
+    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
   } = useChatContext();
 
   const { isBanned, submitAppeal } = useSafety();
@@ -61,6 +62,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   // Auto-join private room from URL/code
   useEffect(() => {
+    const savedName = localStorage.getItem("livetalk_user_name");
+    if (savedName) setUserName(savedName);
+
     const storedCode = sessionStorage.getItem("echo_join_room");
     const pendingCode = (initialRoomCode || storedCode || "").toUpperCase();
     if (!pendingCode) return;
@@ -80,10 +84,19 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     prevStatusRef.current = status;
   }, [status]);
 
+  const handleSaveName = (name: string) => {
+    const trimmed = name.trim().slice(0, 15);
+    if (trimmed) {
+      setUserName(trimmed);
+      localStorage.setItem("livetalk_user_name", trimmed);
+    }
+  };
+
   const handleStart = useCallback(() => {
+    if (!userName) return;
     setShowInterests(false);
     startChat();
-  }, [startChat]);
+  }, [startChat, userName]);
 
   useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
 
@@ -199,7 +212,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     <div className="flex min-h-[100dvh] flex-col bg-background relative z-0">
       <ChatWallpaper />
       <div className="lg:hidden">
-        <Header onlineCount={onlineCount} />
+        <Header onlineCount={onlineCount} strangerName={status === "connected" ? strangerName : undefined} />
       </div>
 
       <ChatStatusBar
@@ -208,6 +221,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         autoReconnectCountdown={autoReconnectCountdown}
         searchElapsed={searchElapsed}
         messages={messages}
+        strangerName={strangerName}
         onToggleInterests={() => setShowInterests(!showInterests)}
         showInterests={showInterests}
         onNext={nextChat}
@@ -234,39 +248,66 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       />
 
       {status === "idle" ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="flex flex-col items-center gap-5"
-          >
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <MessageSquare className="h-8 w-8 text-primary" />
-            </div>
-            <Button
-              variant="glow"
-              size="lg"
-              onClick={handleStart}
-              className="h-14 px-10 text-lg font-semibold rounded-2xl gap-2 shadow-xl shadow-primary/20"
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 relative">
+          {!userName ? (
+            <motion.div 
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               className="w-full max-w-xs space-y-6 text-center"
             >
-              Start Chat <ArrowRight className="h-5 w-5" />
-            </Button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col items-center gap-2 text-center max-w-xs"
-          >
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">How it works</p>
-            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground/70">
-              <span className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-primary/60 shrink-0" /> Press Start → get matched instantly</span>
-              <span className="flex items-center gap-1.5"><MessageSquare className="h-3 w-3 text-primary/60 shrink-0" /> Chat via text, images, or video</span>
-              <span className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-primary/60 shrink-0" /> 100% anonymous · no data saved</span>
-            </div>
-          </motion.div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">What's your name?</h2>
+                <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Enter a nickname to start matching</p>
+              </div>
+              <div className="relative group">
+                <Input 
+                  placeholder="Your nickname..."
+                  autoFocus
+                  maxLength={15}
+                  className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6 text-center text-lg font-bold focus:border-primary/50 transition-all uppercase"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveName((e.target as HTMLInputElement).value);
+                  }}
+                  onChange={(e) => {
+                    if (e.target.value.length >= 15) {
+                      toast({ title: "Name too long", description: "Max 15 characters allowed." });
+                    }
+                  }}
+                />
+                <div className="absolute inset-0 rounded-2xl border border-primary/20 scale-105 opacity-0 group-focus-within:opacity-100 transition-all -z-10 blur-xl bg-primary/5" />
+              </div>
+              <p className="text-[8px] text-muted-foreground/30 font-bold uppercase">Press Enter to Confirm</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              className="flex flex-col items-center gap-5"
+            >
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center relative">
+                <MessageSquare className="h-8 w-8 text-primary" />
+                <button 
+                  onClick={() => setUserName("")}
+                  className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-background border border-border flex items-center justify-center text-muted-foreground hover:text-white transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="text-center space-y-1">
+                <h3 className="text-white font-black uppercase italic tracking-widest">Welcome, {userName}</h3>
+                <p className="text-muted-foreground text-[8px] font-bold uppercase tracking-widest opacity-40">Ready to chat anonymously</p>
+              </div>
+              <Button
+                variant="glow"
+                size="lg"
+                onClick={handleStart}
+                className="h-14 px-12 rounded-2xl text-sm font-black uppercase tracking-[0.2em] italic"
+              >
+                Start Chatting <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </motion.div>
+          )}
         </div>
       ) : status === "searching" ? (
         <div className="flex-1 flex flex-col items-center justify-center px-6 gap-10 relative overflow-hidden">

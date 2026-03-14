@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   onlineCount: number;
+  strangerName?: string;
 }
 
-const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount }, ref) => {
+const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName }, ref) => {
   const { settings, updateSetting } = useSettings();
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -45,6 +46,12 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount }, ref) => {
           <BrandLogo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
           <span className="font-display text-base sm:text-lg font-bold text-foreground hover:text-primary transition-colors select-none">LiveTalk</span>
         </div>
+        {strangerName && (
+          <div className="flex flex-col ml-1 border-l border-border/50 pl-4 h-8 justify-center">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-primary italic tracking-widest leading-none">Stranger</span>
+            <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[100px] sm:max-w-[150px] leading-tight">{strangerName}</span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">

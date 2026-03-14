@@ -88,6 +88,8 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [strangerTypingText, setStrangerTypingText] = useState("");
   const [autoReconnectCountdown, setAutoReconnectCountdown] = useState<number | null>(null);
   const [searchElapsed, setSearchElapsed] = useState(0);
+  const [userName, setUserName] = useState<string>("");
+  const [strangerName, setStrangerName] = useState<string>("Stranger");
   const [privateRoomCode, setPrivateRoomCode] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const roomChannelRef = useRef<RealtimeChannel | null>(null);
@@ -244,14 +246,16 @@ export function useChat(callbacks?: ChatCallbacks) {
     [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
   );
 
-  const onMatched = useCallback((roomId: string, strangerId: string, strangerStableId: string, sharedInterests: string[]) => {
+  const onMatched = useCallback((roomId: string, strangerId: string, strangerStableId: string, strName: string, sharedInterests: string[]) => {
     strangerStableIdRef.current = strangerStableId;
+    setStrangerName(strName);
     joinRoom(roomId, strangerId, sharedInterests);
   }, [joinRoom]);
 
   const { startSearch: startFirebaseSearch, stopSearch: stopFirebaseSearch } = useFirebaseMatchmaking({
     sessionId,
     stableId,
+    userName,
     interests,
     onMatched
   });
@@ -348,7 +352,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar, replyTo },
+        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: userName || p.nickname, avatar: p.avatar, replyTo },
       });
     },
     [status, addMessage, playSoundIfEnabled, checkProfanity]
@@ -482,9 +486,27 @@ export function useChat(callbacks?: ChatCallbacks) {
     return () => clearInterval(interval);
   }, [disappearTimer]);
 
+  // Effect to detect if stranger is banned during session
+  useEffect(() => {
+    if (status !== "connected" || !strangerStableIdRef.current) return;
+    
+    // Check every 2 seconds if the stranger got banned
+    const checkBanStatus = setInterval(() => {
+      if (isBanned(strangerStableIdRef.current!)) {
+        addMessage("system", "Blocked: This user has been banned for violating community guidelines.");
+        setStatus("disconnected");
+        leaveRoom();
+        clearInterval(checkBanStatus);
+      }
+    }, 2000);
+
+    return () => clearInterval(checkBanStatus);
+  }, [status, isBanned, addMessage, leaveRoom]);
+
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, stableId, searchElapsed, privateRoomCode,
+    userName, setUserName, strangerName,
     roomChannel: roomChannelRef.current,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,

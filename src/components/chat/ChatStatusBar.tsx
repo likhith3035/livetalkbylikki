@@ -19,6 +19,7 @@ interface ChatStatusBarProps {
   autoReconnectCountdown: number | null;
   searchElapsed: number;
   messages?: Message[];
+  strangerName?: string;
   onToggleInterests: () => void;
   showInterests: boolean;
   onNext: () => void;
@@ -49,7 +50,7 @@ const ChatStatusBar = ({
   onToggleInterests, showInterests, onNext, onStop, onStart, onBlock,
   onVideoCall, onAudioCall, isVideoCallActive, onCreateRoom, onJoinRoom,
   disappearTimer, onSetDisappearTimer,
-  onSearchResult, onThemeChange,
+  onSearchResult, onThemeChange, strangerName,
 }: ChatStatusBarProps) => {
   const statusInfo = statusMessages[status] || statusMessages.idle;
   const { toast } = useToast();
@@ -87,7 +88,7 @@ const ChatStatusBar = ({
           <span className="text-xs sm:text-sm text-foreground truncate font-medium block">
             {status === "idle" && statusInfo.text}
             {status === "searching" && `Searching${searchElapsed > 0 ? ` (${searchElapsed}s)` : "..."}`}
-            {status === "connected" && statusInfo.text}
+            {status === "connected" && (strangerName || statusInfo.text)}
             {status === "disconnected" && (
               autoReconnectCountdown
                 ? `Reconnecting in ${autoReconnectCountdown}s...`

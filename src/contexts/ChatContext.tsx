@@ -27,6 +27,9 @@ interface ChatContextValue {
   roomChannel: ReturnType<typeof useChat>["roomChannel"];
   searchElapsed: number;
   disappearTimer: number | null;
+  userName: string;
+  setUserName: (n: string) => void;
+  strangerName: string;
 
   // Chat actions
   setInterests: (i: string[]) => void;
@@ -112,6 +115,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
     sendSignalingEvent, reportStranger, stableId,
+    userName, setUserName, strangerName,
   } = chatHook;
 
   const onCallEnded = useCallback(() => {
@@ -232,6 +236,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     inCallMessages, sendInCallMessage,
     supportsScreenShare,
     reportStranger, stableId,
+    userName, setUserName, strangerName,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
