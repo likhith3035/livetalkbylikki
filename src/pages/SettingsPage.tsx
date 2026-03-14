@@ -94,7 +94,7 @@ const SettingsPage = () => {
             <div className="space-y-5">
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground/80 px-1">Message Bubbles</label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-6 gap-2">
                   {(Object.keys(CHAT_THEMES) as ChatTheme[]).map((key) => {
                     const theme = CHAT_THEMES[key];
                     const isActive = settings.chatTheme === key;
@@ -111,7 +111,7 @@ const SettingsPage = () => {
                       >
                         <div 
                           className="h-8 w-8 rounded-full shadow-lg transition-transform group-hover:scale-110" 
-                          style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}dd)` }} 
+                          style={{ background: theme.accent }} 
                         />
                         <span className="text-[10px] font-bold text-foreground/80 truncate w-full text-center">{theme.label}</span>
                       </button>
@@ -122,7 +122,7 @@ const SettingsPage = () => {
 
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground/80 px-1">Chat Background</label>
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-8 gap-2">
                   {(Object.keys(CHAT_WALLPAPERS) as ChatWallpaper[]).map((key) => {
                     const wp = CHAT_WALLPAPERS[key];
                     const isActive = settings.chatWallpaper === key;

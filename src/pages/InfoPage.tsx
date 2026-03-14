@@ -314,7 +314,7 @@ const InfoPage = () => {
 
       <Header onlineCount={onlineCount} />
 
-      <main className="flex-1 px-6 pb-28 pt-8 max-w-2xl mx-auto w-full relative z-10 space-y-24">
+      <main className="flex-1 px-4 sm:px-6 pb-28 pt-6 sm:pt-8 max-w-2xl mx-auto w-full relative z-10 space-y-16 sm:space-y-24">
         {/* Back */}
         <motion.button
           initial={{ opacity: 0, x: -10 }}
@@ -505,7 +505,8 @@ const InfoPage = () => {
               See how LiveTalk compares to other platforms. We built every feature you wished Omegle had.
             </p>
           </div>
-          <div className="rounded-[2.5rem] bg-card/3 backdrop-blur-md border border-border/50 overflow-hidden">
+          <div className="overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide">
+            <div className="min-w-[500px] sm:min-w-full rounded-[2rem] sm:rounded-[2.5rem] bg-card/3 backdrop-blur-md border border-border/50 overflow-hidden">
             <div className="grid grid-cols-3 gap-0 text-center border-b border-border/30 bg-primary/5 px-6 py-4">
               <span className="text-sm font-bold text-foreground text-left uppercase tracking-widest">Feature</span>
               <span className="text-sm font-bold text-primary uppercase tracking-widest">LiveTalk</span>
@@ -542,7 +543,8 @@ const InfoPage = () => {
               </div>
             ))}
           </div>
-        </motion.section>
+        </div>
+      </motion.section>
 
         {/* ─── Section: Tech Stack ─── */}
         <motion.section id="tech" {...fadeUp} transition={{ delay: 0.25 }} className="space-y-8 scroll-mt-24">

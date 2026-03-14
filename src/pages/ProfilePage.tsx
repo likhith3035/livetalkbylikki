@@ -43,16 +43,8 @@ const ProfilePage = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 200, damping: 25 }}
-          className="w-full max-w-md glow-card rounded-[2.5rem] border border-primary/20 bg-card/30 backdrop-blur-xl p-8 sm:p-10 shadow-2xl shadow-primary/10 flex flex-col items-center gap-8 relative"
+          className="w-full max-w-md glow-card rounded-[2rem] sm:rounded-[2.5rem] border border-primary/20 bg-card/30 backdrop-blur-xl p-6 sm:p-10 shadow-2xl shadow-primary/10 flex flex-col items-center gap-6 sm:gap-8 relative !overflow-visible"
         >
-          {/* Top-left back button as secondary option */}
-          <Link 
-            to="/chat" 
-            className="absolute top-6 left-6 p-2 rounded-xl bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-all z-[70] sm:hidden"
-            aria-label="Back to chat"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
 
           {/* Avatar Section */}
           <div className="relative group">
@@ -76,12 +68,12 @@ const ProfilePage = () => {
             <AnimatePresence>
               {showAvatars && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-50 w-72"
+                  initial={{ opacity: 0, scale: 0.9, x: "-50%", y: 10 }}
+                  animate={{ opacity: 1, scale: 1, x: "-50%", y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, x: "-50%", y: 10 }}
+                  className="absolute top-full left-1/2 mt-4 z-50 w-[max-content] max-w-[calc(100vw-3rem)] sm:w-72"
                 >
-                  <div className="grid grid-cols-6 gap-2 rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md p-4 shadow-2xl">
+                  <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md p-3 sm:p-4 shadow-2xl">
                     {AVATAR_OPTIONS.map((emoji) => (
                       <button
                         key={emoji}
@@ -126,7 +118,7 @@ const ProfilePage = () => {
                 onClick={() => { setNameInput(profile.nickname); setEditingName(true); }}
                 className="group inline-flex items-center gap-3 hover:scale-105 transition-transform"
               >
-                <h1 className="text-3xl font-bold font-display text-foreground tracking-tight">{displayName}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold font-display text-foreground tracking-tight break-words max-w-[280px] sm:max-w-md px-2">{displayName}</h1>
                 <div className="p-2 rounded-xl bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-all">
                   <Pencil className="h-4 w-4" />
                 </div>
@@ -141,20 +133,20 @@ const ProfilePage = () => {
           <div className="grid grid-cols-2 gap-4 w-full">
             <motion.div 
               whileHover={{ y: -5 }}
-              className="rounded-3xl bg-primary/5 border border-primary/10 p-5 text-center transition-all hover:bg-primary/10"
+              className="rounded-2xl sm:rounded-3xl bg-primary/5 border border-primary/10 p-4 sm:p-5 text-center transition-all hover:bg-primary/10"
             >
-              <p className="text-3xl font-bold font-display text-primary">0</p>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-widest">Chats today</p>
+              <p className="text-2xl sm:text-3xl font-bold font-display text-primary">0</p>
+              <p className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-widest">Chats today</p>
             </motion.div>
             <motion.div 
               whileHover={{ y: -5 }}
-              className="rounded-3xl bg-accent/5 border border-accent/10 p-5 text-center transition-all hover:bg-accent/10"
+              className="rounded-2xl sm:rounded-3xl bg-accent/5 border border-accent/10 p-4 sm:p-5 text-center transition-all hover:bg-accent/10"
             >
               <div className="flex items-center justify-center gap-1.5 text-accent">
-                <Shield className="h-5 w-5" />
-                <p className="text-xl font-bold font-display">100%</p>
+                <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
+                <p className="text-lg sm:text-xl font-bold font-display">100%</p>
               </div>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-widest">Anonymous</p>
+              <p className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-widest">Anonymous</p>
             </motion.div>
           </div>
 

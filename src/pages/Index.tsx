@@ -129,7 +129,7 @@ const Index = () => {
             {onlineCount.toLocaleString()} people chatting now
           </motion.div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold font-display leading-[1.05] tracking-tight text-foreground">
+          <h1 className="text-4xl xs:text-5xl sm:text-6xl lg:text-8xl font-bold font-display leading-[1.1] tracking-tight text-foreground break-words max-w-full px-4">
             <span className="text-gradient">LiveTalk</span>
             {" "}by Likki
           </h1>
@@ -139,7 +139,7 @@ const Index = () => {
             <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="text-primary/80 hover:text-primary transition-colors hover:underline decoration-primary/30 underline-offset-4">Likhith Kami</a>
           </div>
 
-          <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground/80 font-medium max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground/80 font-medium max-w-2xl mx-auto px-4">
             The #1 Omegle Alternative — Chat Anonymously with Strangers
           </p>
 
@@ -287,7 +287,7 @@ const Index = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
-            className="grid gap-4 sm:gap-5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+            className="grid gap-3 sm:gap-5 grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
           >
             {FEATURES.map((feature) => (
               <motion.div
