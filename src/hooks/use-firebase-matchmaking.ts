@@ -129,8 +129,15 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
           const strangerStableId = match.user1 === sessionId ? match.stable2 : match.stable1;
           const strangerName = match.user1 === sessionId ? match.name2 : match.name1;
           
+          // Each user only removes their own lobby entry
           remove(ref(db, `lobby/${sessionId}`)).catch(() => {});
-          remove(ref(db, `matches/${mId}`)).catch(() => {});
+          
+          // DELAY cleanup of the match signal to prevent race conditions
+          // This ensures the second user has time to see the snapshot before it's gone
+          const matchRef = ref(db, `matches/${mId}`);
+          setTimeout(() => {
+            remove(matchRef).catch(() => {});
+          }, 3000); 
           
           onMatched(match.roomId, strangerId, strangerStableId, strangerName || "Stranger", match.sharedInterests || []);
           setStatus("idle");
