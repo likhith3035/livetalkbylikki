@@ -1,4 +1,4 @@
-import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Users, Shield, MessageCircle } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Users, Shield, ShieldAlert, MessageCircle } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import OnlineBadge from "@/components/OnlineBadge";
@@ -12,6 +12,7 @@ const navItems = [
   { icon: Shield, path: "/safety", label: "Safety" },
   { icon: User, path: "/profile", label: "Profile" },
   { icon: Settings, path: "/settings", label: "Settings" },
+  { icon: ShieldAlert, path: "/guidelines", label: "Guidelines" },
   { icon: Info, path: "/info", label: "About" },
 ];
 

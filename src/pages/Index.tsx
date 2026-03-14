@@ -567,6 +567,7 @@ Likhith Kami (Likki)</a>
         </p>
 
         <div className="flex justify-center gap-4 mt-2 text-[10px] text-muted-foreground/40">
+          <Link to="/guidelines" className="hover:text-primary transition-colors">Guidelines</Link>
           <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
           <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
           <a href="/info" className="hover:text-primary transition-colors">About</a>

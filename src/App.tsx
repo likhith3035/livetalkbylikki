@@ -21,6 +21,7 @@ import SafetyCenterPage from "./pages/SafetyCenterPage";
 import InfoPage from "./pages/InfoPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
+import GuidelinesPage from "./pages/GuidelinesPage";
 import NotFound from "./pages/NotFound";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,6 +64,7 @@ const AnimatedRoutes = () => {
           <Route path="/info" element={<InfoPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/guidelines" element={<GuidelinesPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>

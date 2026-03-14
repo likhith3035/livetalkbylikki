@@ -7,10 +7,10 @@ import {
   Timer, Copy, Pin, Forward, Palette, Code2, Database, Server, Monitor,
   Layers, Cpu, FileCode2, Smartphone, Radio, ChevronDown, ChevronUp,
   Star, Headphones, Mic, Phone, ScreenShare, UserCheck, Fingerprint,
-  Check, X
+  Check, X, Info, ShieldAlert, Code
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
@@ -794,14 +794,14 @@ const InfoPage = () => {
 
         {/* Footer */}
         <div className="text-center pb-8 pt-10 border-t border-border/10">
-          <p className="text-xs text-muted-foreground/60 font-medium">
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-[10px] font-bold text-muted-foreground/40 tracking-widest uppercase">
+            <Link to="/guidelines" className="hover:text-primary transition-colors">Guidelines</Link>
+            <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
+          </div>
+          <p className="text-xs text-muted-foreground/60 font-medium mt-4">
             Developed by <span className="text-foreground font-bold">Likhith Kami (Likki)</span> · © 2026 LiveTalk by Likki
           </p>
-          <div className="flex justify-center gap-6 mt-4 text-xs font-bold text-muted-foreground/40 tracking-widest uppercase">
-            <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-primary transition-colors">Terms</a>
-            <a href="/feedback" className="hover:text-primary transition-colors">Feedback</a>
-          </div>
         </div>
       </main>
 
