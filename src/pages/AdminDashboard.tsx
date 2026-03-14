@@ -180,6 +180,8 @@ const AdminDashboard = () => {
         }
         setVisitData(formatted);
       }
+    }, (error) => {
+      console.error("[Admin] Visits Read Error:", error);
     });
 
     // Match Tracking
@@ -197,6 +199,8 @@ const AdminDashboard = () => {
           .slice(-14);
         setMatchData(formatted);
       }
+    }, (error) => {
+      console.error("[Admin] Matches Read Error:", error);
     });
 
     // Hourly Intensity (Today)
@@ -212,11 +216,15 @@ const AdminDashboard = () => {
         }));
         setHourlyData(formatted);
       }
+    }, (error) => {
+      console.error("[Admin] Hourly Read Error:", error);
     });
 
     const presenceRef = ref(db, "presence");
     const unsubPresence = onValue(presenceRef, (snapshot) => {
       setOnlineCount(snapshot.exists() ? Object.keys(snapshot.val()).length : 0);
+    }, (error) => {
+      console.error("[Admin] Online Count Error:", error);
     });
 
     // Safety Reports
@@ -231,6 +239,8 @@ const AdminDashboard = () => {
       } else {
         setSafetyReports([]);
       }
+    }, (error) => {
+      console.error("[Admin] Reports Sync Error:", error);
     });
 
     // Banned Words
@@ -243,6 +253,8 @@ const AdminDashboard = () => {
         setBannedWords(DEFAULT_BANNED_WORDS);
         set(wordsRef, DEFAULT_BANNED_WORDS).catch(() => {});
       }
+    }, (error) => {
+      console.error("[Admin] Words Sync Error:", error);
     });
 
     // Ban Appeals
@@ -257,6 +269,8 @@ const AdminDashboard = () => {
       } else {
         setAppeals([]);
       }
+    }, (error) => {
+      console.error("[Admin] Appeals Sync Error:", error);
     });
 
     return () => { 

@@ -73,7 +73,9 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
           return;
         });
       }
-    }, { onlyOnce: false });
+    }, (error) => {
+      console.error("[Matchmaking] Lobby Sync Error:", error);
+    });
   }, [sessionId, stableId, interests, status]);
 
   const startSearch = useCallback((code: string | null = null) => {
@@ -122,7 +124,9 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
       }
     };
 
-    onValue(matchesRef, handleMatch);
+    onValue(matchesRef, handleMatch, (error) => {
+      console.error("[Matchmaking] Matches Sync Error:", error);
+    });
     return () => off(matchesRef, "value", handleMatch);
   }, [status, sessionId, onMatched]);
 

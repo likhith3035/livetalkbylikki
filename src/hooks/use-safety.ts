@@ -22,10 +22,13 @@ export function useSafety() {
       if (snapshot.exists()) {
         setBannedWords(snapshot.val());
       } else {
-        // Initialize with defaults if empty
         setBannedWords(DEFAULT_BANNED_WORDS);
-        set(wordsRef, DEFAULT_BANNED_WORDS).catch(() => {});
+        set(wordsRef, DEFAULT_BANNED_WORDS).catch(err => {
+          console.warn("[Safety] Failed to initialize profanity list:", err.message);
+        });
       }
+    }, (error) => {
+      console.error("[Safety] Profanity List Sync Error:", error);
     });
 
     // Sync Global Blacklist
@@ -36,6 +39,8 @@ export function useSafety() {
       } else {
         setBlacklist({});
       }
+    }, (error) => {
+      console.error("[Safety] Blacklist Sync Error:", error);
     });
 
     return () => { unsubWords(); unsubBlacklist(); };
