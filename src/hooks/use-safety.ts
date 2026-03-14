@@ -66,6 +66,13 @@ export function useSafety() {
       reason,
       timestamp: serverTimestamp(),
       status: "pending"
+    }).catch(err => {
+      console.error("[Safety] Failed to report user:", err);
+      toast({
+        variant: "destructive",
+        title: "Report Failed",
+        description: "Please check your connection and try again.",
+      });
     });
 
     toast({
@@ -85,6 +92,13 @@ export function useSafety() {
       reason,
       timestamp: serverTimestamp(),
       status: "pending"
+    }).catch(err => {
+      console.error("[Safety] Failed to submit appeal:", err);
+      toast({
+        variant: "destructive",
+        title: "Appeal Failed",
+        description: "Failed to send appeal. Please try again.",
+      });
     });
     toast({
       title: "Appeal Sent",
@@ -111,7 +125,9 @@ export function useSafety() {
       });
     } else if (count >= 5) {
       // Auto Ban
-      await set(ref(db, `admin/blacklist/${uid}`), true);
+      await set(ref(db, `admin/blacklist/${uid}`), true).catch(err => {
+        console.error("[Safety] Auto-ban failed:", err);
+      });
       // Auto report for the ban
       await reportUser(uid, "Automatic Ban: 5+ Profanity Violations", "SYSTEM");
     }

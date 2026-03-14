@@ -251,7 +251,9 @@ const AdminDashboard = () => {
       } else {
         // Initialize with defaults if empty
         setBannedWords(DEFAULT_BANNED_WORDS);
-        set(wordsRef, DEFAULT_BANNED_WORDS).catch(() => {});
+        set(wordsRef, DEFAULT_BANNED_WORDS).catch(err => {
+          console.error("[Admin] Failed to initialize words:", err);
+        });
       }
     }, (error) => {
       console.error("[Admin] Words Sync Error:", error);
@@ -265,6 +267,7 @@ const AdminDashboard = () => {
         const formatted = Object.entries(data)
           .map(([uid, val]: [string, any]) => ({ uid, ...val }))
           .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        console.log("[Admin] Appeals loaded:", formatted);
         setAppeals(formatted);
       } else {
         setAppeals([]);

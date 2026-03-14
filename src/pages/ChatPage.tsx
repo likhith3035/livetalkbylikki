@@ -19,6 +19,8 @@ import { useSafety } from "@/hooks/use-safety";
 import { motion } from "framer-motion";
 import { useSEO } from "@/hooks/use-seo";
 import { BrandLogo } from "@/components/BrandLogo";
+import { useToast } from "@/hooks/use-toast";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const {
@@ -38,6 +40,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   } = useChatContext();
 
   const { isBanned, submitAppeal } = useSafety();
+  const { toast } = useToast();
+  const { settings } = useSettings();
   const [appealReason, setAppealReason] = useState("");
   const [appealSent, setAppealSent] = useState(false);
   const banned = isBanned(stableId);
@@ -112,8 +116,21 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   const handleAppealSubmit = async () => {
     if (!appealReason.trim()) return;
-    await submitAppeal(stableId, appealReason.trim());
-    setAppealSent(true);
+    try {
+      await submitAppeal(stableId, appealReason.trim());
+      setAppealSent(true);
+      toast({
+        title: "Appeal Received",
+        description: "Your appeal has been submitted for review.",
+      });
+    } catch (error: any) {
+      console.error("Appeal submission error:", error);
+      toast({
+        variant: "destructive",
+        title: "Submission Error",
+        description: "Could not send appeal. Check your connection.",
+      });
+    }
   };
 
   if (banned) {

@@ -71,6 +71,8 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
             };
           }
           return;
+        }).catch(err => {
+          console.error("[Matchmaking] Transaction failed:", err);
         });
       }
     }, (error) => {
@@ -89,6 +91,8 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
       stableId,
       code,
       joinedAt: serverTimestamp()
+    }).catch(err => {
+      console.error("[Matchmaking] Failed to join lobby:", err);
     });
     onDisconnect(myLobbyRef).remove();
   }, [sessionId, stableId, interests]);
@@ -96,7 +100,9 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
   const stopSearch = useCallback(() => {
     setStatus("idle");
     const myLobbyRef = ref(db, `lobby/${sessionId}`);
-    remove(myLobbyRef);
+    remove(myLobbyRef).catch(err => {
+      console.error("[Matchmaking] Failed to stop search:", err);
+    });
   }, [sessionId]);
 
   useEffect(() => {
@@ -114,8 +120,8 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
           const strangerId = match.user1 === sessionId ? match.user2 : match.user1;
           const strangerStableId = match.user1 === sessionId ? match.stable2 : match.stable1;
           
-          remove(ref(db, `lobby/${sessionId}`));
-          remove(ref(db, `matches/${mId}`));
+          remove(ref(db, `lobby/${sessionId}`)).catch(() => {});
+          remove(ref(db, `matches/${mId}`)).catch(() => {});
           
           onMatched(match.roomId, strangerId, strangerStableId, match.sharedInterests || []);
           setStatus("idle");
