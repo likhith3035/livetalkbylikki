@@ -32,12 +32,45 @@ export default defineConfig(({ mode }) => ({
         orientation: "portrait",
         scope: "/",
         start_url: "/",
+        categories: ["social", "communication", "entertainment"],
         icons: [
           {
             src: "logo.png",
             sizes: "192x192 512x512",
             type: "image/png",
             purpose: "any maskable",
+          },
+        ],
+        screenshots: [
+          {
+            src: "screenshot-desktop.png",
+            sizes: "1280x720",
+            type: "image/png",
+            form_factor: "wide",
+            label: "LiveTalk Desktop Interface",
+          },
+          {
+            src: "screenshot-mobile.png",
+            sizes: "750x1334",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "LiveTalk Mobile Interface",
+          },
+        ],
+        shortcuts: [
+          {
+            name: "Start Chatting",
+            short_name: "Start",
+            description: "Start a new anonymous chat",
+            url: "/chat",
+            icons: [{ src: "logo.png", sizes: "192x192" }],
+          },
+          {
+            name: "Safety Center",
+            short_name: "Safety",
+            description: "Learn how to stay safe",
+            url: "/safety",
+            icons: [{ src: "logo.png", sizes: "192x192" }],
           },
         ],
       },
