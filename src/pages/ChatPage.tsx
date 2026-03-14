@@ -13,7 +13,9 @@ import { useChatContext } from "@/contexts/ChatContext";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Zap, Shield, ArrowRight, X } from "lucide-react";
+import { MessageSquare, Zap, Shield, ArrowRight, X, AlertTriangle, Send } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useSafety } from "@/hooks/use-safety";
 import { motion } from "framer-motion";
 import { useSEO } from "@/hooks/use-seo";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -21,7 +23,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
-    autoReconnectCountdown, sessionId, roomChannel, searchElapsed, disappearTimer,
+    autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed, disappearTimer,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, setDisappearTimer,
@@ -34,6 +36,11 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     inCallMessages, sendInCallMessage,
     supportsScreenShare,
   } = useChatContext();
+
+  const { isBanned, submitAppeal } = useSafety();
+  const [appealReason, setAppealReason] = useState("");
+  const [appealSent, setAppealSent] = useState(false);
+  const banned = isBanned(stableId);
 
   useSEO({
     title: "Anonymous Text & Video Chat",
@@ -102,6 +109,74 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     setShowInterests(false);
     joinPrivateRoom(code);
   };
+
+  const handleAppealSubmit = async () => {
+    if (!appealReason.trim()) return;
+    await submitAppeal(stableId, appealReason.trim());
+    setAppealSent(true);
+  };
+
+  if (banned) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[#09090B] px-6 text-center">
+        <ChatWallpaper opacity={0.3} />
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="relative z-10 space-y-8 max-w-sm w-full"
+        >
+          <div className="mx-auto h-20 w-20 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive animate-pulse">
+            <AlertTriangle className="h-10 w-10" />
+          </div>
+          
+          <div className="space-y-4">
+            <h1 className="text-4xl font-black font-display tracking-tight text-white uppercase italic">
+              You cross limits
+            </h1>
+            <p className="text-muted-foreground text-sm font-medium leading-relaxed">
+              Your account has been blacklisted for community guideline violations. You cannot access chat features at this time.
+            </p>
+          </div>
+
+          {!appealSent ? (
+            <div className="space-y-4 pt-4">
+              <div className="relative">
+                <Input 
+                  placeholder="Enter reason for unbanning..."
+                  value={appealReason}
+                  onChange={(e) => setAppealReason(e.target.value)}
+                  className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pr-12 focus:border-primary/50 transition-all font-medium text-sm"
+                />
+                <Button 
+                   onClick={handleAppealSubmit}
+                   disabled={!appealReason.trim()}
+                   className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary hover:bg-primary/80"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-widest">
+                Submit an appeal to request access
+              </p>
+            </div>
+          ) : (
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="bg-primary/10 border border-primary/20 p-6 rounded-3xl"
+            >
+              <h3 className="text-primary font-black uppercase tracking-widest text-xs mb-1">Appeal Received</h3>
+              <p className="text-white/60 text-[10px] font-medium uppercase tracking-[0.2em]">Our team will review your request shortly.</p>
+            </motion.div>
+          )}
+
+          <div className="pt-8">
+            <BrandLogo className="h-8 w-8 mx-auto opacity-20" />
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background relative z-0">

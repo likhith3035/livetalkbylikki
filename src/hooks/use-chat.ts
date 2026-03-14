@@ -6,6 +6,7 @@ import { sounds, haptics } from "@/lib/sounds";
 import { sendNotification, type NotificationType } from "@/lib/notifications";
 import { useFirebaseMatchmaking } from "./use-firebase-matchmaking";
 import { useFirebaseSignaling } from "./use-firebase-signaling";
+import { useSafety } from "./use-safety";
 
 const getProfile = () => {
   try {
@@ -28,7 +29,7 @@ export interface Message {
   replyTo?: { id: string; text: string; sender: string };
   deleted?: boolean;
   pinned?: boolean;
-  disappearAt?: number; // unix ms when message auto-deletes
+  disappearAt?: number;
 }
 
 export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
@@ -51,6 +52,17 @@ const getSessionId = () => {
 
 const sessionId = getSessionId();
 
+const getStableId = () => {
+  let id = localStorage.getItem("echo_stable_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("echo_stable_id", id);
+  }
+  return id;
+};
+
+const stableId = getStableId();
+
 const getBlockedIds = (): string[] => {
   try {
     return JSON.parse(localStorage.getItem("echo.blocked") || "[]");
@@ -69,6 +81,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ChatStatus>("idle");
   const onlineCount = useOnlineCount();
+  const { checkProfanity, reportUser, isBanned } = useSafety();
   const [interests, setInterests] = useState<string[]>([]);
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const [strangerTyping, setStrangerTyping] = useState(false);
@@ -80,6 +93,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const roomChannelRef = useRef<RealtimeChannel | null>(null);
   const roomIdRef = useRef<string | null>(null);
   const strangerIdRef = useRef<string | null>(null);
+  const strangerStableIdRef = useRef<string | null>(null);
   const interestsRef = useRef<string[]>([]);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -90,37 +104,12 @@ export function useChat(callbacks?: ChatCallbacks) {
   const messagesRef = useRef<Message[]>([]);
   const [disappearTimer, setDisappearTimer] = useState<number | null>(null);
 
+  const stopSearchRef = useRef<() => void>(() => {});
+
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
   useEffect(() => { interestsRef.current = interests; }, [interests]);
   useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
-
-  // Firebase integration
-  const onMatched = useCallback((roomId: string, strangerId: string, sharedInterests: string[]) => {
-    joinRoom(roomId, strangerId, sharedInterests);
-  }, []);
-
-  const { startSearch: startFirebaseSearch, stopSearch: stopFirebaseSearch } = useFirebaseMatchmaking({
-    sessionId,
-    interests,
-    onMatched
-  });
-
-  const { sendEvent: sendFirebaseSignalingEvent } = useFirebaseSignaling({
-    sessionId,
-    roomId: roomIdRef.current,
-    onEvent: (event, payload) => {
-      callbacksRef.current?.onSignaling?.(event, payload);
-    }
-  });
-
-  const clearReconnectTimer = useCallback(() => {
-    if (reconnectTimerRef.current) {
-      clearInterval(reconnectTimerRef.current);
-      reconnectTimerRef.current = null;
-    }
-    setAutoReconnectCountdown(null);
-  }, []);
 
   const playSoundIfEnabled = useCallback((sound: keyof typeof sounds) => {
     if (callbacksRef.current?.soundEnabled) sounds[sound]();
@@ -150,8 +139,8 @@ export function useChat(callbacks?: ChatCallbacks) {
     strangerIdRef.current = null;
     setStrangerTyping(false);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    stopFirebaseSearch();
-  }, [stopFirebaseSearch]);
+    stopSearchRef.current?.();
+  }, []);
 
   const joinRoom = useCallback(
     (roomId: string, strangerId: string, sharedInterests: string[] = []) => {
@@ -173,9 +162,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
       setSearchElapsed(0);
 
-      // Supabase is still used for CHAT MESSAGES
       const channel = supabase.channel(`room:${roomId}`);
-
       channel
         .on("broadcast", { event: "message" }, (payload) => {
           const data = payload.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string; replyTo?: Message["replyTo"] };
@@ -185,7 +172,6 @@ export function useChat(callbacks?: ChatCallbacks) {
             playSoundIfEnabled("messageReceived");
             if (callbacksRef.current?.soundEnabled) haptics.vibrate(50);
             notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100), "message");
-            // Send read receipt
             channel.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: data.messageId } });
           }
         })
@@ -255,8 +241,40 @@ export function useChat(callbacks?: ChatCallbacks) {
       channel.subscribe();
       roomChannelRef.current = channel;
     },
-    [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled, stopFirebaseSearch]
+    [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
   );
+
+  const onMatched = useCallback((roomId: string, strangerId: string, strangerStableId: string, sharedInterests: string[]) => {
+    strangerStableIdRef.current = strangerStableId;
+    joinRoom(roomId, strangerId, sharedInterests);
+  }, [joinRoom]);
+
+  const { startSearch: startFirebaseSearch, stopSearch: stopFirebaseSearch } = useFirebaseMatchmaking({
+    sessionId,
+    stableId,
+    interests,
+    onMatched
+  });
+
+  useEffect(() => {
+    stopSearchRef.current = stopFirebaseSearch;
+  }, [stopFirebaseSearch]);
+
+  const { sendEvent: sendFirebaseSignalingEvent } = useFirebaseSignaling({
+    sessionId,
+    roomId: roomIdRef.current,
+    onEvent: (event, payload) => {
+      callbacksRef.current?.onSignaling?.(event, payload);
+    }
+  });
+
+  const clearReconnectTimer = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearInterval(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    setAutoReconnectCountdown(null);
+  }, []);
 
   const sendTyping = useCallback((text?: string) => {
     roomChannelRef.current?.send({
@@ -267,7 +285,6 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, []);
 
   const reactToMessage = useCallback((messageId: string, emoji: string) => {
-    // Local update
     setMessages((prev) =>
       prev.map((msg) => {
         if (msg.id !== messageId) return msg;
@@ -281,7 +298,6 @@ export function useChat(callbacks?: ChatCallbacks) {
         return { ...msg, reactions };
       })
     );
-    // Broadcast
     roomChannelRef.current?.send({
       type: "broadcast",
       event: "reaction",
@@ -290,6 +306,11 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, []);
 
   const startChat = useCallback((code: string | null = null) => {
+    if (isBanned(stableId)) {
+      addMessage("system", "Access Denied: Your account has been globally blacklisted for community guideline violations.");
+      setStatus("disconnected");
+      return;
+    }
     clearReconnectTimer();
     if (searchTimerRef.current) clearInterval(searchTimerRef.current);
     matchedGuardRef.current = false;
@@ -299,8 +320,6 @@ export function useChat(callbacks?: ChatCallbacks) {
     setStatus("searching");
     setSearchElapsed(0);
     addMessage("system", code ? `Joining room ${code} (via Firebase)...` : "Looking for a stranger (using Firebase Lobby)...");
-
-    // Track search time
     const startTime = Date.now();
     searchTimerRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
@@ -311,13 +330,16 @@ export function useChat(callbacks?: ChatCallbacks) {
         addMessage("system", "Taking a bit longer than usual. Try sharing the link to get more people online!");
       }
     }, 1000);
-
     startFirebaseSearch(code);
-  }, [addMessage, clearReconnectTimer, startFirebaseSearch]);
+  }, [addMessage, clearReconnectTimer, startFirebaseSearch, isBanned]);
 
   const sendMessage = useCallback(
     (text: string, imageUrl?: string, replyTo?: Message["replyTo"]) => {
       if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
+      if (text && checkProfanity(text)) {
+        addMessage("system", "Blocked: Please maintain a friendly environment. Profanity is not allowed.");
+        return;
+      }
       const p = getProfile();
       const messageId = crypto.randomUUID();
       addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId, replyTo);
@@ -328,7 +350,7 @@ export function useChat(callbacks?: ChatCallbacks) {
         payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: p.nickname, avatar: p.avatar, replyTo },
       });
     },
-    [status, addMessage, playSoundIfEnabled]
+    [status, addMessage, playSoundIfEnabled, checkProfanity]
   );
 
   const nextChat = useCallback(() => {
@@ -368,6 +390,12 @@ export function useChat(callbacks?: ChatCallbacks) {
     stopChat();
   }, [stopChat]);
 
+  const reportStranger = useCallback((reason: string) => {
+    if (strangerStableIdRef.current) {
+      reportUser(strangerStableIdRef.current, reason, stableId);
+    }
+  }, [reportUser]);
+
   const joinPrivateRoom = useCallback((code: string) => {
     setPrivateRoomCode(code);
     startChat(code); 
@@ -381,7 +409,6 @@ export function useChat(callbacks?: ChatCallbacks) {
     return code;
   }, [joinPrivateRoom]);
 
-  // Auto-reconnect countdown
   useEffect(() => {
     if (status === "disconnected" && callbacksRef.current?.autoReconnect && !privateRoomCode) {
       let count = 5;
@@ -414,9 +441,9 @@ export function useChat(callbacks?: ChatCallbacks) {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       if (reconnectTimerRef.current) clearInterval(reconnectTimerRef.current);
       if (searchTimerRef.current) clearInterval(searchTimerRef.current);
-      stopFirebaseSearch();
+      stopSearchRef.current?.();
     };
-  }, [stopFirebaseSearch]);
+  }, []);
 
   const deleteMessage = useCallback((messageId: string) => {
     setMessages((prev) => prev.map((msg) =>
@@ -456,11 +483,11 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
-    autoReconnectCountdown, sessionId, searchElapsed, privateRoomCode,
+    autoReconnectCountdown, sessionId, stableId, searchElapsed, privateRoomCode,
     roomChannel: roomChannelRef.current,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
-    sendSignalingEvent: sendFirebaseSignalingEvent
+    sendSignalingEvent: sendFirebaseSignalingEvent, reportStranger
   };
 }

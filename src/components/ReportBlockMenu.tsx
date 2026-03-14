@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Flag, Ban, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useChatContext } from "@/contexts/ChatContext";
 
 interface ReportBlockMenuProps {
   onBlock: () => void;
@@ -19,12 +20,10 @@ const ReportBlockMenu = ({ onBlock }: ReportBlockMenuProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const { toast } = useToast();
+  const { reportStranger } = useChatContext();
 
   const handleReport = (reason: string) => {
-    toast({
-      title: "Report submitted",
-      description: `Thank you. We'll review this report.`,
-    });
+    reportStranger(reason);
     setShowReport(false);
     setShowMenu(false);
     onBlock();

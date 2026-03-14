@@ -12,16 +12,17 @@ const wallpaperStyles: Record<ChatWallpaper, string> = {
   zigzag: "chat-wallpaper-zigzag",
 };
 
-const ChatWallpaperBg = () => {
+const ChatWallpaperBg = ({ opacity }: { opacity?: number }) => {
   const { settings } = useSettings();
   if (settings.chatWallpaper === "none") return null;
 
   return (
     <div
       className={cn(
-        "pointer-events-none fixed inset-0 -z-10 opacity-[0.04] dark:opacity-[0.06]",
+        "pointer-events-none fixed inset-0 -z-10",
         wallpaperStyles[settings.chatWallpaper]
       )}
+      style={opacity !== undefined ? { opacity } : undefined}
       aria-hidden
     />
   );

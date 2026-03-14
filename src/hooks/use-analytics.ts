@@ -12,12 +12,15 @@ export function useAnalytics() {
       if (sessionStorage.getItem(sessionKey)) return;
 
       const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const hour = new Date().getHours();
       const visitRef = ref(db, `analytics/daily_visits/${today}`);
+      const hourlyRef = ref(db, `analytics/hourly_visits/${today}/${hour}`);
 
       try {
-        await runTransaction(visitRef, (currentValue) => {
-          return (currentValue || 0) + 1;
-        });
+        await Promise.all([
+          runTransaction(visitRef, (val) => (val || 0) + 1),
+          runTransaction(hourlyRef, (val) => (val || 0) + 1)
+        ]);
         sessionStorage.setItem(sessionKey, "true");
       } catch (error) {
         console.error("[Analytics] Failed to track visit:", error);
@@ -27,3 +30,19 @@ export function useAnalytics() {
     trackVisit();
   }, []);
 }
+
+export const trackMatch = async () => {
+  if (!db) return;
+  const today = new Date().toISOString().split("T")[0];
+  const totalMatchesRef = ref(db, "analytics/total_matches");
+  const dailyMatchesRef = ref(db, `analytics/daily_matches/${today}`);
+  
+  try {
+    await Promise.all([
+      runTransaction(totalMatchesRef, (val) => (val || 0) + 1),
+      runTransaction(dailyMatchesRef, (val) => (val || 0) + 1)
+    ]);
+  } catch (e) {
+    console.error("[Analytics] Failed to track match:", e);
+  }
+};

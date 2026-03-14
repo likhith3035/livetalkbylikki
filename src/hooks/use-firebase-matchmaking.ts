@@ -4,11 +4,12 @@ import { ref, onValue, set, onDisconnect, serverTimestamp, runTransaction, off, 
 
 interface MatchmakingOptions {
   sessionId: string;
+  stableId: string;
   interests: string[];
-  onMatched: (roomId: string, strangerId: string, sharedInterests: string[]) => void;
+  onMatched: (roomId: string, strangerId: string, strangerStableId: string, sharedInterests: string[]) => void;
 }
 
-export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: MatchmakingOptions) {
+export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatched }: MatchmakingOptions) {
   const [status, setStatus] = useState<"idle" | "searching">("idle");
   const matchedGuardRef = useRef(false);
   const searchCodeRef = useRef<string | null>(null);
@@ -58,9 +59,12 @@ export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: Matc
       if (pair[0] === sessionId) {
         runTransaction(matchRef, (currentData) => {
           if (currentData === null) {
+            import("@/hooks/use-analytics").then(({ trackMatch }) => trackMatch());
             return {
               user1: pair[0],
               user2: pair[1],
+              stable1: pair[0] === sessionId ? stableId : users[matchedUserId].stableId,
+              stable2: pair[1] === sessionId ? stableId : users[matchedUserId].stableId,
               sharedInterests: shared,
               roomId: matchId,
               createdAt: serverTimestamp()
@@ -70,7 +74,7 @@ export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: Matc
         });
       }
     }, { onlyOnce: false });
-  }, [sessionId, interests, status]);
+  }, [sessionId, stableId, interests, status]);
 
   const startSearch = useCallback((code: string | null = null) => {
     matchedGuardRef.current = false;
@@ -80,11 +84,12 @@ export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: Matc
     const myLobbyRef = ref(db, `lobby/${sessionId}`);
     set(myLobbyRef, {
       interests,
+      stableId,
       code,
       joinedAt: serverTimestamp()
     });
     onDisconnect(myLobbyRef).remove();
-  }, [sessionId, interests]);
+  }, [sessionId, stableId, interests]);
 
   const stopSearch = useCallback(() => {
     setStatus("idle");
@@ -105,11 +110,12 @@ export function useFirebaseMatchmaking({ sessionId, interests, onMatched }: Matc
         if (match.user1 === sessionId || match.user2 === sessionId) {
           matchedGuardRef.current = true;
           const strangerId = match.user1 === sessionId ? match.user2 : match.user1;
+          const strangerStableId = match.user1 === sessionId ? match.stable2 : match.stable1;
           
           remove(ref(db, `lobby/${sessionId}`));
           remove(ref(db, `matches/${mId}`));
           
-          onMatched(match.roomId, strangerId, match.sharedInterests || []);
+          onMatched(match.roomId, strangerId, strangerStableId, match.sharedInterests || []);
           setStatus("idle");
           break;
         }

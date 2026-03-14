@@ -42,6 +42,8 @@ interface ChatContextValue {
   deleteMessage: (messageId: string) => void;
   pinMessage: (messageId: string) => void;
   setDisappearTimer: (t: number | null) => void;
+  reportStranger: (reason: string) => void;
+  stableId: string;
 
   // Video call state
   callStatus: ReturnType<typeof useVideoCall>["callStatus"];
@@ -109,7 +111,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
-    sendSignalingEvent,
+    sendSignalingEvent, reportStranger, stableId,
   } = chatHook;
 
   const onCallEnded = useCallback(() => {
@@ -229,6 +231,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     upgradeToVideo,
     inCallMessages, sendInCallMessage,
     supportsScreenShare,
+    reportStranger, stableId,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
