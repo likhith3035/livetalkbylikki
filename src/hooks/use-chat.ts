@@ -81,7 +81,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ChatStatus>("idle");
   const onlineCount = useOnlineCount();
-  const { checkProfanity, reportUser, isBanned } = useSafety();
+  const { checkProfanity, reportUser, isBanned, handleViolation } = useSafety();
   const [interests, setInterests] = useState<string[]>([]);
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const [strangerTyping, setStrangerTyping] = useState(false);
@@ -338,6 +338,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
       if (text && checkProfanity(text)) {
         addMessage("system", "Blocked: Please maintain a friendly environment. Profanity is not allowed.");
+        handleViolation(stableId); // Track violation for auto-ban
         return;
       }
       const p = getProfile();

@@ -87,5 +87,32 @@ export function useSafety() {
     });
   }, [toast]);
 
-  return { bannedWords, checkProfanity, reportUser, isBanned, submitAppeal };
+  const handleViolation = useCallback(async (uid: string) => {
+    if (!db) return;
+    const violationRef = ref(db, `admin/violations/${uid}`);
+    
+    // Increment violation count using transaction
+    const result = await runTransaction(violationRef, (currentData) => {
+      return (currentData || 0) + 1;
+    });
+
+    const count = result.snapshot.val() || 0;
+
+    if (count === 3) {
+      toast({
+        variant: "destructive",
+        title: "Warning: Community Guidelines",
+        description: "You have sent abusive words 3 times. Continuing will result in a permanent ban.",
+      });
+    } else if (count >= 5) {
+      // Auto Ban
+      await set(ref(db, `admin/blacklist/${uid}`), true);
+      // Auto report for the ban
+      await reportUser(uid, "Automatic Ban: 5+ Profanity Violations", "SYSTEM");
+    }
+    
+    return count;
+  }, [toast, reportUser]);
+
+  return { bannedWords, checkProfanity, reportUser, isBanned, submitAppeal, handleViolation };
 }
