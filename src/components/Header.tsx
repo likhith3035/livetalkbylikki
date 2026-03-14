@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
-import { Shield, Moon, Sun } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Shield, Moon, Sun, ArrowLeft } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -12,13 +12,25 @@ interface HeaderProps {
 
 const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount }, ref) => {
   const { settings, updateSetting } = useSettings();
+  const { pathname } = useLocation();
 
   return (
     <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 glass">
-      <Link to="/" className="flex items-center gap-3 group">
-        <BrandLogo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md group-hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
-        <span className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors">LiveTalk</span>
-      </Link>
+      <div className="flex items-center gap-3">
+        {pathname === "/profile" && (
+          <Link 
+            to="/chat" 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all font-semibold text-sm mr-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden xs:inline">Back to Chat</span>
+          </Link>
+        )}
+        <Link to="/" className="flex items-center gap-3 group">
+          <BrandLogo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md group-hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
+          <span className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors">LiveTalk</span>
+        </Link>
+      </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
         <button

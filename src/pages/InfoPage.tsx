@@ -6,7 +6,8 @@ import {
   Image, Send, SkipForward, Volume2, Gamepad2, MapPin, Search,
   Timer, Copy, Pin, Forward, Palette, Code2, Database, Server, Monitor,
   Layers, Cpu, FileCode2, Smartphone, Radio, ChevronDown, ChevronUp,
-  Star, Headphones, Mic, Phone, ScreenShare, UserCheck, Fingerprint
+  Star, Headphones, Mic, Phone, ScreenShare, UserCheck, Fingerprint,
+  Check, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -215,20 +216,21 @@ const FAQ = [
 ];
 
 const COMPARISON = [
-  { feature: "Anonymous Chat", LiveTalk: true, others: true },
-  { feature: "No Registration", LiveTalk: true, others: false },
-  { feature: "Video Calls", LiveTalk: true, others: true },
-  { feature: "Text Formatting", LiveTalk: true, others: false },
-  { feature: "Message Reactions", LiveTalk: true, others: false },
-  { feature: "GIF Support", LiveTalk: true, others: false },
-  { feature: "Built-in Games", LiveTalk: true, others: false },
-  { feature: "Disappearing Messages", LiveTalk: true, others: false },
-  { feature: "Interest Matching", LiveTalk: true, others: true },
-  { feature: "Private Rooms", LiveTalk: true, others: false },
-  { feature: "Chat Themes", LiveTalk: true, others: false },
-  { feature: "No Ads", LiveTalk: true, others: false },
-  { feature: "PWA Support", LiveTalk: true, others: false },
-  { feature: "Dark Mode", LiveTalk: true, others: false },
+  { feature: "Anonymous Chat 💬", LiveTalk: true, others: true },
+  { feature: "No Registration 🔓", LiveTalk: true, others: false },
+  { feature: "Video Calls 📹", LiveTalk: true, others: true },
+  { feature: "Voice Calls 📞", LiveTalk: true, others: true },
+  { feature: "Text Formatting ✍️", LiveTalk: true, others: false },
+  { feature: "Message Reactions ❤️", LiveTalk: true, others: false },
+  { feature: "GIF Support 🎬", LiveTalk: true, others: false },
+  { feature: "Built-in Games 🎮", LiveTalk: true, others: false },
+  { feature: "Disappearing Messages ⏳", LiveTalk: true, others: false },
+  { feature: "Interest Matching 🎯", LiveTalk: true, others: true },
+  { feature: "Private Rooms 🔒", LiveTalk: true, others: false },
+  { feature: "Chat Themes 🎨", LiveTalk: true, others: false },
+  { feature: "No Ads 🚫", LiveTalk: true, others: false },
+  { feature: "PWA Support 📲", LiveTalk: true, others: false },
+  { feature: "Dark Mode 🌙", LiveTalk: true, others: false },
 ];
 
 const fadeUp = {
@@ -272,95 +274,143 @@ const ExpandableDetail = ({ details }: { details: string }) => {
 const InfoPage = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
+  
   useSEO({ 
     title: "Help, FAQ & Tech Stack", 
-    description: "Learn everything about LiveTalk by Likki – features, how to use, safety tips, FAQ, and the modern tech stack behind the best Omegle alternative.",
+    description: "Learn about LiveTalk, its privacy-first mission, and the technology behind it. Created by Likhith Kami.",
     keywords: "LiveTalk FAQ, how to use LiveTalk, LiveTalk features, anonymous chat tech stack, Omegle vs LiveTalk, random chat help"
   });
+
 
   const categories = [...new Set(FEATURES_DETAILED.map((f) => f.category))];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background relative overflow-hidden">
+      {/* Structured Data for AI/Search Engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            "name": "About LiveTalk",
+            "description": "The story, technology, and mission behind LiveTalk by Likhith Kami.",
+            "mainEntity": {
+              "@type": "Person",
+              "name": "Likhith Kami",
+              "url": "https://livetalkbylikki.netlify.app/",
+              "jobTitle": "Full Stack Developer",
+              "description": "The creator and lead developer of LiveTalk."
+            }
+          })
+        }}
+      />
+      {/* Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[150px] float-slow" />
+        <div className="absolute top-[30%] left-[-15%] w-[400px] h-[400px] rounded-full bg-accent/8 blur-[130px] float-medium" />
+        <div className="absolute bottom-[20%] right-[-5%] w-[450px] h-[450px] rounded-full bg-primary/8 blur-[140px] float-slow" />
+      </div>
+
       <Header onlineCount={onlineCount} />
 
-      <main className="flex-1 px-5 pb-28 pt-6 max-w-lg mx-auto w-full space-y-12">
+      <main className="flex-1 px-6 pb-28 pt-8 max-w-2xl mx-auto w-full relative z-10 space-y-24">
         {/* Back */}
-        <button
+        <motion.button
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <div className="p-2 rounded-xl bg-secondary/50 group-hover:bg-primary/10 transition-colors">
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          </div>
           Go back
-        </button>
+        </motion.button>
 
         {/* Title */}
-        <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="space-y-3">
-          <h1 className="text-3xl sm:text-4xl font-bold font-display text-foreground">
-            Everything about <span className="text-primary">LiveTalk</span>
+        <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="space-y-6">
+          <h1 className="text-4xl sm:text-7xl font-bold font-display text-foreground leading-[1.1]">
+            Everything about <br />
+            <span className="text-gradient">LiveTalk</span>
           </h1>
-          <p className="text-muted-foreground text-base">
+          <p className="text-muted-foreground text-lg sm:text-xl font-medium max-w-xl">
             The complete guide to every feature, how it works, and the technology behind it 🔧
           </p>
-          <p className="text-sm text-muted-foreground/70 leading-relaxed">
-            LiveTalk by Likki is a modern, feature-rich anonymous chat platform built for genuine human connections.
-            Whether you want quick text chats, video calls, or fun games with strangers — this guide covers everything you need to know.
-          </p>
+          <div className="p-6 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50">
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium">
+              LiveTalk by Likki is a modern, feature-rich anonymous chat platform built for genuine human connections.
+              Whether you want quick text chats, video calls, or fun games with strangers — this guide covers everything you need to know.
+            </p>
+          </div>
         </motion.div>
 
         {/* ─── Table of Contents ─── */}
-        <motion.nav {...fadeUp} transition={{ delay: 0.08 }} className="rounded-2xl bg-card border border-border/50 p-5 space-y-2">
-          <p className="text-sm font-semibold text-foreground mb-3">📑 Jump to a section</p>
-          {[
-            { id: "what", label: "What is LiveTalk?" },
-            { id: "howto", label: "How to use it" },
-            { id: "features", label: "All features (detailed)" },
-            { id: "comparison", label: "LiveTalk vs Others" },
-            { id: "tech", label: "Technology stack" },
-            { id: "settings", label: "Settings & preferences" },
-            { id: "safety", label: "Safety tips" },
-            { id: "shortcuts", label: "Keyboard shortcuts" },
-            { id: "faq", label: "Common questions" },
-            { id: "story", label: "The Developer Story" },
-            { id: "browsers", label: "Privacy Browser Optimization" },
-          ].map((item) => (
-            <a
-              key={item.id}
-              href={`#${item.id}`}
-              className="block text-sm text-primary hover:text-primary/80 transition-colors py-0.5"
-            >
-              → {item.label}
-            </a>
-          ))}
+        <motion.nav 
+          {...fadeUp} 
+          transition={{ delay: 0.08 }} 
+          className="rounded-[2.5rem] bg-card/40 backdrop-blur-md border border-border/50 p-8 space-y-4"
+        >
+          <p className="text-sm font-bold text-foreground mb-4 uppercase tracking-widest flex items-center gap-2">
+            <Pin className="h-4 w-4 text-primary" />
+            Jump to a section
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
+            {[
+              { id: "what", label: "What is LiveTalk?" },
+              { id: "howto", label: "How to use it" },
+              { id: "features", label: "All features (detailed)" },
+              { id: "comparison", label: "LiveTalk vs Others" },
+              { id: "tech", label: "Technology stack" },
+              { id: "settings", label: "Settings & preferences" },
+              { id: "safety", label: "Safety tips" },
+              { id: "shortcuts", label: "Keyboard shortcuts" },
+              { id: "faq", label: "Common questions" },
+              { id: "developer", label: "The Developer" },
+              { id: "story", label: "The Story" },
+              { id: "browsers", label: "Browser Optimization" },
+            ].map((item) => (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-all font-medium py-1"
+              >
+                <div className="h-1.5 w-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
+                {item.label}
+              </a>
+            ))}
+          </div>
         </motion.nav>
 
         {/* ─── Section: What is LiveTalk ─── */}
-        <motion.section id="what" {...fadeUp} transition={{ delay: 0.1 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <HelpCircle className="h-5 w-5 text-primary" />
-            What is LiveTalk?
-          </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            LiveTalk is a free, open website where you can chat with random strangers from all over the world.
-            No sign up, no account, no download — just open the page, tap a button, and you're instantly connected
-            with a real person. When you're done, everything disappears forever. It's the modern successor to Omegle,
-            built with better technology, more features, and a strong focus on your privacy and safety.
-          </p>
-          <div className="grid gap-3">
+        <motion.section id="what" {...fadeUp} transition={{ delay: 0.1 }} className="space-y-8 scroll-mt-24">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <HelpCircle className="h-8 w-8 text-primary" />
+              What is LiveTalk?
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed font-medium">
+              LiveTalk is a free, open website where you can chat with random strangers from all over the world.
+              No sign up, no account, no download — just open the page, tap a button, and you're instantly connected
+              with a real person.
+            </p>
+          </div>
+          <div className="grid gap-4">
             {WHAT_IS.map((item, i) => (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 + i * 0.05 }}
-                className="flex items-start gap-3 rounded-2xl bg-card border border-border/50 p-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="group flex items-start gap-4 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 hover:border-primary/30 transition-all duration-500"
               >
-                <div className="rounded-xl bg-primary/10 p-2.5 shrink-0">
-                  <item.icon className="h-5 w-5 text-primary" />
+                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                  <item.icon className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.desc}</p>
+                <div className="space-y-1">
+                  <p className="text-lg font-bold text-foreground">{item.title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -368,26 +418,29 @@ const InfoPage = () => {
         </motion.section>
 
         {/* ─── Section: How to use ─── */}
-        <motion.section id="howto" {...fadeUp} transition={{ delay: 0.15 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground">📱 How to use LiveTalk (step by step)</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Follow these simple steps. It takes less than 10 seconds to start chatting! No technical knowledge required.
-          </p>
-          <div className="space-y-2">
+        <motion.section id="howto" {...fadeUp} transition={{ delay: 0.15 }} className="space-y-8 scroll-mt-24">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-foreground">📱 How to use LiveTalk</h2>
+            <p className="text-base text-muted-foreground leading-relaxed font-medium">
+              Follow these simple steps. It takes less than 10 seconds to start chatting!
+            </p>
+          </div>
+          <div className="space-y-4">
             {HOW_TO.map((item, i) => (
               <motion.div
                 key={item.step}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.06 }}
-                className="flex items-start gap-3 rounded-xl bg-secondary/40 border border-border/50 px-4 py-3"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="group flex items-start gap-6 rounded-[2rem] bg-secondary/40 backdrop-blur-sm border border-border/50 p-6 hover:bg-secondary/60 transition-all duration-500"
               >
-                <span className="flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                <span className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary text-primary-foreground text-lg font-bold shrink-0 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
                   {item.step}
                 </span>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                <div className="space-y-1">
+                  <p className="text-lg font-bold text-foreground">{item.title}</p>
+                  <p className="text-sm text-muted-foreground font-medium text-pretty">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -395,93 +448,129 @@ const InfoPage = () => {
         </motion.section>
 
         {/* ─── Section: All features (Detailed) ─── */}
-        <motion.section id="features" {...fadeUp} transition={{ delay: 0.2 }} className="space-y-6 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground">✨ All features explained</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Every feature in LiveTalk explained in detail — how it works for you, the technology powering it, and extra details when you tap "Learn more".
-          </p>
+        <motion.section id="features" {...fadeUp} transition={{ delay: 0.2 }} className="space-y-12 scroll-mt-24">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-foreground">✨ All features explained</h2>
+            <p className="text-base text-muted-foreground leading-relaxed font-medium">
+              Every feature in LiveTalk explained in detail — how it works for you and the technology powering it.
+            </p>
+          </div>
 
           {categories.map((cat) => (
-            <div key={cat} className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-primary/70 pl-1">{cat}</h3>
-              {FEATURES_DETAILED.filter((f) => f.category === cat).map((item, i) => (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 + i * 0.04 }}
-                  className="rounded-2xl bg-card border border-border/50 p-4 space-y-3"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-accent/10 p-2 shrink-0">
-                      <item.icon className="h-4 w-4 text-accent" />
+            <div key={cat} className="space-y-6">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-primary/70 pl-2 border-l-2 border-primary/30">{cat}</h3>
+              <div className="grid gap-6">
+                {FEATURES_DETAILED.filter((f) => f.category === cat).map((item, i) => (
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    className="rounded-[2.5rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 sm:p-8 space-y-6 hover:bg-card/50 hover:border-primary/20 transition-all duration-500"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="rounded-2xl bg-accent/10 p-4 shrink-0">
+                        <item.icon className="h-6 w-6 text-accent" />
+                      </div>
+                      <p className="text-xl font-bold text-foreground">{item.title}</p>
                     </div>
-                    <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed pl-10">{item.desc}</p>
-                  <div className="ml-10 rounded-xl bg-secondary/60 border border-border/30 px-3 py-2.5">
-                    <p className="text-[10px] font-semibold text-primary/80 uppercase tracking-wider mb-1">⚙️ How it works</p>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">{item.tech}</p>
-                  </div>
-                  {item.details && <ExpandableDetail details={item.details} />}
-                </motion.div>
-              ))}
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium pl-2">{item.desc}</p>
+                    <div className="rounded-[1.5rem] bg-secondary/50 border border-border/40 p-5 space-y-2">
+                       <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                        <Zap className="h-3 w-3" /> 
+                        Engineering Details
+                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground/90 font-medium leading-relaxed">{item.tech}</p>
+                    </div>
+                    {item.details && (
+                      <div className="pt-2">
+                        <ExpandableDetail details={item.details} />
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
             </div>
           ))}
         </motion.section>
 
         {/* ─── Section: Comparison ─── */}
-        <motion.section id="comparison" {...fadeUp} transition={{ delay: 0.22 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Star className="h-5 w-5 text-primary" />
-            LiveTalk vs Other Platforms
-          </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            See how LiveTalk compares to other anonymous chat platforms. We built every feature you wished Omegle had.
-          </p>
-          <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
-            <div className="grid grid-cols-3 gap-0 text-center border-b border-border/30 bg-secondary/40 px-3 py-2.5">
-              <span className="text-[11px] font-semibold text-foreground text-left">Feature</span>
-              <span className="text-[11px] font-bold text-primary">LiveTalk</span>
-              <span className="text-[11px] font-semibold text-muted-foreground">Others</span>
+        <motion.section id="comparison" {...fadeUp} transition={{ delay: 0.22 }} className="space-y-8 scroll-mt-24">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <Star className="h-8 w-8 text-primary" />
+              LiveTalk vs Others
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed font-medium">
+              See how LiveTalk compares to other platforms. We built every feature you wished Omegle had.
+            </p>
+          </div>
+          <div className="rounded-[2.5rem] bg-card/3 backdrop-blur-md border border-border/50 overflow-hidden">
+            <div className="grid grid-cols-3 gap-0 text-center border-b border-border/30 bg-primary/5 px-6 py-4">
+              <span className="text-sm font-bold text-foreground text-left uppercase tracking-widest">Feature</span>
+              <span className="text-sm font-bold text-primary uppercase tracking-widest">LiveTalk</span>
+              <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Others</span>
             </div>
             {COMPARISON.map((row, i) => (
               <div
                 key={row.feature}
-                className={`grid grid-cols-3 gap-0 text-center px-3 py-2 ${i !== COMPARISON.length - 1 ? "border-b border-border/20" : ""}`}
+                className={`grid grid-cols-3 gap-0 text-center px-6 py-4 transition-colors hover:bg-primary/5 ${i !== COMPARISON.length - 1 ? "border-b border-border/10" : ""}`}
               >
-                <span className="text-[11px] text-foreground text-left">{row.feature}</span>
-                <span className="text-[13px]">{row.LiveTalk ? "✅" : "❌"}</span>
-                <span className="text-[13px]">{row.others ? "✅" : "❌"}</span>
+                <span className="text-sm text-foreground text-left font-medium">{row.feature}</span>
+                <span className="flex justify-center">
+                  {row.LiveTalk ? (
+                    <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+                      <Check className="h-5 w-5" />
+                    </div>
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                      <X className="h-5 w-5" />
+                    </div>
+                  )}
+                </span>
+                <span className="flex justify-center">
+                  {row.others ? (
+                    <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+                      <Check className="h-5 w-5" />
+                    </div>
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                      <X className="h-5 w-5" />
+                    </div>
+                  )}
+                </span>
               </div>
             ))}
           </div>
         </motion.section>
 
         {/* ─── Section: Tech Stack ─── */}
-        <motion.section id="tech" {...fadeUp} transition={{ delay: 0.25 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Code2 className="h-5 w-5 text-primary" />
-            Technology Stack
-          </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            The cutting-edge technologies used to build LiveTalk. Everything runs in your browser — no app download needed, no server processing your data.
-          </p>
-          <div className="grid gap-3">
+        <motion.section id="tech" {...fadeUp} transition={{ delay: 0.25 }} className="space-y-8 scroll-mt-24">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <Code2 className="h-8 w-8 text-primary" />
+              Technology Stack
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed font-medium">
+              The cutting-edge technologies used to build LiveTalk. Everything runs in your browser.
+            </p>
+          </div>
+          <div className="grid gap-4">
             {TECH_STACK.map((item, i) => (
               <motion.div
                 key={item.name}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.04 }}
-                className="flex items-start gap-3 rounded-2xl bg-card border border-border/50 p-4"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.04 }}
+                className="group flex items-start gap-4 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 hover:border-primary/30 transition-all duration-500"
               >
-                <div className="rounded-xl bg-primary/10 p-2.5 shrink-0">
-                  <item.icon className="h-5 w-5 text-primary" />
+                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                  <item.icon className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.desc}</p>
+                <div className="space-y-1">
+                  <p className="text-lg font-bold text-foreground">{item.name}</p>
+                  <p className="text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -489,26 +578,24 @@ const InfoPage = () => {
         </motion.section>
 
         {/* ─── Section: Settings ─── */}
-        <motion.section id="settings" {...fadeUp} transition={{ delay: 0.3 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground">⚙️ Settings & preferences</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Customize your LiveTalk experience from the Settings page (tap the gear icon at the bottom navigation bar).
-          </p>
-          <div className="grid gap-3">
+        <motion.section id="settings" {...fadeUp} transition={{ delay: 0.3 }} className="space-y-8 scroll-mt-24">
+          <h2 className="text-3xl font-bold text-foreground">⚙️ Settings & preferences</h2>
+          <div className="grid gap-4">
             {SETTINGS_INFO.map((item, i) => (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.35 + i * 0.06 }}
-                className="flex items-start gap-3 rounded-2xl bg-card border border-border/50 p-4"
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="group flex items-start gap-4 rounded-[2.5rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 hover:border-primary/20 transition-all duration-500"
               >
-                <div className="rounded-xl bg-primary/10 p-2.5 shrink-0">
-                  <item.icon className="h-5 w-5 text-primary" />
+                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                  <item.icon className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.desc}</p>
+                <div className="space-y-1">
+                  <p className="text-lg font-bold text-foreground">{item.title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -516,26 +603,24 @@ const InfoPage = () => {
         </motion.section>
 
         {/* ─── Section: Safety ─── */}
-        <motion.section id="safety" {...fadeUp} transition={{ delay: 0.35 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground">🛡️ Safety tips</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Your safety matters. Follow these guidelines to have a great experience on LiveTalk.
-          </p>
-          <div className="space-y-3">
+        <motion.section id="safety" {...fadeUp} transition={{ delay: 0.35 }} className="space-y-8 scroll-mt-24">
+          <h2 className="text-3xl font-bold text-foreground">🛡️ Safety tips</h2>
+          <div className="grid gap-4">
             {SAFETY.map((item, i) => (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.06 }}
-                className="flex items-start gap-3 rounded-xl bg-destructive/5 border border-destructive/20 p-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-start gap-4 rounded-[2.5rem] bg-destructive/5 border border-destructive/20 p-6 hover:bg-destructive/10 transition-all duration-500"
               >
-                <div className="rounded-xl bg-destructive/10 p-2.5 shrink-0">
-                  <item.icon className="h-5 w-5 text-destructive" />
+                <div className="rounded-2xl bg-destructive/10 p-4 shrink-0">
+                  <item.icon className="h-6 w-6 text-destructive" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.desc}</p>
+                <div className="space-y-1">
+                  <p className="text-lg font-bold text-foreground">{item.title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -543,22 +628,19 @@ const InfoPage = () => {
         </motion.section>
 
         {/* ─── Section: Keyboard shortcuts ─── */}
-        <motion.section id="shortcuts" {...fadeUp} transition={{ delay: 0.4 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Keyboard className="h-5 w-5 text-primary" />
+        <motion.section id="shortcuts" {...fadeUp} transition={{ delay: 0.4 }} className="space-y-8 scroll-mt-24">
+          <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Keyboard className="h-8 w-8 text-primary" />
             Keyboard shortcuts
           </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Power users can use these shortcuts on desktop for faster chatting.
-          </p>
-          <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+          <div className="rounded-[2.5rem] bg-card/30 backdrop-blur-sm border border-border/50 overflow-hidden">
             {KEYBOARD_SHORTCUTS.map((item, i) => (
               <div
                 key={i}
-                className={`flex items-center justify-between px-4 py-3 ${i !== KEYBOARD_SHORTCUTS.length - 1 ? "border-b border-border/30" : ""}`}
+                className={`flex items-center justify-between px-8 py-5 transition-colors hover:bg-primary/5 ${i !== KEYBOARD_SHORTCUTS.length - 1 ? "border-b border-border/30" : ""}`}
               >
-                <span className="text-xs text-muted-foreground">{item.desc}</span>
-                <kbd className="rounded-lg bg-secondary px-3 py-1 text-xs font-mono font-semibold text-foreground">
+                <span className="text-base text-muted-foreground font-medium">{item.desc}</span>
+                <kbd className="rounded-xl bg-secondary px-4 py-2 text-sm font-mono font-bold text-foreground shadow-sm">
                   {item.keys}
                 </kbd>
               </div>
@@ -567,134 +649,158 @@ const InfoPage = () => {
         </motion.section>
 
         {/* ─── Section: FAQ ─── */}
-        <motion.section id="faq" {...fadeUp} transition={{ delay: 0.45 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground">❓ Common questions</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Got questions? Here are answers to the most frequently asked questions about LiveTalk.
-          </p>
-          <div className="space-y-2">
+        <motion.section id="faq" {...fadeUp} transition={{ delay: 0.45 }} className="space-y-8 scroll-mt-24">
+          <h2 className="text-3xl font-bold text-foreground">❓ Common questions</h2>
+          <div className="grid gap-4">
             {FAQ.map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + i * 0.03 }}
-                className="rounded-xl bg-card border border-border/50 p-4 space-y-1.5"
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.03 }}
+                className="rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 transition-all duration-500"
               >
-                <p className="text-sm font-semibold text-foreground">{item.q}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.a}</p>
+                <p className="text-lg font-bold text-foreground mb-2">{item.q}</p>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium">{item.a}</p>
               </motion.div>
             ))}
           </div>
         </motion.section>
 
         {/* ─── Section: Developer ─── */}
-        <motion.section id="developer" {...fadeUp} transition={{ delay: 0.5 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground">👨‍💻 About the Developer</h2>
-          <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-background to-accent/5 border border-primary/20 p-6 space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center text-3xl border-2 border-primary/30">
-                👨‍💻
+        <motion.section id="developer" {...fadeUp} transition={{ delay: 0.5 }} className="space-y-8 scroll-mt-24">
+          <h2 className="text-3xl font-bold text-foreground">👨‍💻 About the Developer</h2>
+          <div className="rounded-[3rem] bg-gradient-to-br from-primary/10 via-card/50 to-accent/5 backdrop-blur-xl border border-primary/20 p-8 sm:p-12 space-y-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
+            
+            <div className="flex flex-col sm:flex-row items-center gap-8 relative z-10">
+              <div className="relative">
+                <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-primary to-accent p-1 shadow-xl">
+                  <div className="h-full w-full rounded-full bg-card flex items-center justify-center text-4xl">
+                    👨‍💻
+                  </div>
+                </div>
+                <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-primary flex items-center justify-center shadow-lg border-4 border-card">
+                  <Sparkles className="h-4 w-4 text-primary-foreground" />
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">Likhith Kami</h3>
-                <p className="text-sm text-primary font-medium">Full Stack Developer & Designer</p>
+              <div className="text-center sm:text-left space-y-1">
+                <h3 className="text-2xl sm:text-3xl font-bold text-foreground">Likhith Kami</h3>
+                <p className="text-primary font-bold tracking-widest uppercase text-xs">Full Stack Developer & Designer</p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              LiveTalk was envisioned and built by <strong>Likhith Kami</strong> (Likki) as a passion project to provide a modern, safe, and feature-rich alternative to legacy anonymous chat platforms.
-              With a focus on privacy and user experience, Likhith utilized cutting-edge technologies like <strong>React, TypeScript, and WebRTC</strong> to create a seamless real-time environment.
+
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium relative z-10 text-pretty">
+              LiveTalk was built by me, <strong>Likhith Kami</strong>, because I wanted to fix what was broken about chatting online. I saw too many sites asking for logins and tracking their users. I used the best modern tools to build something faster, safer, and much more fun for everyone.
             </p>
-            <div className="flex gap-3 pt-2">
-              <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer me" className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors">
-                <Smile className="h-3.5 w-3.5 text-primary" /> Instagram
+
+            <div className="flex flex-wrap gap-4 pt-4 relative z-10">
+              <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-card border border-border/50 px-6 py-4 text-sm font-bold hover:bg-secondary hover:border-primary/30 transition-all group/btn">
+                <Smile className="h-5 w-5 text-primary group-hover/btn:scale-110 transition-transform" /> Instagram
               </a>
-              <a href="https://linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer me" className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors">
-                <Users className="h-3.5 w-3.5 text-primary" /> LinkedIn
+              <a href="https://linkedin.com/in/likhith-kami/" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-card border border-border/50 px-6 py-4 text-sm font-bold hover:bg-secondary hover:border-primary/30 transition-all group/btn">
+                <Users className="h-5 w-5 text-primary group-hover/btn:scale-110 transition-transform" /> LinkedIn
               </a>
             </div>
           </div>
         </motion.section>
 
         {/* ─── Section: Developer Story ─── */}
-        <motion.section id="story" {...fadeUp} transition={{ delay: 0.52 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Heart className="h-5 w-5 text-primary" />
+        <motion.section id="story" {...fadeUp} transition={{ delay: 0.52 }} className="space-y-8 scroll-mt-24">
+          <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Heart className="h-8 w-8 text-primary" />
             The Story Behind LiveTalk
           </h2>
-          <div className="rounded-2xl bg-secondary/30 border border-border/50 p-6 space-y-4">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              LiveTalk started with a simple observation: the internet was losing its spark of spontaneous, safe human connection. Legacy platforms became cluttered with ads, bots, and tracking.
+          <div className="rounded-[2.5rem] bg-secondary/30 backdrop-blur-sm border border-border/50 p-8 sm:p-10 space-y-6">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium text-pretty">
+              I first got the idea for LiveTalk while using sites like Omegle. I just wanted to meet new people and have a chat, but I was annoyed by all the login popups and worried about my privacy. It felt like those sites cared more about collecting my data than helping me talk to people.
             </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              <strong>Likhith Kami</strong> set out to build something different—a professional, "Pro-Level" communication tool that respects your privacy. By using <strong>WebRTC</strong> for direct peer-to-peer connections and <strong>Supabase</strong> for secure signaling, LiveTalk ensures that your conversations remain yours alone. This isn't just a website; it's a commitment to a cleaner, safer internet.
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium text-pretty">
+              So, I decided to build my own version. I wanted a site that was easy to use, had way more cool features, and most importantly, kept you 100% private. No tracking, no logins, and no data saved. LiveTalk is my way of making the internet a bit more fun and a lot more secure for everyone.
             </p>
           </div>
         </motion.section>
 
         {/* ─── Section: Privacy Browsers & Brave ─── */}
-        <motion.section id="browsers" {...fadeUp} transition={{ delay: 0.54 }} className="space-y-4 scroll-mt-20">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
+        <motion.section id="browsers" {...fadeUp} transition={{ delay: 0.54 }} className="space-y-8 scroll-mt-24">
+          <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Zap className="h-8 w-8 text-primary" />
             Optimized for Privacy
           </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-base text-muted-foreground leading-relaxed font-medium">
             LiveTalk is specifically engineered to work flawlessly on privacy-focused environments like <strong>Brave Browser</strong>, Firefox with strict protection, and Tor.
           </p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-card border border-border/50 text-center">
-              <Shield className="h-5 w-5 text-primary mx-auto mb-2" />
-              <p className="text-[11px] font-bold text-foreground">Zero Fingerprinting</p>
-              <p className="text-[10px] text-muted-foreground">No tracking scripts or cookies.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-8 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 text-center space-y-4 hover:border-primary/30 transition-colors group">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                <Shield className="h-7 w-7 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-lg font-bold text-foreground">Zero Fingerprinting</p>
+                <p className="text-sm text-muted-foreground font-medium">No tracking scripts or cookies ever.</p>
+              </div>
             </div>
-            <div className="p-4 rounded-xl bg-card border border-border/50 text-center">
-              <Lock className="h-5 w-5 text-primary mx-auto mb-2" />
-              <p className="text-[11px] font-bold text-foreground">Ad-Free Experience</p>
-              <p className="text-[10px] text-muted-foreground">Clean UI without distractions.</p>
+            <div className="p-8 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 text-center space-y-4 hover:border-primary/30 transition-colors group">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                <Lock className="h-7 w-7 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-lg font-bold text-foreground">Ad-Free Experience</p>
+                <p className="text-sm text-muted-foreground font-medium">Clean premium UI without distractions.</p>
+              </div>
             </div>
           </div>
         </motion.section>
 
         {/* ─── Safety CTA ─── */}
-        <motion.div {...fadeUp} transition={{ delay: 0.5 }} className="pt-4">
-          <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 space-y-4 text-center">
-            <Shield className="h-10 w-10 text-primary mx-auto" />
-            <h3 className="text-xl font-bold font-display">Your Safety is Our Priority</h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+        <motion.div {...fadeUp} transition={{ delay: 0.5 }} className="pt-10">
+          <div className="p-10 rounded-[3rem] bg-primary/5 border border-primary/10 space-y-6 text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+            <Shield className="h-16 w-16 text-primary mx-auto relative z-10" />
+            <h3 className="text-2xl sm:text-4xl font-bold font-display relative z-10">Your Safety is Our Priority</h3>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto leading-relaxed font-medium relative z-10">
               Learn how to stay 100% protected while chatting anonymously. Visit our safety guide.
             </p>
             <button
               onClick={() => navigate("/safety")}
-              className="inline-flex items-center gap-2 rounded-xl bg-secondary border border-border px-6 py-2.5 text-xs font-bold hover:bg-secondary/80 transition-all hover:scale-105"
+              className="inline-flex items-center gap-3 rounded-2xl bg-card border border-border/50 px-8 py-4 text-sm font-bold hover:bg-secondary hover:border-primary/30 transition-all hover:scale-105 relative z-10 shadow-lg"
             >
-              <Shield className="h-3.5 w-3.5" />
+              <Shield className="h-5 w-5 text-primary" />
               Visit Safety Center
             </button>
           </div>
         </motion.div>
 
         {/* ─── CTA ─── */}
-        <motion.div {...fadeUp} transition={{ delay: 0.55 }} className="text-center space-y-3 py-6">
-          <Sparkles className="h-6 w-6 text-primary mx-auto" />
-          <p className="text-foreground font-semibold text-lg">Ready to meet someone new?</p>
-          <p className="text-muted-foreground text-sm">It takes 3 seconds. No signup. Seriously.</p>
-          <button
-            onClick={() => navigate("/chat")}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-accent text-primary-foreground px-8 py-3 font-semibold text-sm shadow-[0_0_30px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_40px_hsl(var(--primary)/0.6)] transition-shadow"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Start Chatting Now
-          </button>
+        <motion.div {...fadeUp} transition={{ delay: 0.55 }} className="text-center space-y-6 py-12 relative">
+          <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full" />
+          <div className="relative z-10 space-y-8">
+            <div className="space-y-2">
+              <Sparkles className="h-10 w-10 text-primary mx-auto mb-4" />
+              <p className="text-foreground font-bold text-2xl sm:text-4xl">Ready to meet someone new?</p>
+              <p className="text-muted-foreground text-lg font-medium">It takes 3 seconds. No signup. Seriously.</p>
+            </div>
+            <button
+              onClick={() => navigate("/chat")}
+              className="inline-flex items-center gap-3 rounded-[2rem] bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground px-12 py-5 font-bold text-base shadow-[0_0_50px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_70px_hsl(var(--primary)/0.6)] transition-all hover:scale-105"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Start Chatting Now
+            </button>
+          </div>
         </motion.div>
 
+
         {/* Footer */}
-        <div className="text-center pb-4">
-          <p className="text-[11px] text-muted-foreground/50">
-            Developed by <strong>Likhith Kami (Likki)</strong> · © 2026 LiveTalk by Likki
+        <div className="text-center pb-8 pt-10 border-t border-border/10">
+          <p className="text-xs text-muted-foreground/60 font-medium">
+            Developed by <span className="text-foreground font-bold">Likhith Kami (Likki)</span> · © 2026 LiveTalk by Likki
           </p>
-          <div className="flex justify-center gap-4 mt-1 text-[10px] text-muted-foreground/40">
-            <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
+          <div className="flex justify-center gap-6 mt-4 text-xs font-bold text-muted-foreground/40 tracking-widest uppercase">
+            <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
+            <a href="/terms" className="hover:text-primary transition-colors">Terms</a>
+            <a href="/feedback" className="hover:text-primary transition-colors">Feedback</a>
           </div>
         </div>
       </main>

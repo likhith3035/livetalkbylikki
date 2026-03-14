@@ -1,4 +1,4 @@
-import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Users, Shield } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Users, Shield, MessageCircle } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import OnlineBadge from "@/components/OnlineBadge";
@@ -40,7 +40,7 @@ const DesktopSidebar = () => {
           return (
             <Link
               key={item.label}
-              to={item.path}
+              to={item.path!}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                 isActive

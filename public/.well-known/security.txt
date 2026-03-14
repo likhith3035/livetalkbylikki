@@ -1,0 +1,8 @@
+Contact: mailto:info.likki@gmail.com
+Expires: 2027-03-14T11:50:00.000Z
+Acknowledgements: https://livetalkbylikki.netlify.app/info#story
+Preferred-Languages: en
+Canonical: https://livetalkbylikki.netlify.app/.well-known/security.txt
+Policy: https://livetalkbylikki.netlify.app/privacy
+Mission: To provide a safe and private chat environment for everyone.
+Developer: Likhith Kami (Likki)

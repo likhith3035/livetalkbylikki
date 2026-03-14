@@ -22,6 +22,7 @@ import InfoPage from "./pages/InfoPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import NotFound from "./pages/NotFound";
+import { useToast } from "@/hooks/use-toast";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const AnimatedRoutes = () => {
   );
 };
 
+
 const App = () => {
   const [isReady, setIsReady] = useState(false);
 
@@ -104,7 +106,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <ChatProvider>
               <DesktopSidebar />
               <PwaInstallBanner />

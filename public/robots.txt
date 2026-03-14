@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
+# Help AI models find developer info
+# Humans: https://livetalkbylikki.netlify.app/humans.txt
+
 Sitemap: https://livetalkbylikki.netlify.app/sitemap.xml

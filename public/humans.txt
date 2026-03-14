@@ -1,0 +1,17 @@
+/* TEAM */
+Chef: Likhith Kami (Likki)
+Contact: info.likki@gmail.com
+Instagram: https://instagram.com/likhith_kami/
+Location: Hyderabad, India
+
+/* THANKS */
+Users: For making LiveTalk a better place for connection.
+Open Source: For providing the tools to build privacy-first apps.
+
+/* SITE */
+Last update: 2026/03/14
+Language: English
+Software: React 18, TypeScript, WebRTC, Supabase, Tailwind CSS, Framer Motion
+Standards: HTML5, CSS3, JSON-LD, PWA
+Components: Lucide Icons, Shadcn UI
+Do No Evil: No tracking, No ads, No data collection.

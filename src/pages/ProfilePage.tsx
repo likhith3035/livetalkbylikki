@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pencil, Check, Shield } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Pencil, Check, Shield, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useSEO } from "@/hooks/use-seo";
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
   const onlineCount = useOnlineCount();
   const { profile, displayName, updateNickname, updateAvatar, AVATAR_OPTIONS } = useProfile();
   useSEO({ 
@@ -27,99 +29,149 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background relative">
+      {/* Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[10%] left-[-10%] w-64 h-64 rounded-full bg-primary/10 blur-[100px] float-slow" />
+        <div className="absolute bottom-[20%] right-[-5%] w-80 h-80 rounded-full bg-accent/8 blur-[120px] float-medium" />
+      </div>
+
       <Header onlineCount={onlineCount} />
 
-      <main className="flex flex-1 flex-col items-center gap-6 px-6 py-8 pb-24">
-        {/* Avatar */}
-        <div className="relative">
-          <button
-            onClick={() => setShowAvatars(!showAvatars)}
-            className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary border-2 border-primary/30 text-5xl transition-transform hover:scale-105 active:scale-95"
+      <main className="flex flex-1 flex-col items-center justify-start px-6 pt-10 pb-32 relative z-10 overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
+          className="w-full max-w-md glow-card rounded-[2.5rem] border border-primary/20 bg-card/30 backdrop-blur-xl p-8 sm:p-10 shadow-2xl shadow-primary/10 flex flex-col items-center gap-8 relative"
+        >
+          {/* Top-left back button as secondary option */}
+          <Link 
+            to="/chat" 
+            className="absolute top-6 left-6 p-2 rounded-xl bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-all z-[70] sm:hidden"
+            aria-label="Back to chat"
           >
-            {profile.avatar}
-          </button>
-          <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
-            <Pencil className="h-3.5 w-3.5" />
-          </span>
-        </div>
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
 
-        {/* Avatar picker */}
-        <AnimatePresence>
-          {showAvatars && (
+          {/* Avatar Section */}
+          <div className="relative group">
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="w-full max-w-xs overflow-hidden"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative"
             >
-              <div className="grid grid-cols-8 gap-2 rounded-xl border border-border bg-secondary/40 p-3">
-                {AVATAR_OPTIONS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => { updateAvatar(emoji); setShowAvatars(false); }}
-                    className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-lg text-xl transition-all hover:scale-110",
-                      profile.avatar === emoji && "bg-primary/20 ring-2 ring-primary"
-                    )}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
+              <button
+                onClick={() => setShowAvatars(!showAvatars)}
+                className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-secondary/80 to-secondary/40 border-4 border-primary/30 text-6xl shadow-xl transition-all group-hover:border-primary/50 group-hover:shadow-primary/20"
+              >
+                {profile.avatar}
+              </button>
+              <span className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg border-2 border-background">
+                <Pencil className="h-4 w-4" />
+              </span>
             </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Nickname */}
-        <div className="text-center space-y-2 w-full max-w-xs">
-          {editingName ? (
-            <div className="flex items-center gap-2 justify-center">
-              <input
-                autoFocus
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
-                maxLength={20}
-                placeholder="Enter nickname..."
-                className="w-40 rounded-lg border border-border bg-secondary/50 px-3 py-2 text-center text-lg font-bold font-display text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
-              />
-              <Button size="icon" variant="glow" className="h-9 w-9 rounded-lg" onClick={handleSaveName}>
-                <Check className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <button
-              onClick={() => { setNameInput(profile.nickname); setEditingName(true); }}
-              className="group inline-flex items-center gap-2"
+            {/* Avatar picker popup-style */}
+            <AnimatePresence>
+              {showAvatars && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-50 w-72"
+                >
+                  <div className="grid grid-cols-6 gap-2 rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md p-4 shadow-2xl">
+                    {AVATAR_OPTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => { updateAvatar(emoji); setShowAvatars(false); }}
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-xl text-xl transition-all hover:scale-125 hover:bg-primary/10",
+                          profile.avatar === emoji && "bg-primary/20 ring-2 ring-primary"
+                        )}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Nickname Section */}
+          <div className="text-center space-y-3 w-full">
+            {editingName ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-3 justify-center"
+              >
+                <input
+                  autoFocus
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                  maxLength={20}
+                  placeholder="Enter nickname..."
+                  className="w-48 rounded-2xl border-2 border-primary/30 bg-secondary/30 px-4 py-3 text-center text-xl font-bold font-display text-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+                />
+                <Button size="icon" variant="glow" className="h-12 w-12 rounded-2xl" onClick={handleSaveName}>
+                  <Check className="h-5 w-5" />
+                </Button>
+              </motion.div>
+            ) : (
+              <button
+                onClick={() => { setNameInput(profile.nickname); setEditingName(true); }}
+                className="group inline-flex items-center gap-3 hover:scale-105 transition-transform"
+              >
+                <h1 className="text-3xl font-bold font-display text-foreground tracking-tight">{displayName}</h1>
+                <div className="p-2 rounded-xl bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-all">
+                  <Pencil className="h-4 w-4" />
+                </div>
+              </button>
+            )}
+            <p className="text-sm font-medium text-muted-foreground/80 tracking-wide uppercase">
+              {profile.nickname ? "Your unique identity" : "Tap to reveal yourself"}
+            </p>
+          </div>
+
+          {/* Stats Section */}
+          <div className="grid grid-cols-2 gap-4 w-full">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="rounded-3xl bg-primary/5 border border-primary/10 p-5 text-center transition-all hover:bg-primary/10"
             >
-              <h1 className="text-2xl font-bold font-display text-foreground">{displayName}</h1>
-              <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          )}
-          <p className="text-sm text-muted-foreground">
-            {profile.nickname ? "Your chat nickname" : "Tap to set a nickname"}
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-xs mt-4">
-          <div className="rounded-xl bg-secondary/60 border border-border p-4 text-center">
-            <p className="text-2xl font-bold font-display text-foreground">0</p>
-            <p className="text-xs text-muted-foreground mt-1">Chats today</p>
+              <p className="text-3xl font-bold font-display text-primary">0</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-widest">Chats today</p>
+            </motion.div>
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="rounded-3xl bg-accent/5 border border-accent/10 p-5 text-center transition-all hover:bg-accent/10"
+            >
+              <div className="flex items-center justify-center gap-1.5 text-accent">
+                <Shield className="h-5 w-5" />
+                <p className="text-xl font-bold font-display">100%</p>
+              </div>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-widest">Anonymous</p>
+            </motion.div>
           </div>
-          <div className="rounded-xl bg-secondary/60 border border-border p-4 text-center">
-            <div className="flex items-center justify-center gap-1.5">
-              <Shield className="h-4 w-4 text-primary" />
-              <p className="text-sm font-semibold text-primary">100%</p>
+
+          <div className="space-y-4 w-full pt-4">
+            <div className="flex items-center gap-3 px-5 py-4 rounded-3xl bg-secondary/40 border border-border/50 text-muted-foreground text-sm">
+              <Shield className="h-5 w-5 text-primary/60" />
+              <p className="leading-tight">Your nickname & avatar are stored locally and only visible during active chats.</p>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Private</p>
+            
+            <Link 
+                to="/chat"
+                className="w-full h-14 rounded-2xl border border-primary/20 hover:bg-primary/5 text-primary font-bold flex items-center justify-center transition-all active:scale-[0.98] relative z-[60]"
+            >
+                Back to Chat
+            </Link>
           </div>
-        </div>
-
-        <p className="text-xs text-muted-foreground/60 mt-2">
-          Your nickname & avatar are stored locally and shared only during chats.
-        </p>
+        </motion.div>
       </main>
 
       <BottomNav />
