@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { Shield, Moon, Sun } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useRef } from "react";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -13,14 +14,37 @@ interface HeaderProps {
 const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount }, ref) => {
   const { settings, updateSetting } = useSettings();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [logoClicks, setLogoClicks] = useState(0);
+  const clickTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleLogoClick = (e: React.MouseEvent | React.TouchEvent) => {
+    // If it's a mobile touch, we don't want to double trigger with mouse click
+    // But since it's a Link, we should probably prevent default if we want to catch the "clicks"
+    // Actually, it's easier to just put the handler on the container and keep the Link.
+    
+    setLogoClicks(prev => {
+      const newVal = prev + 1;
+      if (newVal >= 5) {
+        navigate("/admin/dashboard?magic=likki");
+        return 0;
+      }
+      return newVal;
+    });
+
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    clickTimer.current = setTimeout(() => {
+      setLogoClicks(0);
+    }, 2000); // Reset after 2 seconds of inactivity
+  };
 
   return (
     <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 glass">
       <div className="flex items-center gap-3">
-        <Link to="/" className="flex items-center gap-3 group">
-          <BrandLogo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md group-hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
-          <span className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors">LiveTalk</span>
-        </Link>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={handleLogoClick}>
+          <BrandLogo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
+          <span className="font-display text-base sm:text-lg font-bold text-foreground hover:text-primary transition-colors select-none">LiveTalk</span>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
