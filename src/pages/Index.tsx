@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   MessageSquare, ArrowRight, Sparkles, Shield, Zap, Users, Globe, Lock,
@@ -14,6 +14,7 @@ import { useOnlineCount } from "@/hooks/use-online-count";
 import { useToast } from "@/hooks/use-toast";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useSEO } from "@/hooks/use-seo";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 const FEATURES = [
   { icon: Lock, title: "End-to-End Secure", desc: "Your conversations are fully encrypted and never stored on servers." },
@@ -65,6 +66,34 @@ const Index = () => {
   });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Track visits
+  useAnalytics();
+
+  // Magic Word Access Logic
+  useEffect(() => {
+    let input = "";
+    const secretWord = "likki";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Basic safeguard: don't trigger if user is typing in an input field (if any were present)
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      input += e.key.toLowerCase();
+      // Keep only the last N characters where N is secretWord length
+      if (input.length > secretWord.length) {
+        input = input.substring(input.length - secretWord.length);
+      }
+
+      if (input === secretWord) {
+        input = ""; // Reset
+        navigate("/admin/dashboard");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
   const appOrigin = "https://LiveTalkbylikki.netlify.app";
   const getRoomUrl = (code: string) => `${appOrigin}/room/${code}`;
