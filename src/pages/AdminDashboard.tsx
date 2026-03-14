@@ -267,7 +267,6 @@ const AdminDashboard = () => {
         const formatted = Object.entries(data)
           .map(([uid, val]: [string, any]) => ({ uid, ...val }))
           .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        console.log("[Admin] Appeals loaded:", formatted);
         setAppeals(formatted);
       } else {
         setAppeals([]);
