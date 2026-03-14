@@ -59,7 +59,6 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
       if (pair[0] === sessionId) {
         runTransaction(matchRef, (currentData) => {
           if (currentData === null) {
-            import("@/hooks/use-analytics").then(({ trackMatch }) => trackMatch());
             return {
               user1: pair[0],
               user2: pair[1],
@@ -70,7 +69,12 @@ export function useFirebaseMatchmaking({ sessionId, stableId, interests, onMatch
               createdAt: serverTimestamp()
             };
           }
-          return;
+          return; // Abort if already exists
+        }).then((result) => {
+          if (result.committed) {
+             // Track match successfully
+             import("@/hooks/use-analytics").then(({ trackMatch }) => trackMatch());
+          }
         }).catch(err => {
           console.error("[Matchmaking] Transaction failed:", err);
         });
