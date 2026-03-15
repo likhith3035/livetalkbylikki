@@ -118,6 +118,7 @@ const Index = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    setShowJoinInput(false);
     setRoomCode(code);
     
     // Scroll to panel after it renders
@@ -241,7 +242,11 @@ const Index = () => {
               <Button
                 variant="outline"
                 className="flex-1 h-11 px-4 text-xs font-medium rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300"
-                onClick={() => setShowJoinInput(!showJoinInput)}
+                onClick={() => {
+                  const nextState = !showJoinInput;
+                  setShowJoinInput(nextState);
+                  if (nextState) setRoomCode(null);
+                }}
               >
                 <Users className="h-3.5 w-3.5 text-primary" />
                 Join Room
