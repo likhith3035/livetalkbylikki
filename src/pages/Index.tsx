@@ -6,8 +6,9 @@ import {
   Instagram, Linkedin, Mail, ChevronDown, Phone, Timer,
   Heart, Search, Pin, Image, Palette, MapPin,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
@@ -66,6 +67,8 @@ const Index = () => {
   });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
+  const [showJoinInput, setShowJoinInput] = useState(false);
   const invitePanelRef = useRef<HTMLElement>(null);
 
   // Track visits
@@ -98,6 +101,18 @@ const Index = () => {
 
   const appOrigin = "https://LiveTalkbylikki.netlify.app";
   const getRoomUrl = (code: string) => `${appOrigin}/room/${code}`;
+
+  const handleJoinRoom = () => {
+    if (!joinCode) {
+      toast({ title: "Error", description: "Please enter a room code.", variant: "destructive" });
+      return;
+    }
+    if (joinCode.length !== 6) {
+      toast({ title: "Invalid code", description: "Room code must be 6 characters.", variant: "destructive" });
+      return;
+    }
+    navigate(`/room/${joinCode.toUpperCase()}`);
+  };
 
   const generateAndJoinRoom = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -222,7 +237,40 @@ const Index = () => {
               <Link2 className="h-4 w-4 text-primary" />
               Invite a Friend
             </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto h-14 sm:h-16 px-8 text-base font-medium rounded-2xl gap-2.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300"
+              onClick={() => setShowJoinInput(!showJoinInput)}
+            >
+              <Users className="h-4 w-4 text-primary" />
+              Join Room
+            </Button>
           </motion.div>
+
+          <AnimatePresence>
+            {showJoinInput && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                className="w-full max-w-sm mx-auto pt-2 overflow-hidden"
+              >
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter Room Code"
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+                    className="h-12 rounded-xl bg-background/50 backdrop-blur-sm border-primary/20 focus-visible:ring-primary/30 font-mono tracking-widest text-center text-lg uppercase"
+                    maxLength={6}
+                  />
+                  <Button onClick={handleJoinRoom} variant="glow" className="h-12 px-6 rounded-xl">
+                    Join
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ═══════════ PRIVATE ROOM PANEL ═══════════ */}
           {roomCode && (
