@@ -70,6 +70,7 @@ const Index = () => {
   const [joinCode, setJoinCode] = useState("");
   const [showJoinInput, setShowJoinInput] = useState(false);
   const invitePanelRef = useRef<HTMLElement>(null);
+  const joinPanelRef = useRef<HTMLElement>(null);
 
   // Track visits
   useAnalytics();
@@ -245,7 +246,12 @@ const Index = () => {
                 onClick={() => {
                   const nextState = !showJoinInput;
                   setShowJoinInput(nextState);
-                  if (nextState) setRoomCode(null);
+                  if (nextState) {
+                    setRoomCode(null);
+                    setTimeout(() => {
+                      joinPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 100);
+                  }
                 }}
               >
                 <Users className="h-3.5 w-3.5 text-primary" />
@@ -257,6 +263,7 @@ const Index = () => {
           <AnimatePresence>
             {showJoinInput && (
               <motion.div
+                ref={joinPanelRef as any}
                 initial={{ opacity: 0, y: -10, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -10, height: 0 }}
