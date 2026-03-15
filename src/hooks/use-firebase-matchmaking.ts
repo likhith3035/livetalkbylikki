@@ -28,9 +28,14 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
       const users = snapshot.val();
       const waitingIds = Object.keys(users).filter(id => {
         const isMe = id === sessionId;
+        // Allow same stableId ONLY if searching with a private room code (for testing)
         const sameStableId = users[id]?.stableId === stableId;
         const sameCode = (users[id]?.code || null) === searchCodeRef.current;
-        return !isMe && !sameStableId && sameCode;
+        
+        if (searchCodeRef.current) {
+          return !isMe && sameCode; // Private room: connect anyone with same code
+        }
+        return !isMe && !sameStableId && sameCode; // Public room: strict no-self-match
       });
       
       if (waitingIds.length === 0) return;
@@ -64,20 +69,20 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
             return {
               user1: pair[0],
               user2: pair[1],
-              stable1: pair[0] === sessionId ? stableId : users[matchedUserId].stableId,
-              stable2: pair[1] === sessionId ? stableId : users[matchedUserId].stableId,
-              name1: pair[0] === sessionId ? userName : users[matchedUserId].userName || "Stranger",
-              name2: pair[1] === sessionId ? userName : users[matchedUserId].userName || "Stranger",
+              stable1: amIUser1InRaw(pair, sessionId) ? stableId : users[matchedUserId].stableId,
+              stable2: !amIUser1InRaw(pair, sessionId) ? stableId : users[matchedUserId].stableId,
+              name1: amIUser1InRaw(pair, sessionId) ? userName : users[matchedUserId].userName || "Stranger",
+              name2: !amIUser1InRaw(pair, sessionId) ? userName : users[matchedUserId].userName || "Stranger",
               sharedInterests: shared,
               roomId: matchId,
-              createdAt: serverTimestamp(),
+              createdAt: Date.now(), // FIX: serverTimestamp() is NOT allowed in transactions
               ready1: false,
               ready2: false
             };
           }
           return; // Abort if already exists
-        }).catch(err => {
-          console.error("[Matchmaking] Transaction failed:", err);
+        }).catch((error) => {
+          console.error("[Matchmaking] Transaction error:", error);
         });
       }
     }, (error) => {
@@ -85,12 +90,15 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
     });
   }, [sessionId, stableId, interests, status, userName]);
 
+  // Helper for transaction logic
+  const amIUser1InRaw = (pair: string[], myId: string) => pair[0] === myId;
+
   // Step 3: Listen for match signals and perform handshake
   useEffect(() => {
     if (status !== "searching") return;
 
     const matchesRef = ref(db, "matches");
-    const handleMatchSignal = (snapshot: any) => {
+    const handleMatches = (snapshot: any) => {
       if (!snapshot.exists() || matchedGuardRef.current) return;
       
       const allMatches = snapshot.val();
@@ -105,6 +113,7 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
 
           // If we are both ready, FINALIZE
           if (match.ready1 && match.ready2) {
+            if (matchedGuardRef.current) return;
             matchedGuardRef.current = true;
             pendingMatchIdRef.current = mId;
             
@@ -132,20 +141,20 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
             const mRef = ref(db, `matches/${mId}/${myReadyKey}`);
             set(mRef, true).catch(err => console.error("[Matchmaking] Handshake set failed:", err));
             
-            // Timeout if they don't respond to handshake
+            // Timeout if they don't respond to handshake (resilience)
             setTimeout(() => {
                if (status === "searching" && !matchedGuardRef.current) {
-                 console.log("[Matchmaking] Handshake timeout, resuming search...");
+                 console.log("[Matchmaking] Handshake timeout, cleaning up...");
                  remove(ref(db, `matches/${mId}`)).catch(() => {});
                }
-            }, 8000);
+            }, 10000);
           }
         }
       }
     };
 
-    onValue(matchesRef, handleMatchSignal);
-    return () => off(matchesRef, "value", handleMatchSignal);
+    onValue(matchesRef, handleMatches);
+    return () => off(matchesRef, "value", handleMatches);
   }, [status, sessionId, onMatched]);
 
   const startSearch = useCallback((code: string | null = null) => {
