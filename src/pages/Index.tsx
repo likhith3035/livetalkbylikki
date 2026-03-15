@@ -69,8 +69,8 @@ const Index = () => {
   const [copied, setCopied] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [showJoinInput, setShowJoinInput] = useState(false);
-  const invitePanelRef = useRef<HTMLElement>(null);
-  const joinPanelRef = useRef<HTMLElement>(null);
+  const invitePanelRef = useRef<HTMLDivElement>(null);
+  const joinPanelRef = useRef<HTMLDivElement>(null);
 
   // Track visits
   useAnalytics();
@@ -263,7 +263,8 @@ const Index = () => {
           <AnimatePresence>
             {showJoinInput && (
               <motion.div
-                ref={joinPanelRef as any}
+                key="join-room-panel"
+                ref={joinPanelRef}
                 initial={{ opacity: 0, y: -10, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -10, height: 0 }}
@@ -288,7 +289,8 @@ const Index = () => {
           {/* ═══════════ PRIVATE ROOM PANEL ═══════════ */}
           {roomCode && (
             <motion.div
-              ref={invitePanelRef as any}
+              key="invite-room-panel"
+              ref={invitePanelRef}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               className="w-full pt-4 scroll-mt-20"
