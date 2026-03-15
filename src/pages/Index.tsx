@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   MessageSquare, ArrowRight, Sparkles, Shield, Zap, Users, Globe, Lock,
@@ -66,6 +66,7 @@ const Index = () => {
   });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const invitePanelRef = useRef<HTMLElement>(null);
 
   // Track visits
   useAnalytics();
@@ -103,6 +104,11 @@ const Index = () => {
     let code = "";
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
     setRoomCode(code);
+    
+    // Scroll to panel after it renders
+    setTimeout(() => {
+      invitePanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
   };
 
   const shareAndJoin = async () => {
@@ -144,6 +150,25 @@ const Index = () => {
           transition={{ type: "spring", stiffness: 180, damping: 22 }}
           className="relative z-10 text-center space-y-8 max-w-3xl mx-auto"
         >
+          {/* Highlights Row */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 px-4 mb-2"
+          >
+            {[
+              "No Signup", "No Tracking", "No Storing", "Pure Privacy", "Unlimited Fun"
+            ].map((text, i) => (
+              <span key={text} className="flex items-center gap-2">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-foreground/40 whitespace-nowrap">
+                  {text}
+                </span>
+                {i < 4 && <span className="h-1 w-1 rounded-full bg-primary/30" />}
+              </span>
+            ))}
+          </motion.div>
+
           {/* Live badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -168,23 +193,15 @@ const Index = () => {
             <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="text-primary/80 hover:text-primary transition-colors hover:underline decoration-primary/30 underline-offset-4">Likhith Kami</a>
           </div>
 
-          <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground/80 font-medium max-w-2xl mx-auto px-4">
-            The #1 Omegle Alternative — Chat Anonymously with Strangers
+          <p className="text-lg sm:text-xl lg:text-2xl text-gradient font-bold max-w-2xl mx-auto px-4">
+            The #1 Omegle Alternative
           </p>
-
-          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            No sign-ups. No tracking. Just real conversations with real people from around the world. LiveTalk 2 brings back everything you loved — better, safer, and faster.
-          </p>
-
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <span className="px-3 py-1 bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-bold uppercase rounded-lg tracking-widest">Adults Only 18+</span>
-          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 sm:pt-6"
           >
             <Button
               variant="glow"
@@ -207,9 +224,60 @@ const Index = () => {
             </Button>
           </motion.div>
 
-          <p className="text-xs text-muted-foreground/60">
-            Free forever · No registration · Works on any device
-          </p>
+          {/* ═══════════ PRIVATE ROOM PANEL ═══════════ */}
+          {roomCode && (
+            <motion.div
+              ref={invitePanelRef as any}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="w-full pt-4 scroll-mt-20"
+            >
+              <div className="max-w-md mx-auto space-y-4 rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-sm p-5 shadow-lg shadow-primary/5">
+                <p className="text-sm font-semibold text-foreground text-center">🔗 Your private room is ready!</p>
+                <div className="flex items-center gap-2 rounded-xl bg-secondary/80 border border-border p-3">
+                  <Hash className="h-4 w-4 text-primary shrink-0" />
+                  <span className="font-mono text-lg font-bold tracking-widest text-foreground flex-1">{roomCode}</span>
+                  <Button size="sm" variant="ghost" onClick={copyLink} className="h-8 px-2">
+                    {copied ? <Check className="h-4 w-4 text-online" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-[10px] text-muted-foreground">Share via</span>
+                  <a href={`https://wa.me/?text=${encodeURIComponent(`Let's chat anonymously! ${getRoomUrl(roomCode)}`)}`} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(142_70%_45%)]/10 border border-[hsl(142_70%_45%)]/20 text-[hsl(142_70%_45%)] hover:bg-[hsl(142_70%_45%)]/20 hover:scale-110 transition-all" title="WhatsApp">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><title>WhatsApp</title><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                  </a>
+                  <a href={`https://www.instagram.com/direct/new/?text=${encodeURIComponent(`Let's chat anonymously! ${getRoomUrl(roomCode)}`)}`} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(330_70%_55%)]/10 border border-[hsl(330_70%_55%)]/20 text-[hsl(330_70%_55%)] hover:bg-[hsl(330_70%_55%)]/20 hover:scale-110 transition-all" title="Instagram">
+                    <Instagram className="h-4 w-4" />
+                  </a>
+                  <a href={`mailto:?subject=${encodeURIComponent("Let's chat anonymously!")}&body=${encodeURIComponent(`Join me: ${getRoomUrl(roomCode)}`)}`} className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:scale-110 transition-all" title="Email">
+                    <Mail className="h-4 w-4" />
+                  </a>
+                  {typeof navigator !== "undefined" && "share" in navigator && (
+                    <button onClick={() => navigator.share({ title: "L Chat", text: "Join me for an anonymous chat", url: getRoomUrl(roomCode) }).catch(() => { })} className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/50 border border-border text-foreground hover:bg-accent hover:scale-110 transition-all" title="More">
+                      <Share2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <Button onClick={shareAndJoin} variant="glow" className="w-full gap-2 h-11">
+                  <ArrowRight className="h-4 w-4" />
+                  Share & Enter Room
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <span className="px-3 py-1 bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-bold uppercase rounded-lg tracking-widest">Adults Only 18+</span>
+          </div>
+
+          <div className="space-y-4 pt-4 sm:pt-6 max-w-xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+              No sign-ups. No tracking. Just real conversations with real people from around the world. LiveTalk 2 brings back everything you loved — better, safer, and faster.
+            </p>
+            <p className="text-xs text-muted-foreground/60">
+              Free forever · No registration · Works on any device
+            </p>
+          </div>
         </motion.div>
 
         {/* Scroll hint */}
@@ -222,47 +290,6 @@ const Index = () => {
           <ChevronDown className="h-5 w-5 text-muted-foreground animate-bounce" />
         </motion.div>
       </section>
-
-      {/* ═══════════ PRIVATE ROOM PANEL ═══════════ */}
-      {roomCode && (
-        <motion.section
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="px-6 pb-12"
-        >
-          <div className="max-w-md mx-auto space-y-4 rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-sm p-5 shadow-lg shadow-primary/5">
-            <p className="text-sm font-semibold text-foreground text-center">🔗 Your private room is ready!</p>
-            <div className="flex items-center gap-2 rounded-xl bg-secondary/80 border border-border p-3">
-              <Hash className="h-4 w-4 text-primary shrink-0" />
-              <span className="font-mono text-lg font-bold tracking-widest text-foreground flex-1">{roomCode}</span>
-              <Button size="sm" variant="ghost" onClick={copyLink} className="h-8 px-2">
-                {copied ? <Check className="h-4 w-4 text-online" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-[10px] text-muted-foreground">Share via</span>
-              <a href={`https://wa.me/?text=${encodeURIComponent(`Let's chat anonymously! ${getRoomUrl(roomCode)}`)}`} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(142_70%_45%)]/10 border border-[hsl(142_70%_45%)]/20 text-[hsl(142_70%_45%)] hover:bg-[hsl(142_70%_45%)]/20 hover:scale-110 transition-all" title="WhatsApp">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><title>WhatsApp</title><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
-              </a>
-              <a href={`https://www.instagram.com/direct/new/?text=${encodeURIComponent(`Let's chat anonymously! ${getRoomUrl(roomCode)}`)}`} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(330_70%_55%)]/10 border border-[hsl(330_70%_55%)]/20 text-[hsl(330_70%_55%)] hover:bg-[hsl(330_70%_55%)]/20 hover:scale-110 transition-all" title="Instagram">
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a href={`mailto:?subject=${encodeURIComponent("Let's chat anonymously!")}&body=${encodeURIComponent(`Join me: ${getRoomUrl(roomCode)}`)}`} className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:scale-110 transition-all" title="Email">
-                <Mail className="h-4 w-4" />
-              </a>
-              {typeof navigator !== "undefined" && "share" in navigator && (
-                <button onClick={() => navigator.share({ title: "L Chat", text: "Join me for an anonymous chat", url: getRoomUrl(roomCode) }).catch(() => { })} className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/50 border border-border text-foreground hover:bg-accent hover:scale-110 transition-all" title="More">
-                  <Share2 className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <Button onClick={shareAndJoin} variant="glow" className="w-full gap-2 h-11">
-              <ArrowRight className="h-4 w-4" />
-              Share & Enter Room
-            </Button>
-          </div>
-        </motion.section>
-      )}
 
       {/* ═══════════ STATS BAR ═══════════ */}
       <section className="border-y border-border/30 bg-card/20 backdrop-blur-sm">
