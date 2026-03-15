@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { ref, onValue, set, onDisconnect, serverTimestamp, runTransaction, off, remove } from "firebase/database";
+import { ref, onValue, set, onDisconnect, serverTimestamp, runTransaction, off, remove, get } from "firebase/database";
 
 interface MatchmakingOptions {
   sessionId: string;
@@ -14,12 +14,11 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
   const [status, setStatus] = useState<"idle" | "searching">("idle");
   const matchedGuardRef = useRef(false);
   const searchCodeRef = useRef<string | null>(null);
-  const activeMatchIdRef = useRef<string | null>(null);
-
+  
   // LOG VERSION AT TOP
   useEffect(() => {
     if (status === "searching") {
-      console.warn("[V3_ACTIVE] Matchmaking V3.0 Searching Started. Session:", sessionId);
+      console.warn("[V4_ACTIVE] Matchmaking V4.0 Started. Session:", sessionId);
     }
   }, [status, sessionId]);
 
@@ -28,7 +27,8 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
 
     const lobbyRef = ref(db, "lobby");
     
-    onValue(lobbyRef, (snapshot) => {
+    // We use a one-time fetch to avoid loops, findMatch will re-run if needed
+    get(lobbyRef).then((snapshot) => {
       if (!snapshot.exists() || matchedGuardRef.current || status !== "searching") return;
       
       const users = snapshot.val();
@@ -66,65 +66,60 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
       const pair = [sessionId, matchedUserId].sort();
       const matchId = searchCodeRef.current ? `private_${searchCodeRef.current}` : `match_${pair[0]}_${pair[1]}`;
       
+      // Step: Race for the Signal. Only one user can "signal" the other.
       if (pair[0] === sessionId) {
         const signalRef = ref(db, `lobby/${matchedUserId}/signal`);
         runTransaction(signalRef, (currentSignal) => {
           if (currentSignal === null) {
-            return { 
-              matchId, 
-              from: sessionId, 
-              name: userName || "Stranger", 
-              stableId: stableId || sessionId,
-              sharedInterests: shared || [] 
-            };
+             return { matchId, from: sessionId };
           }
           return;
         }).then((result) => {
           if (result.committed) {
-             console.log("[V3] Signal sent to", matchedUserId);
-             initiateMatchRecord(matchId, matchedUserId, shared, users[matchedUserId]);
+             console.log("[V4] Signal Won. Creating Record...");
+             createMatchRecord(matchId, matchedUserId, shared, users[matchedUserId]);
           }
-        }).catch(err => console.error("[V3] Signaling error:", err));
+        }).catch(err => console.error("[V4] Signal race error:", err));
       }
-    }, (error) => {
-      console.error("[V3] Lobby Sync Error:", error);
     });
   }, [sessionId, stableId, interests, status, userName]);
 
-  const initiateMatchRecord = (matchId: string, strangerId: string, shared: string[], strangerData: any) => {
+  const createMatchRecord = (matchId: string, strangerId: string, shared: string[], strangerData: any) => {
     const matchRef = ref(db, `matches/${matchId}`);
-    runTransaction(matchRef, (currentData) => {
-      if (currentData === null) {
-        return {
-          user1: sessionId,
-          user2: strangerId,
-          stable1: stableId || sessionId,
-          stable2: strangerData?.stableId || strangerId,
-          name1: userName || "You",
-          name2: strangerData?.userName || "Stranger",
-          sharedInterests: shared || [],
-          roomId: matchId,
-          createdAt: Date.now(),
-          ready1: false,
-          ready2: false
-        };
-      }
-      return;
-    }).catch(err => console.error("[V3] Match creation error:", err));
+    
+    // Since signaling won the race, we can just use set() here.
+    // This BYPASSES the 'Error: set' crash seen with transactions.
+    const record = {
+      user1: sessionId,
+      user2: strangerId,
+      stable1: stableId || sessionId,
+      stable2: strangerData?.stableId || strangerId,
+      name1: userName || "You",
+      name2: strangerData?.userName || "Stranger",
+      sharedInterests: shared || [],
+      roomId: matchId,
+      createdAt: Date.now(),
+      ready1: false,
+      ready2: false
+    };
+
+    set(matchRef, record)
+      .then(() => console.log("[V4] Match Record Created Successfully"))
+      .catch(err => console.error("[V4] Failed to set match record:", err));
   };
 
   useEffect(() => {
     if (status !== "searching") return;
 
+    // 1. Listen for signals TO ME
     const mySignalRef = ref(db, `lobby/${sessionId}/signal`);
     const handleSignal = (snapshot: any) => {
       if (!snapshot.exists() || matchedGuardRef.current) return;
-      const signal = snapshot.val();
-      activeMatchIdRef.current = signal.matchId;
-      console.log("[V3] Signal received:", signal.matchId);
+      console.log("[V4] Signal received. Preparing handshake...");
     };
     onValue(mySignalRef, handleSignal);
 
+    // 2. Listen for match state
     const matchesRef = ref(db, "matches");
     const handleMatches = (snapshot: any) => {
       if (!snapshot.exists() || matchedGuardRef.current) return;
@@ -136,17 +131,15 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
 
         if (match.user1 === sessionId || match.user2 === sessionId) {
           const amIUser1 = match.user1 === sessionId;
-          const myReadyKey = amIUser1 ? "ready1" : "ready2";
+          const myKey = amIUser1 ? "ready1" : "ready2";
           
           if (match.ready1 && match.ready2) {
-            finalizeMatch(mId, match);
+            finalize(mId, match);
             return;
           }
 
-          if (!match[myReadyKey]) {
-            set(ref(db, `matches/${mId}/${myReadyKey}`), true)
-              .catch(err => console.error("[V3] Handshake failed:", err));
-            
+          if (!match[myKey]) {
+            set(ref(db, `matches/${mId}/${myKey}`), true).catch(() => {});
             setTimeout(() => {
                if (status === "searching" && !matchedGuardRef.current) {
                  remove(ref(db, `matches/${mId}`)).catch(() => {});
@@ -164,7 +157,7 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     };
   }, [status, sessionId, onMatched]);
 
-  const finalizeMatch = (mId: string, match: any) => {
+  const finalize = (mId: string, match: any) => {
     if (matchedGuardRef.current) return;
     matchedGuardRef.current = true;
     
@@ -185,16 +178,16 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     searchCodeRef.current = code ? code.trim().toUpperCase() : null;
     setStatus("searching");
     
-    const myLobbyRef = ref(db, `lobby/${sessionId}`);
-    set(myLobbyRef, {
+    const myRef = ref(db, `lobby/${sessionId}`);
+    set(myRef, {
       interests: interests || [],
       stableId: stableId || sessionId,
       userName: userName || "",
       code: searchCodeRef.current,
       joinedAt: serverTimestamp(),
       signal: null
-    }).catch(err => console.error("[V3] Join failed:", err));
-    onDisconnect(myLobbyRef).remove();
+    }).catch(err => console.error("[V4] Join failed:", err));
+    onDisconnect(myRef).remove();
   }, [sessionId, stableId, interests, userName]);
 
   const stopSearch = useCallback(() => {
@@ -203,7 +196,13 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
   }, [sessionId]);
 
   useEffect(() => {
-    if (status === "searching") findMatch();
+    if (status === "searching") {
+      const interval = setInterval(() => {
+        if (!matchedGuardRef.current) findMatch();
+      }, 5000);
+      findMatch();
+      return () => clearInterval(interval);
+    }
   }, [status, findMatch]);
 
   return { status, startSearch, stopSearch };
