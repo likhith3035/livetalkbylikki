@@ -4,7 +4,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useOnlineCount } from "./use-online-count";
 import { sounds, haptics } from "@/lib/sounds";
 import { sendNotification, type NotificationType } from "@/lib/notifications";
-import { useFirebaseMatchmaking } from "./use-firebase-matchmaking";
+import { useFirebaseMatchmakingV3 as useFirebaseMatchmaking } from "./use-matchmaking-v3";
 import { useFirebaseSignaling } from "./use-firebase-signaling";
 import { useSafety } from "./use-safety";
 
