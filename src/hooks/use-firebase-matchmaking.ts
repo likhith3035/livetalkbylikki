@@ -14,20 +14,23 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
   const [status, setStatus] = useState<"idle" | "searching">("idle");
   const matchedGuardRef = useRef(false);
   const searchCodeRef = useRef<string | null>(null);
+  const pendingMatchIdRef = useRef<string | null>(null);
 
   const findMatch = useCallback(async () => {
     if (matchedGuardRef.current || status !== "searching") return;
 
     const lobbyRef = ref(db, "lobby");
     
+    // Step 1: Find a candidate in the lobby
     onValue(lobbyRef, (snapshot) => {
-      if (!snapshot.exists() || matchedGuardRef.current) return;
+      if (!snapshot.exists() || matchedGuardRef.current || status !== "searching") return;
       
       const users = snapshot.val();
       const waitingIds = Object.keys(users).filter(id => {
         const isMe = id === sessionId;
+        const sameStableId = users[id]?.stableId === stableId;
         const sameCode = (users[id]?.code || null) === searchCodeRef.current;
-        return !isMe && sameCode;
+        return !isMe && !sameStableId && sameCode;
       });
       
       if (waitingIds.length === 0) return;
@@ -45,10 +48,7 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
           return { id: uid, shared: sharedInterests, score: sharedInterests.length };
         });
 
-        // Sort by number of shared interests (highest first)
         candidates.sort((a, b) => b.score - a.score);
-        
-        // If multiple candidates have same score, we still get the best one
         matchedUserId = candidates[0].id;
         shared = candidates[0].shared;
       }
@@ -57,6 +57,7 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
       const matchId = searchCodeRef.current ? `private_${searchCodeRef.current}` : `match_${pair[0]}_${pair[1]}`;
       const matchRef = ref(db, `matches/${matchId}`);
 
+      // Step 2: Only the 'lead' user (alphabetically first) initiates the match record
       if (pair[0] === sessionId) {
         runTransaction(matchRef, (currentData) => {
           if (currentData === null) {
@@ -69,15 +70,12 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
               name2: pair[1] === sessionId ? userName : users[matchedUserId].userName || "Stranger",
               sharedInterests: shared,
               roomId: matchId,
-              createdAt: serverTimestamp()
+              createdAt: serverTimestamp(),
+              ready1: false,
+              ready2: false
             };
           }
           return; // Abort if already exists
-        }).then((result) => {
-          if (result.committed) {
-             // Track match successfully
-             import("@/hooks/use-analytics").then(({ trackMatch }) => trackMatch());
-          }
         }).catch(err => {
           console.error("[Matchmaking] Transaction failed:", err);
         });
@@ -85,11 +83,75 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
     }, (error) => {
       console.error("[Matchmaking] Lobby Sync Error:", error);
     });
-  }, [sessionId, stableId, interests, status]);
+  }, [sessionId, stableId, interests, status, userName]);
+
+  // Step 3: Listen for match signals and perform handshake
+  useEffect(() => {
+    if (status !== "searching") return;
+
+    const matchesRef = ref(db, "matches");
+    const handleMatchSignal = (snapshot: any) => {
+      if (!snapshot.exists() || matchedGuardRef.current) return;
+      
+      const allMatches = snapshot.val();
+      for (const mId in allMatches) {
+        const match = allMatches[mId];
+        
+        // If I am part of this match
+        if (match.user1 === sessionId || match.user2 === sessionId) {
+          const amIUser1 = match.user1 === sessionId;
+          const myReadyKey = amIUser1 ? "ready1" : "ready2";
+          const theirReadyKey = amIUser1 ? "ready2" : "ready1";
+
+          // If we are both ready, FINALIZE
+          if (match.ready1 && match.ready2) {
+            matchedGuardRef.current = true;
+            pendingMatchIdRef.current = mId;
+            
+            const strangerId = amIUser1 ? match.user2 : match.user1;
+            const strangerStableId = amIUser1 ? match.stable2 : match.stable1;
+            const strangerName = amIUser1 ? match.name2 : match.name1;
+            
+            // Clean up my lobby entry
+            remove(ref(db, `lobby/${sessionId}`)).catch(() => {});
+            
+            // Cleanup match signal after a delay to ensure both saw it
+            setTimeout(() => {
+              if (pendingMatchIdRef.current === mId) {
+                remove(ref(db, `matches/${mId}`)).catch(() => {});
+              }
+            }, 5000);
+
+            setStatus("idle");
+            onMatched(match.roomId, strangerId, strangerStableId, strangerName || "Stranger", match.sharedInterests || []);
+            return;
+          }
+
+          // If I haven't marked myself as ready yet, do it now (The Handshake)
+          if (!match[myReadyKey]) {
+            const mRef = ref(db, `matches/${mId}/${myReadyKey}`);
+            set(mRef, true).catch(err => console.error("[Matchmaking] Handshake set failed:", err));
+            
+            // Timeout if they don't respond to handshake
+            setTimeout(() => {
+               if (status === "searching" && !matchedGuardRef.current) {
+                 console.log("[Matchmaking] Handshake timeout, resuming search...");
+                 remove(ref(db, `matches/${mId}`)).catch(() => {});
+               }
+            }, 8000);
+          }
+        }
+      }
+    };
+
+    onValue(matchesRef, handleMatchSignal);
+    return () => off(matchesRef, "value", handleMatchSignal);
+  }, [status, sessionId, onMatched]);
 
   const startSearch = useCallback((code: string | null = null) => {
     matchedGuardRef.current = false;
     searchCodeRef.current = code;
+    pendingMatchIdRef.current = null;
     setStatus("searching");
     
     const myLobbyRef = ref(db, `lobby/${sessionId}`);
@@ -112,45 +174,6 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
       console.error("[Matchmaking] Failed to stop search:", err);
     });
   }, [sessionId]);
-
-  useEffect(() => {
-    if (status !== "searching") return;
-
-    const matchesRef = ref(db, "matches");
-    const handleMatch = (snapshot: any) => {
-      if (!snapshot.exists() || matchedGuardRef.current) return;
-      
-      const allMatches = snapshot.val();
-      for (const mId in allMatches) {
-        const match = allMatches[mId];
-        if (match.user1 === sessionId || match.user2 === sessionId) {
-          matchedGuardRef.current = true;
-          const strangerId = match.user1 === sessionId ? match.user2 : match.user1;
-          const strangerStableId = match.user1 === sessionId ? match.stable2 : match.stable1;
-          const strangerName = match.user1 === sessionId ? match.name2 : match.name1;
-          
-          // Each user only removes their own lobby entry
-          remove(ref(db, `lobby/${sessionId}`)).catch(() => {});
-          
-          // DELAY cleanup of the match signal to prevent race conditions
-          // This ensures the second user has time to see the snapshot before it's gone
-          const matchRef = ref(db, `matches/${mId}`);
-          setTimeout(() => {
-            remove(matchRef).catch(() => {});
-          }, 3000); 
-          
-          onMatched(match.roomId, strangerId, strangerStableId, strangerName || "Stranger", match.sharedInterests || []);
-          setStatus("idle");
-          break;
-        }
-      }
-    };
-
-    onValue(matchesRef, handleMatch, (error) => {
-      console.error("[Matchmaking] Matches Sync Error:", error);
-    });
-    return () => off(matchesRef, "value", handleMatch);
-  }, [status, sessionId, onMatched]);
 
   useEffect(() => {
     if (status === "searching") {

@@ -13,7 +13,7 @@ import { useChatContext } from "@/contexts/ChatContext";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Zap, Shield, ArrowRight, X, AlertTriangle, Send } from "lucide-react";
+import { MessageSquare, Zap, Shield, ArrowRight, X, AlertTriangle, Send, Dices, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSafety } from "@/hooks/use-safety";
 import { motion } from "framer-motion";
@@ -21,6 +21,13 @@ import { useSEO } from "@/hooks/use-seo";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/contexts/SettingsContext";
+
+const RANDOM_NICKNAMES = [
+  "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
+  "Rogue", "Ghost", "Glitch", "Aura", "Nova", "Flux", "Swift", "Cosmic", 
+  "Blaze", "Vortex", "Luna", "Titan", "Solar", "Orion", "Jade", "Ruby",
+  "Phoenix", "Raven", "Skye", "Storm", "Aqua", "Crystal", "Pulse"
+];
 
 const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const {
@@ -58,6 +65,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [showMatchCelebration, setShowMatchCelebration] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [searchHighlight, setSearchHighlight] = useState<string | null>(null);
+  const [tempName, setTempName] = useState("");
   const lastAutoJoinCodeRef = useRef<string | null>(null);
 
   // Auto-join private room from URL/code
@@ -89,7 +97,13 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     if (trimmed) {
       setUserName(trimmed);
       localStorage.setItem("livetalk_user_name", trimmed);
+      toast({ title: "Welcome!", description: `You are now known as ${trimmed}` });
     }
+  };
+
+  const handleRandomName = () => {
+    const randomName = RANDOM_NICKNAMES[Math.floor(Math.random() * RANDOM_NICKNAMES.length)];
+    setTempName(randomName);
   };
 
   const handleStart = useCallback(() => {
@@ -250,34 +264,82 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       {status === "idle" ? (
         <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 relative">
           {!userName ? (
-            <motion.div 
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               className="w-full max-w-xs space-y-6 text-center"
-            >
-              <div className="space-y-2">
-                <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">What's your name?</h2>
-                <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Enter a nickname to start matching</p>
-              </div>
-              <div className="relative group">
-                <Input 
-                  placeholder="Your nickname..."
-                  autoFocus
-                  maxLength={15}
-                  className="h-14 bg-white/5 border-white/10 text-white rounded-2xl px-6 text-center text-lg font-bold focus:border-primary/50 transition-all uppercase"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSaveName((e.target as HTMLInputElement).value);
-                  }}
-                  onChange={(e) => {
-                    if (e.target.value.length >= 15) {
-                      toast({ title: "Name too long", description: "Max 15 characters allowed." });
-                    }
-                  }}
-                />
-                <div className="absolute inset-0 rounded-2xl border border-primary/20 scale-105 opacity-0 group-focus-within:opacity-100 transition-all -z-10 blur-xl bg-primary/5" />
-              </div>
-              <p className="text-[8px] text-muted-foreground/30 font-bold uppercase">Press Enter to Confirm</p>
-            </motion.div>
+            <div className="w-full max-w-sm relative">
+              {/* Background Dimmer Overlay */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="fixed inset-0 bg-black/60 backdrop-blur-[2px] -z-10"
+              />
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full space-y-8 text-center bg-card/40 backdrop-blur-md border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative"
+              >
+                <div className="space-y-3">
+                  <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white drop-shadow-lg">What's your name?</h2>
+                  <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest opacity-70">Enter a nickname to start matching</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="relative group">
+                    <Input 
+                      placeholder="Your nickname..."
+                      autoFocus
+                      maxLength={15}
+                      value={tempName}
+                      className="h-16 bg-white/5 border-white/10 text-white rounded-2xl px-6 text-center text-xl font-bold focus:border-primary/50 transition-all uppercase placeholder:text-white/20"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveName(tempName);
+                      }}
+                      onChange={(e) => setTempName(e.target.value)}
+                    />
+                    <div className="absolute inset-0 rounded-2xl border border-primary/20 scale-105 opacity-0 group-focus-within:opacity-100 transition-all -z-10 blur-xl bg-primary/5" />
+                    
+                    <button 
+                      onClick={handleRandomName}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-primary hover:bg-primary/10 transition-all active:scale-90"
+                      title="Random Nickname"
+                    >
+                      <Dices className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      variant="glow"
+                      size="lg"
+                      className="h-14 w-full rounded-2xl text-sm font-black uppercase tracking-[0.2em] italic disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20"
+                      disabled={!tempName.trim()}
+                      onClick={() => handleSaveName(tempName)}
+                    >
+                      Start Chatting <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    
+                    <p className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-[0.15em]">
+                      {tempName ? "Press Enter or click the button" : "Choose a name to continue"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quick suggestions */}
+                <div className="pt-2">
+                  <p className="text-[8px] text-muted-foreground/30 font-bold uppercase tracking-widest mb-3 text-center">Popular choices</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {RANDOM_NICKNAMES.slice(0, 5).map(name => (
+                      <button
+                        key={name}
+                        onClick={() => setTempName(name)}
+                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[10px] text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all"
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           ) : (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
