@@ -264,13 +264,12 @@ const Index = () => {
             {showJoinInput && (
               <motion.div
                 key="join-room-panel"
-                ref={joinPanelRef}
                 initial={{ opacity: 0, y: -10, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -10, height: 0 }}
                 className="w-full max-w-sm mx-auto pt-2 overflow-hidden"
               >
-                <div className="flex gap-2">
+                <div ref={joinPanelRef} className="flex gap-2">
                   <Input
                     placeholder="ROOM CODE"
                     value={joinCode}
@@ -290,12 +289,11 @@ const Index = () => {
           {roomCode && (
             <motion.div
               key="invite-room-panel"
-              ref={invitePanelRef}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               className="w-full pt-4 scroll-mt-20"
             >
-              <div className="max-w-md mx-auto space-y-4 rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-sm p-5 shadow-lg shadow-primary/5">
+              <div ref={invitePanelRef} className="max-w-md mx-auto space-y-4 rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-sm p-5 shadow-lg shadow-primary/5">
                 <p className="text-sm font-semibold text-foreground text-center">🔗 Your private room is ready!</p>
                 <div className="flex items-center gap-2 rounded-xl bg-secondary/80 border border-border p-3">
                   <Hash className="h-4 w-4 text-primary shrink-0" />
