@@ -109,7 +109,9 @@ export function useChat(callbacks?: ChatCallbacks) {
   const stopSearchRef = useRef<() => void>(() => {});
 
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
-  useEffect(() => { interestsRef.current = interests; }, [interests]);
+  useEffect(() => { 
+    interestsRef.current = (interests || []).map(i => i.toLowerCase().trim()).filter(Boolean); 
+  }, [interests]);
   useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
 
@@ -328,10 +330,14 @@ export function useChat(callbacks?: ChatCallbacks) {
     searchTimerRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       setSearchElapsed(elapsed);
-      if (elapsed === 10) {
+      if (elapsed === 8) {
+        addMessage("system", "Scanning for common interests...");
+      } else if (elapsed === 15) {
         addMessage("system", "Still searching... hang tight!");
-      } else if (elapsed === 30) {
-        addMessage("system", "Taking a bit longer than usual. Try sharing the link to get more people online!");
+      } else if (elapsed === 25) {
+        addMessage("system", "Checking neighboring regions for more people...");
+      } else if (elapsed === 40) {
+        addMessage("system", "Taking a bit longer. Try sharing the link to invite others!");
       }
     }, 1000);
     startFirebaseSearch(code);
@@ -371,6 +377,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, [startChat, leaveRoom]);
 
   const stopChat = useCallback(() => {
+    const wasSearching = status === "searching";
     if (roomChannelRef.current && roomIdRef.current) {
       roomChannelRef.current.send({
         type: "broadcast",
@@ -383,10 +390,16 @@ export function useChat(callbacks?: ChatCallbacks) {
       channelRef.current.unsubscribe();
       channelRef.current = null;
     }
-    setStatus("disconnected");
+    
+    // If we were searching, go back to idle (lobby)
+    // If we were in a chat, go to disconnected to show logs
+    setStatus(wasSearching ? "idle" : "disconnected");
     setMatchedInterests([]);
-    addMessage("system", "You have disconnected.");
-  }, [addMessage, leaveRoom]);
+    
+    if (!wasSearching) {
+      addMessage("system", "You have disconnected.");
+    }
+  }, [addMessage, leaveRoom, status]);
 
   const blockStranger = useCallback(() => {
     if (strangerIdRef.current) {

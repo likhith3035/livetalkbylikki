@@ -14,6 +14,7 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
   const [status, setStatus] = useState<"idle" | "searching">("idle");
   const matchedGuardRef = useRef(false);
   const searchCodeRef = useRef<string | null>(null);
+  const activeMatchIdRef = useRef<string | null>(null);
   
   // LOG VERSION AT TOP
   useEffect(() => {
@@ -115,37 +116,65 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     const mySignalRef = ref(db, `lobby/${sessionId}/signal`);
     const handleSignal = (snapshot: any) => {
       if (!snapshot.exists() || matchedGuardRef.current) return;
-      console.log("[V4] Signal received. Preparing handshake...");
+      const signal = snapshot.val();
+      if (signal && signal.matchId) {
+        activeMatchIdRef.current = signal.matchId;
+        console.log("[V4] Signal received for match:", signal.matchId);
+        
+        // Optimize: Once we have a signal, start a direct listener on the specific match
+        const specificMatchRef = ref(db, `matches/${signal.matchId}`);
+        const handleSpecificMatch = (snap: any) => {
+           if (!snap.exists() || matchedGuardRef.current) return;
+           const match = snap.val();
+           checkAndReadyMatch(signal.matchId, match);
+        };
+        onValue(specificMatchRef, handleSpecificMatch);
+        // We don't need to manually cleanup this specific listener inside the effect 
+        // because it's scoped, but for safety:
+        return () => off(specificMatchRef, "value", handleSpecificMatch);
+      }
     };
     onValue(mySignalRef, handleSignal);
 
-    // 2. Listen for match state
+    const checkAndReadyMatch = (mId: string, match: any) => {
+      if (!match || matchedGuardRef.current) return;
+      
+      const amIUser1 = match.user1 === sessionId;
+      const amIUser2 = match.user2 === sessionId;
+      if (!amIUser1 && !amIUser2) return;
+
+      const myKey = amIUser1 ? "ready1" : "ready2";
+      
+      if (match.ready1 && match.ready2) {
+        finalize(mId, match);
+        return;
+      }
+
+      if (!match[myKey]) {
+        console.log(`[V4] Sending handshake for match ${mId} (${myKey})`);
+        set(ref(db, `matches/${mId}/${myKey}`), true).catch(() => {});
+        // Fallback cleanup if stranger never joins
+        setTimeout(() => {
+           if (status === "searching" && !matchedGuardRef.current) {
+             console.log("[V4] Match handshake timeout, cleaning up...");
+             remove(ref(db, `matches/${mId}`)).catch(() => {});
+           }
+        }, 12000);
+      }
+    };
+
+    // 2. Listen for ALL matches (Fallback/Initial match discovery)
     const matchesRef = ref(db, "matches");
     const handleMatches = (snapshot: any) => {
       if (!snapshot.exists() || matchedGuardRef.current) return;
-      const allMatches = snapshot.val();
       
+      const allMatches = snapshot.val();
       for (const mId in allMatches) {
         const match = allMatches[mId];
         if (!match) continue;
-
+        
         if (match.user1 === sessionId || match.user2 === sessionId) {
-          const amIUser1 = match.user1 === sessionId;
-          const myKey = amIUser1 ? "ready1" : "ready2";
-          
-          if (match.ready1 && match.ready2) {
-            finalize(mId, match);
-            return;
-          }
-
-          if (!match[myKey]) {
-            set(ref(db, `matches/${mId}/${myKey}`), true).catch(() => {});
-            setTimeout(() => {
-               if (status === "searching" && !matchedGuardRef.current) {
-                 remove(ref(db, `matches/${mId}`)).catch(() => {});
-               }
-            }, 10000);
-          }
+          checkAndReadyMatch(mId, match);
         }
       }
     };
