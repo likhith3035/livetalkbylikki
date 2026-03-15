@@ -264,7 +264,7 @@ const Index = () => {
               >
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Enter Room Code"
+                    placeholder="ROOM CODE"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
                     className="h-12 rounded-xl bg-background/50 backdrop-blur-sm border-primary/20 focus-visible:ring-primary/30 font-mono tracking-widest text-center text-lg uppercase"
