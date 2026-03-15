@@ -28,9 +28,12 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
       const users = snapshot.val();
       const waitingIds = Object.keys(users).filter(id => {
         const isMe = id === sessionId;
+        const theirData = users[id];
+        if (!theirData) return false;
+
         // Allow same stableId ONLY if searching with a private room code (for testing)
-        const sameStableId = users[id]?.stableId === stableId;
-        const sameCode = (users[id]?.code || null) === searchCodeRef.current;
+        const sameStableId = theirData.stableId === stableId;
+        const sameCode = (theirData.code || null) === searchCodeRef.current;
         
         if (searchCodeRef.current) {
           return !isMe && sameCode; // Private room: connect anyone with same code
@@ -47,7 +50,7 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
       if (!searchCodeRef.current) {
         const candidates = waitingIds.map(uid => {
           const theirInterests = users[uid].interests || [];
-          const sharedInterests = interests.filter(i => 
+          const sharedInterests = (interests || []).filter(i => 
             theirInterests.some((ti: string) => ti.toLowerCase().trim() === i.toLowerCase().trim())
           );
           return { id: uid, shared: sharedInterests, score: sharedInterests.length };
@@ -64,23 +67,26 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
 
       // Step 2: Only the 'lead' user (alphabetically first) initiates the match record
       if (pair[0] === sessionId) {
+        const theirData = users[matchedUserId] || {};
+        
         runTransaction(matchRef, (currentData) => {
           if (currentData === null) {
+            // HARDENING: Absolutely NO undefined values in the returned object
             return {
               user1: pair[0],
               user2: pair[1],
-              stable1: amIUser1InRaw(pair, sessionId) ? stableId : users[matchedUserId].stableId,
-              stable2: !amIUser1InRaw(pair, sessionId) ? stableId : users[matchedUserId].stableId,
-              name1: amIUser1InRaw(pair, sessionId) ? userName : users[matchedUserId].userName || "Stranger",
-              name2: !amIUser1InRaw(pair, sessionId) ? userName : users[matchedUserId].userName || "Stranger",
-              sharedInterests: shared,
+              stable1: pair[0] === sessionId ? (stableId || sessionId) : (theirData.stableId || matchedUserId),
+              stable2: pair[1] === sessionId ? (stableId || sessionId) : (theirData.stableId || matchedUserId),
+              name1: pair[0] === sessionId ? (userName || "You") : (theirData.userName || "Stranger"),
+              name2: pair[1] === sessionId ? (userName || "You") : (theirData.userName || "Stranger"),
+              sharedInterests: shared || [],
               roomId: matchId,
-              createdAt: Date.now(), // FIX: serverTimestamp() is NOT allowed in transactions
+              createdAt: Date.now(),
               ready1: false,
               ready2: false
             };
           }
-          return; // Abort if already exists
+          return; // Abort
         }).catch((error) => {
           console.error("[Matchmaking] Transaction error:", error);
         });
@@ -104,6 +110,7 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
       const allMatches = snapshot.val();
       for (const mId in allMatches) {
         const match = allMatches[mId];
+        if (!match) continue;
         
         // If I am part of this match
         if (match.user1 === sessionId || match.user2 === sessionId) {
@@ -117,9 +124,9 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
             matchedGuardRef.current = true;
             pendingMatchIdRef.current = mId;
             
-            const strangerId = amIUser1 ? match.user2 : match.user1;
-            const strangerStableId = amIUser1 ? match.stable2 : match.stable1;
-            const strangerName = amIUser1 ? match.name2 : match.name1;
+            const strangerId = amIUser1 ? (match.user2 || "stranger") : (match.user1 || "stranger");
+            const strangerStableId = amIUser1 ? (match.stable2 || strangerId) : (match.stable1 || strangerId);
+            const strangerName = amIUser1 ? (match.name2 || "Stranger") : (match.name1 || "Stranger");
             
             // Clean up my lobby entry
             remove(ref(db, `lobby/${sessionId}`)).catch(() => {});
@@ -132,7 +139,7 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
             }, 5000);
 
             setStatus("idle");
-            onMatched(match.roomId, strangerId, strangerStableId, strangerName || "Stranger", match.sharedInterests || []);
+            onMatched(match.roomId || mId, strangerId, strangerStableId, strangerName, match.sharedInterests || []);
             return;
           }
 
@@ -159,16 +166,16 @@ export function useFirebaseMatchmaking({ sessionId, stableId, userName, interest
 
   const startSearch = useCallback((code: string | null = null) => {
     matchedGuardRef.current = false;
-    searchCodeRef.current = code;
+    searchCodeRef.current = code ? code.trim().toUpperCase() : null;
     pendingMatchIdRef.current = null;
     setStatus("searching");
     
     const myLobbyRef = ref(db, `lobby/${sessionId}`);
     set(myLobbyRef, {
-      interests,
-      stableId,
-      userName,
-      code,
+      interests: interests || [],
+      stableId: stableId || sessionId,
+      userName: userName || "",
+      code: code ? code.trim().toUpperCase() : null,
       joinedAt: serverTimestamp()
     }).catch(err => {
       console.error("[Matchmaking] Failed to join lobby:", err);
