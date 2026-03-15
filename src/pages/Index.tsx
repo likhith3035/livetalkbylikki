@@ -216,36 +216,37 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 sm:pt-6"
+            className="flex flex-col items-center justify-center gap-3 pt-4 sm:pt-6 w-full max-w-lg mx-auto"
           >
             <Button
               variant="glow"
               size="lg"
-              className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-semibold rounded-2xl gap-2.5 shadow-xl shadow-primary/20"
+              className="w-full h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-semibold rounded-2xl gap-2.5 shadow-xl shadow-primary/20"
               onClick={() => navigate("/chat")}
             >
               <MessageSquare className="h-5 w-5" />
               Start Chatting
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto h-14 sm:h-16 px-8 text-base font-medium rounded-2xl gap-2.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300"
-              onClick={generateAndJoinRoom}
-            >
-              <Link2 className="h-4 w-4 text-primary" />
-              Invite a Friend
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto h-14 sm:h-16 px-8 text-base font-medium rounded-2xl gap-2.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300"
-              onClick={() => setShowJoinInput(!showJoinInput)}
-            >
-              <Users className="h-4 w-4 text-primary" />
-              Join Room
-            </Button>
+            
+            <div className="flex items-center justify-center gap-2 w-full">
+              <Button
+                variant="outline"
+                className="flex-1 h-11 px-4 text-xs font-medium rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300"
+                onClick={generateAndJoinRoom}
+              >
+                <Link2 className="h-3.5 w-3.5 text-primary" />
+                Invite Friend
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 h-11 px-4 text-xs font-medium rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300"
+                onClick={() => setShowJoinInput(!showJoinInput)}
+              >
+                <Users className="h-3.5 w-3.5 text-primary" />
+                Join Room
+              </Button>
+            </div>
           </motion.div>
 
           <AnimatePresence>
