@@ -215,6 +215,25 @@ const FAQ = [
   { q: "What is the tech stack of LiveTalk?", a: "LiveTalk uses a professional 'Pro-Level' stack: TypeScript for reliable code, React 18 for the user interface, Vite for lightning-fast speeds, Tailwind CSS for the premium design, and Supabase / WebRTC for instant real-time messaging and video calls. This ensures a seamless, secure experience on any device." },
 ];
 
+const CHALLENGES = [
+  { 
+    issue: "Matching was slow & tricky", 
+    solution: "I built a custom 'Hybrid-Logic' engine on Firebase that scans for users in milliseconds, specifically prioritizing people with similar interests." 
+  },
+  { 
+    issue: "Messages getting covered up", 
+    solution: "I completely redesigned the layout with dynamic padding and subtle gradients, so your chat is always perfectly visible even when replying." 
+  },
+  { 
+    issue: "Keeping things 100% private", 
+    solution: "I engineered a 'Stateless' system—meaning no data is ever saved on a server. Your conversations exist only in your browser and vanish instantly when closed." 
+  },
+  { 
+    issue: "The PWA was hard to get right", 
+    solution: "I spent weeks fine-tuning the Service Worker to work across all browsers (including Brave and Safari) so you can install it like a real app." 
+  }
+];
+
 const COMPARISON = [
   { feature: "Anonymous Chat 💬", LiveTalk: true, others: true },
   { feature: "No Registration 🔓", LiveTalk: true, others: false },
@@ -368,6 +387,7 @@ const InfoPage = () => {
               { id: "faq", label: "Common questions" },
               { id: "developer", label: "The Developer" },
               { id: "story", label: "The Story" },
+              { id: "challenges", label: "Challenges I Overcame" },
               { id: "browsers", label: "Browser Optimization" },
             ].map((item) => (
               <a
@@ -721,6 +741,41 @@ const InfoPage = () => {
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium text-pretty">
               So, I decided to build my own version. I wanted a site that was easy to use, had way more cool features, and most importantly, kept you 100% private. No tracking, no logins, and no data saved. LiveTalk is my way of making the internet a bit more fun and a lot more secure for everyone.
             </p>
+          </div>
+        </motion.section>
+
+        {/* ─── Section: Challenges Overcome ─── */}
+        <motion.section id="challenges" {...fadeUp} transition={{ delay: 0.53 }} className="space-y-8 scroll-mt-24">
+          <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <AlertTriangle className="h-8 w-8 text-primary" />
+            Challenges I Overcame
+          </h2>
+          <div className="grid gap-4">
+            {CHALLENGES.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 space-y-3 hover:bg-card/50 transition-all duration-500"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+                  <p className="text-sm font-bold text-destructive uppercase tracking-widest">The Problem</p>
+                </div>
+                <p className="text-lg font-bold text-foreground">{item.issue}</p>
+                <div className="pt-2 border-t border-border/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest">How I fixed it</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                    {item.solution}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.section>
 
