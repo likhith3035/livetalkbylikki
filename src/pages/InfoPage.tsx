@@ -9,6 +9,12 @@ import {
   Star, Headphones, Mic, Phone, ScreenShare, UserCheck, Fingerprint,
   Check, X, Info, ShieldAlert, Code
 } from "lucide-react";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionPanel,
+} from "@/components/chat/AccordionAnimate";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
@@ -525,38 +531,42 @@ const InfoPage = () => {
               See how LiveTalk compares to other platforms. We built every feature you wished Omegle had.
             </p>
           </div>
-          <div className="overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide">
-            <div className="min-w-[500px] sm:min-w-full rounded-[2rem] sm:rounded-[2.5rem] bg-card/3 backdrop-blur-md border border-border/50 overflow-hidden">
-            <div className="grid grid-cols-3 gap-0 text-center border-b border-border/30 bg-primary/5 px-6 py-4">
-              <span className="text-sm font-bold text-foreground text-left uppercase tracking-widest">Feature</span>
-              <span className="text-sm font-bold text-primary uppercase tracking-widest">LiveTalk</span>
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Others</span>
+          <div className="pb-4 sm:-mx-2 px-0 sm:px-2">
+            <div className="w-full rounded-[1.5rem] sm:rounded-[2.5rem] bg-card/3 backdrop-blur-md border border-border/50 overflow-hidden shadow-sm">
+            {/* Header */}
+            <div className="grid grid-cols-[1.5fr_1fr_1fr] gap-0 text-center border-b border-border/30 bg-primary/5 px-4 sm:px-6 py-3 sm:py-4">
+              <span className="text-[10px] sm:text-sm font-bold text-foreground text-left uppercase tracking-widest self-center">Feature</span>
+              <span className="text-[10px] sm:text-sm font-bold text-primary uppercase tracking-widest self-center">LiveTalk</span>
+              <span className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-widest self-center">Others</span>
             </div>
+            {/* Rows */}
             {COMPARISON.map((row, i) => (
               <div
                 key={row.feature}
-                className={`grid grid-cols-3 gap-0 text-center px-6 py-4 transition-colors hover:bg-primary/5 ${i !== COMPARISON.length - 1 ? "border-b border-border/10" : ""}`}
+                className={`grid grid-cols-[1.5fr_1fr_1fr] gap-0 text-center px-4 sm:px-6 py-3 sm:py-4 transition-colors hover:bg-primary/5 ${i !== COMPARISON.length - 1 ? "border-b border-border/10" : ""}`}
               >
-                <span className="text-sm text-foreground text-left font-medium">{row.feature}</span>
-                <span className="flex justify-center">
+                <span className="text-[11px] sm:text-sm text-foreground text-left font-medium self-center truncate sm:whitespace-normal" title={row.feature}>
+                  {row.feature}
+                </span>
+                <span className="flex justify-center items-center">
                   {row.LiveTalk ? (
-                    <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
-                      <Check className="h-5 w-5" />
+                    <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+                      <Check className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                     </div>
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
-                      <X className="h-5 w-5" />
+                    <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                      <X className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                     </div>
                   )}
                 </span>
-                <span className="flex justify-center">
+                <span className="flex justify-center items-center">
                   {row.others ? (
-                    <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
-                      <Check className="h-5 w-5" />
+                    <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+                      <Check className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                     </div>
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
-                      <X className="h-5 w-5" />
+                    <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                      <X className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                     </div>
                   )}
                 </span>
@@ -673,21 +683,14 @@ const InfoPage = () => {
         {/* ─── Section: FAQ ─── */}
         <motion.section id="faq" {...fadeUp} transition={{ delay: 0.45 }} className="space-y-8 scroll-mt-24">
           <h2 className="text-3xl font-bold text-foreground">❓ Common questions</h2>
-          <div className="grid gap-4">
+          <Accordion multiple={false} className="w-full">
             {FAQ.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.03 }}
-                className="rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 transition-all duration-500"
-              >
-                <p className="text-lg font-bold text-foreground mb-2">{item.q}</p>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium">{item.a}</p>
-              </motion.div>
+              <AccordionItem key={i} value={`item-${i}`}>
+                <AccordionTrigger>{item.q}</AccordionTrigger>
+                <AccordionPanel>{item.a}</AccordionPanel>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         </motion.section>
 
         {/* ─── Section: Developer ─── */}
