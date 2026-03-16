@@ -22,6 +22,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/contexts/SettingsContext";
+import { FindingAnimation } from "@/components/chat/FindingAnimation";
 
 const RANDOM_NICKNAMES = [
   "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
@@ -406,129 +407,11 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           </div>
         </div>
       ) : status === "searching" ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-10 relative overflow-hidden">
-          {/* Premium Background Effects */}
-          <div className="absolute inset-0 pointer-events-none">
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.05, 0.15, 0.05],
-              }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px]"
-            />
-            {/* Radar Scan Effect */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-[0.03]"
-              style={{
-                background: "conic-gradient(from 0deg, var(--primary) 0deg, transparent 90deg)",
-                borderRadius: "50%",
-              }}
-            />
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center space-y-8 relative z-10"
-          >
-            {/* Modern Searching Animation */}
-            <div className="relative flex items-center justify-center">
-              {/* Outer Glow */}
-              <motion.div 
-                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 bg-primary/20 blur-[40px] rounded-full scale-75"
-              />
-              
-              {/* Orbital Rings */}
-              <div className="relative h-40 w-40 sm:h-48 sm:w-48">
-                {/* Ring 1 - Outer Slow */}
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full border border-dashed border-primary/20"
-                />
-                
-                {/* Ring 2 - Middle Fast */}
-                <motion.div 
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-4 rounded-full border-2 border-primary/10 border-t-primary/60"
-                />
-                
-                {/* Ring 3 - Inner Pulse */}
-                <motion.div 
-                  animate={{ 
-                    scale: [0.8, 1, 0.8],
-                    borderColor: ["rgba(var(--primary-rgb), 0.1)", "rgba(var(--primary-rgb), 0.4)", "rgba(var(--primary-rgb), 0.1)"]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-8 rounded-full border-4 border-primary/30"
-                />
-
-                {/* Center Content */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    className="relative"
-                  >
-                    <BrandLogo className="h-12 w-12 sm:h-16 sm:w-16 drop-shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" />
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <motion.h2 
-                animate={{ opacity: [1, 0.7, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-3xl sm:text-5xl font-bold font-display text-foreground tracking-tight"
-              >
-                Finding a match<span className="text-primary animate-pulse">...</span>
-              </motion.h2>
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-sm sm:text-base text-muted-foreground font-medium flex items-center justify-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-online animate-ping" />
-                  {searchElapsed}s searching
-                </p>
-                <div className="h-1 w-32 bg-secondary rounded-full overflow-hidden">
-                  <motion.div 
-                    animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    className="h-full w-full bg-gradient-to-r from-transparent via-primary to-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-4 items-center">
-              <Button
-                variant="danger"
-                size="lg"
-                onClick={stopChat}
-                className="h-14 sm:h-16 px-12 sm:px-14 text-lg sm:text-xl font-bold rounded-[2rem] gap-3 shadow-[0_0_40px_rgba(var(--destructive-rgb),0.2)] hover:shadow-[0_0_60px_rgba(var(--destructive-rgb),0.3)] active:scale-95 transition-all text-destructive-foreground hover:bg-destructive"
-              >
-                <X className="h-6 w-6" />
-                Stop Search
-              </Button>
-              
-              {interests.length > 0 && (
-                <div className="bg-card/30 backdrop-blur-md border border-border/50 p-4 rounded-2xl flex flex-wrap justify-center gap-2 max-w-sm">
-                  <p className="w-full text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">Targeting Interests</p>
-                  {interests.map((i) => (
-                    <span key={i} className="px-3 py-1 bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold rounded-full">
-                      #{i}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
+        <FindingAnimation 
+          searchElapsed={searchElapsed}
+          onStop={stopChat}
+          interests={interests}
+        />
       ) : (
         <ChatMessageList
           messages={messages}
@@ -545,7 +428,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         />
       )}
 
-      <div className={cn("transition-opacity duration-500", status === "idle" && "opacity-0 pointer-events-none")}>
+      <div className={cn("transition-opacity duration-500", (status === "idle" || status === "searching") && "opacity-0 pointer-events-none")}>
         <ChatInput
           status={status}
           onSend={sendMessage}
