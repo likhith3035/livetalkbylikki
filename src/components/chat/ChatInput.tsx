@@ -22,9 +22,15 @@ interface ChatInputProps {
   sessionId?: string;
   hideGames?: boolean;
   hasMessages?: boolean;
+  activeGame: "none" | "ttt" | "canvas";
+  setActiveGame: (game: "none" | "ttt" | "canvas") => void;
 }
 
-const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, roomChannel, sessionId, hideGames, hasMessages }: ChatInputProps) => {
+const ChatInput = ({ 
+  status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, 
+  roomChannel, sessionId, hideGames, hasMessages,
+  activeGame, setActiveGame
+}: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const throttleRef = useRef<number>(0);
@@ -88,7 +94,16 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
           <div className="flex items-center gap-0.5">
             <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
             <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
-            {!hideGames && <ChatGames onSendMessage={onSend} isConnected={isConnected} roomChannel={roomChannel} sessionId={sessionId} />}
+            {!hideGames && (
+              <ChatGames 
+                onSendMessage={onSend} 
+                isConnected={isConnected} 
+                roomChannel={roomChannel} 
+                sessionId={sessionId}
+                activeGame={activeGame}
+                setActiveGame={setActiveGame}
+              />
+            )}
             <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
             <LocationShareButton isConnected={isConnected} onSend={onSend} />
           </div>

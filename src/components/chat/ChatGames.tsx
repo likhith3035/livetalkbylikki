@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gamepad2, X, RotateCcw } from "lucide-react";
+import { Gamepad2, X, RotateCcw, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -10,6 +10,8 @@ interface ChatGamesProps {
   isConnected: boolean;
   roomChannel?: RealtimeChannel | null;
   sessionId?: string;
+  activeGame: "none" | "ttt" | "canvas";
+  setActiveGame: (game: "none" | "ttt" | "canvas") => void;
 }
 
 type TicTacToeCell = "X" | "O" | null;
@@ -26,9 +28,8 @@ const checkWinner = (board: TicTacToeCell[]): TicTacToeCell => {
   return null;
 };
 
-const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatGamesProps) => {
+const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeGame, setActiveGame }: ChatGamesProps) => {
   const [showGames, setShowGames] = useState(false);
-  const [activeGame, setActiveGame] = useState<"none" | "ttt">("none");
 
   // Tic-Tac-Toe state
   const [board, setBoard] = useState<TicTacToeCell[]>(Array(9).fill(null));
@@ -71,8 +72,21 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatG
       }
     });
 
+    roomChannel.on("broadcast", { event: "canvas_start" }, (payload) => {
+      if (payload.payload.senderId !== sessionId) {
+        setActiveGame("canvas");
+        setShowGames(false);
+      }
+    });
+
+    roomChannel.on("broadcast", { event: "canvas_stop" }, (payload) => {
+      if (payload.payload.senderId !== sessionId) {
+        setActiveGame("none");
+      }
+    });
+
     return () => { };
-  }, [roomChannel, sessionId]);
+  }, [roomChannel, sessionId, setActiveGame]);
 
   const handleCellClick = (i: number) => {
     if (board[i] || winner || !mySymbol || currentTurn !== mySymbol) return;
@@ -106,6 +120,13 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatG
     setBoard(Array(9).fill(null));
     setCurrentTurn("X");
     roomChannel?.send({ type: "broadcast", event: "ttt_reset", payload: { senderId: sessionId } });
+  };
+
+  const startCanvas = () => {
+    setActiveGame("canvas");
+    setShowGames(false);
+    roomChannel?.send({ type: "broadcast", event: "canvas_start", payload: { senderId: sessionId } });
+    onSendMessage("🎨 I opened the Collaborative Canvas! Let's doodle together!");
   };
 
   if (!isConnected) return null;
@@ -155,6 +176,13 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId }: ChatG
                 >
                   <p className="text-sm font-medium text-foreground">❌⭕ Tic-Tac-Toe</p>
                   <p className="text-[10px] text-muted-foreground">Play with your stranger!</p>
+                </button>
+                <button
+                  onClick={startCanvas}
+                  className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors"
+                >
+                  <p className="text-sm font-medium text-foreground">🎨 Shared Canvas</p>
+                  <p className="text-[10px] text-muted-foreground">Doodle in real-time!</p>
                 </button>
               </div>
             )}

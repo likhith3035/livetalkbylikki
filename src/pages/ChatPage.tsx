@@ -17,12 +17,13 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare, Zap, Shield, ArrowRight, X, AlertTriangle, Send, Dices, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSafety } from "@/hooks/use-safety";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSEO } from "@/hooks/use-seo";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/contexts/SettingsContext";
 import { FindingAnimation } from "@/components/chat/FindingAnimation";
+import SharedCanvas from "@/components/chat/SharedCanvas";
 
 const RANDOM_NICKNAMES = [
   "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
@@ -68,6 +69,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [searchHighlight, setSearchHighlight] = useState<string | null>(null);
   const [tempName, setTempName] = useState("");
+  const [activeGame, setActiveGame] = useState<"none" | "ttt" | "canvas">("none");
   const lastAutoJoinCodeRef = useRef<string | null>(null);
 
   // Auto-join private room from URL/code
@@ -439,6 +441,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           roomChannel={roomChannel}
           sessionId={sessionId}
           hasMessages={messages.length > 0}
+          activeGame={activeGame}
+          setActiveGame={setActiveGame}
         />
       </div>
 
@@ -479,6 +483,18 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       <div className="relative z-20">
         <BottomNav />
       </div>
+
+      <motion.div className="z-[200]">
+        <AnimatePresence>
+          {activeGame === "canvas" && (
+            <SharedCanvas
+              roomChannel={roomChannel}
+              sessionId={sessionId}
+              onClose={() => setActiveGame("none")}
+            />
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 };

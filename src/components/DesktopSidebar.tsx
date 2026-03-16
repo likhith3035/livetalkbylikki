@@ -22,7 +22,7 @@ const DesktopSidebar = () => {
   const { settings, updateSetting } = useSettings();
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col border-r border-border bg-card/50 backdrop-blur-xl z-40">
+    <aside className="!hidden lg:!flex fixed left-0 top-0 bottom-0 w-[220px] flex-col border-r border-border bg-card/50 backdrop-blur-xl z-40">
       {/* Logo */}
       <Link to="/" className="flex items-center gap-3 px-5 py-5 border-b border-border/50 group">
         <BrandLogo className="h-10 w-10 drop-shadow-md group-hover:scale-105 transition-transform" />
