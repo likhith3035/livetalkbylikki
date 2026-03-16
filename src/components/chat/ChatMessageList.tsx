@@ -23,6 +23,7 @@ interface ChatMessageListProps {
   onForward?: (message: Message) => void;
   disappearTimer?: number | null;
   highlightMessageId?: string | null;
+  isReplying?: boolean;
 }
 
 const messageVariants = {
@@ -51,7 +52,19 @@ const TIPS = [
 
 const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
-const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact, onReply, onDelete, onPin, onForward, disappearTimer, highlightMessageId }: ChatMessageListProps) => {
+const ChatMessageList = ({
+  messages,
+  strangerTyping,
+  strangerTypingText,
+  onReact,
+  onReply,
+  onDelete,
+  onPin,
+  onForward,
+  disappearTimer,
+  highlightMessageId,
+  isReplying
+}: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -151,7 +164,12 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 pb-40 lg:pb-24 space-y-1.5 mx-auto w-full max-w-3xl">
+    <div
+      className={cn(
+        "flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 space-y-1.5 mx-auto w-full max-w-3xl transition-all duration-300",
+        isReplying ? "pb-52 lg:pb-36" : "pb-40 lg:pb-24"
+      )}
+    >
       {/* Pinned messages bar */}
       <AnimatePresence>
         {pinnedMessages.length > 0 && (

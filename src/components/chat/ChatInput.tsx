@@ -50,10 +50,10 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
 
   return (
     <div className="fixed bottom-14 lg:bottom-0 left-0 lg:left-[220px] right-0 z-40">
-      {/* Gradient fade above input */}
-      <div className="h-6 bg-gradient-to-t from-background/80 to-transparent pointer-events-none" />
+      {/* Gradient fade above input - more subtle */}
+      <div className="h-4 bg-gradient-to-t from-background/40 to-transparent pointer-events-none" />
 
-      <div className="glass-heavy px-3 sm:px-4 py-2.5 sm:py-3">
+      <div className="glass-heavy px-3 sm:px-4 py-2.5 sm:py-3 border-t border-border/20">
         <AnimatePresence>
           {replyingTo && (
             <motion.div
@@ -62,15 +62,15 @@ const ChatInput = ({ status, onSend, onImageUpload, onTyping, replyingTo, onCanc
               exit={{ opacity: 0, height: 0 }}
               className="mx-auto max-w-3xl mb-2"
             >
-              <div className="flex items-center gap-2 rounded-xl bg-primary/8 border border-primary/15 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-3 py-2 shadow-sm backdrop-blur-md">
                 <Reply className="h-3.5 w-3.5 text-primary shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold text-primary">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-wider">
                     Replying to {replyingTo.sender === "you" ? "yourself" : "Stranger"}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">{replyingTo.text || "📷 Image"}</p>
+                  <p className="text-xs text-foreground/80 truncate font-medium">{replyingTo.text || "📷 Image"}</p>
                 </div>
-                <button onClick={onCancelReply} className="text-muted-foreground hover:text-foreground shrink-0 hover:scale-110 transition-all">
+                <button onClick={onCancelReply} className="text-muted-foreground hover:text-foreground shrink-0 hover:scale-110 transition-all p-1">
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>

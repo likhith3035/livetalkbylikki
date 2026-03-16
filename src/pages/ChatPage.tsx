@@ -541,6 +541,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           onForward={handleForwardMessage}
           disappearTimer={disappearTimer}
           highlightMessageId={searchHighlight}
+          isReplying={!!replyingTo}
         />
       )}
 
