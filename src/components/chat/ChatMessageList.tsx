@@ -285,9 +285,9 @@ const ChatMessageList = ({ messages, strangerTyping, strangerTypingText, onReact
                 className={cn(
                   "relative max-w-[82%] sm:max-w-[72%] break-words select-none transition-all duration-500",
                   msg.sender === "you" &&
-                    "bg-[hsl(var(--bubble-you)/0.85)] backdrop-blur-md text-[hsl(var(--bubble-you-foreground))] rounded-[22px] rounded-br-[4px] shadow-lg border border-white/10 min-w-[72px] px-4 sm:px-5 py-2.5 sm:py-3 text-[15px] sm:text-base leading-relaxed hover:brightness-110",
+                    "bg-[hsl(var(--bubble-you)/0.85)] backdrop-blur-md text-[hsl(var(--bubble-you-foreground))] rounded-[22px] rounded-br-[4px] shadow-lg border border-white/10 min-w-[100px] w-auto max-w-[85%] sm:max-w-[75%] px-4 sm:px-5 py-2.5 sm:py-3 text-[15px] sm:text-base leading-relaxed hover:brightness-110",
                   msg.sender === "stranger" &&
-                    "bg-[hsl(var(--bubble-stranger)/0.8)] backdrop-blur-md text-[hsl(var(--bubble-stranger-foreground))] rounded-[22px] rounded-bl-[4px] shadow-sm border border-black/5 min-w-[60px] px-3.5 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-[15px] leading-relaxed hover:brightness-105",
+                    "bg-[hsl(var(--bubble-stranger)/0.8)] backdrop-blur-md text-[hsl(var(--bubble-stranger-foreground))] rounded-[22px] rounded-bl-[4px] shadow-sm border border-black/5 min-w-[100px] w-auto max-w-[85%] sm:max-w-[75%] px-4 sm:px-5 py-2.5 sm:py-3 text-[15px] sm:text-base leading-relaxed hover:brightness-105",
                   msg.sender === "system" &&
                     "max-w-fit bg-white/5 backdrop-blur-sm text-muted-foreground text-[11px] text-center italic px-4 py-1.5 rounded-full border border-white/5",
                   msg.deleted && "opacity-60 italic",
