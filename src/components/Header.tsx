@@ -20,14 +20,15 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName
   const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
   const handleLogoClick = (e: React.MouseEvent | React.TouchEvent) => {
-    // If it's a mobile touch, we don't want to double trigger with mouse click
-    // But since it's a Link, we should probably prevent default if we want to catch the "clicks"
-    // Actually, it's easier to just put the handler on the container and keep the Link.
-    
     setLogoClicks(prev => {
       const newVal = prev + 1;
       if (newVal >= 5) {
-        navigate("/admin/dashboard?magic=likki");
+        const password = window.prompt("Enter Admin Password:");
+        if (password === "88854") {
+          navigate("/admin/dashboard");
+        } else {
+          alert("You're not the admin");
+        }
         return 0;
       }
       return newVal;
@@ -36,8 +37,10 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName
     if (clickTimer.current) clearTimeout(clickTimer.current);
     clickTimer.current = setTimeout(() => {
       setLogoClicks(0);
-    }, 2000); // Reset after 2 seconds of inactivity
+    }, 2000); 
   };
+
+
 
   return (
     <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 glass">
