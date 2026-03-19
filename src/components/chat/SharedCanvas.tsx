@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { X, Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2 } from "lucide-react";
+import { Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -9,6 +9,13 @@ interface SharedCanvasProps {
   roomChannel?: RealtimeChannel | null;
   sessionId?: string;
   onClose: () => void;
+}
+
+interface RemoteCursor {
+  x: number;
+  y: number;
+  color: string;
+  lastUpdated: number;
 }
 
 const COLORS = [
@@ -35,6 +42,11 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
   const [brushSize, setBrushSize] = useState(6);
   const [isEraser, setIsEraser] = useState(false);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
+
+  // Network batching and cursor tracking
+  const drawingBufferRef = useRef<any[]>([]);
+  const cursorRef = useRef<{ x: number; y: number } | null>(null);
+  const [remoteCursors, setRemoteCursors] = useState<Record<string, RemoteCursor>>({});
 
   const clearLocal = useCallback(() => {
     const canvas = canvasRef.current;
@@ -77,13 +89,40 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     ctx.closePath();
 
     if (!isRemote) {
-      roomChannel?.send({
-        type: "broadcast",
-        event: "drawing",
-        payload: { x0, y0, x1, y1, color: isEraser ? "eraser" : color, size: brushSize, senderId: sessionId },
-      });
+      drawingBufferRef.current.push({ x0, y0, x1, y1, color: isEraser ? "eraser" : color, size: brushSize });
     }
-  }, [roomChannel, sessionId, color, brushSize, isEraser]);
+  }, [color, brushSize, isEraser]);
+
+  // Sync Loop for Batching Events (Throttle to ~20FPS)
+  useEffect(() => {
+    const syncInterval = setInterval(() => {
+      if (!roomChannel || !sessionId) return;
+      
+      if (drawingBufferRef.current.length > 0) {
+        roomChannel.send({
+          type: "broadcast",
+          event: "drawing_batch",
+          payload: { batch: drawingBufferRef.current, senderId: sessionId },
+        });
+        drawingBufferRef.current = [];
+      }
+
+      if (cursorRef.current) {
+        roomChannel.send({
+          type: "broadcast",
+          event: "cursor",
+          payload: { 
+            x: cursorRef.current.x, 
+            y: cursorRef.current.y, 
+            color: isEraser ? "eraser" : color, 
+            senderId: sessionId 
+          },
+        });
+      }
+    }, 50); // 50ms = 20 network ticks per second
+
+    return () => clearInterval(syncInterval);
+  }, [roomChannel, sessionId, color, isEraser]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -106,6 +145,17 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     handleResize();
     window.addEventListener("resize", handleResize);
 
+    // Handle batched drawing events
+    const handleDrawingBatch = (payload: any) => {
+      const { batch, senderId } = payload.payload;
+      if (senderId !== sessionId) {
+        batch.forEach((line: any) => {
+          drawLine(line.x0, line.y0, line.x1, line.y1, line.color, line.size, true);
+        });
+      }
+    };
+    
+    // Fallback for non-batched drawings from legacy clients
     const handleDrawing = (payload: any) => {
       const { x0, y0, x1, y1, color: remoteColor, size: remoteSize, senderId } = payload.payload;
       if (senderId !== sessionId) {
@@ -117,53 +167,73 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       if (payload.payload.senderId !== sessionId) clearLocal();
     };
 
+    const handleCursor = (payload: any) => {
+      const { x, y, color: remoteColor, senderId } = payload.payload;
+      if (senderId !== sessionId) {
+        setRemoteCursors(prev => ({
+          ...prev,
+          [senderId]: { x, y, color: remoteColor, lastUpdated: Date.now() }
+        }));
+      }
+    };
+
+    roomChannel?.on("broadcast", { event: "drawing_batch" }, handleDrawingBatch);
     roomChannel?.on("broadcast", { event: "drawing" }, handleDrawing);
     roomChannel?.on("broadcast", { event: "clear_canvas" }, handleClearRemote);
+    roomChannel?.on("broadcast", { event: "cursor" }, handleCursor);
+    
+    // Cleanup inactive cursors
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      setRemoteCursors(prev => {
+        const next = { ...prev };
+        let changed = false;
+        for (const [id, cursor] of Object.entries(next)) {
+          if (now - cursor.lastUpdated > 3000) {
+            delete next[id];
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }, 1000);
 
     return () => {
       window.removeEventListener("resize", handleResize);
+      clearInterval(cleanupInterval);
     };
   }, [roomChannel, sessionId, drawLine, clearLocal]);
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+  const updatePointer = (e: React.PointerEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    cursorRef.current = { x, y };
+    return { x, y };
+  };
 
-    let x, y;
-    if ("touches" in e) {
-      x = e.touches[0].clientX - rect.left;
-      y = e.touches[0].clientY - rect.top;
-    } else {
-      x = (e as React.MouseEvent).clientX - rect.left;
-      y = (e as React.MouseEvent).clientY - rect.top;
-    }
-
-    lastPos.current = { x, y };
+  const startDrawing = (e: React.PointerEvent) => {
+    const pos = updatePointer(e);
+    if (!pos) return;
+    
+    lastPos.current = pos;
     setIsDrawing(true);
   };
 
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing || !lastPos.current) return;
+  const draw = (e: React.PointerEvent) => {
+    const pos = updatePointer(e);
+    if (!isDrawing || !lastPos.current || !pos) return;
 
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    let x, y;
-    if ("touches" in e) {
-      x = e.touches[0].clientX - rect.left;
-      y = e.touches[0].clientY - rect.top;
-    } else {
-      x = (e as React.MouseEvent).clientX - rect.left;
-      y = (e as React.MouseEvent).clientY - rect.top;
-    }
-
-    drawLine(lastPos.current.x, lastPos.current.y, x, y, isEraser ? "eraser" : color, brushSize);
-    lastPos.current = { x, y };
+    drawLine(lastPos.current.x, lastPos.current.y, pos.x, pos.y, isEraser ? "eraser" : color, brushSize);
+    lastPos.current = pos;
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e: React.PointerEvent) => {
     setIsDrawing(false);
     lastPos.current = null;
+    updatePointer(e);
   };
 
   return (
@@ -190,7 +260,7 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
             <h2 className="text-white text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] italic truncate">Doodle Lounge</h2>
             <div className="flex items-center gap-1.5">
               <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse shrink-0" />
-              <span className="text-[8px] sm:text-[9px] font-bold text-green-500/80 uppercase tracking-widest">Live Syc</span>
+              <span className="text-[8px] sm:text-[9px] font-bold text-green-500/80 uppercase tracking-widest">Live Sync</span>
             </div>
           </div>
         </div>
@@ -208,26 +278,48 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       </div>
 
       {/* Main Drawing Area */}
-      <div className="flex-1 relative bg-[radial-gradient(circle_at_center,_#0a0a0f_0%,_#050508_100%)]">
+      <div className="flex-1 relative bg-[radial-gradient(circle_at_center,_#0a0a0f_0%,_#050508_100%)] overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
         
         <canvas
           ref={canvasRef}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
+          onPointerDown={startDrawing}
+          onPointerMove={draw}
+          onPointerUp={stopDrawing}
+          onPointerLeave={stopDrawing}
           className="absolute inset-0 w-full h-full touch-none cursor-crosshair"
         />
 
-        {/* Floating Tool Controls - Responsive (becomes pill on desktop, compact bar on mobile) */}
+        {/* Remote Cursors render */}
+        <AnimatePresence>
+          {Object.entries(remoteCursors).map(([id, cursor]) => (
+            <motion.div
+              key={id}
+              initial={{ opacity: 0, x: cursor.x, y: cursor.y }}
+              animate={{ opacity: 1, x: cursor.x, y: cursor.y }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.05, ease: "linear" }}
+              className="absolute top-0 left-0 pointer-events-none z-30"
+            >
+              <MousePointer2 
+                className={cn(
+                  "w-5 h-5 drop-shadow-md",
+                  cursor.color === "eraser" ? "text-white opacity-50" : ""
+                )}
+                style={cursor.color !== "eraser" ? { fill: cursor.color, stroke: 'white', strokeWidth: 1.5 } : {}}
+              />
+              <div className="absolute left-4 top-4 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-wider text-white whitespace-nowrap opacity-75">
+                {cursor.color === "eraser" ? "Erasing" : "Drawing"}
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {/* Floating Tool Controls */}
         <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row items-center gap-2 sm:gap-3 p-2 bg-black/70 backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-[2rem] shadow-2xl z-20 ring-1 ring-white/5 w-[90%] sm:w-auto overflow-hidden">
           
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-            {/* Colors Selection - Horizontal Scroll on small screens */}
+            {/* Colors Selection */}
             <div className="flex items-center gap-1.5 p-1 bg-white/[0.02] rounded-xl sm:rounded-2xl border border-white/5 overflow-x-auto no-scrollbar max-w-[200px] xs:max-w-none">
               {COLORS.map((c) => (
                 <button
@@ -253,7 +345,7 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
 
             <div className="hidden sm:block h-8 w-px bg-white/10 mx-1" />
 
-            {/* Actions (Eraser & Trash) */}
+            {/* Actions */}
             <div className="flex items-center gap-1.5 pr-1">
               <Button
                 variant={isEraser ? "glow" : "ghost"}
@@ -302,7 +394,7 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
         </div>
       </div>
 
-      {/* Footer Status - Minimal on mobile */}
+      {/* Footer Status */}
       <div className="px-4 sm:px-8 py-2.5 sm:py-3 bg-black/40 border-t border-white/5 backdrop-blur-xl flex justify-between items-center z-20 shrink-0">
         <div className="flex items-center gap-2 sm:gap-4 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] text-white/20">
           <span className="truncate max-w-[60px] xs:max-w-none">{isEraser ? "Eraser" : "Brush"}</span>
