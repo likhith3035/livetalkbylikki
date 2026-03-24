@@ -148,22 +148,91 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
   const handleDownload = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
     const ctx = tempCanvas.getContext("2d");
     if (!ctx) return;
-    
-    ctx.fillStyle = "#050508"; 
+
+    // Fill dark background
+    ctx.fillStyle = "#050508";
     ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
     ctx.drawImage(canvas, 0, 0);
-    
-    const url = tempCanvas.toDataURL("image/png");
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `LiveTalk-Doodle-${Date.now()}.png`;
-    a.click();
+
+    const dpr = window.devicePixelRatio || 1;
+    const logoSize = 28 * dpr;
+    const padding = 14 * dpr;
+    const textFontSize = 11 * dpr;
+    const subFontSize = 9 * dpr;
+    const labelHeight = textFontSize + subFontSize + 6 * dpr;
+    const totalWidth = logoSize + 8 * dpr + 120 * dpr;
+    const totalHeight = logoSize + padding * 2;
+
+    // Watermark background pill
+    const bgX = tempCanvas.width - totalWidth - padding;
+    const bgY = tempCanvas.height - totalHeight - padding;
+    const bgW = totalWidth + padding;
+    const bgH = totalHeight;
+    const bgRadius = 12 * dpr;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(bgX + bgRadius, bgY);
+    ctx.lineTo(bgX + bgW - bgRadius, bgY);
+    ctx.quadraticCurveTo(bgX + bgW, bgY, bgX + bgW, bgY + bgRadius);
+    ctx.lineTo(bgX + bgW, bgY + bgH - bgRadius);
+    ctx.quadraticCurveTo(bgX + bgW, bgY + bgH, bgX + bgW - bgRadius, bgY + bgH);
+    ctx.lineTo(bgX + bgRadius, bgY + bgH);
+    ctx.quadraticCurveTo(bgX, bgY + bgH, bgX, bgY + bgH - bgRadius);
+    ctx.lineTo(bgX, bgY + bgRadius);
+    ctx.quadraticCurveTo(bgX, bgY, bgX + bgRadius, bgY);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fill();
+    ctx.restore();
+
+    const logoX = bgX + padding / 1.5;
+    const logoY = bgY + (totalHeight - logoSize) / 2;
+    const textX = logoX + logoSize + 8 * dpr;
+    const textY = bgY + (totalHeight - labelHeight) / 2;
+
+    const logoImg = new Image();
+    logoImg.src = "/logo.png";
+    logoImg.onload = () => {
+      ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.90)";
+      ctx.font = `700 ${textFontSize}px Inter, sans-serif`;
+      ctx.fillText("LiveTalk by Likki", textX, textY + textFontSize);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.font = `500 ${subFontSize}px Inter, sans-serif`;
+      ctx.fillText("livetalkbylikki.netlify.app", textX, textY + textFontSize + subFontSize + 4 * dpr);
+
+      const url = tempCanvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `LiveTalk-Doodle-${Date.now()}.png`;
+      a.click();
+    };
+
+    logoImg.onerror = () => {
+      // Fallback if logo can't load — download without watermark branding image
+      ctx.fillStyle = "rgba(255, 255, 255, 0.90)";
+      ctx.font = `700 ${textFontSize}px Inter, sans-serif`;
+      ctx.fillText("LiveTalk by Likki", textX, textY + textFontSize);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.font = `500 ${subFontSize}px Inter, sans-serif`;
+      ctx.fillText("livetalkbylikki.netlify.app", textX, textY + textFontSize + subFontSize + 4 * dpr);
+
+      const url = tempCanvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `LiveTalk-Doodle-${Date.now()}.png`;
+      a.click();
+    };
   };
 
   const drawShape = useCallback((ctx: CanvasRenderingContext2D, tool: string, x0: number, y0: number, x1: number, y1: number, c: string, s: number, glow = false) => {
