@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback, memo } from "react";
-import { Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2, Download, Sparkles, Pencil, Square, Circle, Minus, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -25,6 +26,7 @@ const COLORS = [
   { name: "Green", value: "#10b981" },
   { name: "Yellow", value: "#f59e0b" },
   { name: "Red", value: "#ef4444" },
+  { name: "Rainbow", value: "rainbow" },
 ];
 
 const BRUSH_SIZES = [
@@ -101,19 +103,24 @@ CursorOverlay.displayName = "CursorOverlay";
 
 const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const draftCanvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const draftContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState("#7c3aed");
   const [brushSize, setBrushSize] = useState(6);
-  const [isEraser, setIsEraser] = useState(false);
+  const [activeTool, setActiveTool] = useState<"draw" | "eraser" | "line" | "arrow" | "rect" | "circle">("draw");
+  const [isGlow, setIsGlow] = useState(false);
+  const hueRef = useRef(0);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
+  const startPos = useRef<{ x: number; y: number } | null>(null);
 
   // Use refs for UI state so drawing and sync listeners don't re-trigger and run resize (which clears canvas!)
-  const stateRef = useRef({ color: "#7c3aed", brushSize: 6, isEraser: false });
+  const stateRef = useRef({ color: "#7c3aed", brushSize: 6, activeTool: "draw", isGlow: false });
 
   useEffect(() => {
-    stateRef.current = { color, brushSize, isEraser };
-  }, [color, brushSize, isEraser]);
+    stateRef.current = { color, brushSize, activeTool, isGlow };
+  }, [color, brushSize, activeTool, isGlow]);
 
   // Network batching and cursor tracking
   const drawingBufferRef = useRef<any[]>([]);
@@ -138,9 +145,99 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     });
   }, [clearLocal, roomChannel, sessionId]);
 
-  const drawLine = useCallback((x0: number, y0: number, x1: number, y1: number, c: string, s: number, isRemote = false) => {
+  const handleDownload = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const ctx = tempCanvas.getContext("2d");
+    if (!ctx) return;
+    
+    ctx.fillStyle = "#050508"; 
+    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    ctx.drawImage(canvas, 0, 0);
+    
+    const url = tempCanvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `LiveTalk-Doodle-${Date.now()}.png`;
+    a.click();
+  };
+
+  const drawShape = useCallback((ctx: CanvasRenderingContext2D, tool: string, x0: number, y0: number, x1: number, y1: number, c: string, s: number, glow = false) => {
+    let actualColor = c;
+    if (c === "rainbow") {
+      actualColor = `hsl(${hueRef.current}, 100%, 60%)`;
+      // We don't advance the hue here so the draft shape stays one color, it will advance on commit
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = actualColor;
+    ctx.lineWidth = s;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (glow) {
+      ctx.shadowBlur = s * 2.5;
+      ctx.shadowColor = actualColor;
+    } else {
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
+    }
+
+    if (tool === "line") {
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+    } else if (tool === "arrow") {
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      const angle = Math.atan2(y1 - y0, x1 - x0);
+      const headLength = s * 3;
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 - headLength * Math.cos(angle - Math.PI / 6), y1 - headLength * Math.sin(angle - Math.PI / 6));
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 - headLength * Math.cos(angle + Math.PI / 6), y1 - headLength * Math.sin(angle + Math.PI / 6));
+    } else if (tool === "rect") {
+      ctx.rect(x0, y0, x1 - x0, y1 - y0);
+    } else if (tool === "circle") {
+      const r = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
+      ctx.arc(x0, y0, r, 0, 2 * Math.PI);
+    }
+
+    ctx.stroke();
+    ctx.closePath();
+    ctx.shadowBlur = 0;
+  }, []);
+
+  const commitShape = useCallback((tool: string, x0: number, y0: number, x1: number, y1: number, c: string, s: number, isRemote = false, glow = false) => {
     const ctx = contextRef.current;
     if (!ctx) return;
+    
+    if (c === "rainbow" && !isRemote) hueRef.current = (hueRef.current + 15) % 360;
+    
+    drawShape(ctx, tool, x0, y0, x1, y1, c, s, glow);
+    
+    if (!isRemote) {
+      const { color: currentColor, brushSize: currentSize, isGlow: currentGlow } = stateRef.current;
+      roomChannel?.send({
+        type: "broadcast",
+        event: "shape",
+        payload: { tool, x0, y0, x1, y1, color: currentColor, size: currentSize, glow: currentGlow, senderId: sessionId },
+      });
+    }
+  }, [drawShape, roomChannel, sessionId]);
+
+  const drawLine = useCallback((x0: number, y0: number, x1: number, y1: number, c: string, s: number, isRemote = false, glow = false) => {
+    const ctx = contextRef.current;
+    if (!ctx) return;
+
+    let actualColor = c;
+    if (c === "rainbow") {
+      actualColor = `hsl(${hueRef.current}, 100%, 60%)`;
+      hueRef.current = (hueRef.current + 3) % 360; 
+    }
 
     ctx.beginPath();
     ctx.moveTo(x0, y0);
@@ -148,9 +245,18 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     
     if (c === "eraser") {
       ctx.globalCompositeOperation = "destination-out";
+      ctx.shadowBlur = 0;
     } else {
       ctx.globalCompositeOperation = "source-over";
-      ctx.strokeStyle = c;
+      ctx.strokeStyle = actualColor;
+      
+      if (glow) {
+        ctx.shadowBlur = s * 2.5;
+        ctx.shadowColor = actualColor;
+      } else {
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = "transparent";
+      }
     }
     
     ctx.lineWidth = s;
@@ -158,13 +264,16 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     ctx.lineJoin = "round";
     ctx.stroke();
     ctx.closePath();
+    
+    ctx.shadowBlur = 0;
 
     if (!isRemote) {
-      const { color: currentColor, brushSize: currentSize, isEraser: currentEraser } = stateRef.current;
+      const { color: currentColor, brushSize: currentSize, activeTool, isGlow: currentGlow } = stateRef.current;
       drawingBufferRef.current.push({ 
         x0, y0, x1, y1, 
-        color: currentEraser ? "eraser" : currentColor, 
-        size: currentSize 
+        color: activeTool === "eraser" ? "eraser" : currentColor, 
+        size: currentSize,
+        glow: currentGlow
       });
     }
   }, []); // Empty deps avoids recreating drawLine on color change, preventing canvas clear
@@ -184,14 +293,14 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       }
 
       if (cursorRef.current) {
-        const { color: currentColor, isEraser: currentEraser } = stateRef.current;
+        const { color: currentColor, activeTool } = stateRef.current;
         roomChannel.send({
           type: "broadcast",
           event: "cursor",
           payload: { 
             x: cursorRef.current.x, 
             y: cursorRef.current.y, 
-            color: currentEraser ? "eraser" : currentColor, 
+            color: activeTool === "eraser" ? "eraser" : currentColor, 
             senderId: sessionId 
           },
         });
@@ -207,10 +316,32 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
 
     const handleResize = () => {
       const rect = canvas.getBoundingClientRect();
-      const tempContent = contextRef.current?.getImageData(0, 0, canvas.width, canvas.height); // save canvas
+      if (rect.width === 0 || rect.height === 0) return;
+
+      // Store current drawing before resizing using a temporary canvas.
+      // This is much safer than getImageData/putImageData for keeping scale correct.
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext("2d");
+      if (canvas.width > 0 && canvas.height > 0) {
+        tempCtx?.drawImage(canvas, 0, 0);
+      }
 
       canvas.width = rect.width * window.devicePixelRatio;
       canvas.height = rect.height * window.devicePixelRatio;
+      
+      if (draftCanvasRef.current) {
+        draftCanvasRef.current.width = rect.width * window.devicePixelRatio;
+        draftCanvasRef.current.height = rect.height * window.devicePixelRatio;
+        const draftCtx = draftCanvasRef.current.getContext("2d", { willReadFrequently: true });
+        if (draftCtx) {
+          draftCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+          draftCtx.lineCap = "round";
+          draftCtx.lineJoin = "round";
+          draftContextRef.current = draftCtx;
+        }
+      }
 
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (!ctx) return;
@@ -220,28 +351,51 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       ctx.lineJoin = "round";
       contextRef.current = ctx;
 
-      if (tempContent) {
-        // Restore canvas after resize (if it was an actual window resize)
-        ctx.putImageData(tempContent, 0, 0); 
+      // Restore the drawing
+      if (tempCanvas.width > 0 && tempCanvas.height > 0) {
+        ctx.drawImage(
+          tempCanvas,
+          0,
+          0,
+          tempCanvas.width / window.devicePixelRatio,
+          tempCanvas.height / window.devicePixelRatio
+        );
       }
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
 
+    const resizeObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(() => handleResize());
+    });
+
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    } else {
+      resizeObserver.observe(canvas);
+    }
+
     const handleDrawingBatch = (payload: any) => {
       const { batch, senderId } = payload.payload;
       if (senderId !== sessionId) {
         batch.forEach((line: any) => {
-          drawLine(line.x0, line.y0, line.x1, line.y1, line.color, line.size, true);
+          drawLine(line.x0, line.y0, line.x1, line.y1, line.color, line.size, true, line.glow);
         });
       }
     };
     
     const handleDrawing = (payload: any) => {
-      const { x0, y0, x1, y1, color: remoteColor, size: remoteSize, senderId } = payload.payload;
+      const { x0, y0, x1, y1, color: remoteColor, size: remoteSize, senderId, glow } = payload.payload;
       if (senderId !== sessionId) {
-        drawLine(x0, y0, x1, y1, remoteColor, remoteSize, true);
+        drawLine(x0, y0, x1, y1, remoteColor, remoteSize, true, glow);
+      }
+    };
+
+    const handleShape = (payload: any) => {
+      const { tool, x0, y0, x1, y1, color: remoteColor, size: remoteSize, senderId, glow } = payload.payload;
+      if (senderId !== sessionId) {
+        commitShape(tool, x0, y0, x1, y1, remoteColor, remoteSize, true, glow);
       }
     };
 
@@ -251,10 +405,12 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
 
     roomChannel?.on("broadcast", { event: "drawing_batch" }, handleDrawingBatch);
     roomChannel?.on("broadcast", { event: "drawing" }, handleDrawing);
+    roomChannel?.on("broadcast", { event: "shape" }, handleShape);
     roomChannel?.on("broadcast", { event: "clear_canvas" }, handleClearRemote);
 
     return () => {
       window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
     };
   }, [roomChannel, sessionId, drawLine, clearLocal]);
 
@@ -273,25 +429,53 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     if (!pos) return;
     
     lastPos.current = pos;
+    startPos.current = pos;
     setIsDrawing(true);
   };
 
   const draw = (e: React.PointerEvent) => {
     const pos = updatePointer(e);
-    if (!isDrawing || !lastPos.current || !pos) return;
+    if (!isDrawing || !lastPos.current || !pos || !startPos.current) return;
 
-    const { color: currentColor, brushSize: currentSize, isEraser: currentEraser } = stateRef.current;
-    drawLine(lastPos.current.x, lastPos.current.y, pos.x, pos.y, currentEraser ? "eraser" : currentColor, currentSize);
-    lastPos.current = pos;
+    const { activeTool, color: currentColor, brushSize: currentSize, isGlow: currentGlow } = stateRef.current;
+    
+    if (activeTool === "draw" || activeTool === "eraser") {
+      drawLine(lastPos.current.x, lastPos.current.y, pos.x, pos.y, activeTool === "eraser" ? "eraser" : currentColor, currentSize, false, currentGlow);
+      lastPos.current = pos;
+    } else {
+      // Draw shape onto draft canvas
+      const draftCtx = draftContextRef.current;
+      const draftCanvas = draftCanvasRef.current;
+      if (draftCtx && draftCanvas) {
+        draftCtx.clearRect(0, 0, draftCanvas.width, draftCanvas.height);
+        drawShape(draftCtx, activeTool, startPos.current.x, startPos.current.y, pos.x, pos.y, currentColor, currentSize, currentGlow);
+      }
+    }
   };
 
   const stopDrawing = (e: React.PointerEvent) => {
+    if (isDrawing) {
+      const pos = updatePointer(e);
+      const { activeTool, color: currentColor, brushSize: currentSize, isGlow: currentGlow } = stateRef.current;
+      
+      if (activeTool !== "draw" && activeTool !== "eraser" && startPos.current && pos) {
+        // Clear draft canvas
+        const draftCtx = draftContextRef.current;
+        const draftCanvas = draftCanvasRef.current;
+        if (draftCtx && draftCanvas) draftCtx.clearRect(0, 0, draftCanvas.width, draftCanvas.height);
+        
+        // Commit shape to main canvas
+        commitShape(activeTool, startPos.current.x, startPos.current.y, pos.x, pos.y, currentColor, currentSize, false, currentGlow);
+      }
+    }
+    
     setIsDrawing(false);
     lastPos.current = null;
+    startPos.current = null;
     updatePointer(e);
   };
 
-  return (
+  const canvasContent = (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -336,74 +520,111 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
         
         <canvas
           ref={canvasRef}
+          className="absolute inset-0 w-full h-full touch-none"
+        />
+        
+        <canvas
+          ref={draftCanvasRef}
           onPointerDown={startDrawing}
           onPointerMove={draw}
           onPointerUp={stopDrawing}
           onPointerLeave={stopDrawing}
-          className="absolute inset-0 w-full h-full touch-none cursor-crosshair"
+          className="absolute inset-0 w-full h-full touch-none cursor-crosshair z-10"
         />
 
         {/* Remote Cursors Sub-component rendering isolated to prevent root lag! */}
         <CursorOverlay roomChannel={roomChannel} sessionId={sessionId} />
 
-        <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row items-center gap-2 sm:gap-3 p-2 bg-black/70 backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-[2rem] shadow-2xl z-20 ring-1 ring-white/5 w-[90%] sm:w-auto overflow-hidden">
+        <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-row items-center gap-2 sm:gap-3 p-2 bg-black/70 backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-[2rem] shadow-2xl z-20 ring-1 ring-white/5 w-[95%] sm:w-auto overflow-x-auto no-scrollbar pointer-events-auto">
           
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-            <div className="flex items-center gap-1.5 p-1 bg-white/[0.02] rounded-xl sm:rounded-2xl border border-white/5 overflow-x-auto no-scrollbar max-w-[200px] xs:max-w-none">
+          <div className="flex flex-row items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 p-1 bg-white/[0.02] rounded-xl sm:rounded-2xl border border-white/5 shrink-0">
               {COLORS.map((c) => (
                 <button
                   key={c.value}
                   onClick={() => {
                     setColor(c.value);
-                    setIsEraser(false);
+                    if (activeTool === "eraser") setActiveTool("draw");
                   }}
                   className={cn(
                     "w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl transition-all active:scale-90 relative shrink-0",
-                    color === c.value && !isEraser ? "scale-105 ring-2 ring-primary ring-offset-2 sm:ring-offset-4 ring-offset-black" : "opacity-40 hover:opacity-100"
+                    color === c.value && activeTool !== "eraser" ? "scale-105 ring-2 ring-primary ring-offset-2 sm:ring-offset-4 ring-offset-black" : "opacity-40 hover:opacity-100"
                   )}
-                  style={{ backgroundColor: c.value }}
+                  style={c.value === "rainbow" ? { background: "linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)" } : { backgroundColor: c.value }}
                 >
-                  {color === c.value && !isEraser && (
+                  {color === c.value && activeTool !== "eraser" && (
                     <motion.div layoutId="activeColor" className="absolute inset-0 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                      <CheckCircle2 className="h-3 w-3 text-white" />
+                      <CheckCircle2 className="h-3 w-3 text-white drop-shadow-md" />
                     </motion.div>
                   )}
                 </button>
               ))}
             </div>
 
-            <div className="hidden sm:block h-8 w-px bg-white/10 mx-1" />
+            <div className="h-8 w-px bg-white/10 shrink-0 mx-1" />
 
-            <div className="flex items-center gap-1.5 pr-1">
+            <div className="flex items-center gap-1.5 pr-1 shrink-0">
+              {[
+                { id: "draw", icon: Pencil },
+                { id: "line", icon: Minus },
+                { id: "arrow", icon: ArrowUpRight },
+                { id: "rect", icon: Square },
+                { id: "circle", icon: Circle }
+              ].map(t => (
+                <Button
+                  key={t.id}
+                  variant={activeTool === t.id ? "glow" : "ghost"}
+                  size="icon"
+                  className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl shrink-0", activeTool !== t.id && "text-white/40 hover:text-white")}
+                  onClick={() => setActiveTool(t.id as any)}
+                  title={`Tool: ${t.id}`}
+                >
+                  <t.icon className="h-4 w-4" />
+                </Button>
+              ))}
+              
+              <div className="h-6 w-px bg-white/10 mx-0.5 shrink-0" />
+
               <Button
-                variant={isEraser ? "glow" : "ghost"}
+                variant={activeTool === "eraser" ? "glow" : "ghost"}
                 size="icon"
-                className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl", !isEraser && "text-white/40 hover:text-white")}
-                onClick={() => setIsEraser(!isEraser)}
+                className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl shrink-0", activeTool !== "eraser" && "text-white/40 hover:text-white")}
+                onClick={() => setActiveTool("eraser")}
+                title="Eraser"
               >
                 <Eraser className="h-4 w-4" />
               </Button>
               <Button
+                variant={isGlow ? "glow" : "ghost"}
+                size="icon"
+                className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl shrink-0", !isGlow && "text-white/40 hover:text-white")}
+                onClick={() => setIsGlow(!isGlow)}
+                title="Neon Glow"
+              >
+                <Sparkles className="h-4 w-4" />
+              </Button>
+              <Button
                 variant="ghost"
                 size="icon"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl text-red-500/60 hover:text-red-500 hover:bg-red-500/10"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl text-red-500/60 hover:text-red-500 hover:bg-red-500/10 shrink-0"
                 onClick={handleClear}
+                title="Clear Canvas"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          <div className="h-px sm:h-8 w-full sm:w-px bg-white/10" />
+          <div className="h-8 w-px bg-white/10 shrink-0 mx-1" />
 
-          <div className="flex items-center gap-1 p-1 w-full sm:w-auto justify-evenly sm:justify-start">
+          <div className="flex items-center gap-1 p-1 shrink-0">
             {BRUSH_SIZES.map((size) => (
               <button
                 key={size.value}
                 onClick={() => setBrushSize(size.value)}
                 className={cn(
-                  "w-8 h-8 rounded-lg sm:rounded-xl flex items-center justify-center transition-all px-2",
-                  brushSize === size.value && !isEraser ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-white/40 hover:bg-white/5 hover:text-white"
+                  "w-8 h-8 rounded-lg sm:rounded-xl flex items-center justify-center transition-all px-2 shrink-0",
+                  brushSize === size.value && activeTool !== "eraser" ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-white/40 hover:bg-white/5 hover:text-white"
                 )}
                 title={size.label}
               >
@@ -417,13 +638,25 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
                 />
               </button>
             ))}
+            
+            <div className="h-8 w-px bg-white/10 mx-1 shrink-0" />
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-8 h-8 rounded-lg sm:rounded-xl text-white/40 hover:text-white hover:bg-white/5 shrink-0 mx-1"
+              onClick={handleDownload}
+              title="Download Masterpiece"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="px-4 sm:px-8 py-2.5 sm:py-3 bg-black/40 border-t border-white/5 backdrop-blur-xl flex justify-between items-center z-20 shrink-0">
         <div className="flex items-center gap-2 sm:gap-4 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] text-white/20">
-          <span className="truncate max-w-[60px] xs:max-w-none">{isEraser ? "Eraser" : "Brush"}</span>
+          <span className="truncate max-w-[60px] xs:max-w-none">{activeTool}</span>
           <div className="w-0.5 h-0.5 rounded-full bg-white/5" />
           <span className="hidden xs:inline">{color}</span>
           <div className="w-0.5 h-0.5 rounded-full bg-white/5" />
@@ -435,6 +668,8 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       </div>
     </motion.div>
   );
+
+  return createPortal(canvasContent, document.body);
 };
 
 export default SharedCanvas;

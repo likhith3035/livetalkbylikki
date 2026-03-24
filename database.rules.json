@@ -1,0 +1,77 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false, 
+    
+    "settings": {
+      "safety": {
+        "profanity_list": {
+          ".write": true 
+        }
+      }
+    },
+    
+    "admin": {
+      "reports": {
+        ".read": true,
+        "$reportId": {
+          ".write": true 
+        }
+      },
+      "blacklist": {
+        ".read": true,
+        "$uid": {
+          ".write": true
+        }
+      },
+      "appeals": {
+        ".read": true,
+        "$uid": {
+          ".write": true 
+        }
+      },
+      "violations": {
+        ".read": true,
+        "$uid": {
+          ".write": true
+        }
+      }
+    },
+    
+    "lobby": {
+      ".read": true,
+      "$sessionId": {
+        // Since Firebase Auth is not used, we rely on schema validation
+        ".write": true
+      }
+    },
+    
+    "matches": {
+      ".read": true,
+      "$matchId": {
+        ".write": true,
+        ".validate": "!newData.exists() || newData.hasChildren(['user1', 'user2', 'roomId'])"
+      }
+    },
+    
+    "rooms": {
+      ".read": true,
+      "$roomId": {
+        ".write": true
+      }
+    },
+    
+    "analytics": {
+      ".read": true,
+      ".write": true
+    },
+
+    "presence": {
+      ".read": true,
+      "$uid": {
+        ".write": true,
+        ".validate": "!newData.exists() || newData.hasChildren(['online_at'])"
+      }
+    }
+  }
+}
