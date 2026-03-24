@@ -42,6 +42,7 @@ interface VideoCallOverlayProps {
   onSendInCallMessage?: (text: string) => void;
   inCallMessages?: InCallMessage[];
   supportsScreenShare?: boolean;
+  strangerTyping?: boolean;
 }
 
 const formatDuration = (seconds: number) => {
@@ -59,6 +60,7 @@ const VideoCallOverlay = ({
   onUpgradeToVideo,
   onSendInCallMessage, inCallMessages = [],
   supportsScreenShare = false,
+  strangerTyping = false,
 }: VideoCallOverlayProps) => {
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -486,6 +488,25 @@ const VideoCallOverlay = ({
             )}
           </AnimatePresence>
         </div>
+
+        {/* Typing indicator in video call */}
+        <AnimatePresence>
+          {strangerTyping && !showChat && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute bottom-[120px] left-4 z-30 flex items-center gap-2 bg-card/80 backdrop-blur-md border border-border/50 px-3 py-2 rounded-full shadow-lg pointer-events-none"
+            >
+              <div className="flex gap-0.5 items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:150ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:300ms]" />
+              </div>
+              <span className="text-[10px] font-medium text-muted-foreground">Stranger is typing...</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Controls */}
         <AnimatePresence>

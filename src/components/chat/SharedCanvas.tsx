@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback, memo } from "react";
 import { createPortal } from "react-dom";
-import { Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2, Download, Sparkles, Pencil, Square, Circle, Minus, ArrowUpRight } from "lucide-react";
+import { Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2, Download, Sparkles, Pencil, Square, Circle, Minus, ArrowUpRight, Type, Undo2, Redo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -109,11 +109,21 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState("#7c3aed");
   const [brushSize, setBrushSize] = useState(6);
-  const [activeTool, setActiveTool] = useState<"draw" | "eraser" | "line" | "arrow" | "rect" | "circle">("draw");
+  const [activeTool, setActiveTool] = useState<"draw" | "eraser" | "line" | "arrow" | "rect" | "circle" | "text">("draw");
   const [isGlow, setIsGlow] = useState(false);
   const hueRef = useRef(0);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
   const startPos = useRef<{ x: number; y: number } | null>(null);
+
+  // Undo/Redo history
+  const historyRef = useRef<string[]>([]);
+  const historyIndexRef = useRef(-1);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  // Text tool overlay
+  const [textOverlay, setTextOverlay] = useState<{ x: number; y: number } | null>(null);
+  const [textInput, setTextInput] = useState("");
 
   // Use refs for UI state so drawing and sync listeners don't re-trigger and run resize (which clears canvas!)
   const stateRef = useRef({ color: "#7c3aed", brushSize: 6, activeTool: "draw", isGlow: false });
@@ -126,6 +136,51 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
   const drawingBufferRef = useRef<any[]>([]);
   const cursorRef = useRef<{ x: number; y: number } | null>(null);
 
+  const saveSnapshot = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const snapshot = canvas.toDataURL();
+    // Drop any redo history when new action is taken
+    historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
+    historyRef.current.push(snapshot);
+    // Keep max 30 snapshots to avoid memory bloat
+    if (historyRef.current.length > 30) historyRef.current.shift();
+    historyIndexRef.current = historyRef.current.length - 1;
+    setCanUndo(historyIndexRef.current > 0);
+    setCanRedo(false);
+  }, []);
+
+  const applySnapshot = useCallback((snapshot: string) => {
+    const canvas = canvasRef.current;
+    const ctx = contextRef.current;
+    if (!canvas || !ctx) return;
+    const img = new Image();
+    img.src = snapshot;
+    img.onload = () => {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      ctx.drawImage(img, 0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
+    };
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (historyIndexRef.current <= 0) return;
+    historyIndexRef.current--;
+    applySnapshot(historyRef.current[historyIndexRef.current]);
+    setCanUndo(historyIndexRef.current > 0);
+    setCanRedo(true);
+  }, [applySnapshot]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndexRef.current >= historyRef.current.length - 1) return;
+    historyIndexRef.current++;
+    applySnapshot(historyRef.current[historyIndexRef.current]);
+    setCanUndo(true);
+    setCanRedo(historyIndexRef.current < historyRef.current.length - 1);
+  }, [applySnapshot]);
+
   const clearLocal = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = contextRef.current;
@@ -134,7 +189,8 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
-  }, []);
+    saveSnapshot();
+  }, [saveSnapshot]);
 
   const handleClear = useCallback(() => {
     clearLocal();
@@ -295,8 +351,9 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
         event: "shape",
         payload: { tool, x0, y0, x1, y1, color: currentColor, size: currentSize, glow: currentGlow, senderId: sessionId },
       });
+      saveSnapshot();
     }
-  }, [drawShape, roomChannel, sessionId]);
+  }, [drawShape, roomChannel, sessionId, saveSnapshot]);
 
   const drawLine = useCallback((x0: number, y0: number, x1: number, y1: number, c: string, s: number, isRemote = false, glow = false) => {
     const ctx = contextRef.current;
@@ -344,21 +401,29 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
         size: currentSize,
         glow: currentGlow
       });
+      // Save snapshot after each freehand batch flush — done in syncInterval
     }
   }, []); // Empty deps avoids recreating drawLine on color change, preventing canvas clear
 
-  // Sync Loop for Batching Events (Throttle to ~20FPS)
+  // Save snapshot periodically when freehand buffer empties
+  const lastBufferLenRef = useRef(0);
   useEffect(() => {
     const syncInterval = setInterval(() => {
       if (!roomChannel || !sessionId) return;
       
-      if (drawingBufferRef.current.length > 0) {
+      const batchLen = drawingBufferRef.current.length;
+      if (batchLen > 0) {
         roomChannel.send({
           type: "broadcast",
           event: "drawing_batch",
           payload: { batch: drawingBufferRef.current, senderId: sessionId },
         });
         drawingBufferRef.current = [];
+        lastBufferLenRef.current = 0;
+      } else if (lastBufferLenRef.current > 0) {
+        // Buffer just flushed, save snapshot
+        saveSnapshot();
+        lastBufferLenRef.current = 0;
       }
 
       if (cursorRef.current) {
@@ -377,7 +442,7 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     }, 50);
 
     return () => clearInterval(syncInterval);
-  }, [roomChannel, sessionId]); // Run only on mount
+  }, [roomChannel, sessionId, saveSnapshot]); // Run only on mount
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -472,9 +537,24 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       if (payload.payload.senderId !== sessionId) clearLocal();
     };
 
+    const handleTextRemote = (payload: any) => {
+      const { text, x, y, color: remoteColor, size, senderId, glow } = payload.payload;
+      if (senderId !== sessionId) {
+        const ctx = contextRef.current;
+        if (!ctx) return;
+        ctx.save();
+        ctx.font = `bold ${size}px Inter, sans-serif`;
+        ctx.fillStyle = remoteColor;
+        if (glow) { ctx.shadowBlur = 12; ctx.shadowColor = remoteColor; }
+        ctx.fillText(text, x, y);
+        ctx.restore();
+      }
+    };
+
     roomChannel?.on("broadcast", { event: "drawing_batch" }, handleDrawingBatch);
     roomChannel?.on("broadcast", { event: "drawing" }, handleDrawing);
     roomChannel?.on("broadcast", { event: "shape" }, handleShape);
+    roomChannel?.on("broadcast", { event: "text_draw" }, handleTextRemote);
     roomChannel?.on("broadcast", { event: "clear_canvas" }, handleClearRemote);
 
     return () => {
@@ -482,6 +562,54 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       resizeObserver.disconnect();
     };
   }, [roomChannel, sessionId, drawLine, clearLocal]);
+
+  // Keyboard shortcuts: Ctrl+Z (undo), Ctrl+Shift+Z / Ctrl+Y (redo)
+  useEffect(() => {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if ((e.ctrlKey && e.shiftKey && e.key === "z") || (e.ctrlKey && e.key === "y")) {
+        e.preventDefault();
+        handleRedo();
+      } else if (e.key === "Escape" && textOverlay) {
+        setTextOverlay(null);
+        setTextInput("");
+      }
+    };
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, [handleUndo, handleRedo, textOverlay]);
+
+  // Commit text to canvas
+  const commitText = useCallback(() => {
+    if (!textInput.trim() || !textOverlay || !contextRef.current) return;
+    const ctx = contextRef.current;
+    const { color: currentColor, brushSize: currentSize, isGlow: currentGlow } = stateRef.current;
+    const actualColor = currentColor === "rainbow" ? `hsl(${hueRef.current}, 100%, 60%)` : currentColor;
+    const fontSize = Math.max(14, currentSize * 3);
+
+    ctx.save();
+    ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+    ctx.fillStyle = actualColor;
+    if (currentGlow) {
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = actualColor;
+    }
+    ctx.fillText(textInput.trim(), textOverlay.x, textOverlay.y);
+    ctx.restore();
+
+    // Sync text to remote
+    roomChannel?.send({
+      type: "broadcast",
+      event: "text_draw",
+      payload: { text: textInput.trim(), x: textOverlay.x, y: textOverlay.y, color: actualColor, size: fontSize, glow: currentGlow, senderId: sessionId },
+    });
+
+    saveSnapshot();
+    setTextOverlay(null);
+    setTextInput("");
+  }, [textInput, textOverlay, roomChannel, sessionId, saveSnapshot]);
 
   const updatePointer = (e: React.PointerEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -496,6 +624,15 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
   const startDrawing = (e: React.PointerEvent) => {
     const pos = updatePointer(e);
     if (!pos) return;
+    
+    const { activeTool } = stateRef.current;
+
+    // Text tool: show overlay at click position, don't start drawing
+    if (activeTool === "text") {
+      setTextOverlay({ x: pos.x, y: pos.y });
+      setTextInput("");
+      return;
+    }
     
     lastPos.current = pos;
     startPos.current = pos;
@@ -601,6 +738,45 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
           className="absolute inset-0 w-full h-full touch-none cursor-crosshair z-10"
         />
 
+        {/* Text Tool Input Overlay */}
+        <AnimatePresence>
+          {textOverlay && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute z-40 pointer-events-auto"
+              style={{ left: textOverlay.x, top: textOverlay.y }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                autoFocus
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitText();
+                  if (e.key === "Escape") {
+                    setTextOverlay(null);
+                    setTextInput("");
+                  }
+                }}
+                onBlur={commitText}
+                placeholder="Type here..."
+                className="bg-black/80 backdrop-blur-md border border-primary/50 text-white rounded-lg px-3 py-1.5 focus:outline-none ring-2 ring-primary/20 shadow-2xl min-w-[120px]"
+                style={{
+                  color: color === "rainbow" ? `hsl(${hueRef.current}, 100%, 60%)` : color,
+                  fontSize: Math.max(14, brushSize * 3),
+                  fontWeight: 'bold'
+                }}
+              />
+              <div className="mt-1 flex gap-1 justify-end">
+                <button onClick={() => { setTextOverlay(null); setTextInput(""); }} className="text-[10px] text-white/40 hover:text-white bg-white/5 px-1.5 rounded uppercase font-bold tracking-tighter">Cancel</button>
+                <button onClick={commitText} className="text-[10px] text-primary hover:text-primary/80 bg-primary/10 px-1.5 rounded uppercase font-bold tracking-tighter">Done</button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Remote Cursors Sub-component rendering isolated to prevent root lag! */}
         <CursorOverlay roomChannel={roomChannel} sessionId={sessionId} />
 
@@ -638,7 +814,8 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
                 { id: "line", icon: Minus },
                 { id: "arrow", icon: ArrowUpRight },
                 { id: "rect", icon: Square },
-                { id: "circle", icon: Circle }
+                { id: "circle", icon: Circle },
+                { id: "text", icon: Type }
               ].map(t => (
                 <Button
                   key={t.id}
@@ -680,6 +857,29 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
                 title="Clear Canvas"
               >
                 <Trash2 className="h-4 w-4" />
+              </Button>
+
+              <div className="h-6 w-px bg-white/10 mx-0.5 shrink-0" />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl shrink-0", !canUndo && "opacity-20 pointer-events-none")}
+                onClick={handleUndo}
+                title="Undo (Ctrl+Z)"
+                disabled={!canUndo}
+              >
+                <Undo2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl shrink-0", !canRedo && "opacity-20 pointer-events-none")}
+                onClick={handleRedo}
+                title="Redo (Ctrl+Y)"
+                disabled={!canRedo}
+              >
+                <Redo2 className="h-4 w-4" />
               </Button>
             </div>
           </div>

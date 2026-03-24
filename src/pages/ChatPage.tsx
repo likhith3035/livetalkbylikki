@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/contexts/SettingsContext";
 import { FindingAnimation } from "@/components/chat/FindingAnimation";
 import SharedCanvas from "@/components/chat/SharedCanvas";
+import { useSoundNotifications } from "@/hooks/use-sound-notifications";
 
 const RANDOM_NICKNAMES = [
   "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
@@ -53,6 +54,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const { isBanned, submitAppeal } = useSafety();
   const { toast } = useToast();
   const { settings } = useSettings();
+  const { playConnect, playDisconnect } = useSoundNotifications();
   const [appealReason, setAppealReason] = useState("");
   const [appealSent, setAppealSent] = useState(false);
   const banned = isBanned(stableId);
@@ -92,9 +94,13 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
       setShowMatchCelebration(true);
       setTimeout(() => setShowMatchCelebration(false), 4000);
+      playConnect();
+    }
+    if (status === "idle" && prevStatusRef.current === "connected") {
+      playDisconnect();
     }
     prevStatusRef.current = status;
-  }, [status]);
+  }, [status, playConnect, playDisconnect]);
 
   const handleSaveName = (name: string) => {
     const trimmed = name.trim().slice(0, 15);
@@ -472,6 +478,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onSendInCallMessage={sendInCallMessage}
         inCallMessages={inCallMessages}
         supportsScreenShare={supportsScreenShare}
+        strangerTyping={strangerTyping}
       />
 
       <MatchCelebration
