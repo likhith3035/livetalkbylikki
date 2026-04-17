@@ -44,6 +44,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
+    sendSurprise,
+    surpriseEffect,
     inCallMessages, sendInCallMessage,
     supportsScreenShare, 
     autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed,
@@ -475,6 +477,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onToggleScreenShare={toggleScreenShare}
         onToggleBlur={toggleBlur}
         onUpgradeToVideo={upgradeToVideo}
+        onSendSurprise={sendSurprise}
+        surpriseEffect={surpriseEffect}
         onSendInCallMessage={sendInCallMessage}
         inCallMessages={inCallMessages}
         supportsScreenShare={supportsScreenShare}

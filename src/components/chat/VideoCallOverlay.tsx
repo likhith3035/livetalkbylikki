@@ -39,6 +39,8 @@ interface VideoCallOverlayProps {
   onToggleScreenShare: () => void;
   onToggleBlur: () => void;
   onUpgradeToVideo?: () => void;
+  onSendSurprise?: (type: string) => void;
+  surpriseEffect?: { type: string; id: number } | null;
   onSendInCallMessage?: (text: string) => void;
   inCallMessages?: InCallMessage[];
   supportsScreenShare?: boolean;
@@ -58,6 +60,8 @@ const VideoCallOverlay = ({
   onToggleMute, onToggleCamera, onEndCall, onAccept, onDecline,
   onFlipCamera, onToggleScreenShare, onToggleBlur,
   onUpgradeToVideo,
+  onSendSurprise,
+  surpriseEffect,
   onSendInCallMessage, inCallMessages = [],
   supportsScreenShare = false,
   strangerTyping = false,
@@ -65,6 +69,7 @@ const VideoCallOverlay = ({
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [showControls, setShowControls] = useState(true);
+  const [showSurpriseMenu, setShowSurpriseMenu] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isPiP, setIsPiP] = useState(false);
   const [isLocalMain, setIsLocalMain] = useState(false); // WhatsApp-style swap
@@ -322,6 +327,13 @@ const VideoCallOverlay = ({
             </div>
           )}
 
+          {/* Surprise Reactions Overlay */}
+          <AnimatePresence>
+            {surpriseEffect && (
+              <SurpriseReactionOverlay key={surpriseEffect.id} type={surpriseEffect.type} />
+            )}
+          </AnimatePresence>
+
           {/* Remote state indicators */}
           {(remoteMuted || remoteCameraOff || remoteBlurred) && !isLocalMain && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
@@ -564,8 +576,51 @@ const VideoCallOverlay = ({
                     />
                   </>
                 )}
+                <div className="relative">
+                  <ControlButton
+                    onClick={() => {
+                        setShowSurpriseMenu(!showSurpriseMenu);
+                        if (!showSurpriseMenu) setShowChat(false);
+                    }}
+                    active={showSurpriseMenu}
+                    icon={<Sparkles className={cn("h-4 w-4", showSurpriseMenu && "animate-pulse")} />}
+                    label="Surprise"
+                    small
+                  />
+                  <AnimatePresence>
+                    {showSurpriseMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-50 flex gap-2 rounded-2xl bg-card border border-border p-2 shadow-2xl min-w-[160px]"
+                      >
+                        {[
+                          { type: "love", icon: "❤️" },
+                          { type: "fire", icon: "🔥" },
+                          { type: "party", icon: "🎉" },
+                          { type: "star", icon: "⭐" },
+                        ].map((item) => (
+                          <button
+                            key={item.type}
+                            onClick={() => {
+                                onSendSurprise?.(item.type);
+                                setShowSurpriseMenu(false);
+                            }}
+                            className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted text-xl transition-all hover:scale-110 active:scale-90"
+                          >
+                            {item.icon}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 <ControlButton
-                  onClick={() => setShowChat(!showChat)}
+                  onClick={() => {
+                      setShowChat(!showChat);
+                      if (!showChat) setShowSurpriseMenu(false);
+                  }}
                   active={showChat}
                   icon={<MessageSquare className="h-4 w-4" />}
                   label="Chat"
@@ -640,5 +695,66 @@ const ControlButton = ({
     )}
   </button>
 );
+
+// --- Surprise Reaction Components ---
+
+const SurpriseReactionOverlay = ({ type }: { type: string }) => {
+  const getEmoji = () => {
+    switch (type) {
+      case "love": return "❤️";
+      case "fire": return "🔥";
+      case "party": return "🎉";
+      case "star": return "⭐";
+      default: return "✨";
+    }
+  };
+
+  const particles = Array.from({ length: 15 });
+
+  return (
+    <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
+      {particles.map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{
+            opacity: 0,
+            scale: 0.5,
+            x: "50%",
+            y: "50%",
+          }}
+          animate={{
+            opacity: [0, 1, 1, 0],
+            scale: [0.5, 1.5, 2, 1],
+            x: `${10 + Math.random() * 80}%`,
+            y: `${10 + Math.random() * 80}%`,
+            rotate: Math.random() * 360,
+          }}
+          transition={{
+            duration: 1.5 + Math.random() * 1,
+            ease: "easeOut",
+            delay: Math.random() * 0.5,
+          }}
+          className="absolute text-3xl sm:text-4xl"
+        >
+          {getEmoji()}
+        </motion.div>
+      ))}
+      
+      {/* Background Flash Effect */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 0.2, 0] }}
+        transition={{ duration: 0.5 }}
+        className={cn(
+          "absolute inset-0",
+          type === "love" && "bg-destructive",
+          type === "fire" && "bg-orange-500",
+          type === "party" && "bg-primary",
+          type === "star" && "bg-yellow-400"
+        )}
+      />
+    </div>
+  );
+};
 
 export default VideoCallOverlay;

@@ -51,6 +51,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
   const [remoteMuted, setRemoteMuted] = useState(false);
   const [remoteCameraOff, setRemoteCameraOff] = useState(false);
   const [remoteBlurred, setRemoteBlurred] = useState(false);
+  const [surpriseEffect, setSurpriseEffect] = useState<{ type: string; id: number } | null>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -327,6 +328,13 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     });
   }, [sessionId]);
 
+  // Send a surprise reaction FX
+  const sendSurprise = useCallback((type: string) => {
+    // Show locally too
+    setSurpriseEffect({ type, id: Date.now() });
+    sendSignalingEventRef.current("webrtc:surprise", { senderId: sessionId, type });
+  }, [sessionId]);
+
   // Handle signaling events
   const handleSignalingEvent = useCallback(
     async (event: string, payload: Record<string, unknown>) => {
@@ -446,6 +454,12 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
           setCallStatus("idle");
           onCallEnded?.();
           break;
+
+        case "webrtc:surprise": {
+          const type = payload.type as string;
+          setSurpriseEffect({ type, id: Date.now() });
+          break;
+        }
       }
     },
     [sessionId, getMedia, createPeerConnection, cleanup, onCallEnded]
@@ -484,6 +498,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     toggleScreenShare,
     toggleBlur,
     upgradeToVideo,
+    sendSurprise,
+    surpriseEffect,
     handleSignalingEvent,
     cleanup,
     supportsScreenShare,

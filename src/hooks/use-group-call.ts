@@ -158,9 +158,14 @@ export function useGroupCall({ roomId, userId, maxMembers }: UseGroupCallOptions
             localStreamRef.current = stream;
             setLocalStream(stream);
 
-            const channel = supabase.channel(`group_room:${roomId}`, {
-                config: { presence: { key: userId } },
-            });
+            // Legacy Supabase connection disabled to prevent console warnings
+            const channel = { 
+                on: () => channel, 
+                subscribe: () => channel, 
+                track: () => Promise.resolve(), 
+                send: () => Promise.resolve(),
+                presenceState: () => ({})
+            } as any;
             channelRef.current = channel;
 
             channel

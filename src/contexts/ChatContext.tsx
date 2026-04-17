@@ -63,6 +63,7 @@ interface ChatContextValue {
   remoteCameraOff: boolean;
   remoteBlurred: boolean;
   supportsScreenShare: boolean;
+  surpriseEffect: { type: string; id: number } | null;
 
   // Video call actions
   startCall: (audioOnly: boolean) => void;
@@ -75,6 +76,7 @@ interface ChatContextValue {
   toggleScreenShare: () => void;
   toggleBlur: () => void;
   upgradeToVideo: () => void;
+  sendSurprise: (type: string) => void;
 
   // In-call chat
   inCallMessages: InCallMessage[];
@@ -233,6 +235,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
+    sendSurprise,
+    surpriseEffect,
     inCallMessages, sendInCallMessage,
     supportsScreenShare,
     reportStranger, stableId,
