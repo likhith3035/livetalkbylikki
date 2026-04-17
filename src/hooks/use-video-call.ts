@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { sounds } from "@/lib/sounds";
 
 export type VideoCallStatus = "idle" | "requesting" | "incoming" | "connecting" | "active";
 
@@ -332,6 +333,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
   const sendSurprise = useCallback((type: string) => {
     // Show locally too
     setSurpriseEffect({ type, id: Date.now() });
+    sounds.surprise();
     sendSignalingEventRef.current("webrtc:surprise", { senderId: sessionId, type });
   }, [sessionId]);
 
@@ -458,6 +460,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         case "webrtc:surprise": {
           const type = payload.type as string;
           setSurpriseEffect({ type, id: Date.now() });
+          sounds.surprise();
           break;
         }
       }

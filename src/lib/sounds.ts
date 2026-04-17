@@ -59,4 +59,12 @@ export const sounds = {
   messageSent: () => {
     playTone(1200, 0.05, "sine", 0.06);
   },
+
+  /** Fun sparkly tone for surprise effects */
+  surprise: () => {
+    playTone(880, 0.1, "sine", 0.08);
+    playTone(1108, 0.1, "sine", 0.08); // C#6
+    setTimeout(() => playTone(1318, 0.15, "sine", 0.06), 60); // E6
+    setTimeout(() => playTone(1760, 0.2, "sine", 0.04), 120); // A6
+  },
 };
