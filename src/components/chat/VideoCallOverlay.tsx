@@ -371,7 +371,7 @@ const VideoCallOverlay = ({
               drag
               dragMomentum={false}
               dragElastic={0.1}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-24 h-32 xs:w-28 xs:h-36 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none ring-1 ring-white/10"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-20 h-28 xs:w-24 xs:h-32 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none ring-1 ring-white/10"
               onClick={(e) => { e.stopPropagation(); setIsLocalMain(!isLocalMain); }}
               whileDrag={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -587,32 +587,51 @@ const VideoCallOverlay = ({
                     label="Surprise"
                     small
                   />
+                  
+                  {/* Surprise Menu: Adaptive positioning */}
                   <AnimatePresence>
                     {showSurpriseMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-50 flex gap-2 rounded-2xl bg-card border border-border p-2 shadow-2xl min-w-[160px]"
-                      >
-                        {[
-                          { type: "love", icon: "❤️" },
-                          { type: "fire", icon: "🔥" },
-                          { type: "party", icon: "🎉" },
-                          { type: "star", icon: "⭐" },
-                        ].map((item) => (
-                          <button
-                            key={item.type}
-                            onClick={() => {
-                                onSendSurprise?.(item.type);
-                                setShowSurpriseMenu(false);
-                            }}
-                            className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted text-xl transition-all hover:scale-110 active:scale-90"
-                          >
-                            {item.icon}
-                          </button>
-                        ))}
-                      </motion.div>
+                      <>
+                        {/* Mobile Overlay Backdrop */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-[60] bg-background/40 backdrop-blur-md sm:hidden"
+                          onClick={() => setShowSurpriseMenu(false)}
+                        />
+                        
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: 10, x: "-50%" }}
+                          animate={{ opacity: 1, scale: 1, y: 0, x: "-50%" }}
+                          exit={{ opacity: 0, scale: 0.9, y: 10, x: "-50%" }}
+                          className={cn(
+                            "fixed sm:absolute z-[70] flex gap-3 rounded-2xl bg-card border border-border p-3 shadow-2xl transition-all",
+                            "bottom-1/2 left-1/2 -translate-y-1/2 sm:bottom-14 sm:translate-y-0 min-w-[200px] justify-around"
+                          )}
+                        >
+                          {[
+                            { type: "love", icon: "❤️", label: "Hearts" },
+                            { type: "fire", icon: "🔥", label: "Fire" },
+                            { type: "party", icon: "🎉", label: "Burst" },
+                            { type: "star", icon: "⭐", label: "Sparkle" },
+                          ].map((item) => (
+                            <button
+                              key={item.type}
+                              onClick={() => {
+                                  onSendSurprise?.(item.type);
+                                  setShowSurpriseMenu(false);
+                              }}
+                              className="flex flex-col items-center gap-1 group"
+                            >
+                              <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-secondary group-hover:bg-primary/20 text-2xl transition-all group-hover:scale-110 active:scale-95">
+                                {item.icon}
+                              </div>
+                              <span className="text-[9px] font-medium text-muted-foreground">{item.label}</span>
+                            </button>
+                          ))}
+                        </motion.div>
+                      </>
                     )}
                   </AnimatePresence>
                 </div>
@@ -709,48 +728,100 @@ const SurpriseReactionOverlay = ({ type }: { type: string }) => {
     }
   };
 
-  const particles = Array.from({ length: 15 });
+  const particleCount = 25;
+  const particles = Array.from({ length: particleCount });
+
+  // Physics based on type
+  const getAnimationProps = (i: number) => {
+    switch (type) {
+      case "love":
+        // Floating upward surge from bottom
+        return {
+          initial: { opacity: 0, scale: 0, x: `${40 + Math.random() * 20}%`, y: "110%" },
+          animate: {
+            opacity: [0, 1, 1, 0],
+            scale: [0.5, 1.2, 1, 0.8],
+            x: `${10 + Math.random() * 80}%`,
+            y: "-10%",
+          },
+          transition: { duration: 3 + Math.random() * 2, delay: i * 0.1, ease: "easeOut" }
+        };
+      case "fire":
+        // Rising embers from bottom with shimmer
+        return {
+          initial: { opacity: 0, scale: 0, x: `${Math.random() * 100}%`, y: "100%" },
+          animate: {
+            opacity: [0, 1, 0.7, 1, 0],
+            scale: [0.4, 1.1, 0.9, 0],
+            y: `${Math.random() * 20}%`,
+            rotate: [0, 180, 360],
+          },
+          transition: { duration: 2 + Math.random() * 1.5, delay: i * 0.05, ease: "circIn" }
+        };
+      case "party":
+        // Circular burst from center with gravity
+        return {
+          initial: { opacity: 0, scale: 0, x: "50%", y: "40%" },
+          animate: {
+            opacity: [0, 1, 1, 0],
+            scale: [0.2, 1.5, 1.2, 0.5],
+            x: `${20 + Math.random() * 60}%`,
+            y: ["40%", `${10 + Math.random() * 20}%`, "100%"],
+            rotate: Math.random() * 720,
+          },
+          transition: { duration: 2.2, delay: i * 0.02, ease: "backOut" }
+        };
+      case "star":
+        // Falling stars from top corners
+        const fromLeft = i % 2 === 0;
+        return {
+          initial: { opacity: 0, scale: 0, x: fromLeft ? "-10%" : "110%", y: "-5%" },
+          animate: {
+            opacity: [0, 1, 1, 0],
+            scale: [0.5, 1.4, 1],
+            x: fromLeft ? "110%" : "-10%",
+            y: "90%",
+            rotate: fromLeft ? 360 : -360,
+          },
+          transition: { duration: 1.8 + Math.random() * 1, delay: i * 0.08, ease: "linear" }
+        };
+      default:
+        return {
+          initial: { opacity: 0, x: "50%", y: "50%" },
+          animate: { opacity: 0 },
+          transition: { duration: 0.1 }
+        };
+    }
+  };
 
   return (
     <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
-      {particles.map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{
-            opacity: 0,
-            scale: 0.5,
-            x: "50%",
-            y: "50%",
-          }}
-          animate={{
-            opacity: [0, 1, 1, 0],
-            scale: [0.5, 1.5, 2, 1],
-            x: `${10 + Math.random() * 80}%`,
-            y: `${10 + Math.random() * 80}%`,
-            rotate: Math.random() * 360,
-          }}
-          transition={{
-            duration: 1.5 + Math.random() * 1,
-            ease: "easeOut",
-            delay: Math.random() * 0.5,
-          }}
-          className="absolute text-3xl sm:text-4xl"
-        >
-          {getEmoji()}
-        </motion.div>
-      ))}
+      {particles.map((_, i) => {
+        const props = getAnimationProps(i);
+        return (
+          <motion.div
+            key={i}
+            initial={props.initial}
+            animate={props.animate}
+            transition={props.transition}
+            className="absolute text-4xl sm:text-5xl drop-shadow-lg"
+          >
+            {getEmoji()}
+          </motion.div>
+        );
+      })}
       
       {/* Background Flash Effect */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 0.2, 0] }}
-        transition={{ duration: 0.5 }}
+        animate={{ opacity: [0, 0.15, 0] }}
+        transition={{ duration: 0.8 }}
         className={cn(
           "absolute inset-0",
-          type === "love" && "bg-destructive",
-          type === "fire" && "bg-orange-500",
-          type === "party" && "bg-primary",
-          type === "star" && "bg-yellow-400"
+          type === "love" && "bg-rose-500",
+          type === "fire" && "bg-orange-600",
+          type === "party" && "bg-emerald-500",
+          type === "star" && "bg-amber-400"
         )}
       />
     </div>
