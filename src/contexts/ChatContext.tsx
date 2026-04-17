@@ -138,6 +138,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
     upgradeToVideo,
+    sendSurprise,
+    surpriseEffect,
     handleSignalingEvent, cleanup,
     supportsScreenShare,
   } = useVideoCall({ 
