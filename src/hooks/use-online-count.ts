@@ -43,17 +43,20 @@ export function useOnlineCount() {
     });
 
     // Monitor total online count
+    let loggedWarning = false;
     const unsubscribeCount = onValue(countRef, (snap) => {
       if (snap.exists()) {
         const count = Object.keys(snap.val()).length;
         setOnlineCount(count);
       } else {
-        setOnlineCount(0);
+        setOnlineCount(1); // Default to at least 1 (self)
       }
     }, (error) => {
-      if (error.message.includes("permission_denied")) {
+      if (error.message.includes("permission_denied") && !loggedWarning) {
         console.warn("[Firebase] Online count read permission denied. Please check your Security Rules.");
+        loggedWarning = true;
       }
+      setOnlineCount(1); // Fallback
     });
 
     return () => {

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import { RoomChannel } from "@/lib/types";
 import { Send, X, Reply } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ interface ChatInputProps {
   onTyping: (text?: string) => void;
   replyingTo?: Message | null;
   onCancelReply?: () => void;
-  roomChannel?: RealtimeChannel | null;
+  roomChannel?: RoomChannel;
   sessionId?: string;
   hideGames?: boolean;
   hasMessages?: boolean;

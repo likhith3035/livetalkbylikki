@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Gamepad2, X, RotateCcw, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import { RoomChannel } from "@/lib/types";
 
 interface ChatGamesProps {
   onSendMessage: (text: string) => void;
   isConnected: boolean;
-  roomChannel?: RealtimeChannel | null;
+  roomChannel?: RoomChannel;
   sessionId?: string;
   activeGame: "none" | "ttt" | "canvas";
   setActiveGame: (game: "none" | "ttt" | "canvas") => void;
@@ -41,7 +41,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
   useEffect(() => {
     if (!roomChannel) return;
 
-    roomChannel.on("broadcast", { event: "ttt_move" }, (payload) => {
+    roomChannel.on?.("broadcast", { event: "ttt_move" }, (payload) => {
       const data = payload.payload as { senderId: string; index: number; symbol: "X" | "O" };
       if (data.senderId !== sessionId) {
         setBoard((prev) => {
@@ -53,7 +53,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       }
     });
 
-    roomChannel.on("broadcast", { event: "ttt_start" }, (payload) => {
+    roomChannel.on?.("broadcast", { event: "ttt_start" }, (payload) => {
       const data = payload.payload as { senderId: string; starterSymbol: "X" | "O" };
       if (data.senderId !== sessionId) {
         setMySymbol(data.starterSymbol === "X" ? "O" : "X");
@@ -64,7 +64,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       }
     });
 
-    roomChannel.on("broadcast", { event: "ttt_reset" }, (payload) => {
+    roomChannel.on?.("broadcast", { event: "ttt_reset" }, (payload) => {
       const data = payload.payload as { senderId: string };
       if (data.senderId !== sessionId) {
         setBoard(Array(9).fill(null));
@@ -72,18 +72,20 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       }
     });
 
-    roomChannel.on("broadcast", { event: "canvas_start" }, (payload) => {
+    roomChannel.on?.("broadcast", { event: "canvas_start" }, (payload) => {
       if (payload.payload.senderId !== sessionId) {
         setActiveGame("canvas");
         setShowGames(false);
       }
     });
 
-    roomChannel.on("broadcast", { event: "canvas_stop" }, (payload) => {
+    roomChannel.on?.("broadcast", { event: "canvas_stop" }, (payload) => {
       if (payload.payload.senderId !== sessionId) {
         setActiveGame("none");
       }
     });
+
+    roomChannel.subscribe?.();
 
     return () => { };
   }, [roomChannel, sessionId, setActiveGame]);

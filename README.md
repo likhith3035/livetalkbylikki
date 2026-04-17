@@ -145,7 +145,7 @@ cp .env.example .env
 ```
 
 ### 3. Backend Configuration
-- **Supabase**: Create a new project and add your URL/Anon Key to `.env`.
+- **Supabase**: Create a new project and add your URL/Publishable Key to `.env`.
 - **Firebase**: Enable **Realtime Database** and set location to `us-central1`. 
 - **Security Rules**: Copy the rules from [DEVELOPMENT.md](./DEVELOPMENT.md) into your Firebase console.
 

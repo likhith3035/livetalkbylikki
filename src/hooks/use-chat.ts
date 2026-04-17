@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import { db } from "@/lib/firebase";
+import { ref, onChildAdded, push, off, onDisconnect, remove } from "firebase/database";
 import { useOnlineCount } from "./use-online-count";
 import { sounds, haptics } from "@/lib/sounds";
 import { sendNotification, type NotificationType } from "@/lib/notifications";
 import { useFirebaseMatchmakingV3 as useFirebaseMatchmaking } from "./use-matchmaking-v3";
 import { useFirebaseSignaling } from "./use-firebase-signaling";
 import { useSafety } from "./use-safety";
+import { BaseChannel, RoomChannel } from "@/lib/types";
 
 const getProfile = () => {
   try {
@@ -91,8 +92,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [userName, setUserName] = useState<string>("");
   const [strangerName, setStrangerName] = useState<string>("Stranger");
   const [privateRoomCode, setPrivateRoomCode] = useState<string | null>(null);
-  const channelRef = useRef<RealtimeChannel | null>(null);
-  const roomChannelRef = useRef<RealtimeChannel | null>(null);
+  const roomChannelRef = useRef<RoomChannel>(null);
   const roomIdRef = useRef<string | null>(null);
   const strangerIdRef = useRef<string | null>(null);
   const strangerStableIdRef = useRef<string | null>(null);
@@ -166,84 +166,117 @@ export function useChat(callbacks?: ChatCallbacks) {
       if (searchTimerRef.current) { clearInterval(searchTimerRef.current); searchTimerRef.current = null; }
       setSearchElapsed(0);
 
-      const channel = supabase.channel(`room:${roomId}`);
-      channel
-        .on("broadcast", { event: "message" }, (payload) => {
-          const data = payload.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string; replyTo?: Message["replyTo"] };
-          if (data.senderId !== sessionId) {
+      const eventsRef = ref(db, `rooms/${roomId}/chat_events`);
+      
+      const channelMock: BaseChannel = {
+        _listeners: [] as Array<{ event: string, callback: Function }>,
+        on: function(type: string, filter: { event: string }, callback: Function) {
+          this._listeners.push({ event: filter.event, callback });
+          return this;
+        },
+        subscribe: function(callback?: (status: string) => void) {
+          if (callback) callback("SUBSCRIBED");
+          return { unsubscribe: () => this.unsubscribe() };
+        },
+        send: function(data: { type: string; event: string; payload: any }) {
+          const cleanPayload = JSON.parse(JSON.stringify(data.payload));
+          return push(eventsRef, {
+            event: data.event,
+            payload: cleanPayload,
+            timestamp: Date.now()
+          }).catch((err) => console.warn("[Chat] push error:", err));
+        },
+        unsubscribe: function() {
+          this._listeners = [];
+          off(eventsRef);
+        },
+        track: async (state: any) => { return {}; },
+        presenceState: () => { return {}; }
+      };
+
+      onChildAdded(eventsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data || data.payload?.senderId === sessionId) return;
+
+        switch (data.event) {
+          case "message": {
+            const payloadData = data.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string; replyTo?: Message["replyTo"] };
             setStrangerTyping(false);
-            addMessage("stranger", data.text, data.imageUrl, data.nickname, data.avatar, data.messageId, data.replyTo);
+            addMessage("stranger", payloadData.text, payloadData.imageUrl, payloadData.nickname, payloadData.avatar, payloadData.messageId, payloadData.replyTo);
             playSoundIfEnabled("messageReceived");
             if (callbacksRef.current?.soundEnabled) haptics.vibrate(50);
-            notifyIfEnabled("L Chat", data.imageUrl ? "📷 Image" : data.text.slice(0, 100), "message");
-            channel.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: data.messageId } });
+            notifyIfEnabled("L Chat", payloadData.imageUrl ? "📷 Image" : payloadData.text.slice(0, 100), "message");
+            channelMock.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: payloadData.messageId } });
+            break;
           }
-        })
-        .on("broadcast", { event: "read" }, (payload) => {
-          const data = payload.payload as { senderId: string; messageId: string };
-          if (data.senderId !== sessionId) {
-            setMessages((prev) => prev.map((msg) => msg.id === data.messageId ? { ...msg, read: true } : msg));
+          case "read": {
+            const payloadData = data.payload as { senderId: string; messageId: string };
+            setMessages((prev) => prev.map((msg) => msg.id === payloadData.messageId ? { ...msg, read: true } : msg));
+            break;
           }
-        })
-        .on("broadcast", { event: "typing" }, (payload) => {
-          const data = payload.payload as { senderId: string; text?: string };
-          if (data.senderId !== sessionId) {
+          case "typing": {
+            const payloadData = data.payload as { senderId: string; text?: string };
             setStrangerTyping(true);
-            setStrangerTypingText(data.text || "");
+            setStrangerTypingText(payloadData.text || "");
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
             typingTimeoutRef.current = setTimeout(() => {
               setStrangerTyping(false);
               setStrangerTypingText("");
             }, 3000);
+            break;
           }
-        })
-        .on("broadcast", { event: "reaction" }, (payload) => {
-          const data = payload.payload as { senderId: string; messageId: string; emoji: string };
-          if (data.senderId !== sessionId) {
+          case "reaction": {
+            const payloadData = data.payload as { senderId: string; messageId: string; emoji: string };
             setMessages((prev) =>
               prev.map((msg) => {
-                if (msg.id !== data.messageId) return msg;
+                if (msg.id !== payloadData.messageId) return msg;
                 const reactions = { ...msg.reactions };
-                const senders = reactions[data.emoji] || [];
-                if (senders.includes(data.senderId)) {
-                  reactions[data.emoji] = senders.filter((s) => s !== data.senderId);
+                const senders = reactions[payloadData.emoji] || [];
+                if (senders.includes(payloadData.senderId)) {
+                  reactions[payloadData.emoji] = senders.filter((s) => s !== payloadData.senderId);
                 } else {
-                  reactions[data.emoji] = [...senders, data.senderId];
+                  reactions[payloadData.emoji] = [...senders, payloadData.senderId];
                 }
                 return { ...msg, reactions };
               })
             );
+            break;
           }
-        })
-        .on("broadcast", { event: "leave" }, (payload) => {
-          const data = payload.payload as { senderId: string };
-          if (data.senderId !== sessionId) {
+          case "leave": {
             setStatus("disconnected");
             addMessage("system", "Stranger has disconnected.");
             playSoundIfEnabled("disconnected");
             notifyIfEnabled("L Chat", "Stranger has disconnected.", "disconnected");
             leaveRoom();
+            break;
           }
-        })
-        .on("broadcast", { event: "delete_msg" }, (payload) => {
-          const data = payload.payload as { senderId: string; messageId: string };
-          if (data.senderId !== sessionId) {
+          case "delete_msg": {
+            const payloadData = data.payload as { senderId: string; messageId: string };
             setMessages((prev) => prev.map((msg) =>
-              msg.id === data.messageId ? { ...msg, deleted: true, text: "🚫 This message was deleted", imageUrl: undefined } : msg
+              msg.id === payloadData.messageId ? { ...msg, deleted: true, text: "🚫 This message was deleted", imageUrl: undefined } : msg
             ));
+            break;
           }
-        })
-        .on("broadcast", { event: "pin_msg" }, (payload) => {
-          const data = payload.payload as { senderId: string; messageId: string; pinned: boolean };
-          if (data.senderId !== sessionId) {
+          case "pin_msg": {
+            const payloadData = data.payload as { senderId: string; messageId: string; pinned: boolean };
             setMessages((prev) => prev.map((msg) =>
-              msg.id === data.messageId ? { ...msg, pinned: data.pinned } : msg
+              msg.id === payloadData.messageId ? { ...msg, pinned: payloadData.pinned } : msg
             ));
+            break;
+          }
+        }
+        
+        (channelMock as any)._listeners.forEach((l: any) => {
+          if (l.event === data.event) {
+            l.callback({ event: data.event, type: "broadcast", payload: data.payload });
           }
         });
+        
+        remove(snapshot.ref).catch(() => {});
+      });
 
-      channel.subscribe();
-      roomChannelRef.current = channel;
+      onDisconnect(eventsRef).remove().catch(() => {});
+      roomChannelRef.current = channelMock;
     },
     [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
   );
@@ -378,6 +411,7 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   const stopChat = useCallback(() => {
     const wasSearching = status === "searching";
+    const wasDisconnected = status === "disconnected";
     if (roomChannelRef.current && roomIdRef.current) {
       roomChannelRef.current.send({
         type: "broadcast",
@@ -386,20 +420,16 @@ export function useChat(callbacks?: ChatCallbacks) {
       });
     }
     leaveRoom();
-    if (channelRef.current) {
-      channelRef.current.unsubscribe();
-      channelRef.current = null;
-    }
-    
-    // If we were searching, go back to idle (lobby)
-    // If we were in a chat, go to disconnected to show logs
-    setStatus(wasSearching ? "idle" : "disconnected");
-    setMatchedInterests([]);
-    
-    if (!wasSearching) {
+    clearReconnectTimer();
+
+    if (wasSearching || wasDisconnected) {
+      setStatus("idle");
+    } else {
+      setStatus("disconnected");
       addMessage("system", "You have disconnected.");
     }
-  }, [addMessage, leaveRoom, status]);
+    setMatchedInterests([]);
+  }, [addMessage, leaveRoom, clearReconnectTimer, status]);
 
   const blockStranger = useCallback(() => {
     if (strangerIdRef.current) {

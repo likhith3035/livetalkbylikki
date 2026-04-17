@@ -81,12 +81,17 @@ const App = () => {
   useEffect(() => {
     // Ping Supabase to make sure it's awake before showing the app
     const checkConnection = async () => {
+      // 5-second timeout to prevent being stuck forever if Supabase is down
+      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 5000));
+      
       try {
         // Quick, lightweight call to wake it up if needed.
-        // auth.getSession() is incredibly fast, doesn't require tables, and cleanly wakes up the database.
-        await supabase.auth.getSession();
+        await Promise.race([
+          supabase.auth.getSession(),
+          timeout
+        ]);
       } catch (e) {
-        // Ignore errors if table doesn't exist, the goal is just hitting the API to wake it up
+        console.warn("[App] Supabase connection check timed out or failed:", e);
       } finally {
         setIsReady(true);
       }

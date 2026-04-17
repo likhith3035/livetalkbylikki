@@ -3,11 +3,11 @@ import { createPortal } from "react-dom";
 import { Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2, Download, Sparkles, Pencil, Square, Circle, Minus, ArrowUpRight, Type, Undo2, Redo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import { RoomChannel } from "@/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SharedCanvasProps {
-  roomChannel?: RealtimeChannel | null;
+  roomChannel?: RoomChannel;
   sessionId?: string;
   onClose: () => void;
 }
@@ -37,7 +37,7 @@ const BRUSH_SIZES = [
 ];
 
 // Extracted to prevent re-rendering the entire Canvas on every cursor move (fixes lag)
-const CursorOverlay = memo(({ roomChannel, sessionId }: { roomChannel?: RealtimeChannel | null; sessionId?: string }) => {
+const CursorOverlay = memo(({ roomChannel, sessionId }: { roomChannel?: RoomChannel; sessionId?: string }) => {
   const [remoteCursors, setRemoteCursors] = useState<Record<string, RemoteCursor>>({});
 
   useEffect(() => {
@@ -53,7 +53,8 @@ const CursorOverlay = memo(({ roomChannel, sessionId }: { roomChannel?: Realtime
       }
     };
 
-    roomChannel.on("broadcast", { event: "cursor" }, handleCursor);
+    roomChannel.on?.("broadcast", { event: "cursor" }, handleCursor);
+    roomChannel.subscribe?.();
 
     const cleanupInterval = setInterval(() => {
       const now = Date.now();
@@ -551,11 +552,13 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       }
     };
 
-    roomChannel?.on("broadcast", { event: "drawing_batch" }, handleDrawingBatch);
-    roomChannel?.on("broadcast", { event: "drawing" }, handleDrawing);
-    roomChannel?.on("broadcast", { event: "shape" }, handleShape);
-    roomChannel?.on("broadcast", { event: "text_draw" }, handleTextRemote);
-    roomChannel?.on("broadcast", { event: "clear_canvas" }, handleClearRemote);
+
+    roomChannel?.on?.("broadcast", { event: "drawing_batch" }, handleDrawingBatch);
+    roomChannel?.on?.("broadcast", { event: "drawing" }, handleDrawing);
+    roomChannel?.on?.("broadcast", { event: "shape" }, handleShape);
+    roomChannel?.on?.("broadcast", { event: "text_draw" }, handleTextRemote);
+    roomChannel?.on?.("broadcast", { event: "clear_canvas" }, handleClearRemote);
+    roomChannel?.subscribe?.();
 
     return () => {
       window.removeEventListener("resize", handleResize);
