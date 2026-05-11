@@ -4,6 +4,7 @@ import { Gamepad2, X, RotateCcw, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RoomChannel } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatGamesProps {
   onSendMessage: (text: string) => void;
@@ -30,6 +31,7 @@ const checkWinner = (board: TicTacToeCell[]): TicTacToeCell => {
 
 const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeGame, setActiveGame }: ChatGamesProps) => {
   const [showGames, setShowGames] = useState(false);
+  const { toast } = useToast();
 
   // Tic-Tac-Toe state
   const [board, setBoard] = useState<TicTacToeCell[]>(Array(9).fill(null));
@@ -79,9 +81,13 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       }
     });
 
-    roomChannel.on?.("broadcast", { event: "canvas_stop" }, (payload) => {
+    roomChannel.on?.("broadcast", { event: "game_stop" }, (payload) => {
       if (payload.payload.senderId !== sessionId) {
         setActiveGame("none");
+        toast({
+          title: "Game Ended",
+          description: `Stranger left the ${payload.payload.game === 'ttt' ? 'Tic-Tac-Toe' : 'Canvas'} game.`,
+        });
       }
     });
 
@@ -229,6 +235,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
                   onClick={() => {
                     setActiveGame("none");
                     setMySymbol(null);
+                    roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "ttt" } });
                   }}
                   className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center"
                 >

@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => ({
     viteCompression({ algorithm: 'brotliCompress' }),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["robots.txt", "logo.png"],
+      includeAssets: ["robots.txt", "logo.png", "og-image.jpg"],
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],

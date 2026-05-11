@@ -501,7 +501,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             <SharedCanvas
               roomChannel={roomChannel}
               sessionId={sessionId}
-              onClose={() => setActiveGame("none")}
+              onClose={() => {
+                setActiveGame("none");
+                roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "canvas" } });
+              }}
             />
           )}
         </AnimatePresence>
