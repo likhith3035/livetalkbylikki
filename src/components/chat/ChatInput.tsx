@@ -22,8 +22,8 @@ interface ChatInputProps {
   sessionId?: string;
   hideGames?: boolean;
   hasMessages?: boolean;
-  activeGame: "none" | "ttt" | "canvas";
-  setActiveGame: (game: "none" | "ttt" | "canvas") => void;
+  activeGame: "none" | "ttt" | "canvas" | "rps";
+  setActiveGame: (game: "none" | "ttt" | "canvas" | "rps") => void;
 }
 
 const ChatInput = ({ 

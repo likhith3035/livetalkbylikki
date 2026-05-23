@@ -73,7 +73,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [searchHighlight, setSearchHighlight] = useState<string | null>(null);
   const [tempName, setTempName] = useState("");
-  const [activeGame, setActiveGame] = useState<"none" | "ttt" | "canvas">("none");
+  const [activeGame, setActiveGame] = useState<"none" | "ttt" | "canvas" | "rps">("none");
   const lastAutoJoinCodeRef = useRef<string | null>(null);
 
   // Auto-join private room from URL/code

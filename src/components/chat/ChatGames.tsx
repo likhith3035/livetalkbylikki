@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gamepad2, X, RotateCcw, Palette } from "lucide-react";
+import { Gamepad2, X, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RoomChannel } from "@/lib/types";
@@ -11,44 +11,252 @@ interface ChatGamesProps {
   isConnected: boolean;
   roomChannel?: RoomChannel;
   sessionId?: string;
-  activeGame: "none" | "ttt" | "canvas";
-  setActiveGame: (game: "none" | "ttt" | "canvas") => void;
+  activeGame: "none" | "ttt" | "canvas" | "rps";
+  setActiveGame: (game: "none" | "ttt" | "canvas" | "rps") => void;
 }
 
 type TicTacToeCell = "X" | "O" | null;
 
-const checkWinner = (board: TicTacToeCell[]): TicTacToeCell => {
+interface TttResult {
+  winner: TicTacToeCell;
+  line: number[] | null;
+}
+
+const getTttResult = (board: TicTacToeCell[]): TttResult => {
   const lines = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
     [0, 3, 6], [1, 4, 7], [2, 5, 8],
     [0, 4, 8], [2, 4, 6],
   ];
   for (const [a, b, c] of lines) {
-    if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return { winner: board[a], line: [a, b, c] };
+    }
   }
-  return null;
+  return { winner: null, line: null };
+};
+
+const getRpsResult = (p: "R" | "P" | "S", o: "R" | "P" | "S"): "win" | "lose" | "draw" => {
+  if (p === o) return "draw";
+  if (
+    (p === "R" && o === "S") ||
+    (p === "P" && o === "R") ||
+    (p === "S" && o === "P")
+  ) return "win";
+  return "lose";
+};
+
+// Web Audio API Synthesizer Helper
+const playTone = (frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.15) => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch {
+    // Autoplay restrictions or unsupported audio contexts
+  }
+};
+
+const gameAudio = {
+  click: () => playTone(600, 0.04, "sine", 0.08),
+  tension: () => {
+    playTone(220, 0.08, "triangle", 0.12);
+    setTimeout(() => playTone(220, 0.08, "triangle", 0.12), 300);
+    setTimeout(() => playTone(220, 0.08, "triangle", 0.12), 600);
+    setTimeout(() => playTone(330, 0.15, "triangle", 0.12), 900);
+  },
+  win: () => {
+    playTone(523.25, 0.1, "sine", 0.12); // C5
+    setTimeout(() => playTone(659.25, 0.1, "sine", 0.12), 80); // E5
+    setTimeout(() => playTone(783.99, 0.1, "sine", 0.12), 160); // G5
+    setTimeout(() => playTone(1046.50, 0.25, "sine", 0.1), 240); // C6
+  },
+  lose: () => {
+    playTone(392.00, 0.15, "sawtooth", 0.05); // G4
+    setTimeout(() => playTone(349.23, 0.15, "sawtooth", 0.05), 120); // F4
+    setTimeout(() => playTone(311.13, 0.35, "sawtooth", 0.05), 240); // Eb4
+  },
+  draw: () => {
+    playTone(440, 0.1, "triangle", 0.08);
+    setTimeout(() => playTone(440, 0.1, "triangle", 0.08), 150);
+  }
+};
+
+interface Particle {
+  id: number;
+  emoji: string;
+  x: number;
+  y: number;
+  rotate: number;
+  scale: number;
+}
+
+const FloatingParticles = ({ active }: { active: boolean }) => {
+  const [particles, setParticles] = useState<Particle[]>([]);
+
+  useEffect(() => {
+    if (!active) {
+      setParticles([]);
+      return;
+    }
+
+    const EMOJIS = ["🎉", "⭐", "🏆", "✨", "👑", "💖"];
+    const newParticles = Array.from({ length: 15 }).map((_, i) => ({
+      id: i,
+      emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
+      x: (Math.random() - 0.5) * 180,
+      y: -(Math.random() * 140 + 40),
+      rotate: (Math.random() - 0.5) * 240,
+      scale: Math.random() * 0.4 + 0.8,
+    }));
+    setParticles(newParticles);
+  }, [active]);
+
+  if (!active) return null;
+
+  return (
+    <div className="absolute inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden">
+      <AnimatePresence>
+        {particles.map((p) => (
+          <motion.span
+            key={p.id}
+            initial={{ opacity: 1, scale: 0, x: 0, y: 0, rotate: 0 }}
+            animate={{
+              opacity: [1, 1, 0],
+              scale: [0, p.scale, p.scale * 0.7],
+              x: p.x,
+              y: p.y,
+              rotate: p.rotate
+            }}
+            transition={{ duration: 1.4, ease: "easeOut" }}
+            className="absolute text-xl select-none"
+          >
+            {p.emoji}
+          </motion.span>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeGame, setActiveGame }: ChatGamesProps) => {
   const [showGames, setShowGames] = useState(false);
   const { toast } = useToast();
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Tic-Tac-Toe state
   const [board, setBoard] = useState<TicTacToeCell[]>(Array(9).fill(null));
   const [mySymbol, setMySymbol] = useState<"X" | "O" | null>(null);
   const [currentTurn, setCurrentTurn] = useState<"X" | "O">("X");
-  const winner = checkWinner(board);
+  const [tttScores, setTttScores] = useState({ xWins: 0, oWins: 0, draws: 0 });
+
+  const { winner, line: tttLine } = getTttResult(board);
   const isDraw = !winner && board.every((c) => c !== null);
+
+  // Rock Paper Scissors state
+  const [myRpsChoice, setMyRpsChoice] = useState<"R" | "P" | "S" | null>(null);
+  const [strangerRpsChoice, setStrangerRpsChoice] = useState<"R" | "P" | "S" | null>(null);
+  const [rpsScores, setRpsScores] = useState({ wins: 0, losses: 0, draws: 0 });
+  const [isRpsShaking, setIsRpsShaking] = useState(false);
+
+  const myRpsChoiceRef = useRef<"R" | "P" | "S" | null>(null);
+  const strangerRpsChoiceRef = useRef<"R" | "P" | "S" | null>(null);
+  const iMadeFinalChoice = useRef(false);
+
+  useEffect(() => { myRpsChoiceRef.current = myRpsChoice; }, [myRpsChoice]);
+  useEffect(() => { strangerRpsChoiceRef.current = strangerRpsChoice; }, [strangerRpsChoice]);
+
+  // RPS Tension Shake & Score update effect
+  useEffect(() => {
+    if (myRpsChoice !== null && strangerRpsChoice !== null) {
+      setIsRpsShaking(true);
+      gameAudio.tension();
+      
+      const timer = setTimeout(() => {
+        setIsRpsShaking(false);
+        const res = getRpsResult(myRpsChoice, strangerRpsChoice);
+        
+        // Update score
+        setRpsScores((prev) => {
+          if (res === "win") return { ...prev, wins: prev.wins + 1 };
+          if (res === "lose") return { ...prev, losses: prev.losses + 1 };
+          return { ...prev, draws: prev.draws + 1 };
+        });
+
+        // Trigger Audio & Visual Confetti
+        if (res === "win") {
+          gameAudio.win();
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 2000);
+        } else if (res === "lose") {
+          gameAudio.lose();
+        } else {
+          gameAudio.draw();
+        }
+
+        // Post chat message once
+        if (iMadeFinalChoice.current) {
+          const choiceEmojis = { R: "✊", P: "✋", S: "✌️" };
+          if (res === "win") {
+            onSendMessage(`🎮 Rock Paper Scissors: I won! ${choiceEmojis[myRpsChoice]} beats ${choiceEmojis[strangerRpsChoice]} 🎉`);
+          } else if (res === "lose") {
+            onSendMessage(`🎮 Rock Paper Scissors: You won! ${choiceEmojis[strangerRpsChoice]} beats ${choiceEmojis[myRpsChoice]} 🎉`);
+          } else {
+            onSendMessage(`🎮 Rock Paper Scissors: It's a draw! Both chose ${choiceEmojis[myRpsChoice]} 🤝`);
+          }
+          iMadeFinalChoice.current = false;
+        }
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [myRpsChoice, strangerRpsChoice, onSendMessage]);
 
   useEffect(() => {
     if (!roomChannel) return;
 
+    // --- Tic-Tac-Toe listeners ---
     roomChannel.on?.("broadcast", { event: "ttt_move" }, (payload) => {
       const data = payload.payload as { senderId: string; index: number; symbol: "X" | "O" };
       if (data.senderId !== sessionId) {
         setBoard((prev) => {
           const newBoard = [...prev];
           newBoard[data.index] = data.symbol;
+
+          const wResult = getTttResult(newBoard);
+          if (wResult.winner) {
+            setTttScores((prevScores) => {
+              const isStrangerX = data.symbol === "X";
+              return {
+                ...prevScores,
+                xWins: isStrangerX ? prevScores.xWins + 1 : prevScores.xWins,
+                oWins: !isStrangerX ? prevScores.oWins + 1 : prevScores.oWins
+              };
+            });
+            if (wResult.winner === mySymbol) {
+              gameAudio.win();
+              setShowConfetti(true);
+              setTimeout(() => setShowConfetti(false), 2000);
+            } else {
+              gameAudio.lose();
+            }
+          } else if (!wResult.winner && newBoard.every(c => c !== null)) {
+            setTttScores((prevScores) => ({ ...prevScores, draws: prevScores.draws + 1 }));
+            gameAudio.draw();
+          }
+
           return newBoard;
         });
         setCurrentTurn(data.symbol === "X" ? "O" : "X");
@@ -74,6 +282,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       }
     });
 
+    // --- Shared Canvas listeners ---
     roomChannel.on?.("broadcast", { event: "canvas_start" }, (payload) => {
       if (payload.payload.senderId !== sessionId) {
         setActiveGame("canvas");
@@ -81,12 +290,41 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       }
     });
 
+    // --- Rock Paper Scissors listeners ---
+    roomChannel.on?.("broadcast", { event: "rps_start" }, (payload) => {
+      if (payload.payload.senderId !== sessionId) {
+        setMyRpsChoice(null);
+        setStrangerRpsChoice(null);
+        setActiveGame("rps");
+        setShowGames(true);
+      }
+    });
+
+    roomChannel.on?.("broadcast", { event: "rps_choice" }, (payload) => {
+      const data = payload.payload as { senderId: string; choice: "R" | "P" | "S" };
+      if (data.senderId !== sessionId) {
+        setStrangerRpsChoice(data.choice);
+      }
+    });
+
+    roomChannel.on?.("broadcast", { event: "rps_next" }, (payload) => {
+      if (payload.payload.senderId !== sessionId) {
+        setMyRpsChoice(null);
+        setStrangerRpsChoice(null);
+      }
+    });
+
+    // --- General Stop Game listener ---
     roomChannel.on?.("broadcast", { event: "game_stop" }, (payload) => {
       if (payload.payload.senderId !== sessionId) {
         setActiveGame("none");
+        const gameLabel = 
+          payload.payload.game === 'ttt' ? 'Tic-Tac-Toe' : 
+          payload.payload.game === 'rps' ? 'Rock Paper Scissors' : 
+          'Canvas';
         toast({
           title: "Game Ended",
-          description: `Stranger left the ${payload.payload.game === 'ttt' ? 'Tic-Tac-Toe' : 'Canvas'} game.`,
+          description: `Stranger left the ${gameLabel} game.`,
         });
       }
     });
@@ -94,10 +332,12 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
     roomChannel.subscribe?.();
 
     return () => { };
-  }, [roomChannel, sessionId, setActiveGame]);
+  }, [roomChannel, sessionId, setActiveGame, toast, mySymbol]);
 
+  // --- Tic-Tac-Toe actions ---
   const handleCellClick = (i: number) => {
     if (board[i] || winner || !mySymbol || currentTurn !== mySymbol) return;
+    gameAudio.click();
     const newBoard = [...board];
     newBoard[i] = mySymbol;
     setBoard(newBoard);
@@ -109,10 +349,29 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       payload: { senderId: sessionId, index: i, symbol: mySymbol },
     });
 
-    const w = checkWinner(newBoard);
-    const d = !w && newBoard.every((c) => c !== null);
-    if (w) onSendMessage(`🎮 Tic-Tac-Toe: ${w === mySymbol ? "I" : "You"} won! 🎉`);
-    else if (d) onSendMessage("🎮 Tic-Tac-Toe: It's a draw! 🤝");
+    const wResult = getTttResult(newBoard);
+    if (wResult.winner) {
+      setTttScores((prev) => {
+        const isX = mySymbol === "X";
+        return {
+          ...prev,
+          xWins: isX ? prev.xWins + 1 : prev.xWins,
+          oWins: !isX ? prev.oWins + 1 : prev.oWins
+        };
+      });
+      onSendMessage(`🎮 Tic-Tac-Toe: ${wResult.winner === mySymbol ? "I" : "You"} won! 🎉`);
+      if (wResult.winner === mySymbol) {
+        gameAudio.win();
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 2000);
+      } else {
+        gameAudio.lose();
+      }
+    } else if (!wResult.winner && newBoard.every(c => c !== null)) {
+      setTttScores((prev) => ({ ...prev, draws: prev.draws + 1 }));
+      onSendMessage("🎮 Tic-Tac-Toe: It's a draw! 🤝");
+      gameAudio.draw();
+    }
   };
 
   const startTTT = () => {
@@ -130,6 +389,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
     roomChannel?.send({ type: "broadcast", event: "ttt_reset", payload: { senderId: sessionId } });
   };
 
+  // --- Shared Canvas actions ---
   const startCanvas = () => {
     setActiveGame("canvas");
     setShowGames(false);
@@ -137,9 +397,37 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
     onSendMessage("🎨 I opened the Collaborative Canvas! Let's doodle together!");
   };
 
+  // --- Rock Paper Scissors actions ---
+  const startRPS = () => {
+    setMyRpsChoice(null);
+    setStrangerRpsChoice(null);
+    setActiveGame("rps");
+    roomChannel?.send({ type: "broadcast", event: "rps_start", payload: { senderId: sessionId } });
+    onSendMessage("🎮 I started Rock Paper Scissors! Let's play!");
+  };
+
+  const selectRpsChoice = (choice: "R" | "P" | "S") => {
+    if (myRpsChoice) return;
+    gameAudio.click();
+    iMadeFinalChoice.current = strangerRpsChoiceRef.current !== null;
+    setMyRpsChoice(choice);
+    roomChannel?.send({
+      type: "broadcast",
+      event: "rps_choice",
+      payload: { senderId: sessionId, choice },
+    });
+  };
+
+  const nextRpsRound = () => {
+    setMyRpsChoice(null);
+    setStrangerRpsChoice(null);
+    roomChannel?.send({ type: "broadcast", event: "rps_next", payload: { senderId: sessionId } });
+  };
+
   if (!isConnected) return null;
 
   const isMyTurn = mySymbol === currentTurn;
+  const isRpsRevealed = myRpsChoice !== null && strangerRpsChoice !== null && !isRpsShaking;
 
   return (
     <div className="relative">
@@ -159,16 +447,20 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-14 left-0 z-50 w-64 rounded-2xl border border-border bg-card shadow-xl p-3"
+            className="absolute bottom-14 left-0 z-50 w-64 rounded-2xl border border-border bg-card shadow-xl p-3 relative overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-2">
+            {/* Embedded Confetti Particle Burst */}
+            <FloatingParticles active={showConfetti} />
+
+            <div className="flex items-center justify-between mb-2 relative z-10">
               <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                 <Gamepad2 className="h-3.5 w-3.5 text-primary" /> Games
               </span>
               <button
                 onClick={() => {
                   setShowGames(false);
-                  if (activeGame !== "ttt" || !mySymbol) setActiveGame("none");
+                  if (activeGame === "ttt" && !mySymbol) setActiveGame("none");
+                  if (activeGame === "rps" && !myRpsChoice) setActiveGame("none");
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -176,8 +468,9 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
               </button>
             </div>
 
+            {/* --- GAMES SELECTOR SCREEN --- */}
             {activeGame === "none" && (
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative z-10">
                 <button
                   onClick={startTTT}
                   className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors"
@@ -192,13 +485,21 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
                   <p className="text-sm font-medium text-foreground">🎨 Shared Canvas</p>
                   <p className="text-[10px] text-muted-foreground">Doodle in real-time!</p>
                 </button>
+                <button
+                  onClick={startRPS}
+                  className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors"
+                >
+                  <p className="text-sm font-medium text-foreground">✊✋✌️ Rock Paper Scissors</p>
+                  <p className="text-[10px] text-muted-foreground">Co-op hand challenge!</p>
+                </button>
               </div>
             )}
 
+            {/* --- TIC-TAC-TOE BOARD --- */}
             {activeGame === "ttt" && (
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-10">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-[10px] text-muted-foreground font-semibold">
                     {winner
                       ? `${winner === mySymbol ? "You win" : "They win"}! 🎉`
                       : isDraw
@@ -209,38 +510,196 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
                             : `Their turn (${currentTurn})`
                           : "Waiting..."}
                   </span>
-                  <button onClick={resetTTT} className="text-muted-foreground hover:text-foreground">
-                    <RotateCcw className="h-3 w-3" />
-                  </button>
+                  <div className="text-[9px] font-bold text-primary font-mono uppercase tracking-wider">
+                    {tttScores.xWins}X - {tttScores.oWins}O - {tttScores.draws}D
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-1">
-                  {board.map((cell, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleCellClick(i)}
-                      disabled={!isMyTurn || !!winner || !!cell}
-                      className={cn(
-                        "h-12 rounded-lg border border-border bg-secondary/40 text-lg font-bold transition-all",
-                        !cell && !winner && isMyTurn && "hover:bg-secondary cursor-pointer",
-                        (!isMyTurn || !!cell) && !winner && "cursor-not-allowed opacity-70",
-                        cell === "X" && "text-primary",
-                        cell === "O" && "text-destructive"
-                      )}
-                    >
-                      {cell}
-                    </button>
-                  ))}
+                  {board.map((cell, i) => {
+                    const isWinning = tttLine?.includes(i);
+                    return (
+                      <motion.button
+                        key={i}
+                        onClick={() => handleCellClick(i)}
+                        disabled={!isMyTurn || !!winner || !!cell}
+                        animate={isWinning ? { scale: [1, 1.1, 1], rotate: [0, 2, -2, 0] } : {}}
+                        transition={isWinning ? { duration: 0.6, repeat: Infinity } : {}}
+                        className={cn(
+                          "h-12 rounded-lg border text-lg font-bold transition-all relative overflow-hidden",
+                          isWinning 
+                            ? "bg-primary/20 border-primary text-primary shadow-[0_0_10px_hsl(var(--primary)/0.2)]" 
+                            : "bg-secondary/40 border-border",
+                          !cell && !winner && isMyTurn && "hover:bg-secondary cursor-pointer",
+                          (!isMyTurn || !!cell) && !winner && "cursor-not-allowed opacity-75",
+                          cell === "X" && !isWinning && "text-primary",
+                          cell === "O" && !isWinning && "text-destructive"
+                        )}
+                      >
+                        {cell}
+                      </motion.button>
+                    );
+                  })}
                 </div>
-                <button
-                  onClick={() => {
-                    setActiveGame("none");
-                    setMySymbol(null);
-                    roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "ttt" } });
-                  }}
-                  className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center"
-                >
-                  ← Back
-                </button>
+                <div className="flex justify-between items-center pt-1.5 border-t border-border/40">
+                  <button
+                    onClick={() => setTttScores({ xWins: 0, oWins: 0, draws: 0 })}
+                    className="text-[9px] text-muted-foreground/60 hover:text-foreground transition-colors font-bold uppercase tracking-wider"
+                  >
+                    Reset Score
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveGame("none");
+                      setMySymbol(null);
+                      roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "ttt" } });
+                    }}
+                    className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
+                  >
+                    ← Back
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* --- ROCK PAPER SCISSORS BOARD --- */}
+            {activeGame === "rps" && (
+              <div className="space-y-2.5 relative z-10">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground font-semibold">
+                    {isRpsShaking 
+                      ? "Shaking hands..."
+                      : isRpsRevealed 
+                        ? "Round Complete!"
+                        : myRpsChoice 
+                          ? "Waiting for stranger..." 
+                          : "Make your choice!"}
+                  </span>
+                  <div className="text-[10px] font-mono font-bold text-primary">
+                    {rpsScores.wins}W - {rpsScores.losses}L - {rpsScores.draws}D
+                  </div>
+                </div>
+
+                {isRpsShaking ? (
+                  /* Shaking gesture animation screen */
+                  <div className="flex items-center justify-center gap-12 py-3 bg-secondary/20 rounded-2xl border border-border/40">
+                    <motion.span 
+                      animate={{ y: [0, -15, 0, -15, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
+                      className="text-4xl filter drop-shadow select-none"
+                    >
+                      ✊
+                    </motion.span>
+                    <span className="text-sm font-bold text-primary/40 animate-pulse font-mono uppercase tracking-widest">GO!</span>
+                    <motion.span 
+                      animate={{ y: [0, -15, 0, -15, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
+                      className="text-4xl filter drop-shadow select-none"
+                    >
+                      ✊
+                    </motion.span>
+                  </div>
+                ) : isRpsRevealed ? (
+                  /* Reveal screen */
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-6 py-2">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] text-muted-foreground">You</span>
+                        <motion.span 
+                          initial={{ scale: 0.5, rotate: -15 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          className="text-4xl filter drop-shadow"
+                        >
+                          {myRpsChoice === "R" ? "✊" : myRpsChoice === "P" ? "✋" : "✌️"}
+                        </motion.span>
+                      </div>
+                      <span className="text-xs font-bold text-muted-foreground/30 font-mono">VS</span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] text-muted-foreground">Stranger</span>
+                        <motion.span 
+                          initial={{ scale: 0.5, rotate: 15 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          className="text-4xl filter drop-shadow"
+                        >
+                          {strangerRpsChoice === "R" ? "✊" : strangerRpsChoice === "P" ? "✋" : "✌️"}
+                        </motion.span>
+                      </div>
+                    </div>
+
+                    <div className={cn(
+                      "text-center py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider",
+                      getRpsResult(myRpsChoice, strangerRpsChoice) === "win" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                      getRpsResult(myRpsChoice, strangerRpsChoice) === "lose" ? "bg-destructive/10 text-destructive border border-destructive/20" :
+                      "bg-secondary text-muted-foreground border border-border"
+                    )}>
+                      {getRpsResult(myRpsChoice, strangerRpsChoice) === "win" ? "You Won! 🎉" :
+                       getRpsResult(myRpsChoice, strangerRpsChoice) === "lose" ? "You Lost! 😢" :
+                       "Draw! 🤝"}
+                    </div>
+
+                    <Button size="sm" onClick={nextRpsRound} className="w-full h-8 rounded-xl text-xs font-semibold">
+                      Next Round
+                    </Button>
+                  </div>
+                ) : (
+                  /* Choices Screen */
+                  <div className="space-y-3">
+                    <div className="flex justify-center gap-2.5 py-1">
+                      {[
+                        { id: "R" as const, emoji: "✊", name: "Rock" },
+                        { id: "P" as const, emoji: "✋", name: "Paper" },
+                        { id: "S" as const, emoji: "✌️", name: "Scissors" }
+                      ].map((opt) => (
+                        <motion.button
+                          key={opt.id}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          disabled={myRpsChoice !== null}
+                          onClick={() => selectRpsChoice(opt.id)}
+                          className={cn(
+                            "h-14 w-14 rounded-2xl flex flex-col items-center justify-center border transition-all shadow-sm",
+                            myRpsChoice === opt.id 
+                              ? "bg-primary/20 border-primary text-primary scale-105 shadow-primary/10" 
+                              : myRpsChoice !== null 
+                                ? "opacity-45 border-border bg-secondary/40 cursor-not-allowed" 
+                                : "bg-secondary/40 border-border/80 hover:bg-secondary hover:border-border text-foreground"
+                          )}
+                        >
+                          <span className="text-xl leading-none">{opt.emoji}</span>
+                          <span className="text-[8px] font-bold uppercase tracking-wider mt-0.5 opacity-60">{opt.name}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+
+                    {myRpsChoice && (
+                      <div className="flex items-center justify-center gap-1.5 py-1 text-[10px] text-muted-foreground font-semibold">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                        <span>Stranger is choosing...</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-1.5 border-t border-border/40">
+                  <button
+                    onClick={() => setRpsScores({ wins: 0, losses: 0, draws: 0 })}
+                    className="text-[9px] text-muted-foreground/60 hover:text-foreground transition-colors font-bold uppercase tracking-wider"
+                  >
+                    Reset Score
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveGame("none");
+                      setMyRpsChoice(null);
+                      setStrangerRpsChoice(null);
+                      roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "rps" } });
+                    }}
+                    className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
+                  >
+                    ← Back
+                  </button>
+                </div>
               </div>
             )}
           </motion.div>
