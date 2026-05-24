@@ -1,10 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gamepad2, X, RotateCcw } from "lucide-react";
+import { Gamepad2, X, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RoomChannel } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { haptics } from "@/lib/sounds";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerTrigger,
+  DrawerClose,
+} from "@/components/ui/drawer";
 
 interface ChatGamesProps {
   onSendMessage: (text: string) => void;
@@ -49,6 +60,8 @@ const getRpsResult = (p: "R" | "P" | "S", o: "R" | "P" | "S"): "win" | "lose" | 
 // Web Audio API Synthesizer Helper
 const playTone = (frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.15) => {
   try {
+    const isMuted = localStorage.getItem("lchat_games_muted") === "true";
+    if (isMuted) return;
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
@@ -155,6 +168,19 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
   const [showGames, setShowGames] = useState(false);
   const { toast } = useToast();
   const [showConfetti, setShowConfetti] = useState(false);
+  const isMobile = useIsMobile();
+
+  const [isMuted, setIsMuted] = useState(() => {
+    return localStorage.getItem("lchat_games_muted") === "true";
+  });
+
+  const toggleMute = () => {
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    localStorage.setItem("lchat_games_muted", String(nextMuted));
+  };
+
+  const roomId = (roomChannel as any)?.roomId;
 
   // Tic-Tac-Toe state
   const [board, setBoard] = useState<TicTacToeCell[]>(Array(9).fill(null));
@@ -178,6 +204,50 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
   useEffect(() => { myRpsChoiceRef.current = myRpsChoice; }, [myRpsChoice]);
   useEffect(() => { strangerRpsChoiceRef.current = strangerRpsChoice; }, [strangerRpsChoice]);
 
+  // Load scores on roomId change
+  useEffect(() => {
+    if (!roomId) {
+      setTttScores({ xWins: 0, oWins: 0, draws: 0 });
+      setRpsScores({ wins: 0, losses: 0, draws: 0 });
+      return;
+    }
+    
+    const savedTtt = sessionStorage.getItem(`ttt_scores_${roomId}`);
+    if (savedTtt) {
+      try {
+        setTttScores(JSON.parse(savedTtt));
+      } catch (e) {
+        setTttScores({ xWins: 0, oWins: 0, draws: 0 });
+      }
+    } else {
+      setTttScores({ xWins: 0, oWins: 0, draws: 0 });
+    }
+
+    const savedRps = sessionStorage.getItem(`rps_scores_${roomId}`);
+    if (savedRps) {
+      try {
+        setRpsScores(JSON.parse(savedRps));
+      } catch (e) {
+        setRpsScores({ wins: 0, losses: 0, draws: 0 });
+      }
+    } else {
+      setRpsScores({ wins: 0, losses: 0, draws: 0 });
+    }
+  }, [roomId]);
+
+  // Save scores on change
+  useEffect(() => {
+    if (roomId) {
+      sessionStorage.setItem(`ttt_scores_${roomId}`, JSON.stringify(tttScores));
+    }
+  }, [tttScores, roomId]);
+
+  useEffect(() => {
+    if (roomId) {
+      sessionStorage.setItem(`rps_scores_${roomId}`, JSON.stringify(rpsScores));
+    }
+  }, [rpsScores, roomId]);
+
   // RPS Tension Shake & Score update effect
   useEffect(() => {
     if (myRpsChoice !== null && strangerRpsChoice !== null) {
@@ -197,12 +267,15 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
 
         // Trigger Audio & Visual Confetti
         if (res === "win") {
+          haptics.vibrate([100, 50, 100]);
           gameAudio.win();
           setShowConfetti(true);
           setTimeout(() => setShowConfetti(false), 2000);
         } else if (res === "lose") {
+          haptics.vibrate(80);
           gameAudio.lose();
         } else {
+          haptics.vibrate(60);
           gameAudio.draw();
         }
 
@@ -246,14 +319,17 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
               };
             });
             if (wResult.winner === mySymbol) {
+              haptics.vibrate([100, 50, 100]);
               gameAudio.win();
               setShowConfetti(true);
               setTimeout(() => setShowConfetti(false), 2000);
             } else {
+              haptics.vibrate(80);
               gameAudio.lose();
             }
           } else if (!wResult.winner && newBoard.every(c => c !== null)) {
             setTttScores((prevScores) => ({ ...prevScores, draws: prevScores.draws + 1 }));
+            haptics.vibrate(60);
             gameAudio.draw();
           }
 
@@ -337,6 +413,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
   // --- Tic-Tac-Toe actions ---
   const handleCellClick = (i: number) => {
     if (board[i] || winner || !mySymbol || currentTurn !== mySymbol) return;
+    haptics.vibrate(40);
     gameAudio.click();
     const newBoard = [...board];
     newBoard[i] = mySymbol;
@@ -361,15 +438,18 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       });
       onSendMessage(`🎮 Tic-Tac-Toe: ${wResult.winner === mySymbol ? "I" : "You"} won! 🎉`);
       if (wResult.winner === mySymbol) {
+        haptics.vibrate([100, 50, 100]);
         gameAudio.win();
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 2000);
       } else {
+        haptics.vibrate(80);
         gameAudio.lose();
       }
     } else if (!wResult.winner && newBoard.every(c => c !== null)) {
       setTttScores((prev) => ({ ...prev, draws: prev.draws + 1 }));
       onSendMessage("🎮 Tic-Tac-Toe: It's a draw! 🤝");
+      haptics.vibrate(60);
       gameAudio.draw();
     }
   };
@@ -408,6 +488,7 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
 
   const selectRpsChoice = (choice: "R" | "P" | "S") => {
     if (myRpsChoice) return;
+    haptics.vibrate(40);
     gameAudio.click();
     iMadeFinalChoice.current = strangerRpsChoiceRef.current !== null;
     setMyRpsChoice(choice);
@@ -429,6 +510,252 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
   const isMyTurn = mySymbol === currentTurn;
   const isRpsRevealed = myRpsChoice !== null && strangerRpsChoice !== null && !isRpsShaking;
 
+  const renderGameContent = () => {
+    switch (activeGame) {
+      case "none":
+        return (
+          <div className="space-y-2 relative z-10">
+            <button
+              onClick={startTTT}
+              className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-3 hover:bg-secondary transition-colors"
+            >
+              <p className="text-sm font-medium text-foreground">❌⭕ Tic-Tac-Toe</p>
+              <p className="text-[10px] text-muted-foreground">Play with your stranger!</p>
+            </button>
+            <button
+              onClick={startCanvas}
+              className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-3 hover:bg-secondary transition-colors"
+            >
+              <p className="text-sm font-medium text-foreground">🎨 Shared Canvas</p>
+              <p className="text-[10px] text-muted-foreground">Doodle in real-time!</p>
+            </button>
+            <button
+              onClick={startRPS}
+              className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-3 hover:bg-secondary transition-colors"
+            >
+              <p className="text-sm font-medium text-foreground">✊✋✌️ Rock Paper Scissors</p>
+              <p className="text-[10px] text-muted-foreground">Co-op hand challenge!</p>
+            </button>
+          </div>
+        );
+      case "ttt":
+        return (
+          <div className="space-y-3 relative z-10">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground font-semibold">
+                {winner
+                  ? `${winner === mySymbol ? "You win" : "They win"}! 🎉`
+                  : isDraw
+                    ? "Draw! 🤝"
+                    : mySymbol
+                      ? isMyTurn
+                        ? `Your turn (${mySymbol})`
+                        : `Their turn (${currentTurn})`
+                      : "Waiting..."}
+              </span>
+              <div className="text-[10px] font-bold text-primary font-mono uppercase tracking-wider">
+                {tttScores.xWins}X - {tttScores.oWins}O - {tttScores.draws}D
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 max-w-[280px] mx-auto">
+              {board.map((cell, i) => {
+                const isWinning = tttLine?.includes(i);
+                return (
+                  <motion.button
+                    key={i}
+                    onClick={() => handleCellClick(i)}
+                    disabled={!isMyTurn || !!winner || !!cell}
+                    animate={isWinning ? { scale: [1, 1.1, 1], rotate: [0, 2, -2, 0] } : {}}
+                    transition={isWinning ? { duration: 0.6, repeat: Infinity } : {}}
+                    className={cn(
+                      "h-12 sm:h-16 rounded-xl border text-lg sm:text-xl font-bold transition-all relative overflow-hidden",
+                      isWinning 
+                        ? "bg-primary/20 border-primary text-primary shadow-[0_0_10px_hsl(var(--primary)/0.2)]" 
+                        : "bg-secondary/40 border-border",
+                      !cell && !winner && isMyTurn && "hover:bg-secondary cursor-pointer",
+                      (!isMyTurn || !!cell) && !winner && "cursor-not-allowed opacity-75",
+                      cell === "X" && !isWinning && "text-primary",
+                      cell === "O" && !isWinning && "text-destructive"
+                    )}
+                  >
+                    {cell}
+                  </motion.button>
+                );
+              })}
+            </div>
+            <div className="flex justify-between items-center pt-2 border-t border-border/40">
+              <button
+                onClick={() => setTttScores({ xWins: 0, oWins: 0, draws: 0 })}
+                className="text-[10px] text-muted-foreground/60 hover:text-foreground transition-colors font-bold uppercase tracking-wider"
+              >
+                Reset Score
+              </button>
+              <div className="flex gap-2">
+                {winner || isDraw ? (
+                  <button
+                    onClick={resetTTT}
+                    className="text-[10px] text-primary hover:text-primary-foreground font-semibold flex items-center gap-1"
+                  >
+                    <RotateCcw className="h-3 w-3 animate-spin-hover" /> Play Again
+                  </button>
+                ) : null}
+                <button
+                  onClick={() => {
+                    setActiveGame("none");
+                    setMySymbol(null);
+                    roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "ttt" } });
+                  }}
+                  className="text-[11px] text-muted-foreground hover:text-foreground font-semibold"
+                >
+                  ← Back
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      case "rps":
+        return (
+          <div className="space-y-3 relative z-10">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground font-semibold">
+                {isRpsShaking 
+                  ? "Shaking hands..."
+                  : isRpsRevealed 
+                    ? "Round Complete!"
+                    : myRpsChoice 
+                      ? "Waiting for stranger..." 
+                      : "Make your choice!"}
+              </span>
+              <div className="text-[11px] font-mono font-bold text-primary">
+                {rpsScores.wins}W - {rpsScores.losses}L - {rpsScores.draws}D
+              </div>
+            </div>
+
+            {isRpsShaking ? (
+              <div className="flex items-center justify-center gap-12 py-5 bg-secondary/20 rounded-2xl border border-border/40">
+                <motion.span 
+                  animate={{ y: [0, -15, 0, -15, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-5xl filter drop-shadow select-none"
+                >
+                  ✊
+                </motion.span>
+                <span className="text-sm font-bold text-primary/40 animate-pulse font-mono uppercase tracking-widest">GO!</span>
+                <motion.span 
+                  animate={{ y: [0, -15, 0, -15, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-5xl filter drop-shadow select-none"
+                >
+                  ✊
+                </motion.span>
+              </div>
+            ) : isRpsRevealed ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-center gap-8 py-3">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">You</span>
+                    <motion.span 
+                      initial={{ scale: 0.5, rotate: -15 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      className="text-5xl filter drop-shadow"
+                    >
+                      {myRpsChoice === "R" ? "✊" : myRpsChoice === "P" ? "✋" : "✌️"}
+                    </motion.span>
+                  </div>
+                  <span className="text-xs font-bold text-muted-foreground/30 font-mono">VS</span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">Stranger</span>
+                    <motion.span 
+                      initial={{ scale: 0.5, rotate: 15 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      className="text-5xl filter drop-shadow"
+                    >
+                      {strangerRpsChoice === "R" ? "✊" : strangerRpsChoice === "P" ? "✋" : "✌️"}
+                    </motion.span>
+                  </div>
+                </div>
+
+                <div className={cn(
+                  "text-center py-2 rounded-xl text-xs font-bold uppercase tracking-wider",
+                  getRpsResult(myRpsChoice, strangerRpsChoice) === "win" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                  getRpsResult(myRpsChoice, strangerRpsChoice) === "lose" ? "bg-destructive/10 text-destructive border border-destructive/20" :
+                  "bg-secondary text-muted-foreground border border-border"
+                )}>
+                  {getRpsResult(myRpsChoice, strangerRpsChoice) === "win" ? "You Won! 🎉" :
+                   getRpsResult(myRpsChoice, strangerRpsChoice) === "lose" ? "You Lost! 😢" :
+                   "Draw! 🤝"}
+                </div>
+
+                <Button size="sm" onClick={nextRpsRound} className="w-full h-9 rounded-xl text-xs font-semibold">
+                  Next Round
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-center gap-3 py-1">
+                  {[
+                    { id: "R" as const, emoji: "✊", name: "Rock" },
+                    { id: "P" as const, emoji: "✋", name: "Paper" },
+                    { id: "S" as const, emoji: "✌️", name: "Scissors" }
+                  ].map((opt) => (
+                    <motion.button
+                      key={opt.id}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={myRpsChoice !== null}
+                      onClick={() => selectRpsChoice(opt.id)}
+                      className={cn(
+                        "h-14 w-14 sm:h-18 sm:w-18 rounded-2xl flex flex-col items-center justify-center border transition-all shadow-sm",
+                        myRpsChoice === opt.id 
+                          ? "bg-primary/20 border-primary text-primary scale-105 shadow-primary/10" 
+                          : myRpsChoice !== null 
+                            ? "opacity-45 border-border bg-secondary/40 cursor-not-allowed" 
+                            : "bg-secondary/40 border-border/80 hover:bg-secondary hover:border-border text-foreground"
+                      )}
+                    >
+                      <span className="text-2xl leading-none">{opt.emoji}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider mt-1 opacity-60">{opt.name}</span>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {myRpsChoice && (
+                  <div className="flex items-center justify-center gap-1.5 py-1 text-[10px] text-muted-foreground font-semibold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                    <span>Stranger is choosing...</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pt-2 border-t border-border/40">
+              <button
+                onClick={() => setRpsScores({ wins: 0, losses: 0, draws: 0 })}
+                className="text-[10px] text-muted-foreground/60 hover:text-foreground transition-colors font-bold uppercase tracking-wider"
+              >
+                Reset Score
+              </button>
+              <button
+                onClick={() => {
+                  setActiveGame("none");
+                  setMyRpsChoice(null);
+                  setStrangerRpsChoice(null);
+                  roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "rps" } });
+                }}
+                className="text-[11px] text-muted-foreground hover:text-foreground font-semibold"
+              >
+                ← Back
+              </button>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="relative">
       <Button
@@ -441,270 +768,91 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
         <Gamepad2 className="h-4 w-4" />
       </Button>
 
-      <AnimatePresence>
-        {showGames && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-14 left-0 z-50 w-64 rounded-2xl border border-border bg-card shadow-xl p-3 relative overflow-hidden"
-          >
-            {/* Embedded Confetti Particle Burst */}
-            <FloatingParticles active={showConfetti} />
+      {isMobile ? (
+        <Drawer open={showGames} onOpenChange={setShowGames}>
+          <DrawerContent className="px-4 pb-6 bg-card border-t border-border">
+            <DrawerHeader className="text-left px-0 pb-2">
+              <DrawerTitle className="text-sm font-semibold flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Gamepad2 className="h-3.5 w-3.5 text-primary animate-pulse" />
+                  {activeGame === "ttt" ? "Tic-Tac-Toe" : activeGame === "rps" ? "Rock Paper Scissors" : "Games"}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleMute}
+                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                    title={isMuted ? "Unmute" : "Mute"}
+                  >
+                    {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setShowGames(false);
+                      if (activeGame === "ttt" && !mySymbol) setActiveGame("none");
+                      if (activeGame === "rps" && !myRpsChoice) setActiveGame("none");
+                    }}
+                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DrawerTitle>
+              <DrawerDescription className="sr-only">
+                Play mini-games with your matched stranger.
+              </DrawerDescription>
+            </DrawerHeader>
 
-            <div className="flex items-center justify-between mb-2 relative z-10">
-              <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                <Gamepad2 className="h-3.5 w-3.5 text-primary" /> Games
-              </span>
-              <button
-                onClick={() => {
-                  setShowGames(false);
-                  if (activeGame === "ttt" && !mySymbol) setActiveGame("none");
-                  if (activeGame === "rps" && !myRpsChoice) setActiveGame("none");
-                }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+            <div className="relative overflow-hidden pb-4">
+              <FloatingParticles active={showConfetti} />
+              {renderGameContent()}
             </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <AnimatePresence>
+          {showGames && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute bottom-14 left-0 z-50 w-64 rounded-2xl border border-border bg-card shadow-xl p-3 relative overflow-hidden"
+            >
+              <FloatingParticles active={showConfetti} />
 
-            {/* --- GAMES SELECTOR SCREEN --- */}
-            {activeGame === "none" && (
-              <div className="space-y-1.5 relative z-10">
-                <button
-                  onClick={startTTT}
-                  className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors"
-                >
-                  <p className="text-sm font-medium text-foreground">❌⭕ Tic-Tac-Toe</p>
-                  <p className="text-[10px] text-muted-foreground">Play with your stranger!</p>
-                </button>
-                <button
-                  onClick={startCanvas}
-                  className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors"
-                >
-                  <p className="text-sm font-medium text-foreground">🎨 Shared Canvas</p>
-                  <p className="text-[10px] text-muted-foreground">Doodle in real-time!</p>
-                </button>
-                <button
-                  onClick={startRPS}
-                  className="w-full text-left rounded-xl bg-secondary/60 border border-border/50 px-3 py-2.5 hover:bg-secondary transition-colors"
-                >
-                  <p className="text-sm font-medium text-foreground">✊✋✌️ Rock Paper Scissors</p>
-                  <p className="text-[10px] text-muted-foreground">Co-op hand challenge!</p>
-                </button>
-              </div>
-            )}
-
-            {/* --- TIC-TAC-TOE BOARD --- */}
-            {activeGame === "ttt" && (
-              <div className="space-y-2 relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground font-semibold">
-                    {winner
-                      ? `${winner === mySymbol ? "You win" : "They win"}! 🎉`
-                      : isDraw
-                        ? "Draw! 🤝"
-                        : mySymbol
-                          ? isMyTurn
-                            ? `Your turn (${mySymbol})`
-                            : `Their turn (${currentTurn})`
-                          : "Waiting..."}
-                  </span>
-                  <div className="text-[9px] font-bold text-primary font-mono uppercase tracking-wider">
-                    {tttScores.xWins}X - {tttScores.oWins}O - {tttScores.draws}D
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-1">
-                  {board.map((cell, i) => {
-                    const isWinning = tttLine?.includes(i);
-                    return (
-                      <motion.button
-                        key={i}
-                        onClick={() => handleCellClick(i)}
-                        disabled={!isMyTurn || !!winner || !!cell}
-                        animate={isWinning ? { scale: [1, 1.1, 1], rotate: [0, 2, -2, 0] } : {}}
-                        transition={isWinning ? { duration: 0.6, repeat: Infinity } : {}}
-                        className={cn(
-                          "h-12 rounded-lg border text-lg font-bold transition-all relative overflow-hidden",
-                          isWinning 
-                            ? "bg-primary/20 border-primary text-primary shadow-[0_0_10px_hsl(var(--primary)/0.2)]" 
-                            : "bg-secondary/40 border-border",
-                          !cell && !winner && isMyTurn && "hover:bg-secondary cursor-pointer",
-                          (!isMyTurn || !!cell) && !winner && "cursor-not-allowed opacity-75",
-                          cell === "X" && !isWinning && "text-primary",
-                          cell === "O" && !isWinning && "text-destructive"
-                        )}
-                      >
-                        {cell}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-                <div className="flex justify-between items-center pt-1.5 border-t border-border/40">
+              <div className="flex items-center justify-between mb-2 relative z-10">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Gamepad2 className="h-3.5 w-3.5 text-primary" /> Games
+                </span>
+                <div className="flex items-center gap-1">
                   <button
-                    onClick={() => setTttScores({ xWins: 0, oWins: 0, draws: 0 })}
-                    className="text-[9px] text-muted-foreground/60 hover:text-foreground transition-colors font-bold uppercase tracking-wider"
+                    onClick={toggleMute}
+                    className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-secondary transition-colors"
+                    title={isMuted ? "Unmute" : "Mute"}
                   >
-                    Reset Score
+                    {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                   </button>
                   <button
                     onClick={() => {
-                      setActiveGame("none");
-                      setMySymbol(null);
-                      roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "ttt" } });
+                      setShowGames(false);
+                      if (activeGame === "ttt" && !mySymbol) setActiveGame("none");
+                      if (activeGame === "rps" && !myRpsChoice) setActiveGame("none");
                     }}
-                    className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
+                    className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-secondary transition-colors"
                   >
-                    ← Back
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
-            )}
 
-            {/* --- ROCK PAPER SCISSORS BOARD --- */}
-            {activeGame === "rps" && (
-              <div className="space-y-2.5 relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground font-semibold">
-                    {isRpsShaking 
-                      ? "Shaking hands..."
-                      : isRpsRevealed 
-                        ? "Round Complete!"
-                        : myRpsChoice 
-                          ? "Waiting for stranger..." 
-                          : "Make your choice!"}
-                  </span>
-                  <div className="text-[10px] font-mono font-bold text-primary">
-                    {rpsScores.wins}W - {rpsScores.losses}L - {rpsScores.draws}D
-                  </div>
-                </div>
-
-                {isRpsShaking ? (
-                  /* Shaking gesture animation screen */
-                  <div className="flex items-center justify-center gap-12 py-3 bg-secondary/20 rounded-2xl border border-border/40">
-                    <motion.span 
-                      animate={{ y: [0, -15, 0, -15, 0] }}
-                      transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
-                      className="text-4xl filter drop-shadow select-none"
-                    >
-                      ✊
-                    </motion.span>
-                    <span className="text-sm font-bold text-primary/40 animate-pulse font-mono uppercase tracking-widest">GO!</span>
-                    <motion.span 
-                      animate={{ y: [0, -15, 0, -15, 0] }}
-                      transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
-                      className="text-4xl filter drop-shadow select-none"
-                    >
-                      ✊
-                    </motion.span>
-                  </div>
-                ) : isRpsRevealed ? (
-                  /* Reveal screen */
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-center gap-6 py-2">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">You</span>
-                        <motion.span 
-                          initial={{ scale: 0.5, rotate: -15 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          className="text-4xl filter drop-shadow"
-                        >
-                          {myRpsChoice === "R" ? "✊" : myRpsChoice === "P" ? "✋" : "✌️"}
-                        </motion.span>
-                      </div>
-                      <span className="text-xs font-bold text-muted-foreground/30 font-mono">VS</span>
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">Stranger</span>
-                        <motion.span 
-                          initial={{ scale: 0.5, rotate: 15 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          className="text-4xl filter drop-shadow"
-                        >
-                          {strangerRpsChoice === "R" ? "✊" : strangerRpsChoice === "P" ? "✋" : "✌️"}
-                        </motion.span>
-                      </div>
-                    </div>
-
-                    <div className={cn(
-                      "text-center py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider",
-                      getRpsResult(myRpsChoice, strangerRpsChoice) === "win" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                      getRpsResult(myRpsChoice, strangerRpsChoice) === "lose" ? "bg-destructive/10 text-destructive border border-destructive/20" :
-                      "bg-secondary text-muted-foreground border border-border"
-                    )}>
-                      {getRpsResult(myRpsChoice, strangerRpsChoice) === "win" ? "You Won! 🎉" :
-                       getRpsResult(myRpsChoice, strangerRpsChoice) === "lose" ? "You Lost! 😢" :
-                       "Draw! 🤝"}
-                    </div>
-
-                    <Button size="sm" onClick={nextRpsRound} className="w-full h-8 rounded-xl text-xs font-semibold">
-                      Next Round
-                    </Button>
-                  </div>
-                ) : (
-                  /* Choices Screen */
-                  <div className="space-y-3">
-                    <div className="flex justify-center gap-2.5 py-1">
-                      {[
-                        { id: "R" as const, emoji: "✊", name: "Rock" },
-                        { id: "P" as const, emoji: "✋", name: "Paper" },
-                        { id: "S" as const, emoji: "✌️", name: "Scissors" }
-                      ].map((opt) => (
-                        <motion.button
-                          key={opt.id}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          disabled={myRpsChoice !== null}
-                          onClick={() => selectRpsChoice(opt.id)}
-                          className={cn(
-                            "h-14 w-14 rounded-2xl flex flex-col items-center justify-center border transition-all shadow-sm",
-                            myRpsChoice === opt.id 
-                              ? "bg-primary/20 border-primary text-primary scale-105 shadow-primary/10" 
-                              : myRpsChoice !== null 
-                                ? "opacity-45 border-border bg-secondary/40 cursor-not-allowed" 
-                                : "bg-secondary/40 border-border/80 hover:bg-secondary hover:border-border text-foreground"
-                          )}
-                        >
-                          <span className="text-xl leading-none">{opt.emoji}</span>
-                          <span className="text-[8px] font-bold uppercase tracking-wider mt-0.5 opacity-60">{opt.name}</span>
-                        </motion.button>
-                      ))}
-                    </div>
-
-                    {myRpsChoice && (
-                      <div className="flex items-center justify-center gap-1.5 py-1 text-[10px] text-muted-foreground font-semibold">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
-                        <span>Stranger is choosing...</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center pt-1.5 border-t border-border/40">
-                  <button
-                    onClick={() => setRpsScores({ wins: 0, losses: 0, draws: 0 })}
-                    className="text-[9px] text-muted-foreground/60 hover:text-foreground transition-colors font-bold uppercase tracking-wider"
-                  >
-                    Reset Score
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveGame("none");
-                      setMyRpsChoice(null);
-                      setStrangerRpsChoice(null);
-                      roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "rps" } });
-                    }}
-                    className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
-                  >
-                    ← Back
-                  </button>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {renderGameContent()}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 };

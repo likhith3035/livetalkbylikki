@@ -20,6 +20,8 @@ export interface BaseChannel {
   track?(state: any): Promise<any>;
   
   presenceState?(): any;
+
+  roomId?: string;
 }
 
 // Type guard or helper to simplify component code

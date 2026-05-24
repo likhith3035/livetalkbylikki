@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy } from "lucide-react";
+import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -52,6 +52,35 @@ const TIPS = [
 
 const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
+const SUPPORTED_LANGUAGES = [
+  { code: "te", name: "తెలుగు (Telugu)" },
+  { code: "hi", name: "हिन्दी (Hindi)" },
+  { code: "ta", name: "தமிழ் (Tamil)" },
+  { code: "kn", name: "ಕನ್ನಡ (Kannada)" },
+  { code: "ml", name: "മലയാളം (Malayalam)" },
+  { code: "bn", name: "বাংলা (Bengali)" },
+  { code: "mr", name: "मराठी (Marathi)" },
+  { code: "en", name: "English" },
+  { code: "es", name: "Español" },
+  { code: "fr", name: "Français" },
+  { code: "ja", name: "日本語" },
+];
+
+const translateText = async (text: string, targetLang: string): Promise<string> => {
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data && data[0]) {
+      return data[0].map((x: any) => x[0]).join("");
+    }
+    return text;
+  } catch (err) {
+    console.error("Translation error:", err);
+    throw err;
+  }
+};
+
 const ChatMessageList = ({
   messages,
   strangerTyping,
@@ -67,7 +96,37 @@ const ChatMessageList = ({
 }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [showTranslateFor, setShowTranslateFor] = useState<string | null>(null);
+  const [translations, setTranslations] = useState<Record<string, { text: string; langName: string; loading?: boolean; error?: boolean }>>({});
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTranslate = async (msgId: string, text: string, langCode: string, langName: string) => {
+    setTranslations((prev) => ({
+      ...prev,
+      [msgId]: { text: "", langName, loading: true }
+    }));
+
+    try {
+      const translated = await translateText(text, langCode);
+      setTranslations((prev) => ({
+        ...prev,
+        [msgId]: { text: translated, langName, loading: false }
+      }));
+    } catch (e) {
+      setTranslations((prev) => ({
+        ...prev,
+        [msgId]: { text: "Translation failed. Check connection.", langName, error: true, loading: false }
+      }));
+    }
+  };
+
+  const clearTranslation = (msgId: string) => {
+    setTranslations((prev) => {
+      const next = { ...prev };
+      delete next[msgId];
+      return next;
+    });
+  };
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -91,6 +150,7 @@ const ChatMessageList = ({
       const target = e.target as HTMLElement;
       if (!target.closest("[data-msg-menu]")) {
         setActiveMenuId(null);
+        setShowTranslateFor(null);
       }
     };
     document.addEventListener("touchstart", handler, { passive: true });
@@ -113,6 +173,7 @@ const ChatMessageList = ({
 
   const closeMenu = useCallback(() => {
     setActiveMenuId(null);
+    setShowTranslateFor(null);
   }, []);
 
   const scrollToMessage = useCallback((msgId: string) => {
@@ -255,41 +316,74 @@ const ChatMessageList = ({
                         </button>
                       ))}
                     </div>
-                    {/* Action buttons */}
-                    <div className="flex gap-0.5 rounded-xl bg-card border border-border shadow-xl p-1 backdrop-blur-sm">
-                      <button
-                        onClick={() => { navigator.clipboard.writeText(msg.text || ""); closeMenu(); }}
-                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                      >
-                        <Copy className="h-3 w-3" /> Copy
-                      </button>
-                      <button
-                        onClick={() => { onReply?.(msg); closeMenu(); }}
-                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                      >
-                        <ReplyIcon className="h-3 w-3" /> Reply
-                      </button>
-                      <button
-                        onClick={() => { onPin?.(msg.id); closeMenu(); }}
-                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                      >
-                        <Pin className="h-3 w-3" /> {msg.pinned ? "Unpin" : "Pin"}
-                      </button>
-                      <button
-                        onClick={() => { onForward?.(msg); closeMenu(); }}
-                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                      >
-                        <Forward className="h-3 w-3" /> Forward
-                      </button>
-                      {msg.sender === "you" && (
+                    {/* Action buttons or Submenu */}
+                    {showTranslateFor === msg.id ? (
+                      <div className="flex flex-wrap gap-1 max-w-[280px] p-1.5 rounded-xl bg-card border border-border shadow-xl backdrop-blur-sm justify-center items-center">
                         <button
-                          onClick={() => { onDelete?.(msg.id); closeMenu(); }}
-                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
+                          onClick={() => setShowTranslateFor(null)}
+                          className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-[10px] font-bold text-muted-foreground hover:bg-secondary transition-colors"
                         >
-                          <Trash2 className="h-3 w-3" /> Delete
+                          ← Back
                         </button>
-                      )}
-                    </div>
+                        {SUPPORTED_LANGUAGES.map((lang) => (
+                          <button
+                            key={lang.code}
+                            onClick={() => {
+                              handleTranslate(msg.id, msg.text || "", lang.code, lang.name);
+                              closeMenu();
+                            }}
+                            className="rounded-lg px-2 py-1 text-[10px] font-semibold text-foreground hover:bg-secondary hover:text-primary transition-all"
+                          >
+                            {lang.name}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex gap-0.5 rounded-xl bg-card border border-border shadow-xl p-1 backdrop-blur-sm">
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(msg.text || ""); closeMenu(); }}
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <Copy className="h-3 w-3" /> Copy
+                        </button>
+                        <button
+                          onClick={() => { onReply?.(msg); closeMenu(); }}
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <ReplyIcon className="h-3 w-3" /> Reply
+                        </button>
+                        
+                        {msg.text && (
+                          <button
+                            onClick={() => setShowTranslateFor(msg.id)}
+                            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                          >
+                            <Globe className="h-3 w-3 text-primary" /> Translate
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => { onPin?.(msg.id); closeMenu(); }}
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <Pin className="h-3 w-3" /> {msg.pinned ? "Unpin" : "Pin"}
+                        </button>
+                        <button
+                          onClick={() => { onForward?.(msg); closeMenu(); }}
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <Forward className="h-3 w-3" /> Forward
+                        </button>
+                        {msg.sender === "you" && (
+                          <button
+                            onClick={() => { onDelete?.(msg.id); closeMenu(); }}
+                            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
+                          >
+                            <Trash2 className="h-3 w-3" /> Delete
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -371,6 +465,55 @@ const ChatMessageList = ({
                 )}
               </div>
             </SwipeableMessage>
+
+            {/* Translation Card */}
+            {translations[msg.id] && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, y: -4 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -4 }}
+                className={cn(
+                  "w-[85%] sm:w-[75%] mt-1 z-10 flex flex-col gap-1 overflow-hidden",
+                  msg.sender === "you" ? "items-end" : "items-start"
+                )}
+              >
+                <div className={cn(
+                  "rounded-2xl px-4 py-2 border text-sm relative glass-heavy shadow-md flex flex-col gap-1 select-text max-w-full",
+                  msg.sender === "you" 
+                    ? "bg-primary/5 border-primary/20 text-foreground" 
+                    : "bg-secondary/40 border-border text-foreground"
+                )}>
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between gap-4 text-[9px] font-bold tracking-wider uppercase opacity-60">
+                    <span className="flex items-center gap-1 text-primary">
+                      <Globe className="h-3 w-3" /> Translated to {translations[msg.id].langName.split(" ")[0]}
+                    </span>
+                    <button
+                      onClick={() => clearTranslation(msg.id)}
+                      className="text-muted-foreground hover:text-foreground transition-colors p-0.5 hover:bg-secondary rounded"
+                      title="Clear Translation"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                  
+                  {/* Card Content */}
+                  {translations[msg.id].loading ? (
+                    <div className="flex flex-col gap-1 py-1.5 w-32 animate-pulse">
+                      <div className="h-3 bg-muted rounded w-full" />
+                      <div className="h-3 bg-muted rounded w-3/4 mt-1" />
+                    </div>
+                  ) : (
+                    <p className={cn(
+                      "text-xs leading-relaxed font-medium break-words pr-1 select-text",
+                      translations[msg.id].error ? "text-destructive" : "text-foreground"
+                    )}>
+                      {translations[msg.id].text}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
 
             {/* Reaction badges below bubble */}
             {msg.sender !== "system" && !msg.deleted && (

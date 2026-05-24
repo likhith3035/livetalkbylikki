@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { RoomChannel } from "@/lib/types";
-import { Send, X, Reply } from "lucide-react";
+import { Send, X, Reply, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import ImageUploadButton from "@/components/ImageUploadButton";
@@ -10,6 +10,8 @@ import GifPicker from "@/components/chat/GifPicker";
 import LocationShareButton from "@/components/chat/LocationShareButton";
 import Icebreakers from "@/components/chat/Icebreakers";
 import type { ChatStatus, Message } from "@/hooks/use-chat";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   status: ChatStatus;
@@ -33,7 +35,9 @@ const ChatInput = ({
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const throttleRef = useRef<number>(0);
+  const isMobile = useIsMobile();
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -41,6 +45,7 @@ const ChatInput = ({
     onSend(input, undefined, reply);
     setInput("");
     onCancelReply?.();
+    setShowActions(false);
   };
 
   const handleChange = (value: string) => {
@@ -84,6 +89,33 @@ const ChatInput = ({
           )}
         </AnimatePresence>
 
+        {isMobile && showActions && (
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, y: 15, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 15, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="mx-auto max-w-3xl mb-3 flex items-center justify-around gap-2 px-4 py-2 bg-secondary/80 border border-border/40 rounded-2xl glass-heavy shadow-lg relative z-30"
+            >
+              <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
+              <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
+              {!hideGames && (
+                <ChatGames 
+                  onSendMessage={onSend} 
+                  isConnected={isConnected} 
+                  roomChannel={roomChannel} 
+                  sessionId={sessionId}
+                  activeGame={activeGame}
+                  setActiveGame={setActiveGame}
+                />
+              )}
+              <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
+              <LocationShareButton isConnected={isConnected} onSend={onSend} />
+            </motion.div>
+          </AnimatePresence>
+        )}
+
         {!hasMessages && (
           <div className="mx-auto max-w-3xl mb-2 sm:mb-3">
             <Icebreakers onSelect={(text) => onSend(text)} disabled={!isConnected} />
@@ -91,22 +123,40 @@ const ChatInput = ({
         )}
 
         <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2 items-center">
-          <div className="flex items-center gap-0.5">
-            <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
-            <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
-            {!hideGames && (
-              <ChatGames 
-                onSendMessage={onSend} 
-                isConnected={isConnected} 
-                roomChannel={roomChannel} 
-                sessionId={sessionId}
-                activeGame={activeGame}
-                setActiveGame={setActiveGame}
-              />
-            )}
-            <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
-            <LocationShareButton isConnected={isConnected} onSend={onSend} />
-          </div>
+          {isMobile ? (
+            <button
+              onClick={() => setShowActions(!showActions)}
+              disabled={!isConnected}
+              className={cn(
+                "h-10 w-10 sm:h-11 sm:w-11 rounded-2xl flex items-center justify-center border border-border/40 bg-secondary/40 hover:bg-secondary/60 transition-all duration-300 shrink-0",
+                showActions && "bg-primary/10 border-primary/30"
+              )}
+            >
+              <motion.div
+                animate={{ rotate: showActions ? 135 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Plus className={cn("h-5 w-5 text-muted-foreground", showActions && "text-primary")} />
+              </motion.div>
+            </button>
+          ) : (
+            <div className="flex items-center gap-0.5">
+              <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
+              <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
+              {!hideGames && (
+                <ChatGames 
+                  onSendMessage={onSend} 
+                  isConnected={isConnected} 
+                  roomChannel={roomChannel} 
+                  sessionId={sessionId}
+                  activeGame={activeGame}
+                  setActiveGame={setActiveGame}
+                />
+              )}
+              <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
+              <LocationShareButton isConnected={isConnected} onSend={onSend} />
+            </div>
+          )}
 
           <div className={`flex-1 min-w-0 relative rounded-2xl transition-all duration-300 ${isFocused ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/5' : ''}`}>
             <input

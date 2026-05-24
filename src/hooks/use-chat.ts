@@ -191,7 +191,8 @@ export function useChat(callbacks?: ChatCallbacks) {
           off(eventsRef);
         },
         track: async (state: any) => { return {}; },
-        presenceState: () => { return {}; }
+        presenceState: () => { return {}; },
+        roomId: roomId
       };
 
       onChildAdded(eventsRef, (snapshot) => {
