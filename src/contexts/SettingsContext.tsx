@@ -9,6 +9,9 @@ export type SettingsState = {
   notifications: boolean;
   chatTheme: ChatTheme;
   chatWallpaper: ChatWallpaper;
+  protectionEnabled: boolean;
+  notifyAlerts: boolean;
+  autoStopOnScreenshot: boolean;
 };
 
 const DEFAULT_SETTINGS: SettingsState = {
@@ -17,6 +20,9 @@ const DEFAULT_SETTINGS: SettingsState = {
   notifications: false,
   chatTheme: "default",
   chatWallpaper: "none",
+  protectionEnabled: true,
+  notifyAlerts: true,
+  autoStopOnScreenshot: false,
 };
 
 interface SettingsContextValue {
@@ -36,6 +42,9 @@ const loadSettings = (): SettingsState => {
     notifications: localStorage.getItem("echo.notifications") === "true",
     chatTheme: (localStorage.getItem("echo.chatTheme") as ChatTheme) || DEFAULT_SETTINGS.chatTheme,
     chatWallpaper: (localStorage.getItem("echo.chatWallpaper") as ChatWallpaper) || DEFAULT_SETTINGS.chatWallpaper,
+    protectionEnabled: localStorage.getItem("echo.protectionEnabled") !== "false",
+    notifyAlerts: localStorage.getItem("echo.notifyAlerts") !== "false",
+    autoStopOnScreenshot: localStorage.getItem("echo.autoStopOnScreenshot") === "true",
   };
 };
 
@@ -74,6 +83,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("echo.notifications", String(settings.notifications));
     localStorage.setItem("echo.chatTheme", settings.chatTheme);
     localStorage.setItem("echo.chatWallpaper", settings.chatWallpaper);
+    localStorage.setItem("echo.protectionEnabled", String(settings.protectionEnabled));
+    localStorage.setItem("echo.notifyAlerts", String(settings.notifyAlerts));
+    localStorage.setItem("echo.autoStopOnScreenshot", String(settings.autoStopOnScreenshot));
 
     if (settings.darkMode) {
       document.documentElement.classList.add("dark");

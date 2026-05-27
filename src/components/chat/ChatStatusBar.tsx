@@ -1,5 +1,6 @@
-import { SkipForward, X, Tags, Video, Phone, Play, Download, Copy, Timer } from "lucide-react";
+import { SkipForward, X, Tags, Video, Phone, Play, Download, Copy, Timer, Shield, EyeOff, Ban, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
 import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
@@ -12,6 +13,9 @@ import type { ChatStatus } from "@/hooks/use-chat";
 import type { Message } from "@/hooks/use-chat";
 import { exportChatAsText, copyToClipboard, downloadAsFile } from "@/lib/chat-export";
 import { useToast } from "@/hooks/use-toast";
+import { useChatContext } from "@/contexts/ChatContext";
+import { useSettings } from "@/contexts/SettingsContext";
+import { Switch } from "@/components/ui/switch";
 
 interface ChatStatusBarProps {
   status: ChatStatus;
@@ -54,6 +58,15 @@ const ChatStatusBar = ({
 }: ChatStatusBarProps) => {
   const statusInfo = statusMessages[status] || statusMessages.idle;
   const { toast } = useToast();
+  const { 
+    localPrivacyModeActive, 
+    strangerPrivacyModeActive, 
+    privacyModeActive, 
+    togglePrivacyMode, 
+    userName 
+  } = useChatContext();
+  const { settings, updateSetting } = useSettings();
+  const [showPrivacyPopover, setShowPrivacyPopover] = useState(false);
 
   const handleCopyChat = async () => {
     if (messages.length === 0) return;
@@ -71,7 +84,7 @@ const ChatStatusBar = ({
 
   return (
     <div className={cn(
-      "flex items-center justify-between border-b border-border/50 px-2 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2 glass transition-all duration-300",
+      "flex items-center justify-between border-b border-border/50 px-2 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2 glass transition-all duration-300 relative z-30",
       status === "searching" && "search-shimmer"
     )}>
       {/* Status indicator */}
@@ -85,10 +98,40 @@ const ChatStatusBar = ({
           )}
         />
         <div className="min-w-0 flex-1">
-          <span className="text-xs sm:text-sm text-foreground truncate font-medium block">
+          <span className="text-xs sm:text-sm text-foreground truncate font-medium flex items-center gap-1.5">
             {status === "idle" && statusInfo.text}
             {status === "searching" && `Searching${searchElapsed > 0 ? ` (${searchElapsed}s)` : "..."}`}
-            {status === "connected" && (strangerName || statusInfo.text)}
+            {status === "connected" && (
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="flex items-center gap-1">
+                  {userName || "You"}
+                  {localPrivacyModeActive && (
+                    <motion.span
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="inline-flex items-center justify-center p-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.25)]"
+                      title="Your Privacy Mode Enabled"
+                    >
+                      <Shield className="h-2.5 w-2.5 text-emerald-400 fill-emerald-400/10 animate-pulse" />
+                    </motion.span>
+                  )}
+                </span>
+                <span className="text-muted-foreground text-[10px] mx-0.5">&</span>
+                <span className="flex items-center gap-1">
+                  {strangerName || "Stranger"}
+                  {strangerPrivacyModeActive && (
+                    <motion.span
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="inline-flex items-center justify-center p-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.25)]"
+                      title="Stranger Privacy Mode Enabled"
+                    >
+                      <Shield className="h-2.5 w-2.5 text-emerald-400 fill-emerald-400/10 animate-pulse" />
+                    </motion.span>
+                  )}
+                </span>
+              </div>
+            )}
             {status === "disconnected" && (
               autoReconnectCountdown
                 ? `Reconnecting in ${autoReconnectCountdown}s...`
@@ -221,6 +264,84 @@ const ChatStatusBar = ({
               <span className="hidden sm:inline">{disappearTimer ? `${disappearTimer}s` : ""}</span>
             </Button>
             {onThemeChange && <ChatThemePicker onApply={onThemeChange} />}
+            
+            {/* Privacy Protection Dropdown Toggle */}
+            <div className="relative">
+              <Button
+                variant={localPrivacyModeActive ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setShowPrivacyPopover(!showPrivacyPopover)}
+                className={cn(
+                  "gap-1 h-8 px-2 text-xs relative",
+                  localPrivacyModeActive && "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/25 hover:text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                )}
+                title="Privacy & Screen Protection Settings"
+              >
+                <Shield className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Privacy</span>
+              </Button>
+
+              <AnimatePresence>
+                {showPrivacyPopover && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40 bg-transparent" 
+                      onClick={() => setShowPrivacyPopover(false)} 
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-64 rounded-2xl border border-border bg-card p-4 shadow-xl z-50 glass-heavy flex flex-col gap-3"
+                    >
+                      <div className="flex items-center gap-1.5 pb-2 border-b border-border/40">
+                        <Shield className="h-4 w-4 text-primary" />
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Privacy Protection</h4>
+                      </div>
+
+                      {/* Row 1: Privacy Mode */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-foreground">Privacy Mode</span>
+                          <span className="text-[9px] text-muted-foreground">Encrypt screen & block shots</span>
+                        </div>
+                        <Switch
+                          checked={localPrivacyModeActive}
+                          onCheckedChange={(c) => {
+                            togglePrivacyMode(c);
+                          }}
+                        />
+                      </div>
+
+                      {/* Row 2: Share Violations (alerts) */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-foreground">Alert Partner</span>
+                          <span className="text-[9px] text-muted-foreground">Notify peer on capture attempts</span>
+                        </div>
+                        <Switch
+                          checked={settings.notifyAlerts}
+                          onCheckedChange={(c) => updateSetting("notifyAlerts", c)}
+                        />
+                      </div>
+
+                      {/* Row 3: Auto-Stop */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-foreground">Auto-Stop Chat</span>
+                          <span className="text-[9px] text-muted-foreground">Disconnect immediately if captured</span>
+                        </div>
+                        <Switch
+                          checked={settings.autoStopOnScreenshot}
+                          onCheckedChange={(c) => updateSetting("autoStopOnScreenshot", c)}
+                        />
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
             <ChatTimer isConnected={status === "connected"} onAutoDisconnect={onStop} />
           </>
         )}

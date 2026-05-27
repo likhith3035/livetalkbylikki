@@ -1,4 +1,4 @@
-import { Moon, Sun, Volume2, Bell, Info, Palette, Image, Keyboard, ShieldCheck } from "lucide-react";
+import { Moon, Sun, Volume2, Bell, Info, Palette, Image, Keyboard, ShieldCheck, EyeOff, Ban, ShieldAlert } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { Switch } from "@/components/ui/switch";
@@ -27,7 +27,10 @@ const SettingsPage = () => {
     keywords: "chat settings, dark mode chat, chat themes, message notifications, customize LiveTalk"
   });
 
-  const handleToggle = async (key: "darkMode" | "soundEffects" | "notifications", checked: boolean) => {
+  const handleToggle = async (
+    key: "darkMode" | "soundEffects" | "notifications" | "protectionEnabled" | "notifyAlerts" | "autoStopOnScreenshot", 
+    checked: boolean
+  ) => {
     if (key === "notifications" && checked) {
       if (!("Notification" in window)) {
         toast({ title: "Not supported", description: "Your browser does not support notifications." });
@@ -40,6 +43,24 @@ const SettingsPage = () => {
       }
     }
     updateSetting(key, checked);
+    
+    // Display visual feedback
+    if (key === "protectionEnabled") {
+      toast({ 
+        title: checked ? "🛡️ Screen Protection Enabled" : "⚠️ Screen Protection Disabled", 
+        description: checked ? "Heuristic screenshot and recording safeguards are active." : "Content and recording protections are suspended."
+      });
+    } else if (key === "notifyAlerts") {
+      toast({
+        title: checked ? "🔔 Share Violations Active" : "🔕 Share Violations Silenced",
+        description: checked ? "Your chat partner will be alerted if you attempt a screenshot." : "Detection runs locally, but no peer alerts will be sent."
+      });
+    } else if (key === "autoStopOnScreenshot") {
+      toast({
+        title: checked ? "🚨 Auto-Stop Enabled" : "🔄 Auto-Stop Disabled",
+        description: checked ? "Chats will auto-terminate instantly if a capture is detected." : "Screen will black out temporarily, but the chat will remain connected."
+      });
+    }
   };
 
   return (
@@ -81,6 +102,43 @@ const SettingsPage = () => {
               </SettingRow>
               <SettingRow icon={<Bell className="h-4.5 w-4.5" />} title="Notifications" desc="Alerts when tab is inactive">
                 <Switch checked={settings.notifications} onCheckedChange={(c) => handleToggle("notifications", c)} />
+              </SettingRow>
+            </div>
+          </motion.section>
+
+          {/* Security & Privacy */}
+          <motion.section {...fadeUp} transition={{ delay: 0.15 }} className="space-y-3">
+            <h2 className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] px-1">Security & Privacy</h2>
+            <div className="space-y-2.5">
+              <SettingRow
+                icon={<ShieldCheck className="h-4.5 w-4.5 text-emerald-500" />}
+                title="Screen Protection"
+                desc="Prevent screenshots, copies, & screen shares"
+              >
+                <Switch 
+                  checked={settings.protectionEnabled} 
+                  onCheckedChange={(c) => handleToggle("protectionEnabled", c)}
+                />
+              </SettingRow>
+              <SettingRow
+                icon={<EyeOff className="h-4.5 w-4.5 text-blue-500" />}
+                title="Share Violations"
+                desc="Notify chat partner of screenshot attempts"
+              >
+                <Switch 
+                  checked={settings.notifyAlerts} 
+                  onCheckedChange={(c) => handleToggle("notifyAlerts", c)}
+                />
+              </SettingRow>
+              <SettingRow
+                icon={<Ban className="h-4.5 w-4.5 text-rose-500" />}
+                title="Auto-Stop on Violation"
+                desc="Auto-disconnect chat immediately if screen is captured"
+              >
+                <Switch 
+                  checked={settings.autoStopOnScreenshot} 
+                  onCheckedChange={(c) => handleToggle("autoStopOnScreenshot", c)}
+                />
               </SettingRow>
             </div>
           </motion.section>

@@ -71,7 +71,10 @@ const CursorOverlay = memo(({ roomChannel, sessionId }: { roomChannel?: RoomChan
       });
     }, 1000);
 
-    return () => clearInterval(cleanupInterval);
+    return () => {
+      clearInterval(cleanupInterval);
+      roomChannel.off?.("broadcast", { event: "cursor" });
+    };
   }, [roomChannel, sessionId]);
 
   return (
@@ -563,6 +566,11 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     return () => {
       window.removeEventListener("resize", handleResize);
       resizeObserver.disconnect();
+      roomChannel?.off?.("broadcast", { event: "drawing_batch" });
+      roomChannel?.off?.("broadcast", { event: "drawing" });
+      roomChannel?.off?.("broadcast", { event: "shape" });
+      roomChannel?.off?.("broadcast", { event: "text_draw" });
+      roomChannel?.off?.("broadcast", { event: "clear_canvas" });
     };
   }, [roomChannel, sessionId, drawLine, clearLocal]);
 

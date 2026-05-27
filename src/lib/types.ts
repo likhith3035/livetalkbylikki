@@ -11,6 +11,9 @@ export interface BaseChannel {
      filter: { event: string; [key: string]: any }, 
      callback: (payload: any) => void): BaseChannel;
   
+  off?(type: "broadcast" | "presence" | "postgres_changes", 
+       filter: { event: string; [key: string]: any }): BaseChannel;
+  
   subscribe(callback?: (status: string) => void): { unsubscribe: () => void };
   
   send(data: { type: string; event: string; payload: any }): Promise<any> | void;

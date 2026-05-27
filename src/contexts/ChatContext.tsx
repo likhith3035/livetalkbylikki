@@ -47,6 +47,7 @@ interface ChatContextValue {
   setDisappearTimer: (t: number | null) => void;
   reportStranger: (reason: string) => void;
   stableId: string;
+  addMessage: ReturnType<typeof useChat>["addMessage"];
 
   // Video call state
   callStatus: ReturnType<typeof useVideoCall>["callStatus"];
@@ -81,6 +82,15 @@ interface ChatContextValue {
   // In-call chat
   inCallMessages: InCallMessage[];
   sendInCallMessage: (text: string) => void;
+
+  // Protection state & actions
+  localPrivacyModeActive: boolean;
+  strangerPrivacyModeActive: boolean;
+  privacyModeActive: boolean;
+  privacyAlertActive: boolean;
+  togglePrivacyMode: (val?: boolean) => void;
+  sendPrivacyAlert: (type: string) => void;
+  privacyLogs: string[];
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -117,8 +127,124 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
     sendSignalingEvent, reportStranger, stableId,
-    userName, setUserName, strangerName,
+    userName, setUserName, strangerName, addMessage,
   } = chatHook;
+
+  const [localPrivacyModeActive, setLocalPrivacyModeActive] = useState(false);
+  const [strangerPrivacyModeActive, setStrangerPrivacyModeActive] = useState(false);
+  const [privacyAlertActive, setPrivacyAlertActive] = useState(false);
+  const [privacyLogs, setPrivacyLogs] = useState<string[]>([]);
+  const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const privacyModeActive = localPrivacyModeActive || strangerPrivacyModeActive;
+
+  const togglePrivacyMode = useCallback((val?: boolean) => {
+    const newVal = val !== undefined ? val : !localPrivacyModeActive;
+    setLocalPrivacyModeActive(newVal);
+    setPrivacyLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Local Privacy Mode ${newVal ? "Enabled" : "Disabled"}`]);
+    
+    // Add inline system message about active settings
+    if (newVal) {
+      addMessage("system", "🔒 Privacy Mode is active. Screenshots and screen recordings are discouraged and may trigger alerts.");
+    } else {
+      addMessage("system", "🔓 You disabled Privacy Mode.");
+    }
+
+    roomChannel?.send({
+      type: "broadcast",
+      event: "privacy_mode_change",
+      payload: { senderId: sessionId, enabled: newVal }
+    });
+  }, [localPrivacyModeActive, roomChannel, sessionId, addMessage]);
+
+  const sendPrivacyAlert = useCallback((type: string) => {
+    setPrivacyLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Local capture detected: ${type}`]);
+    
+    // Set local alert active to trigger UI overlays/blurs
+    setPrivacyAlertActive(true);
+    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+    alertTimeoutRef.current = setTimeout(() => setPrivacyAlertActive(false), 3000);
+
+    // Notify peer via signaling channel
+    if (settings.notifyAlerts) {
+      roomChannel?.send({
+        type: "broadcast",
+        event: "privacy_alert",
+        payload: { senderId: sessionId, username: userName || "Stranger", type }
+      });
+    }
+  }, [roomChannel, sessionId, userName, settings.notifyAlerts]);
+
+  // Sync privacy mode events in real-time
+  useEffect(() => {
+    if (!roomChannel) {
+      setLocalPrivacyModeActive(false);
+      setStrangerPrivacyModeActive(false);
+      setPrivacyAlertActive(false);
+      setPrivacyLogs([]);
+      return;
+    }
+
+    const onPrivacyModeChange = (payload: any) => {
+      const data = payload.payload as { senderId: string; enabled: boolean };
+      if (data.senderId !== sessionId) {
+        setStrangerPrivacyModeActive(data.enabled);
+        setPrivacyLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] peer Privacy Mode ${data.enabled ? "enabled" : "disabled"}`]);
+        
+        toast({
+          title: data.enabled ? "🛡️ Privacy Mode Enabled" : "🛡️ Privacy Mode Disabled",
+          description: data.enabled
+            ? `${strangerName || "Stranger"} enabled Privacy Mode.`
+            : `${strangerName || "Stranger"} disabled Privacy Mode.`,
+        });
+
+        // Appending warning/info system messages to chat history
+        if (data.enabled) {
+          addMessage("system", `🔒 Privacy Mode is active. Screenshots and screen recordings are discouraged and may trigger alerts.`);
+        } else {
+          addMessage("system", `🔓 ${strangerName || "Stranger"} disabled Privacy Mode.`);
+        }
+      }
+    };
+
+    const onPrivacyAlert = (payload: any) => {
+      const data = payload.payload as { senderId: string; username: string; type: string };
+      if (data.senderId !== sessionId) {
+        setPrivacyLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Peer attempted screen capture: ${data.type}`]);
+        
+        // Show mutual warning modal
+        setPrivacyAlertActive(true);
+        if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+        alertTimeoutRef.current = setTimeout(() => setPrivacyAlertActive(false), 3000);
+
+        addMessage("system", `⚠️ Possible screenshot or screen recording detected!`);
+
+        toast({
+          variant: "destructive",
+          title: "⚠️ Privacy Alert",
+          description: "Possible screenshot or screen recording detected",
+        });
+      }
+    };
+
+    roomChannel.on("broadcast", { event: "privacy_mode_change" }, onPrivacyModeChange);
+    roomChannel.on("broadcast", { event: "privacy_alert" }, onPrivacyAlert);
+
+    return () => {
+      roomChannel.off?.("broadcast", { event: "privacy_mode_change" });
+      roomChannel.off?.("broadcast", { event: "privacy_alert" });
+      if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+    };
+  }, [roomChannel, sessionId, strangerName, toast, addMessage]);
+
+  useEffect(() => {
+    if (status !== "connected") {
+      setLocalPrivacyModeActive(false);
+      setStrangerPrivacyModeActive(false);
+      setPrivacyAlertActive(false);
+      setPrivacyLogs([]);
+    }
+  }, [status]);
 
   const onCallEnded = useCallback(() => {
     console.log("ChatContext: Call ended");
@@ -167,7 +293,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   // Handle in-call chat messages via the room channel (Supabase)
   useEffect(() => {
     if (!roomChannel) return;
-    roomChannel.on("broadcast", { event: "incall_chat" }, (payload) => {
+    const handleInCallChat = (payload: any) => {
       const data = payload.payload as { senderId: string; text: string };
       if (data.senderId !== sessionId) {
         setInCallMessages((prev) => [...prev, {
@@ -177,7 +303,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           timestamp: new Date(),
         }]);
       }
-    });
+    };
+    roomChannel.on("broadcast", { event: "incall_chat" }, handleInCallChat);
+    return () => {
+      roomChannel.off?.("broadcast", { event: "incall_chat" });
+    };
   }, [roomChannel, sessionId]);
 
   const sendInCallMessage = useCallback((text: string) => {
@@ -243,6 +373,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     supportsScreenShare,
     reportStranger, stableId,
     userName, setUserName, strangerName,
+    localPrivacyModeActive,
+    strangerPrivacyModeActive,
+    privacyModeActive,
+    privacyAlertActive,
+    togglePrivacyMode,
+    sendPrivacyAlert,
+    privacyLogs,
+    addMessage,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

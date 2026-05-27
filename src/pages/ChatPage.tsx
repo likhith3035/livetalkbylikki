@@ -25,6 +25,8 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { FindingAnimation } from "@/components/chat/FindingAnimation";
 import SharedCanvas from "@/components/chat/SharedCanvas";
 import { useSoundNotifications } from "@/hooks/use-sound-notifications";
+import { useProtectionDetection } from "@/hooks/use-protection-detection";
+import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
 
 const RANDOM_NICKNAMES = [
   "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
@@ -51,6 +53,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
+    localPrivacyModeActive, strangerPrivacyModeActive, privacyModeActive, privacyAlertActive, sendPrivacyAlert
   } = useChatContext();
 
   const { isBanned, submitAppeal } = useSafety();
@@ -125,6 +128,56 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }, [startChat, userName]);
 
   useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
+
+  // Heuristic screen protection & recording detection hook
+  const { isTriggered } = useProtectionDetection({
+    active: status === "connected" && privacyModeActive,
+    onTriggered: (type) => {
+      sendPrivacyAlert(type);
+      toast({
+        variant: "destructive",
+        title: "⚠️ Capture Attempt Blocked",
+        description: `Screenshot or recording attempt detected (${type}).`
+      });
+      if (settings.autoStopOnScreenshot) {
+        toast({
+          variant: "destructive",
+          title: "🚨 Chat Terminated",
+          description: "Disconnecting session automatically to safeguard privacy."
+        });
+        setTimeout(() => {
+          stopChat();
+        }, 1000);
+      }
+    }
+  });
+
+  // Prevent right-clicks, selection, copying, dragging in Privacy Mode
+  useEffect(() => {
+    if (status !== "connected" || !privacyModeActive) return;
+
+    const preventDefault = (e: Event) => {
+      e.preventDefault();
+      toast({
+        title: "🔒 Security Feature Active",
+        description: "Gestures like right-clicks, selection, dragging, and copying are disabled in Privacy Mode."
+      });
+    };
+
+    document.addEventListener("contextmenu", preventDefault);
+    document.addEventListener("selectstart", preventDefault);
+    document.addEventListener("dragstart", preventDefault);
+    document.addEventListener("copy", preventDefault);
+    document.addEventListener("cut", preventDefault);
+
+    return () => {
+      document.removeEventListener("contextmenu", preventDefault);
+      document.removeEventListener("selectstart", preventDefault);
+      document.removeEventListener("dragstart", preventDefault);
+      document.removeEventListener("copy", preventDefault);
+      document.removeEventListener("cut", preventDefault);
+    };
+  }, [status, privacyModeActive, toast]);
 
   const handleImageUpload = (url: string) => {
     sendMessage("", url, replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.sender } : undefined);
@@ -235,9 +288,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }
 
   return (
-    <div className={cn("flex flex-col bg-background relative z-0", status === "idle" ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh]")}>
+    <div className={cn("flex flex-col bg-background relative z-0", status === "idle" ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh]", status === "connected" && privacyModeActive && "select-none")}>
       <ChatWallpaper />
-      <div className="lg:hidden relative z-20">
+      <div className={cn("flex flex-col flex-1 min-h-0", privacyAlertActive && "blur-lg pointer-events-none transition-all duration-300")}>
+        <div className="lg:hidden relative z-20">
         <Header onlineCount={onlineCount} strangerName={status === "connected" ? strangerName : undefined} />
       </div>
 
@@ -494,6 +548,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       <div className="relative z-20">
         <BottomNav />
       </div>
+      </div>
 
       <motion.div className="z-[200]">
         <AnimatePresence>
@@ -509,6 +564,52 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           )}
         </AnimatePresence>
       </motion.div>
+
+      {status === "connected" && privacyModeActive && (
+        <PrivacyWatermark userName={userName} strangerName={strangerName} sessionId={sessionId} />
+      )}
+
+      {isTriggered && (
+        <div className="fixed inset-0 bg-black z-[9999] pointer-events-auto flex items-center justify-center" />
+      )}
+
+      {/* Realtime Mutual Warning Modal popup */}
+      <AnimatePresence>
+        {privacyAlertActive && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 15 }}
+              className="bg-card border border-border/80 p-6 rounded-[2rem] max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center text-center gap-4 relative overflow-hidden"
+            >
+              {/* Premium Glow effect */}
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-destructive via-red-500 to-destructive" />
+              
+              <div className="h-14 w-14 rounded-full bg-destructive/15 border border-destructive/20 flex items-center justify-center text-destructive animate-pulse">
+                <AlertTriangle className="h-7 w-7" />
+              </div>
+              
+              <div className="space-y-1">
+                <h3 className="text-base font-black uppercase tracking-tight text-foreground leading-tight">
+                  Security Warning
+                </h3>
+                <p className="text-xs font-bold text-destructive/95 uppercase tracking-wide">
+                  Possible screenshot or screen recording detected
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed pt-1">
+                  Screenshots and recordings are strictly discouraged and may trigger alerts.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

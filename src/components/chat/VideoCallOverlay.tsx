@@ -2,12 +2,15 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Video, VideoOff, Mic, MicOff, PhoneOff, Phone, X,
   Monitor, MonitorOff, SwitchCamera, Sparkles, MessageSquare, Send,
-  PictureInPicture2, Clock,
+  PictureInPicture2, Clock, Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { VideoCallStatus } from "@/hooks/use-video-call";
+import { useChatContext } from "@/contexts/ChatContext";
+import { useSettings } from "@/contexts/SettingsContext";
+import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
 
 interface InCallMessage {
   id: string;
@@ -70,6 +73,27 @@ const VideoCallOverlay = ({
   const [chatInput, setChatInput] = useState("");
   const [showControls, setShowControls] = useState(true);
   const [showSurpriseMenu, setShowSurpriseMenu] = useState(false);
+
+  const { settings } = useSettings();
+  const { privacyModeActive, privacyAlertActive, userName, strangerName, sessionId } = useChatContext();
+  const [tabFocused, setTabFocused] = useState(true);
+
+  // Monitor focus/blur for screen-recording tab protection
+  useEffect(() => {
+    if (!privacyModeActive || !settings.protectionEnabled) {
+      setTabFocused(true);
+      return;
+    }
+    const handleFocus = () => setTabFocused(true);
+    const handleBlur = () => setTabFocused(false);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    setTabFocused(document.hasFocus());
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [privacyModeActive, settings.protectionEnabled]);
   const [callDuration, setCallDuration] = useState(0);
   const [isPiP, setIsPiP] = useState(false);
   const [isLocalMain, setIsLocalMain] = useState(false); // WhatsApp-style swap
@@ -293,7 +317,7 @@ const VideoCallOverlay = ({
                     muted
                     className={cn(
                       "h-full w-full object-cover",
-                      isBlurred && "video-blur"
+                      (isBlurred || !tabFocused || privacyAlertActive) && "video-blur"
                     )}
                     style={{
                       transform: [
@@ -315,7 +339,8 @@ const VideoCallOverlay = ({
                     playsInline
                     className={cn(
                       "h-full w-full",
-                      remoteIsScreenSharing ? "object-contain" : "object-cover"
+                      remoteIsScreenSharing ? "object-contain" : "object-cover",
+                      (remoteBlurred || !tabFocused || privacyAlertActive) && "video-blur"
                     )}
                   />
                 ) : (
@@ -365,6 +390,20 @@ const VideoCallOverlay = ({
             </div>
           )}
 
+          {/* Watermark in Video Call */}
+          {privacyModeActive && (
+            <PrivacyWatermark userName={userName} strangerName={strangerName} sessionId={sessionId} />
+          )}
+
+          {/* Screen blurred mask */}
+          {!tabFocused && privacyModeActive && (
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-2xl flex flex-col items-center justify-center gap-3 z-[25] select-none pointer-events-auto">
+              <Shield className="h-10 w-10 text-primary animate-pulse" />
+              <p className="text-sm font-bold text-foreground tracking-widest uppercase">Protected Content</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Screen capture protections are active</p>
+            </div>
+          )}
+
           {/* Draggable PiP video - only for video calls */}
           {!isAudioOnly && (
             <motion.div
@@ -387,7 +426,7 @@ const VideoCallOverlay = ({
                     className={cn(
                       "h-full w-full",
                       isScreenSharing ? "object-contain bg-black" : "object-cover",
-                      isBlurred && "video-blur"
+                      (isBlurred || !tabFocused || privacyAlertActive) && "video-blur"
                     )}
                     style={{
                       transform: [
@@ -409,7 +448,8 @@ const VideoCallOverlay = ({
                     playsInline
                     className={cn(
                       "h-full w-full object-cover",
-                      remoteIsScreenSharing && "object-contain bg-black"
+                      remoteIsScreenSharing && "object-contain bg-black",
+                      (!tabFocused || privacyAlertActive) && "video-blur"
                     )}
                   />
                 ) : (

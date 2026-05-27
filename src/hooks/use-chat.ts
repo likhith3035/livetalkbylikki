@@ -105,6 +105,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   const disappearTimerRef = useRef<number | null>(null);
   const messagesRef = useRef<Message[]>([]);
   const [disappearTimer, setDisappearTimer] = useState<number | null>(null);
+  const [roomChannel, setRoomChannel] = useState<RoomChannel>(null);
 
   const stopSearchRef = useRef<() => void>(() => {});
 
@@ -139,6 +140,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       roomChannelRef.current.unsubscribe();
       roomChannelRef.current = null;
     }
+    setRoomChannel(null);
     roomIdRef.current = null;
     strangerIdRef.current = null;
     setStrangerTyping(false);
@@ -172,6 +174,10 @@ export function useChat(callbacks?: ChatCallbacks) {
         _listeners: [] as Array<{ event: string, callback: Function }>,
         on: function(type: string, filter: { event: string }, callback: Function) {
           this._listeners.push({ event: filter.event, callback });
+          return this;
+        },
+        off: function(type: string, filter: { event: string }) {
+          this._listeners = this._listeners.filter((l) => l.event !== filter.event);
           return this;
         },
         subscribe: function(callback?: (status: string) => void) {
@@ -278,6 +284,7 @@ export function useChat(callbacks?: ChatCallbacks) {
 
       onDisconnect(eventsRef).remove().catch(() => {});
       roomChannelRef.current = channelMock;
+      setRoomChannel(channelMock);
     },
     [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
   );
@@ -551,10 +558,10 @@ export function useChat(callbacks?: ChatCallbacks) {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, stableId, searchElapsed, privateRoomCode,
     userName, setUserName, strangerName,
-    roomChannel: roomChannelRef.current,
+    roomChannel,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
-    sendSignalingEvent: sendFirebaseSignalingEvent, reportStranger
+    sendSignalingEvent: sendFirebaseSignalingEvent, reportStranger, addMessage
   };
 }
