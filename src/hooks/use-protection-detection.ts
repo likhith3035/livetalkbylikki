@@ -78,50 +78,16 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
       triggerViolation("Window Focus Lost");
     };
 
-    // 3. DevTools opening detection (window dimension check & custom element checker)
-    const devtoolsThreshold = 160;
-    const checkDimensions = () => {
-      const widthDiff = window.outerWidth - window.innerWidth;
-      const heightDiff = window.outerHeight - window.innerHeight;
-      
-      if (widthDiff > devtoolsThreshold || heightDiff > devtoolsThreshold) {
-        // Exclude standard OS/browser chrome differences if any
-        if (window.outerWidth > 0 && window.outerHeight > 0) {
-          triggerViolation("DevTools Opened");
-        }
-      }
-    };
-
-    // Console logging getter check
-    const element = new Image();
-    Object.defineProperty(element, "id", {
-      get: () => {
-        triggerViolation("Console Inspected");
-      },
-    });
-
-    const consoleInterval = setInterval(() => {
-      // Print image element to trigger the getter if console is open
-      console.log(element);
-      console.clear();
-    }, 2000);
-
     window.addEventListener("keydown", handleKeyDown, true);
     window.addEventListener("keyup", handleKeyUp, true);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("blur", handleWindowBlur);
-    window.addEventListener("resize", checkDimensions);
-
-    // Check initially
-    checkDimensions();
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
       window.removeEventListener("keyup", handleKeyUp, true);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
-      window.removeEventListener("resize", checkDimensions);
-      clearInterval(consoleInterval);
       if (triggerTimeoutRef.current) clearTimeout(triggerTimeoutRef.current);
     };
   }, [active, settings.protectionEnabled]);

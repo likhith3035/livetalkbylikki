@@ -162,7 +162,7 @@ const ChatStatusBar = ({
       </div>
 
       {/* Action buttons with labels */}
-      <div className="flex gap-0.5 sm:gap-1.5 items-center shrink-0 overflow-x-auto max-w-[65vw] sm:max-w-none scrollbar-none">
+      <div className="flex gap-0.5 sm:gap-1.5 items-center shrink-0 overflow-x-auto sm:overflow-visible max-w-[65vw] sm:max-w-none scrollbar-none">
         {status === "idle" && (
           <>
             <Button
