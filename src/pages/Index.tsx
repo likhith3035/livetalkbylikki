@@ -4,7 +4,7 @@ import {
   MessageSquare, ArrowRight, Sparkles, Shield, Zap, Users, Globe, Lock,
   EyeOff, Video, Gamepad2, Link2, Copy, Check, Hash, Share2,
   Instagram, Linkedin, Mail, ChevronDown, Phone, Timer,
-  Heart, Search, Pin, Image, Palette, MapPin,
+  Heart, Search, Pin, Image, Palette, MapPin, Camera,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useSEO } from "@/hooks/use-seo";
 import { useAnalytics } from "@/hooks/use-analytics";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import QrScanner from "@/components/chat/QrScanner";
 
 const FEATURES = [
   { icon: Lock, title: "End-to-End Secure", desc: "Your conversations are fully encrypted and never stored on servers." },
@@ -69,11 +71,28 @@ const Index = () => {
   const [copied, setCopied] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [showJoinInput, setShowJoinInput] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const invitePanelRef = useRef<HTMLDivElement>(null);
   const joinPanelRef = useRef<HTMLDivElement>(null);
 
   // Track visits
   useAnalytics();
+
+  const handleQrScanSuccess = (decodedText: string) => {
+    let code = decodedText.trim().toUpperCase();
+    const urlMatch = decodedText.match(/\/room\/([A-Za-z0-9]+)/i);
+    if (urlMatch) {
+      code = urlMatch[1].toUpperCase();
+    }
+
+    if (code.length >= 4) {
+      toast({ title: "✅ QR Scanned!", description: `Joining room ${code}...` });
+      setShowScanner(false);
+      navigate(`/room/${code}`);
+    } else {
+      toast({ title: "Invalid QR", description: "This QR code doesn't contain a valid room code.", variant: "destructive" });
+    }
+  };
 
   // Magic Word Access Logic
   useEffect(() => {
@@ -272,13 +291,26 @@ const Index = () => {
                 className="w-full max-w-sm mx-auto pt-2 overflow-hidden"
               >
                 <div ref={joinPanelRef} className="flex gap-2">
-                  <Input
-                    placeholder="ROOM CODE"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-                    className="h-12 rounded-xl bg-background/50 backdrop-blur-sm border-primary/20 focus-visible:ring-primary/30 font-mono tracking-widest text-center text-lg uppercase"
-                    maxLength={6}
-                  />
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="ROOM CODE"
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+                      className="h-12 rounded-xl bg-background/50 backdrop-blur-sm border-primary/20 focus-visible:ring-primary/30 font-mono tracking-widest text-center text-lg uppercase pr-12"
+                      maxLength={6}
+                      onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-primary rounded-lg"
+                      onClick={() => setShowScanner(true)}
+                      title="Scan QR Code"
+                    >
+                      <Camera className="h-5 w-5" />
+                    </Button>
+                  </div>
                   <Button onClick={handleJoinRoom} variant="glow" className="h-12 px-6 rounded-xl">
                     Join
                   </Button>
@@ -692,6 +724,20 @@ Likhith Kami (Likki)</a>
           <a href="/info" className="hover:text-primary transition-colors">About</a>
         </div>
       </footer>
+
+      <Dialog open={showScanner} onOpenChange={setShowScanner}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Scan QR Code</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 flex justify-center">
+            <QrScanner
+              onScanSuccess={handleQrScanSuccess}
+              onClose={() => setShowScanner(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>
