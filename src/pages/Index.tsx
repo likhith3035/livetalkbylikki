@@ -122,6 +122,8 @@ const Index = () => {
     setShowJoinInput(false);
     setRoomCode(code);
     
+    sessionStorage.setItem("echo_created_room", code);
+    
     // Scroll to panel after it renders
     setTimeout(() => {
       invitePanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });

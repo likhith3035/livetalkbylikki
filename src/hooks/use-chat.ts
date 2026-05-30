@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "@/lib/firebase";
-import { ref, onChildAdded, push, off, onDisconnect, remove } from "firebase/database";
+import { ref, onChildAdded, push, off, onDisconnect, remove, get } from "firebase/database";
 import { useOnlineCount } from "./use-online-count";
 import { sounds, haptics } from "@/lib/sounds";
 import { sendNotification, type NotificationType } from "@/lib/notifications";
@@ -40,6 +40,7 @@ interface ChatCallbacks {
   notificationsEnabled: boolean;
   autoReconnect: boolean;
   onSignaling?: (event: string, payload: Record<string, unknown>) => void;
+  toast?: (options: any) => void;
 }
 
 const getSessionId = () => {
@@ -79,6 +80,9 @@ const addBlockedId = (id: string) => {
 };
 
 export function useChat(callbacks?: ChatCallbacks) {
+  const toast = useCallback((options: any) => {
+    callbacksRef.current?.toast?.(options);
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ChatStatus>("idle");
   const onlineCount = useOnlineCount();
@@ -452,16 +456,101 @@ export function useChat(callbacks?: ChatCallbacks) {
     }
   }, [reportUser]);
 
-  const joinPrivateRoom = useCallback((code: string) => {
-    setPrivateRoomCode(code);
-    startChat(code); 
-  }, [startChat]);
+  const joinPrivateRoom = useCallback(async (code: string, isCreator: boolean = false) => {
+    const formattedCode = code.trim().toUpperCase();
+    if (formattedCode.length !== 6) {
+      toast({
+        title: "Invalid Room Code",
+        description: "Room code must be 6 characters.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isCreator) {
+      try {
+        // 1. Check if the match already exists and is full
+        const matchRef = ref(db, `matches/private_${formattedCode}`);
+        const matchSnap = await get(matchRef);
+
+        if (matchSnap.exists()) {
+          const matchData = matchSnap.val();
+          if (matchData.user1 !== sessionId && matchData.user2 !== sessionId) {
+            toast({
+              title: "Room Full",
+              description: "This room already has 2 active users.",
+              variant: "destructive"
+            });
+            return;
+          }
+          // If we are part of the match, we can reconnect.
+        } else {
+          // 2. Check the lobby for another player waiting with this code
+          const lobbyRef = ref(db, "lobby");
+          const lobbySnap = await get(lobbyRef);
+          let creatorFound = false;
+
+          if (lobbySnap.exists()) {
+            const lobbyUsers = lobbySnap.val();
+            const waiting = Object.entries(lobbyUsers).filter(([uid, uData]: [string, any]) => {
+              return uData?.code?.toUpperCase() === formattedCode && uid !== sessionId;
+            });
+
+            if (waiting.length > 0) {
+              creatorFound = true;
+
+              if (waiting.length >= 2) {
+                toast({
+                  title: "Room Full",
+                  description: "This room is already full.",
+                  variant: "destructive"
+                });
+                return;
+              }
+
+              const firstWaitingUser = waiting[0][1] as any;
+              const joinedAt = firstWaitingUser.joinedAt;
+              // 5-minute expiry check
+              if (joinedAt && Date.now() - joinedAt > 300 * 1000) {
+                toast({
+                  title: "Room Expired",
+                  description: "This private room invitation has expired.",
+                  variant: "destructive"
+                });
+                return;
+              }
+            }
+          }
+
+          if (!creatorFound) {
+            toast({
+              title: "Invalid or Expired Room",
+              description: "No active room found with this code. It may have expired or been canceled.",
+              variant: "destructive"
+            });
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error verifying private room:", err);
+        toast({
+          title: "Connection Error",
+          description: "Could not verify room status. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    setPrivateRoomCode(formattedCode);
+    startChat(formattedCode); 
+  }, [startChat, toast]);
 
   const createPrivateRoom = useCallback((): string => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-    joinPrivateRoom(code);
+    joinPrivateRoom(code, true);
     return code;
   }, [joinPrivateRoom]);
 

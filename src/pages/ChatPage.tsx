@@ -27,6 +27,8 @@ import SharedCanvas from "@/components/chat/SharedCanvas";
 import { useSoundNotifications } from "@/hooks/use-sound-notifications";
 import { useProtectionDetection } from "@/hooks/use-protection-detection";
 import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
+import { useNavigate } from "react-router-dom";
+import RoomWaitingScreen from "@/components/chat/RoomWaitingScreen";
 
 const RANDOM_NICKNAMES = [
   "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
@@ -53,7 +55,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
-    localPrivacyModeActive, strangerPrivacyModeActive, privacyModeActive, privacyAlertActive, sendPrivacyAlert
+    localPrivacyModeActive, strangerPrivacyModeActive, privacyModeActive, privacyAlertActive, sendPrivacyAlert,
+    privateRoomCode
   } = useChatContext();
 
   const { isBanned, submitAppeal } = useSafety();
@@ -78,6 +81,28 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [tempName, setTempName] = useState("");
   const [activeGame, setActiveGame] = useState<"none" | "ttt" | "canvas" | "rps">("none");
   const lastAutoJoinCodeRef = useRef<string | null>(null);
+  const navigate = useNavigate();
+  const [pendingRoomCode, setPendingRoomCode] = useState<string | null>(null);
+  const [showPrivateWaiting, setShowPrivateWaiting] = useState(false);
+
+  const handleCancelRoom = useCallback(() => {
+    stopChat();
+    setPendingRoomCode(null);
+    setShowPrivateWaiting(false);
+    navigate("/");
+  }, [stopChat, navigate]);
+
+  useEffect(() => {
+    if (privateRoomCode && status === "searching") {
+      setShowPrivateWaiting(true);
+    }
+  }, [privateRoomCode, status]);
+
+  useEffect(() => {
+    if (!privateRoomCode) {
+      setShowPrivateWaiting(false);
+    }
+  }, [privateRoomCode]);
 
   // Auto-join private room from URL/code
   useEffect(() => {
@@ -92,8 +117,18 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     lastAutoJoinCodeRef.current = pendingCode;
     sessionStorage.removeItem("echo_join_room");
     setShowInterests(false);
-    joinPrivateRoom(pendingCode);
-  }, [initialRoomCode, joinPrivateRoom]);
+
+    if (!savedName && !userName) {
+      setPendingRoomCode(pendingCode);
+    } else {
+      const createdCode = sessionStorage.getItem("echo_created_room");
+      const isCreator = createdCode?.toUpperCase() === pendingCode;
+      if (isCreator) {
+        sessionStorage.removeItem("echo_created_room");
+      }
+      joinPrivateRoom(pendingCode, isCreator);
+    }
+  }, [initialRoomCode, joinPrivateRoom, userName]);
 
   useEffect(() => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
@@ -113,6 +148,15 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       setUserName(trimmed);
       localStorage.setItem("livetalk_user_name", trimmed);
       toast({ title: "Welcome!", description: `You are now known as ${trimmed}` });
+      if (pendingRoomCode) {
+        const createdCode = sessionStorage.getItem("echo_created_room");
+        const isCreator = createdCode?.toUpperCase() === pendingRoomCode;
+        if (isCreator) {
+          sessionStorage.removeItem("echo_created_room");
+        }
+        joinPrivateRoom(pendingRoomCode, isCreator);
+        setPendingRoomCode(null);
+      }
     }
   };
 
@@ -608,6 +652,18 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Private Room QR Waiting Screen Overlay */}
+      <AnimatePresence>
+        {showPrivateWaiting && privateRoomCode && (
+          <RoomWaitingScreen
+            roomCode={privateRoomCode}
+            isMatched={status === "connected"}
+            onCancel={handleCancelRoom}
+            onPartnerJoined={() => setShowPrivateWaiting(false)}
+          />
         )}
       </AnimatePresence>
     </div>

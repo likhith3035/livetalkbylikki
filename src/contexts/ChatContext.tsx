@@ -41,13 +41,14 @@ interface ChatContextValue {
   reactToMessage: (messageId: string, emoji: string) => void;
   blockStranger: () => void;
   createPrivateRoom: () => string;
-  joinPrivateRoom: (code: string) => void;
+  joinPrivateRoom: (code: string, isCreator?: boolean) => void;
   deleteMessage: (messageId: string) => void;
   pinMessage: (messageId: string) => void;
   setDisappearTimer: (t: number | null) => void;
   reportStranger: (reason: string) => void;
   stableId: string;
   addMessage: ReturnType<typeof useChat>["addMessage"];
+  privateRoomCode: string | null;
 
   // Video call state
   callStatus: ReturnType<typeof useVideoCall>["callStatus"];
@@ -116,7 +117,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     onSignaling: (event: string, payload: Record<string, unknown>) => {
       signalingHandlerRef.current?.(event, payload);
     },
-  }), [settings.soundEffects, settings.notifications]);
+    toast,
+  }), [settings.soundEffects, settings.notifications, toast]);
 
   const chatHook = useChat(chatCallbacks);
 
@@ -128,6 +130,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
     sendSignalingEvent, reportStranger, stableId,
     userName, setUserName, strangerName, addMessage,
+    privateRoomCode,
   } = chatHook;
 
   const [localPrivacyModeActive, setLocalPrivacyModeActive] = useState(false);
@@ -361,6 +364,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, setDisappearTimer,
+    privateRoomCode,
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
     remoteMuted, remoteCameraOff, remoteBlurred,

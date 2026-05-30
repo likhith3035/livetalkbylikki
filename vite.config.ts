@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  optimizeDeps: {
+    include: ["qrcode.react"],
+  },
   build: {
     rollupOptions: {
       output: {
