@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link2, ArrowRight } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Link2, ArrowRight, Camera, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatePresence } from "framer-motion";
+import QrScanner from "@/components/chat/QrScanner";
+import { cn } from "@/lib/utils";
 
 interface PrivateRoomDialogProps {
   onCreateRoom: () => string;
@@ -21,9 +24,10 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [joinCode, setJoinCode] = useState("");
+  const [joinMode, setJoinMode] = useState<"code" | "scan">("code");
 
   const handleCreate = () => {
-    onCreateRoom(); // Calls createPrivateRoom which triggers joinPrivateRoom(code, true)
+    onCreateRoom();
     setOpen(false);
   };
 
@@ -38,10 +42,30 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
     setJoinCode("");
   };
 
+  const handleScanSuccess = useCallback((decodedText: string) => {
+    // Extract room code from URL or use raw text
+    let code = decodedText.trim().toUpperCase();
+
+    // If it's a URL like https://livetalkbylikki.netlify.app/room/ABCDEF
+    const urlMatch = decodedText.match(/\/room\/([A-Za-z0-9]+)/i);
+    if (urlMatch) {
+      code = urlMatch[1].toUpperCase();
+    }
+
+    if (code.length >= 4) {
+      toast({ title: "✅ QR Scanned!", description: `Joining room ${code}...` });
+      onJoinRoom(code);
+      setOpen(false);
+    } else {
+      toast({ title: "Invalid QR", description: "This QR code doesn't contain a valid room code.", variant: "destructive" });
+    }
+  }, [onJoinRoom, toast]);
+
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
       setJoinCode("");
+      setJoinMode("code");
     }
   };
 
@@ -78,26 +102,69 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
 
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">or</span>
+            <span className="text-xs text-muted-foreground">or join a room</span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
-          {/* Join room */}
+          {/* Join room — Tabbed: Code / Scan */}
           <div className="space-y-3">
-            <p className="text-sm font-medium text-foreground">Join with code</p>
-            <div className="flex gap-2">
-              <Input
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-                placeholder="Enter code"
-                className="font-mono text-center tracking-widest uppercase"
-                maxLength={6}
-                onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-              />
-              <Button onClick={handleJoin} variant="default" size="icon" className="shrink-0">
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+            {/* Tab switcher */}
+            <div className="flex rounded-xl bg-muted/50 p-0.5 border border-border/40">
+              <button
+                onClick={() => setJoinMode("code")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-all duration-200",
+                  joinMode === "code"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Keyboard className="h-3.5 w-3.5" />
+                Enter Code
+              </button>
+              <button
+                onClick={() => setJoinMode("scan")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-all duration-200",
+                  joinMode === "scan"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Camera className="h-3.5 w-3.5" />
+                Scan QR
+              </button>
             </div>
+
+            {/* Tab content */}
+            <AnimatePresence mode="wait">
+              {joinMode === "code" ? (
+                <div key="code-input" className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+                      placeholder="Enter room code"
+                      className="font-mono text-center tracking-widest uppercase"
+                      maxLength={6}
+                      onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+                    />
+                    <Button onClick={handleJoin} variant="default" size="icon" className="shrink-0">
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    Ask your friend for the 6-character room code
+                  </p>
+                </div>
+              ) : (
+                <QrScanner
+                  key="qr-scanner"
+                  onScanSuccess={handleScanSuccess}
+                  onClose={() => setJoinMode("code")}
+                />
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </DialogContent>
@@ -106,3 +173,4 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
 };
 
 export default PrivateRoomDialog;
+

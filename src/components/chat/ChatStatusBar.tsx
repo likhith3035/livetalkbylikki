@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface ChatStatusBarProps {
   status: ChatStatus;
@@ -266,81 +267,84 @@ const ChatStatusBar = ({
             {onThemeChange && <ChatThemePicker onApply={onThemeChange} />}
             
             {/* Privacy Protection Dropdown Toggle */}
-            <div className="relative">
-              <Button
-                variant={localPrivacyModeActive ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setShowPrivacyPopover(!showPrivacyPopover)}
-                className={cn(
-                  "gap-1 h-8 px-2 text-xs relative",
-                  localPrivacyModeActive && "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/25 hover:text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-                )}
-                title="Privacy & Screen Protection Settings"
+            <Popover open={showPrivacyPopover} onOpenChange={setShowPrivacyPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={localPrivacyModeActive ? "default" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    "gap-1 h-8 px-2 text-xs relative",
+                    localPrivacyModeActive && "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/25 hover:text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                  )}
+                  title="Privacy & Screen Protection Settings"
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline">Privacy</span>
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent
+                align="end"
+                sideOffset={8}
+                className="w-64 rounded-2xl border border-border bg-card p-4 shadow-xl z-50 glass-heavy flex flex-col gap-3"
               >
-                <Shield className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Privacy</span>
-              </Button>
+                <div className="flex items-center gap-1.5 pb-2 border-b border-border/40">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Privacy Protection</h4>
+                </div>
 
-              <AnimatePresence>
-                {showPrivacyPopover && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-40 bg-transparent" 
-                      onClick={() => setShowPrivacyPopover(false)} 
+                {/* Row 1: Privacy Mode */}
+                <div 
+                  className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer select-none"
+                  onClick={() => togglePrivacyMode(!localPrivacyModeActive)}
+                >
+                  <div className="flex flex-col flex-1">
+                    <span className="text-[11.5px] font-bold text-foreground">Privacy Mode</span>
+                    <span className="text-[9.5px] text-muted-foreground">Encrypt screen & block shots</span>
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Switch
+                      checked={localPrivacyModeActive}
+                      onCheckedChange={(c) => togglePrivacyMode(c)}
                     />
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-64 rounded-2xl border border-border bg-card p-4 shadow-xl z-50 glass-heavy flex flex-col gap-3"
-                    >
-                      <div className="flex items-center gap-1.5 pb-2 border-b border-border/40">
-                        <Shield className="h-4 w-4 text-primary" />
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Privacy Protection</h4>
-                      </div>
+                  </div>
+                </div>
 
-                      {/* Row 1: Privacy Mode */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-[11px] font-bold text-foreground">Privacy Mode</span>
-                          <span className="text-[9px] text-muted-foreground">Encrypt screen & block shots</span>
-                        </div>
-                        <Switch
-                          checked={localPrivacyModeActive}
-                          onCheckedChange={(c) => {
-                            togglePrivacyMode(c);
-                          }}
-                        />
-                      </div>
+                {/* Row 2: Share Violations (alerts) */}
+                <div 
+                  className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer select-none"
+                  onClick={() => updateSetting("notifyAlerts", !settings.notifyAlerts)}
+                >
+                  <div className="flex flex-col flex-1">
+                    <span className="text-[11.5px] font-bold text-foreground">Alert Partner</span>
+                    <span className="text-[9.5px] text-muted-foreground">Notify peer on capture attempts</span>
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Switch
+                      checked={settings.notifyAlerts}
+                      onCheckedChange={(c) => updateSetting("notifyAlerts", c)}
+                    />
+                  </div>
+                </div>
 
-                      {/* Row 2: Share Violations (alerts) */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-[11px] font-bold text-foreground">Alert Partner</span>
-                          <span className="text-[9px] text-muted-foreground">Notify peer on capture attempts</span>
-                        </div>
-                        <Switch
-                          checked={settings.notifyAlerts}
-                          onCheckedChange={(c) => updateSetting("notifyAlerts", c)}
-                        />
-                      </div>
-
-                      {/* Row 3: Auto-Stop */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-[11px] font-bold text-foreground">Auto-Stop Chat</span>
-                          <span className="text-[9px] text-muted-foreground">Disconnect immediately if captured</span>
-                        </div>
-                        <Switch
-                          checked={settings.autoStopOnScreenshot}
-                          onCheckedChange={(c) => updateSetting("autoStopOnScreenshot", c)}
-                        />
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
+                {/* Row 3: Auto-Stop */}
+                <div 
+                  className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer select-none"
+                  onClick={() => updateSetting("autoStopOnScreenshot", !settings.autoStopOnScreenshot)}
+                >
+                  <div className="flex flex-col flex-1">
+                    <span className="text-[11.5px] font-bold text-foreground">Auto-Stop Chat</span>
+                    <span className="text-[9.5px] text-muted-foreground">Disconnect immediately if captured</span>
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Switch
+                      checked={settings.autoStopOnScreenshot}
+                      onCheckedChange={(c) => updateSetting("autoStopOnScreenshot", c)}
+                    />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
 
             <ChatTimer isConnected={status === "connected"} onAutoDisconnect={onStop} />
           </>
