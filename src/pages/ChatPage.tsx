@@ -29,6 +29,11 @@ import { useProtectionDetection } from "@/hooks/use-protection-detection";
 import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
 import { useNavigate } from "react-router-dom";
 import RoomWaitingScreen from "@/components/chat/RoomWaitingScreen";
+import HumanVerifyModal from "@/components/chat/HumanVerifyModal";
+import SessionStatsBar from "@/components/chat/SessionStatsBar";
+import StrangerProfileCard from "@/components/chat/StrangerProfileCard";
+import { useHumanVerify } from "@/hooks/use-human-verify";
+import { useSessionStats } from "@/hooks/use-session-stats";
 
 const RANDOM_NICKNAMES = [
   "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
@@ -66,6 +71,16 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [appealReason, setAppealReason] = useState("");
   const [appealSent, setAppealSent] = useState(false);
   const banned = isBanned(stableId);
+
+  // Feature: Human Verification
+  const { isVerified, showVerify, requireVerification, onVerifySuccess, onVerifyClose } = useHumanVerify();
+
+  // Feature: Session Stats
+  const { todayConversations, todayTotalTime, currentStreak, longestStreak, onChatStart, onChatEnd } = useSessionStats();
+
+  // Feature: Stranger Profile Card
+  const [showProfileCard, setShowProfileCard] = useState(false);
+  const [connectedAt, setConnectedAt] = useState<number | null>(null);
 
   useSEO({
     title: "Anonymous Text & Video Chat",
@@ -137,15 +152,23 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       setShowMatchCelebration(true);
       celebrationTimerRef.current = setTimeout(() => setShowMatchCelebration(false), 3500);
       playConnect();
+      // Session stats + profile card
+      onChatStart();
+      setConnectedAt(Date.now());
+      setShowProfileCard(true);
     }
-    if (status === "idle" && prevStatusRef.current === "connected") {
+    if ((status === "disconnected" || status === "idle") && prevStatusRef.current === "connected") {
       playDisconnect();
+      // Session stats
+      onChatEnd();
+      setShowProfileCard(false);
+      setConnectedAt(null);
     }
     prevStatusRef.current = status;
     return () => {
       if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current);
     };
-  }, [status, playConnect, playDisconnect]);
+  }, [status, playConnect, playDisconnect, onChatStart, onChatEnd]);
 
   const handleSaveName = (name: string) => {
     const trimmed = name.trim().slice(0, 15);
@@ -173,8 +196,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const handleStart = useCallback(() => {
     if (!userName) return;
     setShowInterests(false);
-    startChat();
-  }, [startChat, userName]);
+    requireVerification(() => startChat());
+  }, [startChat, userName, requireVerification]);
 
   useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
 
@@ -344,6 +367,15 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         <Header onlineCount={onlineCount} strangerName={status === "connected" ? strangerName : undefined} />
       </div>
 
+      {/* Session Stats Bar */}
+      <SessionStatsBar
+        todayConversations={todayConversations}
+        todayTotalTime={todayTotalTime}
+        currentStreak={currentStreak}
+        longestStreak={longestStreak}
+        isVerified={isVerified}
+      />
+
       <div className={cn("transition-opacity duration-500", status === "idle" && "opacity-0 pointer-events-none")}>
         <ChatStatusBar
           status={status}
@@ -369,6 +401,16 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           onThemeChange={handleThemeChange}
         />
       </div>
+
+      {/* Stranger Profile Card — shown when connected */}
+      <StrangerProfileCard
+        strangerName={strangerName}
+        matchedInterests={matchedInterests}
+        connectedAt={connectedAt}
+        isVerified={isVerified}
+        show={showProfileCard && status === "connected"}
+        onClose={() => setShowProfileCard(false)}
+      />
 
       <div className={cn("transition-opacity duration-500", status === "idle" && "opacity-0 pointer-events-none")}>
         <InterestBar
@@ -622,6 +664,13 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       {isTriggered && (
         <div className="fixed inset-0 bg-black z-[9999] pointer-events-auto flex items-center justify-center" />
       )}
+
+      {/* Human Verification Modal */}
+      <HumanVerifyModal
+        show={showVerify}
+        onVerified={onVerifySuccess}
+        onClose={onVerifyClose}
+      />
 
       {/* Realtime Mutual Warning Modal popup */}
       <AnimatePresence>
