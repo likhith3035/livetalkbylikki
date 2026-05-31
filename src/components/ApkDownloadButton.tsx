@@ -163,7 +163,7 @@ export default function ApkDownloadButton({ variant = "compact", className }: Ap
           </>
         ) : (
           <>
-            <AndroidIcon className="h-3.5 w-3.5 relative z-10" />
+            <Download className="h-3.5 w-3.5 relative z-10" />
             <span className="relative z-10 hidden xs:inline">Download App</span>
             <span className="relative z-10 xs:hidden">APK</span>
           </>
