@@ -402,15 +402,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         />
       </div>
 
-      {/* Stranger Profile Card — shown when connected */}
-      <StrangerProfileCard
-        strangerName={strangerName}
-        matchedInterests={matchedInterests}
-        connectedAt={connectedAt}
-        isVerified={isVerified}
-        show={showProfileCard && status === "connected"}
-        onClose={() => setShowProfileCard(false)}
-      />
+      {/* Stranger Profile Card — floating overlay, removed from flow */}
 
       <div className={cn("transition-opacity duration-500", status === "idle" && "opacity-0 pointer-events-none")}>
         <InterestBar
@@ -569,19 +561,30 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           interests={interests}
         />
       ) : (
-        <ChatMessageList
-          messages={messages}
-          strangerTyping={strangerTyping}
-          strangerTypingText={strangerTypingText}
-          onReact={reactToMessage}
-          onReply={(msg) => setReplyingTo(msg)}
-          onDelete={deleteMessage}
-          onPin={pinMessage}
-          onForward={handleForwardMessage}
-          disappearTimer={disappearTimer}
-          highlightMessageId={searchHighlight}
-          isReplying={!!replyingTo}
-        />
+        <div className="relative flex-1 min-h-0">
+          {/* Floating stranger profile card — top-right, no layout impact */}
+          <StrangerProfileCard
+            strangerName={strangerName}
+            matchedInterests={matchedInterests}
+            connectedAt={connectedAt}
+            isVerified={isVerified}
+            show={showProfileCard && status === "connected"}
+            onClose={() => setShowProfileCard(false)}
+          />
+          <ChatMessageList
+            messages={messages}
+            strangerTyping={strangerTyping}
+            strangerTypingText={strangerTypingText}
+            onReact={reactToMessage}
+            onReply={(msg) => setReplyingTo(msg)}
+            onDelete={deleteMessage}
+            onPin={pinMessage}
+            onForward={handleForwardMessage}
+            disappearTimer={disappearTimer}
+            highlightMessageId={searchHighlight}
+            isReplying={!!replyingTo}
+          />
+        </div>
       )}
 
       <div className={cn("transition-opacity duration-500", (status === "idle" || status === "searching") && "opacity-0 pointer-events-none")}>
