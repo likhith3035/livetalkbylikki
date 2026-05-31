@@ -6,7 +6,6 @@ import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
-import ApkDownloadButton from "@/components/ApkDownloadButton";
 
 interface HeaderProps {
   onlineCount: number;
@@ -65,10 +64,8 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName
         )}
       </div>
 
-      {/* Right: Download + Theme + Online */}
+      {/* Right: Theme + Online */}
       <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* APK Download button — always visible */}
-        <ApkDownloadButton variant="compact" />
 
         {/* Theme toggle */}
         <button
