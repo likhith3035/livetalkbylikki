@@ -1,11 +1,12 @@
 import { forwardRef, useEffect } from "react";
-import { Shield, Moon, Sun } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Moon, Sun } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
+import ApkDownloadButton from "@/components/ApkDownloadButton";
 
 interface HeaderProps {
   onlineCount: number;
@@ -14,59 +15,66 @@ interface HeaderProps {
 
 const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName }, ref) => {
   const { settings, updateSetting } = useSettings();
-  const { pathname } = useLocation();
   const navigate = useNavigate();
   const [logoClicks, setLogoClicks] = useState(0);
   const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const handleLogoClick = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleLogoClick = () => {
     setLogoClicks(prev => {
       const newVal = prev + 1;
       if (newVal >= 5) {
         const password = window.prompt("Enter Admin Password:");
-        if (password === "88854") {
-          navigate("/admin/dashboard");
-        } else {
-          alert("You're not the admin");
-        }
+        if (password === "88854") navigate("/admin/dashboard");
+        else alert("You're not the admin");
         return 0;
       }
       return newVal;
     });
-
     if (clickTimer.current) clearTimeout(clickTimer.current);
-    clickTimer.current = setTimeout(() => {
-      setLogoClicks(0);
-    }, 2000);
+    clickTimer.current = setTimeout(() => setLogoClicks(0), 2000);
   };
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => { if (clickTimer.current) clearTimeout(clickTimer.current); };
   }, []);
 
-
-
   return (
-    <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 glass">
+    <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40">
+      {/* Left: Logo */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={handleLogoClick}>
-          <BrandLogo className="h-9 w-9 sm:h-10 sm:w-10 drop-shadow-md hover:scale-105 transition-transform" aria-label="LiveTalk Home" />
-          <span className="font-display text-base sm:text-lg font-bold text-foreground hover:text-primary transition-colors select-none">LiveTalk</span>
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={handleLogoClick}>
+          <BrandLogo
+            className="h-8 w-8 sm:h-9 sm:w-9 drop-shadow-md hover:scale-105 transition-transform"
+            aria-label="LiveTalk Home"
+          />
+          <span className="font-display text-sm sm:text-base font-bold text-foreground hover:text-primary transition-colors select-none">
+            LiveTalk
+          </span>
         </div>
+
+        {/* Stranger name (chat page) */}
         {strangerName && (
-          <div className="flex flex-col ml-1 border-l border-border/50 pl-4 h-8 justify-center">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-primary italic tracking-widest leading-none">Stranger</span>
-            <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[100px] sm:max-w-[150px] leading-tight">{strangerName}</span>
+          <div className="flex flex-col ml-1 border-l border-border/50 pl-3 h-8 justify-center">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-primary italic tracking-widest leading-none">
+              Stranger
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[90px] sm:max-w-[140px] leading-tight">
+              {strangerName}
+            </span>
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      {/* Right: Download + Theme + Online */}
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* APK Download button — always visible */}
+        <ApkDownloadButton variant="compact" />
+
+        {/* Theme toggle */}
         <button
           onClick={() => updateSetting("darkMode", !settings.darkMode)}
           className={cn(
-            "relative flex h-8 w-14 items-center rounded-full p-1 transition-colors duration-300",
+            "relative flex h-7 w-12 sm:h-8 sm:w-14 items-center rounded-full p-1 transition-colors duration-300 shrink-0",
             settings.darkMode
               ? "bg-primary/20 border border-primary/30"
               : "bg-secondary border border-border"
@@ -75,17 +83,16 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName
         >
           <div
             className={cn(
-              "flex h-6 w-6 items-center justify-center rounded-full bg-card shadow-md transition-transform duration-300",
-              settings.darkMode ? "translate-x-6" : "translate-x-0"
+              "flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-card shadow-md transition-transform duration-300",
+              settings.darkMode ? "translate-x-5 sm:translate-x-6" : "translate-x-0"
             )}
           >
-            {settings.darkMode ? (
-              <Moon className="h-3.5 w-3.5 text-primary" />
-            ) : (
-              <Sun className="h-3.5 w-3.5 text-warning" />
-            )}
+            {settings.darkMode
+              ? <Moon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+              : <Sun className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-warning" />}
           </div>
         </button>
+
         <OnlineBadge count={onlineCount} />
       </div>
     </header>
@@ -93,5 +100,4 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName
 });
 
 Header.displayName = "Header";
-
 export default Header;

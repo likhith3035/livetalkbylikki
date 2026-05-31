@@ -9,8 +9,6 @@ import { SettingsProvider } from "@/contexts/SettingsContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { AnimatePresence, motion } from "framer-motion";
 import DesktopSidebar from "@/components/DesktopSidebar";
-import PwaInstallBanner from "@/components/PwaInstallBanner";
-import PwaInstallModal from "@/components/PwaInstallModal";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import Index from "./pages/Index";
@@ -119,8 +117,6 @@ const App = () => {
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <ChatProvider>
               <DesktopSidebar />
-              <PwaInstallBanner />
-              <PwaInstallModal />
               <NotificationPrompt />
               <FeedbackSharePopup />
               <div className="lg:pl-[220px]">
