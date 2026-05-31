@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   MessageSquare, ArrowRight, Sparkles, Shield, Zap, Users, Globe, Lock,
   EyeOff, Video, Gamepad2, Link2, Copy, Check, Hash, Share2,
-  Instagram, Mail, ChevronDown, Timer,
+  Instagram, Linkedin, Mail, ChevronDown, Timer,
   Heart, Search, Pin, Image, Palette, Camera,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
