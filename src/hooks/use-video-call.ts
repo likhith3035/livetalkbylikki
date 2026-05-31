@@ -134,13 +134,58 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
   }, [sessionId]);
 
   const getMedia = useCallback(async (facing: "user" | "environment" = "user", audioOnly = false) => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: audioOnly ? false : { facingMode: facing },
-      audio: true,
-    });
-    localStreamRef.current = stream;
-    setLocalStream(stream);
-    return stream;
+    // Try progressively looser constraints — Android WebView is strict about exact constraints
+    const videoConstraints: MediaTrackConstraints[] = [
+      { facingMode: { exact: facing } },   // 1. exact facing mode
+      { facingMode: facing },               // 2. ideal facing mode
+      { facingMode: "user" },               // 3. front camera fallback
+      true,                                 // 4. any camera
+    ];
+
+    let lastError: unknown;
+
+    if (audioOnly) {
+      // Audio-only path — straightforward
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+        localStreamRef.current = stream;
+        setLocalStream(stream);
+        return stream;
+      } catch (err) {
+        console.error("WebRTC: Audio-only getUserMedia failed:", err);
+        throw err;
+      }
+    }
+
+    // Video path — try each constraint set until one works
+    for (const videoConstraint of videoConstraints) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: videoConstraint,
+          audio: true,
+        });
+        localStreamRef.current = stream;
+        setLocalStream(stream);
+        console.log("WebRTC: getUserMedia succeeded with constraint:", videoConstraint);
+        return stream;
+      } catch (err) {
+        console.warn("WebRTC: getUserMedia failed with constraint:", videoConstraint, err);
+        lastError = err;
+      }
+    }
+
+    // All video attempts failed — try audio only as last resort
+    try {
+      console.warn("WebRTC: All video constraints failed, falling back to audio-only");
+      const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+      localStreamRef.current = stream;
+      setLocalStream(stream);
+      setIsAudioOnly(true);
+      return stream;
+    } catch (err) {
+      console.error("WebRTC: All getUserMedia attempts failed:", lastError);
+      throw lastError;
+    }
   }, []);
 
   const supportsScreenShare = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
@@ -164,7 +209,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       pendingCandidatesRef.current = [];
 
       sendSignalingEventRef.current("webrtc:accept", { senderId: sessionId, audioOnly: isAudioOnly });
-    } catch {
+    } catch (err) {
+      console.error("WebRTC: acceptCall failed:", err);
       setCallStatus("idle");
       cleanup();
     }
@@ -364,7 +410,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
             await pc.setLocalDescription(offer);
 
             sendSignalingEventRef.current("webrtc:offer", { senderId: sessionId, offer: pc.localDescription?.toJSON() });
-          } catch {
+          } catch (err) {
+            console.error("WebRTC: webrtc:accept handler failed:", err);
             setCallStatus("idle");
             cleanup();
           }

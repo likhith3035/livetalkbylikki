@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Users } from "lucide-react";
 
@@ -10,22 +10,28 @@ interface MatchCelebrationProps {
 
 const EMOJIS = ["🎉", "✨", "🔥", "💜", "⚡", "🌟", "🎊", "💫"];
 
-const MatchCelebration = ({ show, matchedInterests, onDismiss }: MatchCelebrationProps) => {
-  const [particles, setParticles] = useState<Array<{ id: number; emoji: string; x: number; delay: number }>>([]);
+// Stable particle data — generated once at module level
+const PARTICLES = Array.from({ length: 10 }, (_, i) => ({
+  id: i,
+  emoji: EMOJIS[i % EMOJIS.length],
+  x: 10 + (i * 9) % 80,
+  delay: (i * 0.07),
+  dy: -120 - (i % 4) * 30,
+  dx: ((i % 5) - 2) * 60,
+}));
 
+const MatchCelebration = ({ show, matchedInterests, onDismiss }: MatchCelebrationProps) => {
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-dismiss after 3.5s
   useEffect(() => {
     if (show) {
-      const newParticles = Array.from({ length: 16 }, (_, i) => ({
-        id: i,
-        emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
-        x: Math.random() * 100,
-        delay: Math.random() * 0.6,
-      }));
-      setParticles(newParticles);
-    } else {
-      setParticles([]);
+      dismissTimerRef.current = setTimeout(() => onDismiss?.(), 3500);
     }
-  }, [show]);
+    return () => {
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    };
+  }, [show, onDismiss]);
 
   return (
     <AnimatePresence>
@@ -34,32 +40,18 @@ const MatchCelebration = ({ show, matchedInterests, onDismiss }: MatchCelebratio
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center"
-          onClick={onDismiss}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
         >
-          {/* Background overlay */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-background/40 backdrop-blur-sm"
-          />
-
-          {/* Particles */}
-          {particles.map((p) => (
+          {/* Particles — CSS-driven for performance */}
+          {PARTICLES.map((p) => (
             <motion.span
               key={p.id}
-              initial={{ opacity: 1, y: 0, scale: 1 }}
-              animate={{
-                opacity: 0,
-                y: -150 - Math.random() * 100,
-                scale: 0.3,
-                x: (Math.random() - 0.5) * 300,
-              }}
-              transition={{ duration: 2, delay: p.delay, ease: "easeOut" }}
-              className="absolute text-3xl pointer-events-none"
-              style={{ left: `${p.x}%`, bottom: "35%" }}
+              initial={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+              animate={{ opacity: 0, y: p.dy, x: p.dx, scale: 0.4 }}
+              transition={{ duration: 1.8, delay: p.delay, ease: "easeOut" }}
+              className="absolute text-2xl pointer-events-none select-none"
+              style={{ left: `${p.x}%`, bottom: "38%" }}
             >
               {p.emoji}
             </motion.span>
@@ -67,59 +59,55 @@ const MatchCelebration = ({ show, matchedInterests, onDismiss }: MatchCelebratio
 
           {/* Center card */}
           <motion.div
-            initial={{ scale: 0.3, opacity: 0, y: 30 }}
+            initial={{ scale: 0.5, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: -20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 22 }}
-            className="relative"
-            onClick={(e) => e.stopPropagation()}
+            exit={{ scale: 0.85, opacity: 0, y: -10 }}
+            transition={{ type: "spring", stiffness: 320, damping: 24 }}
+            className="pointer-events-auto"
+            onClick={onDismiss}
           >
-            {/* Pulse rings */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="match-ring absolute h-24 w-24 rounded-full border-2 border-primary/40" />
-              <span className="match-ring absolute h-24 w-24 rounded-full border-2 border-primary/25" style={{ animationDelay: "0.3s" }} />
-              <span className="match-ring absolute h-24 w-24 rounded-full border-2 border-primary/15" style={{ animationDelay: "0.6s" }} />
-            </div>
+            <div className="flex flex-col items-center gap-3 rounded-3xl bg-card/95 border border-primary/25 px-8 py-6 shadow-2xl shadow-primary/10 relative overflow-hidden">
+              {/* Top accent */}
+              <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-violet-500 via-primary to-blue-500" />
 
-            <div className="flex flex-col items-center gap-4 rounded-3xl bg-card/95 backdrop-blur-xl border border-primary/30 px-10 py-8 shadow-2xl shadow-primary/10">
               <motion.div
-                initial={{ scale: 0, rotate: -180 }}
+                initial={{ scale: 0, rotate: -90 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.15 }}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 border border-primary/30"
+                transition={{ type: "spring", stiffness: 250, damping: 18, delay: 0.1 }}
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 border border-primary/25"
               >
-                <Users className="h-8 w-8 text-primary" />
+                <Users className="h-7 w-7 text-primary" />
               </motion.div>
 
-              <div className="text-center space-y-1">
+              <div className="text-center space-y-0.5">
                 <motion.p
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
-                  className="text-xl font-display font-bold text-foreground"
+                  transition={{ delay: 0.2 }}
+                  className="text-lg font-black font-display text-foreground"
                 >
                   Connected! 🎉
                 </motion.p>
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-sm text-muted-foreground"
+                  transition={{ delay: 0.3 }}
+                  className="text-xs text-muted-foreground"
                 >
-                  You're now chatting with a stranger
+                  Say hello to your stranger
                 </motion.p>
               </div>
 
               {matchedInterests.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 5 }}
+                  initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="flex flex-wrap gap-1.5 justify-center"
+                  transition={{ delay: 0.35 }}
+                  className="flex flex-wrap gap-1 justify-center"
                 >
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  <Sparkles className="h-3 w-3 text-primary self-center" />
                   {matchedInterests.map((i) => (
-                    <span key={i} className="rounded-full bg-primary/15 border border-primary/25 px-2.5 py-0.5 text-[11px] text-primary font-medium">
+                    <span key={i} className="rounded-full bg-primary/12 border border-primary/20 px-2 py-0.5 text-[10px] text-primary font-semibold">
                       {i}
                     </span>
                   ))}
@@ -129,10 +117,10 @@ const MatchCelebration = ({ show, matchedInterests, onDismiss }: MatchCelebratio
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="text-xs text-muted-foreground"
+                transition={{ delay: 0.45 }}
+                className="text-[10px] text-muted-foreground/60"
               >
-                Tap anywhere to start chatting 👋
+                Tap to dismiss
               </motion.p>
             </div>
           </motion.div>

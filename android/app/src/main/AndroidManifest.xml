@@ -17,7 +17,8 @@
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="unspecified">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,17 +38,32 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
+    <!-- Network -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
+    <!-- Camera & Microphone — required for WebRTC video/audio calls -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.CAPTURE_AUDIO_OUTPUT" />
+
+    <!-- Bluetooth audio routing (headsets) -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- Keep screen on during calls -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- Hardware features (optional, so the app works on devices without camera too) -->
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Vibration feedback -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Hardware features — all optional so app installs on devices without camera -->
+    <uses-feature android:name="android.hardware.camera"          android:required="false" />
+    <uses-feature android:name="android.hardware.camera.front"    android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone"      android:required="false" />
+
 </manifest>

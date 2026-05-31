@@ -161,10 +161,15 @@ const ChatMessageList = ({
     };
   }, [activeMenuId]);
 
+  // Cleanup longPressTimer on unmount to prevent state update on unmounted component
+  useEffect(() => {
+    return () => { if (longPressTimer.current) clearTimeout(longPressTimer.current); };
+  }, []);
+
   const handleTouchStart = useCallback((msgId: string) => {
     longPressTimer.current = setTimeout(() => {
       setActiveMenuId((prev) => (prev === msgId ? null : msgId));
-    }, 400);
+    }, 450);
   }, []);
 
   const handleTouchEnd = useCallback(() => {
@@ -276,10 +281,9 @@ const ChatMessageList = ({
             variants={messageVariants}
             initial="hidden"
             animate="visible"
-            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-            layout
+            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
             className={cn(
-              "flex flex-col transition-all duration-300 relative",
+              "flex flex-col relative",
               msg.sender === "you" && "items-end",
               msg.sender === "system" && "items-center"
             )}

@@ -130,16 +130,21 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     }
   }, [initialRoomCode, joinPrivateRoom, userName]);
 
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (status === "connected" && prevStatusRef.current !== "connected") {
       setShowMatchCelebration(true);
-      setTimeout(() => setShowMatchCelebration(false), 4000);
+      celebrationTimerRef.current = setTimeout(() => setShowMatchCelebration(false), 3500);
       playConnect();
     }
     if (status === "idle" && prevStatusRef.current === "connected") {
       playDisconnect();
     }
     prevStatusRef.current = status;
+    return () => {
+      if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current);
+    };
   }, [status, playConnect, playDisconnect]);
 
   const handleSaveName = (name: string) => {
@@ -373,7 +378,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           isIdle={status === "idle"}
           isActive={status !== "idle" && !showInterests}
         />
-      </div>      {status === "idle" ? (
+      </div>
+      {status === "idle" ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 z-10 overflow-hidden pointer-events-none">
           <div className="pointer-events-auto w-full max-w-sm flex flex-col items-center justify-center">
             {!userName ? (

@@ -5,12 +5,18 @@ const config: CapacitorConfig = {
   appName: 'LiveTalk by Likki',
   webDir: 'dist',
   server: {
-    // Allow mixed content for development
     androidScheme: 'https',
+    // Allow all origins for WebRTC signaling and Firebase
+    allowNavigation: ['*'],
   },
   android: {
-    // Allow WebRTC and camera permissions
     allowMixedContent: true,
+    // Enable remote debugging via chrome://inspect
+    webContentsDebuggingEnabled: true,
+    // Ensure the WebView captures focus for input
+    initialFocus: true,
+    // Use hardware-accelerated rendering
+    backgroundColor: '#0f0f23',
   },
   plugins: {
     SplashScreen: {

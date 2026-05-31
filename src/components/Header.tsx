@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 import { Shield, Moon, Sun } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
@@ -37,8 +37,13 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName
     if (clickTimer.current) clearTimeout(clickTimer.current);
     clickTimer.current = setTimeout(() => {
       setLogoClicks(0);
-    }, 2000); 
+    }, 2000);
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => { if (clickTimer.current) clearTimeout(clickTimer.current); };
+  }, []);
 
 
 

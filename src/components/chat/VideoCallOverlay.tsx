@@ -156,7 +156,7 @@ const VideoCallOverlay = ({
     };
   }, [callStatus]);
 
-  // Auto-hide controls after 4s
+  // Auto-hide controls after 4s — cleanup on unmount too
   useEffect(() => {
     if (callStatus !== "active") return;
     const resetTimer = () => {
@@ -768,94 +768,41 @@ const SurpriseReactionOverlay = ({ type }: { type: string }) => {
     }
   };
 
-  const particleCount = 25;
-  const particles = Array.from({ length: particleCount });
-
-  // Physics based on type
-  const getAnimationProps = (i: number) => {
-    switch (type) {
-      case "love":
-        // Floating upward surge from bottom
-        return {
-          initial: { opacity: 0, scale: 0, x: `${40 + Math.random() * 20}%`, y: "110%" },
-          animate: {
-            opacity: [0, 1, 1, 0],
-            scale: [0.5, 1.2, 1, 0.8],
-            x: `${10 + Math.random() * 80}%`,
-            y: "-10%",
-          },
-          transition: { duration: 3 + Math.random() * 2, delay: i * 0.1, ease: "easeOut" }
-        };
-      case "fire":
-        // Rising embers from bottom with shimmer
-        return {
-          initial: { opacity: 0, scale: 0, x: `${Math.random() * 100}%`, y: "100%" },
-          animate: {
-            opacity: [0, 1, 0.7, 1, 0],
-            scale: [0.4, 1.1, 0.9, 0],
-            y: `${Math.random() * 20}%`,
-            rotate: [0, 180, 360],
-          },
-          transition: { duration: 2 + Math.random() * 1.5, delay: i * 0.05, ease: "circIn" }
-        };
-      case "party":
-        // Circular burst from center with gravity
-        return {
-          initial: { opacity: 0, scale: 0, x: "50%", y: "40%" },
-          animate: {
-            opacity: [0, 1, 1, 0],
-            scale: [0.2, 1.5, 1.2, 0.5],
-            x: `${20 + Math.random() * 60}%`,
-            y: ["40%", `${10 + Math.random() * 20}%`, "100%"],
-            rotate: Math.random() * 720,
-          },
-          transition: { duration: 2.2, delay: i * 0.02, ease: "backOut" }
-        };
-      case "star":
-        // Falling stars from top corners
-        const fromLeft = i % 2 === 0;
-        return {
-          initial: { opacity: 0, scale: 0, x: fromLeft ? "-10%" : "110%", y: "-5%" },
-          animate: {
-            opacity: [0, 1, 1, 0],
-            scale: [0.5, 1.4, 1],
-            x: fromLeft ? "110%" : "-10%",
-            y: "90%",
-            rotate: fromLeft ? 360 : -360,
-          },
-          transition: { duration: 1.8 + Math.random() * 1, delay: i * 0.08, ease: "linear" }
-        };
-      default:
-        return {
-          initial: { opacity: 0, x: "50%", y: "50%" },
-          animate: { opacity: 0 },
-          transition: { duration: 0.1 }
-        };
-    }
-  };
+  // Reduced to 12 particles (was 25) — stable positions, no Math.random() in render
+  const PARTICLE_DATA = [
+    { x: "15%", y: "80%", dx: "25%", dy: "-15%", rot: 120, dur: 2.2, delay: 0 },
+    { x: "30%", y: "85%", dx: "60%", dy: "-5%",  rot: -90, dur: 2.5, delay: 0.08 },
+    { x: "50%", y: "90%", dx: "40%", dy: "-20%", rot: 200, dur: 2.0, delay: 0.15 },
+    { x: "70%", y: "80%", dx: "20%", dy: "-10%", rot: -150,dur: 2.3, delay: 0.05 },
+    { x: "85%", y: "75%", dx: "10%", dy: "-25%", rot: 80,  dur: 2.1, delay: 0.12 },
+    { x: "20%", y: "60%", dx: "70%", dy: "-30%", rot: -60, dur: 2.4, delay: 0.2 },
+    { x: "40%", y: "70%", dx: "55%", dy: "-8%",  rot: 300, dur: 1.9, delay: 0.1 },
+    { x: "60%", y: "65%", dx: "30%", dy: "-35%", rot: -200,dur: 2.6, delay: 0.18 },
+    { x: "75%", y: "55%", dx: "15%", dy: "-40%", rot: 140, dur: 2.0, delay: 0.07 },
+    { x: "10%", y: "50%", dx: "80%", dy: "-15%", rot: -100,dur: 2.3, delay: 0.25 },
+    { x: "45%", y: "45%", dx: "50%", dy: "-45%", rot: 250, dur: 1.8, delay: 0.03 },
+    { x: "90%", y: "60%", dx: "5%",  dy: "-20%", rot: -180,dur: 2.2, delay: 0.14 },
+  ];
 
   return (
     <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden">
-      {particles.map((_, i) => {
-        const props = getAnimationProps(i);
-        return (
-          <motion.div
-            key={i}
-            initial={props.initial}
-            animate={props.animate}
-            transition={props.transition}
-            className="absolute text-4xl sm:text-5xl drop-shadow-lg"
-          >
-            {getEmoji()}
-          </motion.div>
-        );
-      })}
-      
-      {/* Background Flash Effect */}
+      {PARTICLE_DATA.map((p, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, scale: 0, x: p.x, y: p.y, rotate: 0 }}
+          animate={{ opacity: [0, 1, 1, 0], scale: [0.3, 1.3, 1, 0.5], x: p.dx, y: p.dy, rotate: p.rot }}
+          transition={{ duration: p.dur, delay: p.delay, ease: "easeOut" }}
+          className="absolute text-3xl drop-shadow-md"
+        >
+          {getEmoji()}
+        </motion.div>
+      ))}
+
+      {/* Background flash */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 0.15, 0] }}
-        transition={{ duration: 0.8 }}
+        animate={{ opacity: [0, 0.12, 0] }}
+        transition={{ duration: 0.6 }}
         className={cn(
           "absolute inset-0",
           type === "love" && "bg-rose-500",

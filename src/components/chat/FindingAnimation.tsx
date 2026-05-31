@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { BrandLogo } from "@/components/BrandLogo";
-import { X, Search, Globe, Zap, Users } from "lucide-react";
+import { X, Globe, Zap, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 interface FindingAnimationProps {
   searchElapsed: number;
@@ -19,6 +19,16 @@ const STATUS_MESSAGES = [
   "Almost there...",
 ];
 
+// Stable particle data — generated once, never on re-render
+const PARTICLES = Array.from({ length: 5 }, (_, i) => ({
+  id: i,
+  x: (i * 80) - 160,
+  y: (i * 60) - 120,
+  duration: 3.5 + i * 0.7,
+  delay: i * 0.9,
+  dy: -60 - i * 15,
+}));
+
 export const FindingAnimation = ({ searchElapsed, onStop, interests }: FindingAnimationProps) => {
   const [statusIdx, setStatusIdx] = useState(0);
 
@@ -30,182 +40,117 @@ export const FindingAnimation = ({ searchElapsed, onStop, interests }: FindingAn
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 gap-10 relative overflow-hidden bg-background/50 backdrop-blur-sm">
-      {/* Premium Background Effects */}
+    <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8 relative overflow-hidden">
+      {/* Subtle static background glow — no animation to save GPU */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Deep Background Glow */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.03, 0.08, 0.03],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/30 rounded-full blur-[140px]"
-        />
-        
-        {/* Floating Particles */}
-        {[...Array(6)].map((_, i) => (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/8 rounded-full blur-[100px]" />
+
+        {/* Stable particles — positions fixed, only opacity/y animates */}
+        {PARTICLES.map((p) => (
           <motion.div
-            key={i}
-            initial={{ 
-              x: Math.random() * 400 - 200, 
-              y: Math.random() * 400 - 200,
-              opacity: 0 
-            }}
-            animate={{ 
-              y: [null, Math.random() * -100 - 50],
-              opacity: [0, 0.4, 0],
-              scale: [0, 1, 0]
-            }}
-            transition={{ 
-              duration: 3 + Math.random() * 4, 
-              repeat: Infinity, 
-              delay: Math.random() * 5 
-            }}
-            className="absolute left-1/2 top-1/2 h-1 w-1 bg-primary rounded-full blur-[1px]"
+            key={p.id}
+            className="absolute left-1/2 top-1/2 h-1 w-1 bg-primary rounded-full"
+            style={{ x: p.x, y: p.y }}
+            animate={{ y: [p.y, p.y + p.dy, p.y], opacity: [0, 0.5, 0] }}
+            transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
           />
         ))}
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="text-center space-y-12 relative z-10 w-full max-w-lg"
+        transition={{ duration: 0.3 }}
+        className="text-center space-y-10 relative z-10 w-full max-w-lg"
       >
-        {/* Modern Searching Animation */}
-        <div className="relative flex items-center justify-center h-64">
-          {/* Main Visual Group */}
-          <div className="relative w-full h-full flex items-center justify-center">
-            
-            {/* 1. Radar Ray Effects (Outer) */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-              className="absolute w-64 h-64 rounded-full border border-primary/5 opacity-40"
-            />
-            
-            {/* 2. Conic Radar Sweep */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="absolute w-56 h-56 rounded-full opacity-[0.1] blur-sm"
-              style={{
-                background: "conic-gradient(from 0deg, var(--primary) 0deg, transparent 90deg)",
-              }}
-            />
+        {/* Searching animation — simplified to 2 rings + logo */}
+        <div className="relative flex items-center justify-center h-56">
+          {/* Outer slow ring */}
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+            className="absolute w-52 h-52 rounded-full border border-primary/10"
+          />
 
-            {/* 3. Orbital Ring with Node */}
-            <motion.div 
-               animate={{ rotate: -360 }}
-               transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-               className="absolute w-48 h-48 rounded-full border-[0.5px] border-primary/20"
+          {/* Inner ring with dot */}
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+            className="absolute w-36 h-36 rounded-full border border-primary/20"
+          >
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 bg-primary rounded-full shadow-[0_0_8px_hsl(var(--primary)/0.8)]" />
+          </motion.div>
+
+          {/* Center logo — gentle pulse only */}
+          <motion.div
+            animate={{ scale: [1, 1.04, 1] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            className="relative z-20 bg-card/80 backdrop-blur-sm p-5 rounded-[2rem] border border-border shadow-xl"
+          >
+            <BrandLogo className="h-14 w-14" />
+          </motion.div>
+
+          {/* Status label */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={statusIdx}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="absolute -bottom-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border shadow-sm"
             >
-              <motion.div 
-                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 bg-primary rounded-full shadow-[0_0_10px_var(--primary)]" 
-              />
+              {statusIdx % 3 === 0
+                ? <Globe className="h-3 w-3 text-primary" />
+                : statusIdx % 3 === 1
+                ? <Users className="h-3 w-3 text-primary" />
+                : <Zap className="h-3 w-3 text-primary" />}
+              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/70">
+                {STATUS_MESSAGES[statusIdx]}
+              </span>
             </motion.div>
-
-            {/* 4. Center Logo with Pulse */}
-            <div className="relative z-20">
-              <motion.div
-                animate={{ 
-                  scale: [1, 1.05, 1],
-                  filter: ["drop-shadow(0 0 10px rgba(var(--primary-rgb), 0.2))", "drop-shadow(0 0 25px rgba(var(--primary-rgb), 0.5))", "drop-shadow(0 0 10px rgba(var(--primary-rgb), 0.2))"]
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="bg-background/20 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/10 shadow-2xl"
-              >
-                <BrandLogo className="h-16 w-16 sm:h-20 sm:w-20" />
-              </motion.div>
-              
-              {/* Spinning Mini-Loader around Logo */}
-              <svg className="absolute inset-0 -m-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)] -rotate-90">
-                <motion.circle
-                  cx="50%"
-                  cy="50%"
-                  r="45%"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="text-primary/20"
-                  strokeDasharray="10 20"
-                  animate={{ strokeDashoffset: [0, 100] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                />
-              </svg>
-            </div>
-            
-            {/* Visual Symbols around the center */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={statusIdx}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute -bottom-4 flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 border border-border backdrop-blur-xl shadow-sm"
-              >
-                {statusIdx % 3 === 0 ? <Globe className="h-3 w-3 text-primary animate-pulse" /> : 
-                 statusIdx % 3 === 1 ? <Users className="h-3 w-3 text-primary animate-pulse" /> : 
-                 <Zap className="h-3 w-3 text-primary animate-pulse" />}
-                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-foreground/70 italic">
-                  {STATUS_MESSAGES[statusIdx]}
-                </span>
-              </motion.div>
-            </AnimatePresence>
-          </div>
+          </AnimatePresence>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div className="space-y-2">
-            <h2 className="text-3xl sm:text-4xl font-black font-display text-foreground tracking-tighter uppercase italic leading-none">
+            <h2 className="text-3xl font-black font-display text-foreground tracking-tighter uppercase italic leading-none">
               Searching<span className="text-primary">...</span>
             </h2>
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-primary/5 border border-primary/10">
-                <div className="h-1.5 w-1.5 rounded-full bg-online animate-ping" />
-                <span className="text-xs font-bold text-muted-foreground tabular-nums">
-                  {searchElapsed}s elapsed
-                </span>
-              </div>
+            <div className="flex items-center justify-center gap-2 px-3 py-1 rounded-lg bg-primary/5 border border-primary/10 w-fit mx-auto">
+              <div className="h-1.5 w-1.5 rounded-full bg-online animate-pulse" />
+              <span className="text-xs font-bold text-muted-foreground tabular-nums">
+                {searchElapsed}s elapsed
+              </span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 items-center">
+          <div className="flex flex-col gap-4 items-center">
             {interests.length > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-card/50 backdrop-blur-sm border border-border p-4 rounded-3xl flex flex-col items-center gap-3 w-full shadow-sm"
-              >
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Targeting Preferences</p>
-                <div className="flex flex-wrap justify-center gap-2 cursor-default">
+              <div className="bg-card/60 border border-border p-3 rounded-2xl flex flex-col items-center gap-2 w-full shadow-sm">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Targeting</p>
+                <div className="flex flex-wrap justify-center gap-1.5">
                   {interests.map((i) => (
-                    <span key={i} className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary text-[10px] font-black rounded-xl uppercase tracking-wider hover:bg-primary/20 transition-colors">
+                    <span key={i} className="px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold rounded-lg uppercase tracking-wide">
                       #{i}
                     </span>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             )}
 
             <Button
               variant="danger"
               size="lg"
               onClick={onStop}
-              className="h-14 sm:h-16 px-10 sm:px-12 text-sm sm:text-base font-black uppercase tracking-[0.2em] italic rounded-2xl gap-3 shadow-[0_10px_30px_rgba(var(--destructive-rgb),0.15)] hover:shadow-[0_15px_40px_rgba(var(--destructive-rgb),0.25)] active:scale-95 transition-all group"
+              className="h-12 px-8 text-sm font-black uppercase tracking-widest italic rounded-2xl gap-2 active:scale-95 transition-transform"
             >
-              <X className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+              <X className="h-4 w-4" />
               Cancel Search
             </Button>
           </div>
         </div>
       </motion.div>
-
-      {/* Decorative Lines */}
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
     </div>
   );
 };

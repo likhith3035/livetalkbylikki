@@ -29,15 +29,15 @@ import { useToast } from "@/hooks/use-toast";
 const queryClient = new QueryClient();
 
 const pageVariants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 const pageTransition = {
   type: "tween" as const,
-  ease: [0.25, 0.1, 0.25, 1] as const,
-  duration: 0.2,
+  ease: "easeInOut" as const,
+  duration: 0.15,
 };
 
 const AnimatedRoutes = () => {
