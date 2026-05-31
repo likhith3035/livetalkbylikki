@@ -4,7 +4,7 @@ import {
   MessageSquare, ArrowRight, Sparkles, Shield, Zap, Users, Globe, Lock,
   EyeOff, Video, Gamepad2, Link2, Copy, Check, Hash, Share2,
   Instagram, Linkedin, Mail, ChevronDown, Phone, Timer,
-  Heart, Search, Pin, Image, Palette, MapPin, Camera,
+  Heart, Search, Pin, Image, Palette, MapPin, Camera, Download,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import QrScanner from "@/components/chat/QrScanner";
+import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 const FEATURES = [
   { icon: Lock, title: "End-to-End Secure", desc: "Your conversations are fully encrypted and never stored on servers." },
@@ -62,6 +63,7 @@ const Index = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
+  const { canInstall, isInstalled, install, openInstallModal } = usePwaInstall();
   useSEO({ 
     title: "LiveTalk by Likki – Talk to Anyone Instantly", 
     description: "Connect instantly with people worldwide. Anonymous 18+ text and video chat with zero registration required. The #1 Omegle alternative.",
@@ -251,6 +253,19 @@ const Index = () => {
               Start Chatting
               <ArrowRight className="h-4 w-4" />
             </Button>
+
+            {/* Install App button — shown when installable or not yet installed */}
+            {!isInstalled && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-11 px-8 text-sm font-semibold rounded-2xl gap-2 border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all"
+                onClick={openInstallModal}
+              >
+                <Download className="h-4 w-4 text-primary" />
+                Install App — Free
+              </Button>
+            )}
             
             <div className="flex items-center justify-center gap-2 w-full">
               <Button
