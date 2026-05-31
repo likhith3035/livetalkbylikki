@@ -195,7 +195,14 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     const strangerStableId = amIUser1 ? match.stable2 : match.stable1;
     const strangerName = amIUser1 ? match.name2 : match.name1;
 
-    remove(ref(db, `lobby/${sessionId}`)).catch(() => {});
+    const myLobbyRef = ref(db, `lobby/${sessionId}`);
+    // Cancel the onDisconnect so background/foreground doesn't remove lobby entry
+    // for users who are already matched (they're no longer in lobby anyway)
+    import("firebase/database").then(({ onDisconnect: fbOnDisconnect }) => {
+      fbOnDisconnect(myLobbyRef).cancel().catch(() => {});
+    }).catch(() => {});
+
+    remove(myLobbyRef).catch(() => {});
     setTimeout(() => remove(ref(db, `matches/${mId}`)).catch(() => {}), 5000);
 
     setStatus("idle");
@@ -216,6 +223,10 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
       joinedAt: serverTimestamp(),
       signal: null
     }).catch(err => console.error("[V4] Join failed:", err));
+
+    // Only set onDisconnect for lobby — this is safe because if we truly
+    // disconnect while searching, we want to leave the lobby.
+    // But we cancel it immediately when we get matched (in finalize).
     onDisconnect(myRef).remove();
   }, [sessionId, stableId, interests, userName]);
 

@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { ref, onChildAdded, push, remove, off, onDisconnect } from "firebase/database";
+import { ref, onChildAdded, push, remove, off, onDisconnect, serverTimestamp } from "firebase/database";
 
 interface SignalingOptions {
   sessionId: string;
@@ -23,24 +23,30 @@ export function useFirebaseSignaling({ sessionId, roomId, onEvent }: SignalingOp
     if (!roomId) return;
 
     const roomSignalingRef = ref(db, `rooms/${roomId}/signaling`);
+    const processedIds = new Set<string>();
 
-    // Listen for new signaling events
     const unsubscribe = onChildAdded(roomSignalingRef, (snapshot) => {
       const data = snapshot.val();
-      if (data.payload.senderId !== sessionId) {
+      if (!data) return;
+
+      // Deduplicate — mobile reconnects can re-fire onChildAdded for old events
+      const eventId = snapshot.key;
+      if (eventId && processedIds.has(eventId)) return;
+      if (eventId) processedIds.add(eventId);
+
+      if (data.payload?.senderId !== sessionId) {
         onEvent(data.type, data.payload);
-        
-        // AGGRESSIVE CLEANUP: Remove the event message immediately after reading it
-        // This ensures the signaling queue doesn't grow and no history is kept.
-        remove(snapshot.ref);
+        // Delay removal slightly so both sides can read it
+        setTimeout(() => remove(snapshot.ref).catch(() => {}), 2000);
       }
     });
 
-    // Automatically remove the entire signaling node for this room if the user disconnects
-    onDisconnect(roomSignalingRef).remove();
+    // DO NOT use onDisconnect().remove() on signaling —
+    // mobile background triggers Firebase disconnect and wipes the node,
+    // causing the other user to think you left.
 
     return () => {
-      off(roomSignalingRef);
+      off(roomSignalingRef, "child_added", unsubscribe as any);
     };
   }, [roomId, sessionId, onEvent]);
 

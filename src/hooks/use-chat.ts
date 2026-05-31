@@ -44,10 +44,13 @@ interface ChatCallbacks {
 }
 
 const getSessionId = () => {
-  let id = sessionStorage.getItem("echo_session_id");
+  // Use localStorage instead of sessionStorage — sessionStorage is cleared
+  // by some Android browsers when the tab goes to background, which breaks
+  // the connection identity on resume.
+  let id = localStorage.getItem("echo_session_id_v2");
   if (!id) {
     id = crypto.randomUUID();
-    sessionStorage.setItem("echo_session_id", id);
+    localStorage.setItem("echo_session_id_v2", id);
   }
   return id;
 };
@@ -173,6 +176,7 @@ export function useChat(callbacks?: ChatCallbacks) {
       setSearchElapsed(0);
 
       const eventsRef = ref(db, `rooms/${roomId}/chat_events`);
+      const processedEventIds = new Set<string>();
       
       const channelMock: BaseChannel = {
         _listeners: [] as Array<{ event: string, callback: Function }>,
@@ -207,7 +211,18 @@ export function useChat(callbacks?: ChatCallbacks) {
 
       onChildAdded(eventsRef, (snapshot) => {
         const data = snapshot.val();
-        if (!data || data.payload?.senderId === sessionId) return;
+        if (!data) return;
+
+        // Deduplicate — mobile reconnects re-fire onChildAdded for old events
+        const eventKey = snapshot.key;
+        if (eventKey && processedEventIds.has(eventKey)) return;
+        if (eventKey) processedEventIds.add(eventKey);
+
+        if (data.payload?.senderId === sessionId) {
+          // Still clean up our own events
+          setTimeout(() => remove(snapshot.ref).catch(() => {}), 3000);
+          return;
+        }
 
         switch (data.event) {
           case "message": {
@@ -283,10 +298,15 @@ export function useChat(callbacks?: ChatCallbacks) {
           }
         });
         
-        remove(snapshot.ref).catch(() => {});
+        // Delay removal so mobile reconnects don't miss events
+        setTimeout(() => remove(snapshot.ref).catch(() => {}), 3000);
       });
 
-      onDisconnect(eventsRef).remove().catch(() => {});
+      // DO NOT use onDisconnect().remove() on chat events —
+      // mobile browsers trigger Firebase disconnect on background/screen lock,
+      // which would delete the room and disconnect the other user.
+      // Cleanup is handled explicitly in leaveRoom() and stopChat() instead.
+
       roomChannelRef.current = channelMock;
       setRoomChannel(channelMock);
     },
@@ -625,6 +645,26 @@ export function useChat(callbacks?: ChatCallbacks) {
     }, 1000);
     return () => clearInterval(interval);
   }, [disappearTimer]);
+
+  // Handle mobile background/foreground — reconnect Firebase on visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // Firebase SDK auto-reconnects, but we nudge it by checking connection
+        import("firebase/database").then(({ getDatabase, ref: fbRef, onValue, off: fbOff }) => {
+          const connRef = fbRef(getDatabase(), ".info/connected");
+          const unsub = onValue(connRef, (snap) => {
+            if (snap.val() === true) {
+              console.log("[Chat] Firebase reconnected after background");
+            }
+            fbOff(connRef, "value", unsub as any);
+          });
+        }).catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
 
   // Effect to detect if stranger is banned during session
   useEffect(() => {
