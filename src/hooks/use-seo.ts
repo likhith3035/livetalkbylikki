@@ -7,27 +7,25 @@ interface SEOProps {
     image?: string;
 }
 
-const BASE_TITLE = "LiveTalk by Likki";
-const DEFAULT_DESC = "Connect instantly with people worldwide. Anonymous 18+ text and video chat with zero registration required. The #1 Omegle alternative.";
-const DEFAULT_KEYWORDS = "likkimeet, likkitalk, likkichat, livetalk, live talk, livetalk chat, livetalk app, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat strangers, talk to strangers, likhith kami, likki";
+const BASE_TITLE = "LiveTalk by Likhith Kami (Likki)";
+const DEFAULT_DESC = "Free anonymous chat app by Likhith Kami (Likki). Talk to strangers instantly — no signup, no tracking. Video calls, games, private rooms & more. The #1 Omegle alternative.";
+const DEFAULT_KEYWORDS = "likhith livetalk, likki livetalk, likhith websites, kami likhith, kami likhith websites, likhith portfolio, kami likhith portfolio, likhith kami, likhith kami developer, likki developer, likhith kami chat app, likhith kami project, likkimeet, likkitalk, likkichat, livetalk, live talk, livetalkbylikki, livetalk by likki, livetalk chat, livetalk app, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat strangers, talk to strangers, free chat app";
 const DEFAULT_IMAGE = "https://livetalkbylikki.netlify.app/og-image.jpg";
 
-/**
- * Sets the document title and meta tags for each page.
- * Google uses these for search result snippets.
- */
 export const useSEO = ({ title, description, keywords, image }: SEOProps) => {
     useEffect(() => {
-        const fullTitle = title ? `${title} | ${BASE_TITLE}` : `${BASE_TITLE} – Talk to Anyone Instantly`;
+        const fullTitle = title
+            ? `${title} | LiveTalk by Likhith Kami`
+            : `LiveTalk by Likhith Kami (Likki) – Anonymous Chat & Video`;
         const fullDesc = description || DEFAULT_DESC;
-        const fullKeywords = keywords || DEFAULT_KEYWORDS;
+        const fullKeywords = keywords
+            ? `${keywords}, likhith kami, likki, kami likhith, likhith livetalk, likki livetalk`
+            : DEFAULT_KEYWORDS;
         const fullImage = image || DEFAULT_IMAGE;
         const currentUrl = window.location.href;
 
-        // Set title
         document.title = fullTitle;
 
-        // Helper to set/update meta/link tags
         const setTag = (selector: string, attr: string, value: string, isLink = false) => {
             let el = document.querySelector(selector);
             if (!el) {
@@ -46,26 +44,20 @@ export const useSEO = ({ title, description, keywords, image }: SEOProps) => {
             el.setAttribute(attr, value);
         };
 
-        // Standard Meta
         setTag('meta[name="description"]', "content", fullDesc);
         setTag('meta[name="keywords"]', "content", fullKeywords);
-
-        // Canonical
+        setTag('meta[name="author"]', "content", "Likhith Kami");
         setTag('link[rel="canonical"]', "href", currentUrl, true);
 
-        // OpenGraph
         setTag('meta[property="og:title"]', "content", fullTitle);
         setTag('meta[property="og:description"]', "content", fullDesc);
         setTag('meta[property="og:image"]', "content", fullImage);
         setTag('meta[property="og:url"]', "content", currentUrl);
+        setTag('meta[property="og:site_name"]', "content", "LiveTalk by Likhith Kami");
 
-        // Twitter
         setTag('meta[name="twitter:title"]', "content", fullTitle);
         setTag('meta[name="twitter:description"]', "content", fullDesc);
         setTag('meta[name="twitter:image"]', "content", fullImage);
-
-        return () => {
-            // Optional: cleanup or reset tags if needed
-        };
+        setTag('meta[name="twitter:creator"]', "content", "@likhith_kami");
     }, [title, description, keywords, image]);
 };

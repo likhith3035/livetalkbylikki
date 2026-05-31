@@ -64,9 +64,9 @@ const Index = () => {
   const onlineCount = useOnlineCount();
   const { toast } = useToast();
   useSEO({ 
-    title: "LiveTalk by Likki – Talk to Anyone Instantly", 
-    description: "Connect instantly with people worldwide. Anonymous 18+ text and video chat with zero registration required. The #1 Omegle alternative.",
-    keywords: "likkimeet, likkitalk, livetalk, livetalkbylikki, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat, free chat, talk to strangers, likki, likhith kami"
+    title: "LiveTalk by Likhith Kami – Talk to Anyone Instantly", 
+    description: "LiveTalk by Likhith Kami (Likki) — free anonymous chat with strangers. No signup, no tracking. Video calls, games, private rooms & more. The #1 Omegle alternative built by Kami Likhith.",
+    keywords: "likhith livetalk, likki livetalk, likhith websites, kami likhith, kami likhith websites, likhith portfolio, kami likhith portfolio, likhith kami, likhith kami developer, likki developer, likhith kami chat app, likkimeet, likkitalk, likkichat, livetalk, live talk, livetalkbylikki, livetalk by likki, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat, talk to strangers, free chat app, anonymous video chat"
   });
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -227,9 +227,9 @@ const Index = () => {
             {" "}by Likki
           </h1>
 
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground/60 font-medium tracking-wide uppercase">
+          <div className="flex items-center justify-center flex-wrap gap-2 text-sm text-muted-foreground/60 font-medium tracking-wide uppercase">
             <span>Developed with 💜 by</span>
-            <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="text-primary/80 hover:text-primary transition-colors hover:underline decoration-primary/30 underline-offset-4">Likhith Kami</a>
+            <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary/80 hover:text-primary transition-colors hover:underline decoration-primary/30 underline-offset-4" title="Kami Likhith Portfolio">Likhith Kami</a>
           </div>
 
           <p className="text-lg sm:text-xl lg:text-2xl text-gradient font-bold max-w-2xl mx-auto px-4">
@@ -714,20 +714,21 @@ const Index = () => {
 
         {/* SEO footer text */}
         <p className="text-center text-xs text-muted-foreground/40 mt-6 max-w-2xl mx-auto leading-relaxed">
-          LiveTalk by Likki — the best Omegle 2 alternative for anonymous chatting. Meet strangers, make friends, play games. LiveTalk is free, private, and works on any device.
+          LiveTalk by Likki — the best anonymous chat app built by Likhith Kami (Likki). Meet strangers, make friends, and play games. Learn more about the developer and check out other Kami Likhith websites at <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-primary underline font-medium">Kami Likhith Portfolio</a>.
         </p>
 
         <p className="text-center text-xs text-muted-foreground/50 mt-4">
           © 2026 LiveTalk by Likki. Developed with 💜 by{" "}
-          <a href="https://www.instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer me" className="flex items-center gap-1.5 hover:text-primary transition-colors">
+          <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer me" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors font-medium">
 Likhith Kami (Likki)</a>
         </p>
 
-        <div className="flex justify-center gap-4 mt-2 text-[10px] text-muted-foreground/40">
+        <div className="flex justify-center flex-wrap gap-x-4 gap-y-2 mt-2 text-[10px] text-muted-foreground/40 font-semibold uppercase tracking-wider">
           <Link to="/guidelines" className="hover:text-primary transition-colors">Guidelines</Link>
           <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
           <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
-          <a href="/info" className="hover:text-primary transition-colors">About</a>
+          <Link to="/info" className="hover:text-primary transition-colors">About</Link>
+          <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors text-primary/70" title="Kami Likhith Portfolio & Websites">Developer Portfolio</a>
         </div>
       </footer>
 

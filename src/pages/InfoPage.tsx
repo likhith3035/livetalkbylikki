@@ -217,7 +217,7 @@ const FAQ = [
   { q: "What does the 'online' counter show?", a: "It shows how many people are currently on LiveTalk. More people online = faster matching! The count updates in real-time." },
   { q: "Can I use LiveTalk on multiple devices?", a: "Yes! Since there's no account, you can open LiveTalk on any device independently. Each device gets its own separate chat sessions." },
   { q: "Is LiveTalk better than Omegle?", a: "LiveTalk is built as a modern alternative to Omegle with better features, a beautiful UI, no ads, built-in games, reactions, GIFs, video calls, and a focus on privacy. It's what Omegle should have been!" },
-  { q: "Who built LiveTalk?", a: "LiveTalk was designed and developed by Likhith Kami (Likki) as a passion project. It's built with modern, high-performance web technologies to ensure your privacy and safety." },
+  { q: "Who built LiveTalk?", a: "LiveTalk was designed and developed by Likhith Kami (Likki) as a passion project. He is a Full Stack Developer, and you can explore his other projects and official websites on the Kami Likhith Portfolio (https://devlikhith.vercel.app/)." },
   { q: "What is the tech stack of LiveTalk?", a: "LiveTalk uses a professional 'Pro-Level' stack: TypeScript for reliable code, React 18 for the user interface, Vite for lightning-fast speeds, Tailwind CSS for the premium design, and Supabase / WebRTC for instant real-time messaging and video calls. This ensures a seamless, secure experience on any device." },
 ];
 
@@ -301,9 +301,9 @@ const InfoPage = () => {
   const onlineCount = useOnlineCount();
   
   useSEO({ 
-    title: "Help, FAQ & Tech Stack", 
-    description: "Learn about LiveTalk, its privacy-first mission, and the technology behind it. Created by Likhith Kami.",
-    keywords: "LiveTalk FAQ, how to use LiveTalk, LiveTalk features, anonymous chat tech stack, Omegle vs LiveTalk, random chat help"
+    title: "About LiveTalk – Built by Likhith Kami (Likki)", 
+    description: "Learn about LiveTalk — the free anonymous chat app built by Likhith Kami (Likki / Kami Likhith). Tech stack, features, FAQ, and the developer behind the project.",
+    keywords: "likhith kami, kami likhith, likki developer, likhith kami portfolio, likhith kami website, likhith kami project, likhith livetalk, likki livetalk, LiveTalk FAQ, LiveTalk features, anonymous chat tech stack, who made livetalk, livetalk developer"
   });
 
 
@@ -717,10 +717,13 @@ const InfoPage = () => {
             </div>
 
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium relative z-10 text-pretty">
-              LiveTalk was built by me, <strong>Likhith Kami</strong>, because I wanted to fix what was broken about chatting online. I saw too many sites asking for logins and tracking their users. I used the best modern tools to build something faster, safer, and much more fun for everyone.
+              LiveTalk was built by me, <strong>Likhith Kami</strong>, because I wanted to fix what was broken about chatting online. I saw too many sites asking for logins and tracking their users. You can explore my other projects and official websites at <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Kami Likhith Portfolio</a>.
             </p>
 
             <div className="flex flex-wrap gap-4 pt-4 relative z-10">
+              <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-primary/10 border border-primary/20 px-6 py-4 text-sm font-bold hover:bg-primary/20 hover:border-primary/40 transition-all group/btn">
+                <Code className="h-5 w-5 text-primary group-hover/btn:scale-110 transition-transform" /> Portfolio Website
+              </a>
               <a href="https://instagram.com/likhith_kami/" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-card border border-border/50 px-6 py-4 text-sm font-bold hover:bg-secondary hover:border-primary/30 transition-all group/btn">
                 <Smile className="h-5 w-5 text-primary group-hover/btn:scale-110 transition-transform" /> Instagram
               </a>
@@ -742,7 +745,7 @@ const InfoPage = () => {
               I first got the idea for LiveTalk while using sites like Omegle. I just wanted to meet new people and have a chat, but I was annoyed by all the login popups and worried about my privacy. It felt like those sites cared more about collecting my data than helping me talk to people.
             </p>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium text-pretty">
-              So, I decided to build my own version. I wanted a site that was easy to use, had way more cool features, and most importantly, kept you 100% private. No tracking, no logins, and no data saved. LiveTalk is my way of making the internet a bit more fun and a lot more secure for everyone.
+              So, I decided to build my own version. I wanted a site that was easy to use, had way more cool features, and most importantly, kept you 100% private. No tracking, no logins, and no data saved. LiveTalk is my way of making the internet a bit more fun and a lot more secure for everyone. You can learn more about my coding philosophy and other websites at my portfolio: <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">devlikhith.vercel.app</a>.
             </p>
           </div>
         </motion.section>
@@ -858,9 +861,10 @@ const InfoPage = () => {
             <Link to="/guidelines" className="hover:text-primary transition-colors">Guidelines</Link>
             <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
+            <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors text-primary/70" title="Kami Likhith Portfolio & Websites">Developer Portfolio</a>
           </div>
           <p className="text-xs text-muted-foreground/60 font-medium mt-4">
-            Developed by <span className="text-foreground font-bold">Likhith Kami (Likki)</span> · © 2026 LiveTalk by Likki
+            Developed by <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-foreground font-bold hover:text-primary transition-colors">Likhith Kami (Likki)</a> · © 2026 LiveTalk by Likki
           </p>
         </div>
       </main>

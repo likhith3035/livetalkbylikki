@@ -68,7 +68,18 @@ const DesktopSidebar = () => {
           {settings.darkMode ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
           {settings.darkMode ? "Dark Mode" : "Light Mode"}
         </button>
-        <p className="text-[10px] text-muted-foreground/50 text-center">© 2026 LiveTalk</p>
+        <div className="flex flex-col items-center gap-1 text-[10px]">
+          <a
+            href="https://devlikhith.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground/70 hover:text-primary transition-colors underline underline-offset-2 font-medium"
+            title="Likhith Kami's Portfolio & Websites"
+          >
+            Kami Likhith Portfolio
+          </a>
+          <p className="text-muted-foreground/40">© 2026 LiveTalk</p>
+        </div>
       </div>
     </aside>
   );
