@@ -158,7 +158,7 @@ npm run dev
 
 ## 👨‍💻 Developer & Visionary
 
-Developed with 💜 by **Likhith Kami**.
+Developed with 💜 by **Likhith Kami(likki)**.
 
 <div align="center">
   <a href="https://instagram.com/Lucky__likhith" target="_blank">
