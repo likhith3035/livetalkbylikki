@@ -14,7 +14,7 @@ import { useChatContext } from "@/contexts/ChatContext";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Zap, Shield, ArrowRight, X, AlertTriangle, Send, Dices, RefreshCw } from "lucide-react";
+import { MessageSquare, Zap, Shield, ArrowRight, X, AlertTriangle, Send, Dices, RefreshCw, Bot } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSafety } from "@/hooks/use-safety";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,6 +34,12 @@ import SessionStatsBar from "@/components/chat/SessionStatsBar";
 import StrangerProfileCard from "@/components/chat/StrangerProfileCard";
 import { useHumanVerify } from "@/hooks/use-human-verify";
 import { useSessionStats } from "@/hooks/use-session-stats";
+import {
+  useCrossDeviceSync,
+  useTempRoomLifecycle,
+  DeviceHandoffPanel,
+  AIOpponentPanel,
+} from "@/features";
 
 const RANDOM_NICKNAMES = [
   "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
@@ -61,7 +67,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     localPrivacyModeActive, strangerPrivacyModeActive, privacyModeActive, privacyAlertActive, sendPrivacyAlert,
-    privateRoomCode
+    privateRoomCode, roomId, sendSignalingEvent
   } = useChatContext();
 
   const { isBanned, submitAppeal } = useSafety();
@@ -99,6 +105,26 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const navigate = useNavigate();
   const [pendingRoomCode, setPendingRoomCode] = useState<string | null>(null);
   const [showPrivateWaiting, setShowPrivateWaiting] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+
+  const effectiveRoomId = roomId ?? (privateRoomCode ? `private_${privateRoomCode}` : null);
+
+  const crossDevice = useCrossDeviceSync({
+    roomId: effectiveRoomId,
+    sessionId,
+    enabled: !!effectiveRoomId && (status === "connected" || showPrivateWaiting),
+    sendSignaling: sendSignalingEvent,
+  });
+
+  useTempRoomLifecycle({
+    roomId,
+    sessionId,
+    enabled: !!roomId,
+    onExpired: () => {
+      toast({ title: "Session expired", description: "This room was auto-deleted for privacy." });
+      stopChat();
+    },
+  });
 
   const handleCancelRoom = useCallback(() => {
     stopChat();
@@ -605,6 +631,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           onCancelReply={() => setReplyingTo(null)}
           roomChannel={roomChannel}
           sessionId={sessionId}
+          roomId={roomId}
           hasMessages={messages.length > 0}
           activeGame={activeGame}
           setActiveGame={setActiveGame}
@@ -652,6 +679,41 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         <BottomNav />
       </div>
       </div>
+
+      {status === "connected" && (
+        <Button
+          type="button"
+          size="icon"
+          onClick={() => setShowAIPanel((v) => !v)}
+          className={cn(
+            "fixed bottom-28 lg:bottom-8 right-4 z-[45] h-12 w-12 rounded-2xl shadow-lg border border-primary/30",
+            showAIPanel && "bg-primary text-primary-foreground"
+          )}
+          aria-label="AI opponent games"
+        >
+          <Bot className="h-5 w-5" />
+        </Button>
+      )}
+
+      <AIOpponentPanel
+        roomId={roomId}
+        sessionId={sessionId}
+        isOpen={showAIPanel && status === "connected"}
+        onClose={() => setShowAIPanel(false)}
+        onSendMessage={sendMessage}
+      />
+
+      {status === "connected" && crossDevice.sessionToken && (
+        <div className="hidden lg:block fixed top-20 right-6 z-30 w-72">
+          <DeviceHandoffPanel
+            sessionToken={crossDevice.sessionToken}
+            handoffUrl={crossDevice.handoffUrl}
+            participants={crossDevice.participants}
+            onRefreshToken={() => crossDevice.issueToken()}
+            compact
+          />
+        </div>
+      )}
 
       <motion.div className="z-[200]">
         <AnimatePresence>
@@ -729,6 +791,17 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             isMatched={status === "connected"}
             onCancel={handleCancelRoom}
             onPartnerJoined={() => setShowPrivateWaiting(false)}
+            handoffPanel={
+              crossDevice.sessionToken ? (
+                <DeviceHandoffPanel
+                  sessionToken={crossDevice.sessionToken}
+                  handoffUrl={crossDevice.handoffUrl}
+                  participants={crossDevice.participants}
+                  onRefreshToken={() => crossDevice.issueToken()}
+                  compact
+                />
+              ) : undefined
+            }
           />
         )}
       </AnimatePresence>

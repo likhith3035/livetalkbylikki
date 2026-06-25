@@ -319,7 +319,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background selection:bg-primary/20">
+    <div className="flex min-h-full flex-1 flex-col bg-background selection:bg-primary/20">
       <AnimatePresence>
         {scrolledPastPreview && <CompactFloatingPreview />}
       </AnimatePresence>

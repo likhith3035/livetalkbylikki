@@ -5,11 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 interface ImageUploadButtonProps {
   disabled: boolean;
   onUpload: (url: string) => void;
+  roomId?: string | null;
 }
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
-const ImageUploadButton = ({ disabled, onUpload }: ImageUploadButtonProps) => {
+const ImageUploadButton = ({ disabled, onUpload, roomId }: ImageUploadButtonProps) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -20,13 +21,19 @@ const ImageUploadButton = ({ disabled, onUpload }: ImageUploadButtonProps) => {
     setUploading(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
-      const path = `${crypto.randomUUID()}.${ext}`;
+      const fileName = `${crypto.randomUUID()}.${ext}`;
+      const path = roomId ? `${roomId}/${fileName}` : fileName;
 
       const { error } = await supabase.storage
         .from("chat-images")
         .upload(path, file, { cacheControl: "3600", upsert: false });
 
       if (error) throw error;
+
+      if (roomId) {
+        const { trackRoomMediaUpload } = await import("@/features/temp-rooms/registerMediaUpload");
+        await trackRoomMediaUpload(roomId, path);
+      }
 
       const { data } = supabase.storage.from("chat-images").getPublicUrl(path);
       onUpload(data.publicUrl);

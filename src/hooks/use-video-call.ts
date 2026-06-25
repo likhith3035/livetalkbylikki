@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { sounds } from "@/lib/sounds";
+import { RENEGOTIATE_EVENT, handleRenegotiateOffer } from "@/features/cross-device-sync/webrtcRenegotiation";
 
 export type VideoCallStatus = "idle" | "requesting" | "incoming" | "connecting" | "active";
 
@@ -424,9 +425,23 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
           break;
 
         case "webrtc:offer": {
-          const pc = pcRef.current;
-          if (!pc) break;
+          let pc = pcRef.current;
           const offer = payload.offer as RTCSessionDescriptionInit;
+          const isRenegotiation = !!payload.renegotiation;
+
+          if (!pc && isRenegotiation) {
+            try {
+              setCallStatus("connecting");
+              const stream = await getMedia("user", isAudioOnly);
+              pc = createPeerConnection();
+              stream.getTracks().forEach((track) => pc!.addTrack(track, stream));
+            } catch (err) {
+              console.error("WebRTC: renegotiation setup failed:", err);
+              break;
+            }
+          }
+          if (!pc) break;
+
           await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
           for (const c of pendingCandidatesRef.current) {
@@ -494,6 +509,19 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
             }
           } catch {
             // Camera not available on remote side
+          }
+          break;
+        }
+
+        case RENEGOTIATE_EVENT:
+        case "webrtc:renegotiate": {
+          const pc = pcRef.current;
+          if (pc && (callStatus === "active" || callStatus === "connecting")) {
+            try {
+              await handleRenegotiateOffer(pc, sendSignalingEventRef.current, sessionId);
+            } catch (err) {
+              console.error("WebRTC: renegotiation failed:", err);
+            }
           }
           break;
         }

@@ -22,12 +22,12 @@ const DesktopSidebar = () => {
   const { settings, updateSetting } = useSettings();
 
   return (
-    <aside 
+    <aside
       className={cn(
-        "!hidden lg:!flex fixed flex-col z-40 transition-all duration-500",
-        settings.liquidGlassEnabled 
-          ? "left-4 top-4 bottom-4 w-[220px] rounded-[2.25rem] glass shadow-lg border-r-0"
-          : "left-0 top-0 bottom-0 w-[220px] border-r border-border bg-card/50 backdrop-blur-xl"
+        "hidden lg:flex flex-col shrink-0 z-40 transition-all duration-500",
+        settings.liquidGlassEnabled
+          ? "w-[220px] rounded-[2.25rem] glass shadow-lg sticky top-0 self-start h-[calc(100svh-2rem)]"
+          : "w-[220px] sticky top-0 self-stretch min-h-svh border-r border-border bg-card/50 backdrop-blur-xl"
       )}
     >
       {/* Logo */}

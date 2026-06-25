@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
 import { ref, onValue, off } from "firebase/database";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 const APP_URL = typeof window !== "undefined" ? window.location.origin : "https://LiveTalkbylikki.netlify.app";
 const ROOM_EXPIRY_SECONDS = 300; // 5 minutes
@@ -19,6 +20,7 @@ interface RoomWaitingScreenProps {
   onCancel: () => void;
   onPartnerJoined?: () => void;
   isMatched: boolean;
+  handoffPanel?: ReactNode;
 }
 
 type ConnectionStatus = "waiting" | "partner_joined" | "offline";
@@ -171,7 +173,7 @@ function QRDisplay({ value, isDark }: { value: string; isDark: boolean }) {
   );
 }
 
-export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined, isMatched }: RoomWaitingScreenProps) {
+export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined, isMatched, handoffPanel }: RoomWaitingScreenProps) {
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -476,6 +478,10 @@ export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined,
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {handoffPanel && (
+              <div className="w-full">{handoffPanel}</div>
+            )}
 
             {/* Cancel Invitation Button */}
             <Button

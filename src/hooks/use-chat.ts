@@ -8,6 +8,7 @@ import { useFirebaseMatchmakingV3 as useFirebaseMatchmaking } from "./use-matchm
 import { useFirebaseSignaling } from "./use-firebase-signaling";
 import { useSafety } from "./use-safety";
 import { BaseChannel, RoomChannel } from "@/lib/types";
+import { createTempRoom, getRoomMeta, touchRoomExpiry } from "@/features/temp-rooms/roomService";
 
 const getProfile = () => {
   try {
@@ -99,6 +100,8 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [userName, setUserName] = useState<string>("");
   const [strangerName, setStrangerName] = useState<string>("Stranger");
   const [privateRoomCode, setPrivateRoomCode] = useState<string | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const privateRoomCodeRef = useRef<string | null>(null);
   const roomChannelRef = useRef<RoomChannel>(null);
   const roomIdRef = useRef<string | null>(null);
   const strangerIdRef = useRef<string | null>(null);
@@ -122,6 +125,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, [interests]);
   useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { privateRoomCodeRef.current = privateRoomCode; }, [privateRoomCode]);
 
   const playSoundIfEnabled = useCallback((sound: keyof typeof sounds) => {
     if (callbacksRef.current?.soundEnabled) sounds[sound]();
@@ -149,6 +153,7 @@ export function useChat(callbacks?: ChatCallbacks) {
     }
     setRoomChannel(null);
     roomIdRef.current = null;
+    setRoomId(null);
     strangerIdRef.current = null;
     setStrangerTyping(false);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -159,8 +164,22 @@ export function useChat(callbacks?: ChatCallbacks) {
     (roomId: string, strangerId: string, sharedInterests: string[] = []) => {
       leaveRoom();
       roomIdRef.current = roomId;
+      setRoomId(roomId);
       strangerIdRef.current = strangerId;
       setStatus("connected");
+
+      (async () => {
+        try {
+          const existing = await getRoomMeta(roomId);
+          if (!existing) {
+            await createTempRoom(roomId, privateRoomCodeRef.current ?? undefined);
+          } else {
+            await touchRoomExpiry(roomId);
+          }
+        } catch (err) {
+          console.warn("[Chat] temp room metadata:", err);
+        }
+      })();
       setMessages([]);
       setMatchedInterests(sharedInterests);
       playSoundIfEnabled("connected");
@@ -570,6 +589,7 @@ export function useChat(callbacks?: ChatCallbacks) {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    createTempRoom(`private_${code}`, code).catch(console.warn);
     joinPrivateRoom(code, true);
     return code;
   }, [joinPrivateRoom]);
@@ -685,12 +705,12 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
-    autoReconnectCountdown, sessionId, stableId, searchElapsed, privateRoomCode,
+    autoReconnectCountdown, sessionId, stableId, searchElapsed, privateRoomCode, roomId,
     userName, setUserName, strangerName,
-    roomChannel,
+    roomChannel, sendSignalingEvent: sendFirebaseSignalingEvent,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
-    sendSignalingEvent: sendFirebaseSignalingEvent, reportStranger, addMessage
+    reportStranger, addMessage
   };
 }

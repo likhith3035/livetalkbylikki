@@ -24,6 +24,7 @@ interface ChatContextValue {
   strangerTypingText: string | undefined;
   autoReconnectCountdown: number | null;
   sessionId: string;
+  roomId: string | null;
   roomChannel: ReturnType<typeof useChat>["roomChannel"];
   searchElapsed: number;
   disappearTimer: number | null;
@@ -49,6 +50,7 @@ interface ChatContextValue {
   stableId: string;
   addMessage: ReturnType<typeof useChat>["addMessage"];
   privateRoomCode: string | null;
+  sendSignalingEvent: ReturnType<typeof useChat>["sendSignalingEvent"];
 
   // Video call state
   callStatus: ReturnType<typeof useVideoCall>["callStatus"];
@@ -130,7 +132,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
     sendSignalingEvent, reportStranger, stableId,
     userName, setUserName, strangerName, addMessage,
-    privateRoomCode,
+    privateRoomCode, roomId,
   } = chatHook;
 
   const [localPrivacyModeActive, setLocalPrivacyModeActive] = useState(false);
@@ -360,11 +362,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value: ChatContextValue = {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
-    autoReconnectCountdown, sessionId, roomChannel, searchElapsed, disappearTimer,
+    autoReconnectCountdown, sessionId, roomId, roomChannel, searchElapsed, disappearTimer,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     deleteMessage, pinMessage, setDisappearTimer,
-    privateRoomCode,
+    privateRoomCode, sendSignalingEvent,
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
     isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
     remoteMuted, remoteCameraOff, remoteBlurred,

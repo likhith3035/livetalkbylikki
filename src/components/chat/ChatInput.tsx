@@ -22,6 +22,7 @@ interface ChatInputProps {
   onCancelReply?: () => void;
   roomChannel?: RoomChannel;
   sessionId?: string;
+  roomId?: string | null;
   hideGames?: boolean;
   hasMessages?: boolean;
   activeGame: "none" | "ttt" | "canvas" | "rps";
@@ -30,7 +31,7 @@ interface ChatInputProps {
 
 const ChatInput = ({ 
   status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, 
-  roomChannel, sessionId, hideGames, hasMessages,
+  roomChannel, sessionId, roomId, hideGames, hasMessages,
   activeGame, setActiveGame
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
@@ -98,7 +99,7 @@ const ChatInput = ({
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="mx-auto max-w-3xl mb-3 flex items-center justify-around gap-2 px-4 py-2 bg-secondary/80 border border-border/40 rounded-2xl glass-heavy shadow-lg relative z-30"
             >
-              <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
+              <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} roomId={roomId} />
               <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
               {!hideGames && (
                 <ChatGames 
@@ -141,7 +142,7 @@ const ChatInput = ({
             </button>
           ) : (
             <div className="flex items-center gap-0.5">
-              <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} />
+              <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} roomId={roomId} />
               <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
               {!hideGames && (
                 <ChatGames 

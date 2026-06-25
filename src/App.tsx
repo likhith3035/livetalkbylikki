@@ -5,11 +5,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
-import { cn } from "@/lib/utils";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { AnimatePresence, motion } from "framer-motion";
-import DesktopSidebar from "@/components/DesktopSidebar";
+import AppShell from "@/components/AppShell";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import LiquidBackground from "@/components/LiquidBackground";
@@ -25,7 +24,7 @@ import TermsPage from "./pages/TermsPage";
 import GuidelinesPage from "./pages/GuidelinesPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
-import { useToast } from "@/hooks/use-toast";
+import HandoffPage from "./pages/HandoffPage";
 
 const queryClient = new QueryClient();
 
@@ -53,12 +52,13 @@ const AnimatedRoutes = () => {
         animate="animate"
         exit="exit"
         transition={pageTransition}
-        className="min-h-[100dvh]"
+        className="flex flex-1 flex-col"
       >
         <Routes location={location}>
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/room/:code" element={<RoomPage />} />
+          <Route path="/handoff" element={<HandoffPage />} />
           <Route path="/profile" element={<ProfilePage />} />
 
           <Route path="/settings" element={<SettingsPage />} />
@@ -79,22 +79,17 @@ const AnimatedRoutes = () => {
 
 
 const AppContent = () => {
-  const { settings } = useSettings();
   return (
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ChatProvider>
-          <DesktopSidebar />
-          <NotificationPrompt />
-          <FeedbackSharePopup />
-          <div className={cn(
-            "transition-all duration-300",
-            settings.liquidGlassEnabled ? "lg:pl-[236px] lg:pr-4 lg:py-4" : "lg:pl-[220px]"
-          )}>
+          <AppShell>
+            <NotificationPrompt />
+            <FeedbackSharePopup />
             <AnimatedRoutes />
-          </div>
+          </AppShell>
         </ChatProvider>
       </BrowserRouter>
     </TooltipProvider>
