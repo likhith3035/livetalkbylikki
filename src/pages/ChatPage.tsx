@@ -363,9 +363,17 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     <div className={cn("flex flex-col bg-background relative z-0", status === "idle" ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh]", status === "connected" && privacyModeActive && "select-none")}>
       <ChatWallpaper />
       <div className={cn("flex flex-col flex-1 min-h-0", privacyAlertActive && "blur-lg pointer-events-none transition-all duration-300")}>
-        <div className="lg:hidden relative z-20">
+        <div className="relative z-20">
         <Header onlineCount={onlineCount} strangerName={status === "connected" ? strangerName : undefined} />
       </div>
+      {/* Desktop-only compact info bar */}
+      {status === "connected" && strangerName && (
+        <div className="hidden lg:flex items-center gap-3 px-6 py-3 z-20 relative">
+          <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-[10px] font-black uppercase text-primary/70 tracking-widest">Chatting with</span>
+          <span className="text-sm font-bold text-foreground">{strangerName}</span>
+        </div>
+      )}
 
       {/* Session Stats Bar */}
       <SessionStatsBar

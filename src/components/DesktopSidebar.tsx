@@ -22,13 +22,26 @@ const DesktopSidebar = () => {
   const { settings, updateSetting } = useSettings();
 
   return (
-    <aside className="!hidden lg:!flex fixed left-0 top-0 bottom-0 w-[220px] flex-col border-r border-border bg-card/50 backdrop-blur-xl z-40">
+    <aside 
+      className={cn(
+        "!hidden lg:!flex fixed flex-col z-40 transition-all duration-500",
+        settings.liquidGlassEnabled 
+          ? "left-4 top-4 bottom-4 w-[220px] rounded-[2.25rem] glass shadow-lg border-r-0"
+          : "left-0 top-0 bottom-0 w-[220px] border-r border-border bg-card/50 backdrop-blur-xl"
+      )}
+    >
       {/* Logo */}
-      <Link to="/" className="flex items-center gap-3 px-5 py-5 border-b border-border/50 group">
+      <Link 
+        to="/" 
+        className={cn(
+          "flex items-center gap-3 px-5 py-5 group border-b",
+          settings.liquidGlassEnabled ? "border-border/10" : "border-border/50"
+        )}
+      >
         <BrandLogo className="h-10 w-10 drop-shadow-md group-hover:scale-105 transition-transform" />
         <span className="font-display text-lg font-bold text-foreground group-hover:text-primary transition-colors">LiveTalk</span>
       </Link>
-
+      
       {/* Online count */}
       <div className="px-4 pt-4 pb-2">
         <OnlineBadge count={onlineCount} />
@@ -43,10 +56,14 @@ const DesktopSidebar = () => {
               key={item.label}
               to={item.path!}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
                 isActive
-                  ? "bg-primary/15 text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                  ? settings.liquidGlassEnabled
+                    ? "bg-primary/20 text-foreground border-primary/20 shadow-sm"
+                    : "bg-primary/15 text-primary shadow-sm"
+                  : settings.liquidGlassEnabled
+                    ? "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               )}
             >
               <item.icon className="h-[18px] w-[18px] shrink-0" />
@@ -57,12 +74,19 @@ const DesktopSidebar = () => {
       </nav>
 
       {/* Theme toggle + footer */}
-      <div className="px-4 py-4 border-t border-border/50 space-y-3">
+      <div 
+        className={cn(
+          "px-4 py-4 space-y-3 border-t",
+          settings.liquidGlassEnabled ? "border-border/10" : "border-border/50"
+        )}
+      >
         <button
           onClick={() => updateSetting("darkMode", !settings.darkMode)}
           className={cn(
-            "flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-            "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+            "flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
+            settings.liquidGlassEnabled
+              ? "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
           )}
         >
           {settings.darkMode ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}

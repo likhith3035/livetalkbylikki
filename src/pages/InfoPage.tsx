@@ -331,7 +331,7 @@ const InfoPage = () => {
         }}
       />
       {/* Background Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none page-bg-orbs">
         <div className="absolute top-[5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[150px] float-slow" />
         <div className="absolute top-[30%] left-[-15%] w-[400px] h-[400px] rounded-full bg-accent/8 blur-[130px] float-medium" />
         <div className="absolute bottom-[20%] right-[-5%] w-[450px] h-[450px] rounded-full bg-primary/8 blur-[140px] float-slow" />

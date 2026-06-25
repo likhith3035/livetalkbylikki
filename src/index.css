@@ -142,6 +142,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid hsl(var(--glass-border));
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   }
 
   .glass-heavy {
@@ -149,17 +150,101 @@
     backdrop-filter: blur(16px) saturate(1.2);
     -webkit-backdrop-filter: blur(16px) saturate(1.2);
     border: 1px solid hsl(var(--glass-border));
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   }
 
-  /* On low-power devices (mobile), reduce blur cost */
+  /* ─── Liquid Glass Engine ─── */
+  /* Only applies glass to explicit .glass and .glass-heavy classes.
+     Does NOT apply backdrop-filter to bg-card/bg-secondary globally
+     — that was causing GPU overload and UI glitches. */
+  .liquid-glass-active {
+    --glass-bg: var(--glass-tint-hsl) / var(--glass-opacity, 0.4);
+    --glass-border: var(--glass-tint-hsl) / var(--glass-border-opacity, 0.25);
+  }
+
+  .liquid-glass-active body {
+    background: transparent !important;
+  }
+
+  .liquid-glass-active .bg-background {
+    background: transparent !important;
+  }
+
+  /* Only glass + glass-heavy get the effect — not every bg-card */
+  .liquid-glass-active .glass {
+    background: hsla(var(--glass-tint-hsl) / var(--glass-opacity)) !important;
+    backdrop-filter: blur(var(--glass-blur, 20px)) saturate(1.4);
+    -webkit-backdrop-filter: blur(var(--glass-blur, 20px)) saturate(1.4);
+    border: var(--glass-border-width, 1px) solid hsla(var(--glass-tint-hsl) / var(--glass-border-opacity)) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12),
+                0 0 14px hsla(var(--glass-tint-hsl) / calc(var(--glass-glow-intensity) * 0.12));
+    position: relative;
+    overflow: hidden;
+  }
+
+  .liquid-glass-active .glass-heavy {
+    background: hsla(var(--glass-tint-hsl) / calc(var(--glass-opacity) * 1.15)) !important;
+    backdrop-filter: blur(calc(var(--glass-blur, 20px) * 1.25)) saturate(1.5);
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur, 20px) * 1.25)) saturate(1.5);
+    border: var(--glass-border-width, 1px) solid hsla(var(--glass-tint-hsl) / calc(var(--glass-border-opacity) * 1.2)) !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18),
+                0 0 20px hsla(var(--glass-tint-hsl) / calc(var(--glass-glow-intensity) * 0.2));
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle inner highlight on glass elements */
+  .liquid-glass-active .glass::before,
+  .liquid-glass-active .glass-heavy::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(135deg,
+      rgba(255,255,255,0.07) 0%,
+      rgba(255,255,255,0.01) 40%,
+      transparent 41%
+    );
+    z-index: 1;
+  }
+
+  /* Noise texture */
+  .liquid-glass-active .glass::after,
+  .liquid-glass-active .glass-heavy::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: var(--glass-noise-opacity, 0.035);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    z-index: 0;
+  }
+
+  .dark.liquid-glass-active .glass::after,
+  .dark.liquid-glass-active .glass-heavy::after {
+    opacity: calc(var(--glass-noise-opacity, 0.035) * 1.3);
+  }
+
+  /* Glass scrollbar */
+  .liquid-glass-active ::-webkit-scrollbar-thumb {
+    background: hsla(var(--glass-tint-hsl) / 0.25);
+    border: 1px solid hsla(var(--glass-tint-hsl) / 0.15);
+  }
+  .liquid-glass-active ::-webkit-scrollbar-thumb:hover {
+    background: hsla(var(--glass-tint-hsl) / 0.4);
+  }
+
+  /* Reduce blur on mobile to prevent GPU overload */
   @media (max-width: 768px) {
-    .glass {
+    .glass, .liquid-glass-active .glass {
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
-    .glass-heavy {
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+    .glass-heavy, .liquid-glass-active .glass-heavy {
+      backdrop-filter: blur(10px) saturate(1.3);
+      -webkit-backdrop-filter: blur(10px) saturate(1.3);
     }
   }
 
@@ -356,6 +441,24 @@
     background-size: 24px 12px;
     background-position: 0 0, 12px 0;
   }
+  .chat-wallpaper-stripes {
+    background-image: linear-gradient(45deg, hsl(var(--foreground) / 0.04) 25%, transparent 25%, transparent 75%, hsl(var(--foreground) / 0.04) 75%, hsl(var(--foreground) / 0.04)),
+                      linear-gradient(45deg, hsl(var(--foreground) / 0.04) 25%, transparent 25%, transparent 75%, hsl(var(--foreground) / 0.04) 75%, hsl(var(--foreground) / 0.04));
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+  }
+  .chat-wallpaper-honeycomb {
+    background-image: radial-gradient(circle at 100% 150%, transparent 24%, hsl(var(--foreground) / 0.03) 24%, hsl(var(--foreground) / 0.03) 28%, transparent 28%, transparent),
+                      radial-gradient(circle at 0% 150%, transparent 24%, hsl(var(--foreground) / 0.03) 24%, hsl(var(--foreground) / 0.03) 28%, transparent 28%, transparent),
+                      radial-gradient(circle at 50% 100%, transparent 4%, hsl(var(--foreground) / 0.03) 4%, hsl(var(--foreground) / 0.03) 8%, transparent 8%, transparent),
+                      radial-gradient(circle at 100% 50%, transparent 24%, hsl(var(--foreground) / 0.03) 24%, hsl(var(--foreground) / 0.03) 28%, transparent 28%, transparent),
+                      radial-gradient(circle at 0% 50%, transparent 24%, hsl(var(--foreground) / 0.03) 24%, hsl(var(--foreground) / 0.03) 28%, transparent 28%, transparent);
+    background-size: 24px 42px;
+  }
+  .chat-wallpaper-hearts {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='currentColor' fill-opacity='0.05'/%3E%3C/svg%3E");
+    background-size: 28px 28px;
+  }
 
   /* Text gradient utility */
   .text-gradient {
@@ -363,5 +466,72 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* ─── Wallpaper Cropper Grid and Selection Outlines ─── */
+  .crop-mask-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .crop-grid-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+    border: 1.5px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+  
+  .crop-grid-overlay::before,
+  .crop-grid-overlay::after {
+    content: '';
+    position: absolute;
+  }
+  
+  /* Rule of thirds horizontal lines */
+  .crop-grid-overlay::before {
+    top: 33.33%;
+    bottom: 33.33%;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed rgba(255, 255, 255, 0.45);
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.45);
+  }
+  
+  /* Rule of thirds vertical lines */
+  .crop-grid-overlay::after {
+    left: 33.33%;
+    right: 33.33%;
+    top: 0;
+    bottom: 0;
+    border-left: 1px dashed rgba(255, 255, 255, 0.45);
+    border-right: 1px dashed rgba(255, 255, 255, 0.45);
+  }
+
+  /* ─── Custom Frosted Toggle Switches for Liquid Glass ─── */
+  .liquid-glass-active button[data-state="checked"] {
+    background-color: hsla(var(--glass-tint-hsl) / 0.8) !important;
+    box-shadow: 0 0 12px 2px hsla(var(--glass-tint-hsl) / 0.4) !important;
+    border: 1px solid hsla(var(--glass-tint-hsl) / 0.6) !important;
+  }
+
+  .liquid-glass-active button[data-state="unchecked"] {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .dark.liquid-glass-active button[data-state="unchecked"] {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .liquid-glass-active button[data-state="checked"] > span {
+    background-color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  .liquid-glass-active button[data-state="unchecked"] > span {
+    background-color: rgba(120, 120, 120, 0.6) !important;
   }
 }

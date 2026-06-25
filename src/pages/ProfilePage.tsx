@@ -31,7 +31,7 @@ const ProfilePage = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background relative">
       {/* Background Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none page-bg-orbs">
         <div className="absolute top-[10%] left-[-10%] w-64 h-64 rounded-full bg-primary/10 blur-[100px] float-slow" />
         <div className="absolute bottom-[20%] right-[-5%] w-80 h-80 rounded-full bg-accent/8 blur-[120px] float-medium" />
       </div>

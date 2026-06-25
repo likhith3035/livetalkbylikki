@@ -5,12 +5,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { SettingsProvider } from "@/contexts/SettingsContext";
+import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
+import { cn } from "@/lib/utils";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { AnimatePresence, motion } from "framer-motion";
 import DesktopSidebar from "@/components/DesktopSidebar";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import FeedbackSharePopup from "@/components/FeedbackSharePopup";
+import LiquidBackground from "@/components/LiquidBackground";
 import Index from "./pages/Index";
 import ChatPage from "./pages/ChatPage";
 import RoomPage from "./pages/RoomPage";
@@ -74,6 +76,31 @@ const AnimatedRoutes = () => {
 };
 
 
+
+
+const AppContent = () => {
+  const { settings } = useSettings();
+  return (
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ChatProvider>
+          <DesktopSidebar />
+          <NotificationPrompt />
+          <FeedbackSharePopup />
+          <div className={cn(
+            "transition-all duration-300",
+            settings.liquidGlassEnabled ? "lg:pl-[236px] lg:pr-4 lg:py-4" : "lg:pl-[220px]"
+          )}>
+            <AnimatedRoutes />
+          </div>
+        </ChatProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  );
+};
+
 const App = () => {
   const [isReady, setIsReady] = useState(false);
 
@@ -111,20 +138,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <ChatProvider>
-              <DesktopSidebar />
-              <NotificationPrompt />
-              <FeedbackSharePopup />
-              <div className="lg:pl-[220px]">
-                <AnimatedRoutes />
-              </div>
-            </ChatProvider>
-          </BrowserRouter>
-        </TooltipProvider>
+        <LiquidBackground />
+        <AppContent />
       </SettingsProvider>
     </QueryClientProvider>
   );

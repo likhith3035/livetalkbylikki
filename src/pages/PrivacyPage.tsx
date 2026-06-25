@@ -23,7 +23,7 @@ const PrivacyPage = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background relative overflow-hidden">
       {/* Background Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none page-bg-orbs">
         <div className="absolute top-[15%] right-[-5%] w-72 h-72 rounded-full bg-primary/10 blur-[120px] float-slow" />
         <div className="absolute bottom-[10%] left-[-10%] w-64 h-64 rounded-full bg-accent/8 blur-[100px] float-medium" />
       </div>

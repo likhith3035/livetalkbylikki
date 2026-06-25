@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { Home, MessageSquare, User, Settings, Info, Users } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const navItems = [
   { icon: Home, path: "/", label: "Home" },
@@ -13,10 +14,19 @@ const navItems = [
 
 const BottomNav = forwardRef<HTMLElement>((_, ref) => {
   const { pathname } = useLocation();
+  const { settings } = useSettings();
 
   return (
-    <nav ref={ref} className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/90 backdrop-blur-xl safe-area-bottom lg:hidden">
-      <div className="mx-auto flex max-w-md justify-around py-1.5 sm:py-2">
+    <nav 
+      ref={ref} 
+      className={cn(
+        "fixed z-50 transition-all duration-300 lg:hidden",
+        settings.liquidGlassEnabled
+          ? "bottom-4 left-4 right-4 rounded-[1.75rem] glass shadow-lg border-t-0 py-1"
+          : "bottom-0 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-xl safe-area-bottom"
+      )}
+    >
+      <div className="mx-auto flex max-w-md justify-around py-1 sm:py-1.5">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
           return (
@@ -27,18 +37,20 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
                 "flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200",
                 isActive
                   ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  : settings.liquidGlassEnabled
+                    ? "text-muted-foreground/80 hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
               )}
               aria-label={item.label}
             >
               <div className={cn(
                 "flex items-center justify-center h-7 w-7 rounded-lg transition-colors",
-                isActive && "bg-primary/15"
+                isActive && (settings.liquidGlassEnabled ? "bg-primary/20 text-foreground" : "bg-primary/15")
               )}>
                 <item.icon className="h-[18px] w-[18px]" />
               </div>
               <span className={cn(
-                "text-[10px] font-medium leading-none",
+                "text-[9px] font-medium leading-none",
                 isActive && "font-semibold"
               )}>
                 {item.label}
