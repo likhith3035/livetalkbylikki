@@ -28,6 +28,7 @@ export function DeviceHandoffPanel({
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [qrSvg, setQrSvg] = useState("");
+  const [tokenProgress, setTokenProgress] = useState(100);
 
   useEffect(() => {
     if (!handoffUrl) return;
@@ -35,6 +36,19 @@ export function DeviceHandoffPanel({
       .then(setQrSvg)
       .catch(() => setQrSvg(""));
   }, [handoffUrl, compact]);
+
+  // Continuously update the expiry progress bar
+  useEffect(() => {
+    if (!sessionToken) return;
+    const tick = () => {
+      const total = sessionToken.expiresAt - sessionToken.createdAt;
+      const elapsed = Date.now() - sessionToken.createdAt;
+      setTokenProgress(Math.max(0, Math.min(100, 100 - (elapsed / total) * 100)));
+    };
+    tick();
+    const id = setInterval(tick, 2000);
+    return () => clearInterval(id);
+  }, [sessionToken]);
 
   const copyCode = async () => {
     if (!sessionToken) return;
@@ -101,8 +115,8 @@ export function DeviceHandoffPanel({
       >
         <motion.div
           className="h-full bg-primary/60"
-          animate={{ width: `${Math.max(0, 100 - ((Date.now() - sessionToken.createdAt) / (sessionToken.expiresAt - sessionToken.createdAt)) * 100)}%` }}
-          transition={{ duration: 1 }}
+          animate={{ width: `${tokenProgress}%` }}
+          transition={{ duration: 0.5 }}
         />
       </motion.div>
     </div>

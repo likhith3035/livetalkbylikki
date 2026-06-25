@@ -51,6 +51,8 @@ interface ChatContextValue {
   addMessage: ReturnType<typeof useChat>["addMessage"];
   privateRoomCode: string | null;
   sendSignalingEvent: ReturnType<typeof useChat>["sendSignalingEvent"];
+  /** Wire the cross-device sync signaling handler so it receives Firebase events */
+  registerCrossDeviceSignaling: (handler: (event: string, payload: Record<string, unknown>) => void) => void;
 
   // Video call state
   callStatus: ReturnType<typeof useVideoCall>["callStatus"];
@@ -280,8 +282,18 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     onCallUpgraded 
   });
 
-  // Signaling handler with error boundary
+  // Cross-device sync signaling handler — set from ChatPage via ref
+  const crossDeviceSignalingRef = useRef<((event: string, payload: Record<string, unknown>) => void) | null>(null);
+
+  // Signaling handler with error boundary — dispatches to video call AND cross-device sync
   const safeHandleSignaling = useCallback(async (event: string, payload: Record<string, unknown>) => {
+    // Forward to cross-device sync handler first (non-throwing)
+    try {
+      crossDeviceSignalingRef.current?.(event, payload);
+    } catch (err) {
+      console.warn("[ChatContext] crossDevice signaling error:", err);
+    }
+    // Forward to video call handler
     try {
       await handleSignalingEvent(event, payload);
     } catch (error) {
@@ -387,6 +399,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     sendPrivacyAlert,
     privacyLogs,
     addMessage,
+    registerCrossDeviceSignaling: (handler) => { crossDeviceSignalingRef.current = handler; },
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

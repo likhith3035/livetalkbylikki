@@ -39,7 +39,9 @@ import {
   useTempRoomLifecycle,
   DeviceHandoffPanel,
   AIOpponentPanel,
+  sweepExpiredRooms,
 } from "@/features";
+import { trackRoomMediaUpload } from "@/features/temp-rooms/registerMediaUpload";
 
 const RANDOM_NICKNAMES = [
   "Starlight", "Shadow", "Neon", "Cyber", "Mystic", "Echo", "Zenith", "Pixel", 
@@ -67,7 +69,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
     localPrivacyModeActive, strangerPrivacyModeActive, privacyModeActive, privacyAlertActive, sendPrivacyAlert,
-    privateRoomCode, roomId, sendSignalingEvent
+    privateRoomCode, roomId, sendSignalingEvent,
+    registerCrossDeviceSignaling,
   } = useChatContext();
 
   const { isBanned, submitAppeal } = useSafety();
@@ -115,6 +118,38 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     enabled: !!effectiveRoomId && (status === "connected" || showPrivateWaiting),
     sendSignaling: sendSignalingEvent,
   });
+
+  // Wire cross-device sync signaling handler into the shared signaling pipeline
+  useEffect(() => {
+    registerCrossDeviceSignaling(crossDevice.handleSignalingEvent);
+  }, [registerCrossDeviceSignaling, crossDevice.handleSignalingEvent]);
+
+  // Sweep expired rooms from previous sessions once on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("echo.visited_rooms");
+      const rooms: string[] = raw ? JSON.parse(raw) : [];
+      if (rooms.length > 0) {
+        sweepExpiredRooms(rooms).catch(() => {});
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Track connected room IDs for later sweep of expired rooms
+  useEffect(() => {
+    if (status === "connected" && roomId) {
+      try {
+        const raw = localStorage.getItem("echo.visited_rooms");
+        const rooms: string[] = raw ? JSON.parse(raw) : [];
+        if (!rooms.includes(roomId)) {
+          rooms.push(roomId);
+          // Keep only the last 50 to avoid unbounded growth
+          const trimmed = rooms.slice(-50);
+          localStorage.setItem("echo.visited_rooms", JSON.stringify(trimmed));
+        }
+      } catch { /* ignore */ }
+    }
+  }, [status, roomId]);
 
   useTempRoomLifecycle({
     roomId,
@@ -280,6 +315,16 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const handleImageUpload = (url: string) => {
     sendMessage("", url, replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.sender } : undefined);
     setReplyingTo(null);
+    // Track image in temp-room metadata for cleanup when room expires
+    if (roomId) {
+      // url is a Supabase storage URL; extract the path after the bucket name
+      try {
+        const match = url.match(/\/storage\/v1\/object\/(?:public|sign)\/chat-images\/(.+?)(?:\?|$)/);
+        if (match?.[1]) {
+          trackRoomMediaUpload(roomId, decodeURIComponent(match[1])).catch(() => {});
+        }
+      } catch { /* ignore — tracking is best-effort */ }
+    }
   };
 
   const handleThemeChange = useCallback((theme: ChatTheme) => {

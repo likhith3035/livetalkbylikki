@@ -28,16 +28,15 @@ export function AIOpponentPanel({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className="fixed inset-x-4 bottom-20 lg:bottom-6 lg:left-[240px] lg:right-6 z-50 max-w-lg mx-auto lg:mx-0 lg:ml-auto rounded-[1.75rem] border border-primary/25 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden"
-      >
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed inset-x-4 bottom-20 lg:bottom-6 lg:left-[240px] lg:right-6 z-50 max-w-lg mx-auto lg:mx-0 lg:ml-auto rounded-[1.75rem] border border-primary/25 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+        >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 bg-primary/5">
           <div className="flex items-center gap-2">
             <Bot className="h-5 w-5 text-primary" />
@@ -192,6 +191,7 @@ export function AIOpponentPanel({
           Moves synced via Firebase metadata · streams stay P2P
         </div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }
