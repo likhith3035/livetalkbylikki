@@ -6,32 +6,21 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { icon: Settings, path: "/settings", label: "Settings", color: "bg-slate-500" },
-  { icon: User,     path: "/profile",  label: "Profile",  color: "bg-violet-500" },
-  { icon: Info,     path: "/info",     label: "Info",     color: "bg-sky-500"    },
-  { icon: MessageSquare, path: "/chat", label: "Chat",   color: "bg-primary"    },
-  { icon: Home,     path: "/",         label: "Home",     color: "bg-emerald-500"},
+  { icon: Home,          path: "/",         label: "Home",     accent: "#10b981" },
+  { icon: MessageSquare, path: "/chat",      label: "Chat",     accent: "hsl(var(--primary))" },
+  { icon: Info,          path: "/info",      label: "Info",     accent: "#0ea5e9" },
+  { icon: User,          path: "/profile",   label: "Profile",  accent: "#8b5cf6" },
+  { icon: Settings,      path: "/settings",  label: "Settings", accent: "#64748b" },
 ];
-
-// Spread items in an arc from bottom-right, fanning left and up
-// 5 items: angles from ~100° to ~190° (spreading upward-left from the FAB)
-const ARC_ANGLES = [162, 130, 100, 72, 44]; // degrees, 0° = right
-const RADIUS = 72; // px distance from FAB center
-
-function polarToXY(angleDeg: number, r: number) {
-  const rad = (angleDeg * Math.PI) / 180;
-  return { x: -Math.cos(rad) * r, y: -Math.sin(rad) * r };
-}
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Active item
-  const activeItem = navItems.find((i) => i.path === pathname) ?? navItems[4];
+  const activeItem = navItems.find((i) => i.path === pathname) ?? navItems[0];
 
   // Close on route change
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -39,17 +28,14 @@ export default function MobileNav() {
   // Close on outside tap
   useEffect(() => {
     if (!open) return;
-    const handler = (e: TouchEvent | MouseEvent) => {
-      if (overlayRef.current && !overlayRef.current.contains(e.target as Node)) {
+    const handler = (e: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    document.addEventListener("touchstart", handler);
-    return () => {
-      document.removeEventListener("mousedown", handler);
-      document.removeEventListener("touchstart", handler);
-    };
+    // Use capture so it fires before anything else
+    document.addEventListener("pointerdown", handler, true);
+    return () => document.removeEventListener("pointerdown", handler, true);
   }, [open]);
 
   const handleNav = (path: string) => {
@@ -59,7 +45,7 @@ export default function MobileNav() {
 
   return (
     <>
-      {/* Scrim — dims the page when open */}
+      {/* Full-screen scrim when open */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -67,139 +53,138 @@ export default function MobileNav() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-[58] bg-black/30 backdrop-blur-[2px] lg:hidden"
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[58] bg-black/40 lg:hidden"
             onPointerDown={() => setOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* FAB + arc items — always rendered, hidden on desktop */}
+      {/* Menu container — anchored bottom-right */}
       <div
-        ref={overlayRef}
-        className="fixed bottom-6 right-5 z-[60] lg:hidden"
+        ref={menuRef}
+        className="fixed bottom-5 right-4 z-[60] lg:hidden flex flex-col items-end gap-3"
         style={{ willChange: "transform" }}
       >
-        {/* Arc nav items */}
+        {/* Nav items — slide up from FAB */}
         <AnimatePresence>
-          {open && navItems.map((item, i) => {
-            const { x, y } = polarToXY(ARC_ANGLES[i], RADIUS);
-            const isActive = pathname === item.path;
-            return (
-              <motion.div
-                key={item.path}
-                initial={{ opacity: 0, x: 0, y: 0, scale: 0.4 }}
-                animate={{ opacity: 1, x, y, scale: 1 }}
-                exit={{ opacity: 0, x: 0, y: 0, scale: 0.4 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 28,
-                  delay: i * 0.04,
-                }}
-                className="absolute bottom-0 right-0"
-              >
-                <button
-                  onClick={() => handleNav(item.path)}
-                  className={cn(
-                    "flex flex-col items-center gap-1 group",
-                  )}
-                  style={{ WebkitTapHighlightColor: "transparent" }}
-                  aria-label={item.label}
-                >
-                  <div
+          {open && (
+            <motion.div
+              key="menu"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 420, damping: 32 }}
+              className={cn(
+                "flex flex-col gap-1 p-2 rounded-3xl shadow-2xl border",
+                settings.liquidGlassEnabled
+                  ? "glass border-white/10"
+                  : "bg-card border-border/50"
+              )}
+              style={
+                settings.liquidGlassEnabled
+                  ? {}
+                  : { backgroundColor: "hsl(var(--card))" }
+              }
+            >
+              {navItems.map((item, i) => {
+                const isActive = pathname === item.path;
+                return (
+                  <motion.button
+                    key={item.path}
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.035, type: "spring", stiffness: 400, damping: 28 }}
+                    onClick={() => handleNav(item.path)}
                     className={cn(
-                      "h-11 w-11 rounded-2xl flex items-center justify-center shadow-lg",
-                      "transition-transform active:scale-90",
+                      "flex items-center gap-3 px-4 py-3 rounded-2xl w-full text-left",
+                      "transition-colors duration-150 active:scale-95",
                       isActive
-                        ? `${item.color} ring-2 ring-white/30 ring-offset-1 ring-offset-transparent`
-                        : "bg-card border border-border/50"
+                        ? "text-white"
+                        : "text-foreground hover:bg-primary/10"
                     )}
                     style={
                       isActive
-                        ? {}
-                        : { backgroundColor: "hsl(var(--card))" }
+                        ? { backgroundColor: item.accent }
+                        : {}
                     }
+                    aria-label={item.label}
                   >
-                    <item.icon
+                    <div
                       className={cn(
-                        "h-[18px] w-[18px]",
-                        isActive ? "text-white" : "text-muted-foreground"
+                        "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
+                        isActive ? "bg-white/20" : "bg-secondary"
                       )}
-                    />
-                  </div>
-                  <span
-                    className={cn(
-                      "text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-md",
-                      isActive
-                        ? "text-foreground bg-card/80"
-                        : "text-muted-foreground bg-black/30"
+                      style={isActive ? {} : { backgroundColor: "hsl(var(--secondary))" }}
+                    >
+                      <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-foreground")} />
+                    </div>
+                    <span className={cn(
+                      "text-sm font-semibold pr-2",
+                      isActive ? "text-white" : "text-foreground"
+                    )}>
+                      {item.label}
+                    </span>
+                    {isActive && (
+                      <span className="ml-auto h-2 w-2 rounded-full bg-white/70 shrink-0" />
                     )}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              </motion.div>
-            );
-          })}
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+          )}
         </AnimatePresence>
 
-        {/* Main FAB */}
+        {/* FAB toggle button */}
         <motion.button
           onClick={() => setOpen((v) => !v)}
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.88 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
           className={cn(
-            "relative h-14 w-14 rounded-2xl flex items-center justify-center shadow-2xl",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            settings.liquidGlassEnabled
-              ? "glass border border-primary/30"
-              : "bg-primary"
+            "h-14 w-14 rounded-2xl flex items-center justify-center shadow-2xl",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60",
+            "relative overflow-hidden"
           )}
-          style={
-            settings.liquidGlassEnabled
-              ? { willChange: "transform" }
-              : { backgroundColor: "hsl(var(--primary))", willChange: "transform" }
-          }
+          style={{ backgroundColor: "hsl(var(--primary))", willChange: "transform" }}
           aria-label={open ? "Close menu" : "Open navigation"}
         >
-          {/* Active page icon shown when closed */}
+          {/* Ripple glow */}
+          <span
+            className="absolute inset-0 rounded-2xl opacity-30"
+            style={{ background: `radial-gradient(circle at 50% 50%, white 0%, transparent 70%)` }}
+          />
+
           <AnimatePresence mode="wait">
             {open ? (
               <motion.span
-                key="close"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
+                key="x"
+                initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
                 transition={{ duration: 0.15 }}
+                className="relative z-10"
               >
-                <X className="h-6 w-6 text-primary-foreground" />
+                <X className="h-6 w-6 text-white" />
               </motion.span>
             ) : (
               <motion.span
                 key="icon"
-                initial={{ rotate: 90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }}
+                initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
                 transition={{ duration: 0.15 }}
+                className="relative z-10"
               >
-                <activeItem.icon
-                  className={cn(
-                    "h-6 w-6",
-                    settings.liquidGlassEnabled ? "text-primary" : "text-primary-foreground"
-                  )}
-                />
+                <activeItem.icon className="h-6 w-6 text-white" />
               </motion.span>
             )}
           </AnimatePresence>
 
-          {/* Active page dot indicator */}
+          {/* Active page color dot */}
           {!open && (
             <span
-              className={cn(
-                "absolute top-1.5 right-1.5 h-2 w-2 rounded-full",
-                activeItem.color
-              )}
+              className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full border-2 border-primary"
+              style={{ backgroundColor: activeItem.accent }}
             />
           )}
         </motion.button>
