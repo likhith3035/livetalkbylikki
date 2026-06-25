@@ -38,7 +38,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName
   }, []);
 
   return (
-    <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40 lg:hidden">
+    <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40 lg:hidden" style={{ willChange: "transform", contain: "layout style" }}>
       {/* Left: Logo */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={handleLogoClick}>

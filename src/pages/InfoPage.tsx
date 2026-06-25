@@ -7,7 +7,7 @@ import {
   Timer, Copy, Pin, Forward, Palette, Code2, Database, Server, Monitor,
   Layers, Cpu, FileCode2, Smartphone, Radio, ChevronDown, ChevronUp,
   Star, Headphones, Mic, Phone, ScreenShare, UserCheck, Fingerprint,
-  Check, X, Info, ShieldAlert, Code
+  Check, X, Info, ShieldAlert, Code, Bot
 } from "lucide-react";
 import {
   Accordion,
@@ -330,11 +330,11 @@ const InfoPage = () => {
           })
         }}
       />
-      {/* Background Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none page-bg-orbs">
-        <div className="absolute top-[5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[150px] float-slow" />
-        <div className="absolute top-[30%] left-[-15%] w-[400px] h-[400px] rounded-full bg-accent/8 blur-[130px] float-medium" />
-        <div className="absolute bottom-[20%] right-[-5%] w-[450px] h-[450px] rounded-full bg-primary/8 blur-[140px] float-slow" />
+      {/* Background Orbs — hidden on mobile to avoid GPU overload */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block" aria-hidden="true">
+        <div className="absolute top-[5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-primary/8 blur-[120px]" style={{ willChange: "auto" }} />
+        <div className="absolute top-[30%] left-[-15%] w-[400px] h-[400px] rounded-full bg-accent/6 blur-[100px]" style={{ willChange: "auto" }} />
+        <div className="absolute bottom-[20%] right-[-5%] w-[450px] h-[450px] rounded-full bg-primary/6 blur-[110px]" style={{ willChange: "auto" }} />
       </div>
 
       <Header onlineCount={onlineCount} />
@@ -382,6 +382,7 @@ const InfoPage = () => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
             {[
+              { id: "advanced", label: "🤖 AI Games & Cross-device" },
               { id: "what", label: "What is LiveTalk?" },
               { id: "howto", label: "How to use it" },
               { id: "features", label: "All features (detailed)" },
@@ -423,13 +424,9 @@ const InfoPage = () => {
           </div>
           <div className="grid gap-4">
             {WHAT_IS.map((item, i) => (
-              <motion.div
+              <div
                 key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="group flex items-start gap-4 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 hover:border-primary/30 transition-all duration-500"
+                className="group flex items-start gap-4 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 hover:border-primary/30 transition-colors duration-200"
               >
                 <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
                   <item.icon className="h-6 w-6 text-primary" />
@@ -452,23 +449,19 @@ const InfoPage = () => {
             </p>
           </div>
           <div className="space-y-4">
-            {HOW_TO.map((item, i) => (
-              <motion.div
+            {HOW_TO.map((item) => (
+              <div
                 key={item.step}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="group flex items-start gap-6 rounded-[2rem] bg-secondary/40 backdrop-blur-sm border border-border/50 p-6 hover:bg-secondary/60 transition-all duration-500"
+                className="flex items-start gap-6 rounded-[2rem] bg-secondary/40 border border-border/50 p-6 hover:bg-secondary/60 transition-colors duration-200"
               >
-                <span className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary text-primary-foreground text-lg font-bold shrink-0 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                <span className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary text-primary-foreground text-lg font-bold shrink-0 shadow-lg shadow-primary/20">
                   {item.step}
                 </span>
                 <div className="space-y-1">
                   <p className="text-lg font-bold text-foreground">{item.title}</p>
                   <p className="text-sm text-muted-foreground font-medium text-pretty">{item.desc}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </motion.section>
@@ -486,13 +479,10 @@ const InfoPage = () => {
             <div key={cat} className="space-y-6">
               <h3 className="text-xs font-bold uppercase tracking-widest text-primary/70 pl-2 border-l-2 border-primary/30">{cat}</h3>
               <div className="grid gap-6">
-                {FEATURES_DETAILED.filter((f) => f.category === cat).map((item, i) => (
-                  <motion.div
+                {FEATURES_DETAILED.filter((f) => f.category === cat).map((item) => (
+                  <div
                     key={item.title}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    className="rounded-[2.5rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 sm:p-8 space-y-6 hover:bg-card/50 hover:border-primary/20 transition-all duration-500"
+                    className="rounded-[2.5rem] bg-card/30 border border-border/50 p-6 sm:p-8 space-y-6 hover:bg-card/50 hover:border-primary/20 transition-colors duration-200"
                   >
                     <div className="flex items-center gap-4">
                       <div className="rounded-2xl bg-accent/10 p-4 shrink-0">
@@ -513,7 +503,7 @@ const InfoPage = () => {
                         <ExpandableDetail details={item.details} />
                       </div>
                     )}
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -588,23 +578,19 @@ const InfoPage = () => {
             </p>
           </div>
           <div className="grid gap-4">
-            {TECH_STACK.map((item, i) => (
-              <motion.div
+            {TECH_STACK.map((item) => (
+              <div
                 key={item.name}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.04 }}
-                className="group flex items-start gap-4 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 hover:border-primary/30 transition-all duration-500"
+                className="group flex items-start gap-4 rounded-[2rem] bg-card/30 border border-border/50 p-6 hover:bg-card/50 hover:border-primary/30 transition-colors duration-200"
               >
-                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:bg-primary/20 transition-colors">
                   <item.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div className="space-y-1">
                   <p className="text-lg font-bold text-foreground">{item.name}</p>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </motion.section>
@@ -613,24 +599,133 @@ const InfoPage = () => {
         <motion.section id="settings" {...fadeUp} transition={{ delay: 0.3 }} className="space-y-8 scroll-mt-24">
           <h2 className="text-3xl font-bold text-foreground">⚙️ Settings & preferences</h2>
           <div className="grid gap-4">
-            {SETTINGS_INFO.map((item, i) => (
-              <motion.div
+            {SETTINGS_INFO.map((item) => (
+              <div
                 key={item.title}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="group flex items-start gap-4 rounded-[2.5rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 hover:border-primary/20 transition-all duration-500"
+                className="group flex items-start gap-4 rounded-[2.5rem] bg-card/30 border border-border/50 p-6 hover:bg-card/50 hover:border-primary/20 transition-colors duration-200"
               >
-                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:bg-primary/20 transition-colors">
                   <item.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div className="space-y-1">
                   <p className="text-lg font-bold text-foreground">{item.title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed font-medium">{item.desc}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
+          </div>
+        </motion.section>
+
+        {/* ─── Section: Advanced Features Guide ─── */}
+        <motion.section id="advanced" {...fadeUp} transition={{ delay: 0.32 }} className="space-y-8 scroll-mt-24">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <Gamepad2 className="h-8 w-8 text-primary" />
+              Advanced Features Guide
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed font-medium">
+              How to use the newest power features — AI Games, Cross-device Sync, and Temporary Rooms.
+            </p>
+          </div>
+
+          {/* AI Games */}
+          <div className="rounded-[2.5rem] bg-card/30 border border-border/50 p-6 sm:p-8 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-primary/10 p-3 shrink-0">
+                <Bot className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">🤖 AI Games</p>
+                <p className="text-xs text-muted-foreground font-medium">Play Tic-Tac-Toe, Rock-Paper-Scissors or Trivia vs an AI while you wait or chat</p>
+              </div>
+            </div>
+            <div className="space-y-3 pl-1">
+              {[
+                { n: "1", t: "Start a chat", d: 'Connect with someone (random or private room). You need an active room for the AI games to work — they sync moves via Firebase so both users can watch.' },
+                { n: "2", t: "Tap the 🤖 Bot button", d: "Look for the purple Bot icon (bottom-right corner of the chat screen). Tap it to open the AI Opponent Panel." },
+                { n: "3", t: "Pick a game", d: "Choose Tic-Tac-Toe (⭕), Rock-Paper-Scissors (✊), or Trivia (🧠). The AI starts thinking immediately — watch the pulsing indicator." },
+                { n: "4", t: "Tic-Tac-Toe", d: "You're assigned X or O randomly. Tap any empty square to play. The AI responds within ~1 second using minimax — it never makes a mistake!" },
+                { n: "5", t: "Rock-Paper-Scissors", d: "Tap Rock (🪨), Paper (📄), or Scissors (✂️). The AI picks a counter-strategy. Scores are tracked across rounds — tap 'Next round' to continue." },
+                { n: "6", t: "Trivia", d: "Get a multiple-choice question from Open Trivia DB. Tap your answer. A new question loads automatically after each answer. Your score and round count are tracked." },
+                { n: "7", t: "Close or rematch", d: "Tap × to close the panel (game state is cleared from Firebase). Tap 'Rematch' inside Tic-Tac-Toe to restart immediately." },
+              ].map((s) => (
+                <div key={s.n} className="flex items-start gap-3">
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/20 text-primary text-[11px] font-bold shrink-0 mt-0.5">{s.n}</span>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">{s.t}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{s.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Cross-device Sync */}
+          <div className="rounded-[2.5rem] bg-card/30 border border-border/50 p-6 sm:p-8 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-primary/10 p-3 shrink-0">
+                <Smartphone className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">📲 Cross-device Sync</p>
+                <p className="text-xs text-muted-foreground font-medium">Continue your active chat session on a different device without losing anything</p>
+              </div>
+            </div>
+            <div className="space-y-3 pl-1">
+              {[
+                { n: "1", t: "Be in an active chat or private room", d: "The cross-device panel only appears when you have a live connection. Start a chat or join a private room first.' },
+                { n: "2", t: "Look for the QR panel (desktop)", d: "On desktop/laptop, a compact panel appears in the top-right corner showing a QR code and a handoff code like 'ABCD1234'." },
+                { n: "3", t: "On mobile — private room waiting screen", d: "When waiting in a private room, the handoff panel is visible inside the waiting screen. It shows both a QR and the code." },
+                { n: "4", t: "Scan the QR on your other device", d: "Open your phone camera (or a QR scanner app) and scan the code. It opens a link like /handoff?room=...&token=..." },
+                { n: "5", t: "Or type the code manually", d: "On your second device, open LiveTalk and go to the /handoff page. Enter the 8-character code. Tap 'Copy' on the first device to copy it." },
+                { n: "6", t: "The handoff completes automatically", d: "The second device claims the session token, registers as a participant, and navigates you straight back into the same chat room." },
+                { n: "7", t: "Codes expire in 15 minutes", d: "The progress bar under the code shows time remaining. Tap 'New handoff code' to refresh it if it expires before you can use it." },
+              ].map((s) => (
+                <div key={s.n} className="flex items-start gap-3">
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/20 text-primary text-[11px] font-bold shrink-0 mt-0.5">{s.n}</span>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">{s.t}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{s.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Temp Rooms */}
+          <div className="rounded-[2.5rem] bg-card/30 border border-border/50 p-6 sm:p-8 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-primary/10 p-3 shrink-0">
+                <Timer className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">⏳ Temporary Rooms</p>
+                <p className="text-xs text-muted-foreground font-medium">All rooms auto-delete after 30 minutes of inactivity — even uploaded images are cleaned up</p>
+              </div>
+            </div>
+            <div className="space-y-3 pl-1">
+              {[
+                { n: "1", t: "Automatic — no setup needed", d: "Every time you connect with someone (random or private room), a temporary room is created in the background. You don\'t do anything." },
+                { n: "2", t: "30-minute lifetime", d: "The room stays alive as long as someone is in it. Every message or action refreshes the 30-minute countdown. When both users leave, the timer starts." },
+                { n: "3", t: "Images are cleaned up too", d: "Any photos you send are registered under the room. When the room expires, they are automatically deleted from storage — no traces left." },
+                { n: "4", t: "You\'ll get a toast if it expires", d: "If you leave a chat open for a very long time with no activity, you\'ll see a notification: \"Session expired — this room was auto-deleted for privacy.\" Just start a new chat." },
+                { n: "5", t: "Private rooms work the same way", d: "Private rooms (6-letter codes) also have a 30-minute idle timer. Share your code and join quickly — the room won\'t wait forever." },
+              ].map((s) => (
+                <div key={s.n} className="flex items-start gap-3">
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/20 text-primary text-[11px] font-bold shrink-0 mt-0.5">{s.n}</span>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">{s.t}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{s.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-2xl bg-secondary/50 border border-border/30 p-4 flex items-start gap-3">
+              <Shield className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                Temporary rooms are a core privacy feature. Even if someone screenshots your chat session ID, the room and all its content evaporates automatically. Nothing persists.
+              </p>
+            </div>
           </div>
         </motion.section>
 
