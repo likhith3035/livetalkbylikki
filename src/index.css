@@ -156,6 +156,18 @@
     will-change: transform;
   }
 
+  /* Fallback for browsers that don't support backdrop-filter (older Android WebView) */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass, .glass-heavy {
+      background: hsl(var(--card)) !important;
+      border: 1px solid hsl(var(--border));
+    }
+    .liquid-glass-active .glass,
+    .liquid-glass-active .glass-heavy {
+      background: hsla(var(--glass-tint-hsl) / 0.85) !important;
+    }
+  }
+
   /* ─── Liquid Glass Engine ─── */
   /* Only applies glass to explicit .glass and .glass-heavy classes.
      Does NOT apply backdrop-filter to bg-card/bg-secondary globally
@@ -183,7 +195,9 @@
                 0 0 14px hsla(var(--glass-tint-hsl) / calc(var(--glass-glow-intensity) * 0.12));
     position: relative;
     overflow: hidden;
-    contain: layout style paint;
+    /* NOTE: contain:layout/paint must NOT be set on fixed/sticky elements —
+       it creates a new stacking context that breaks position:fixed children.
+       will-change:transform promotes to GPU layer instead. */
     will-change: transform;
   }
 
@@ -196,7 +210,6 @@
                 0 0 20px hsla(var(--glass-tint-hsl) / calc(var(--glass-glow-intensity) * 0.2));
     position: relative;
     overflow: hidden;
-    contain: layout style paint;
     will-change: transform;
   }
 

@@ -20,14 +20,23 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
     <nav
       ref={ref}
       className={cn(
-        "fixed z-50 lg:hidden",
+        // Base: fixed, full-width, above everything, hidden on desktop
+        "fixed z-[60] lg:hidden",
         settings.liquidGlassEnabled
-          ? "bottom-4 left-4 right-4 rounded-[1.75rem] glass shadow-lg border-t-0 py-1"
-          : "bottom-0 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-xl safe-area-bottom"
+          // Liquid glass mode: floating pill
+          ? "bottom-4 left-4 right-4 rounded-[1.75rem] glass shadow-xl border-t-0 py-1"
+          // Standard mode: full-width bar with a guaranteed opaque background
+          : "bottom-0 left-0 right-0 border-t border-border/60 safe-area-bottom"
       )}
-      style={{ willChange: "transform" }}
+      style={{
+        // Guarantee a visible background even when backdrop-filter is unsupported
+        backgroundColor: settings.liquidGlassEnabled
+          ? undefined
+          : "hsl(var(--card))",
+        willChange: "transform",
+      }}
     >
-      <div className="mx-auto flex max-w-md justify-around py-1 sm:py-1.5">
+      <div className="mx-auto flex max-w-md justify-around py-2">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
           return (
@@ -35,7 +44,7 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
               key={item.label}
               to={item.path}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl",
+                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[52px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
               aria-label={item.label}
@@ -51,7 +60,7 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
               </div>
               <span className={cn(
                 "text-[9px] font-medium leading-none",
-                isActive && "font-semibold"
+                isActive && "font-semibold text-primary"
               )}>
                 {item.label}
               </span>
