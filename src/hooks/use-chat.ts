@@ -350,12 +350,22 @@ export function useChat(callbacks?: ChatCallbacks) {
     stopSearchRef.current = stopFirebaseSearch;
   }, [stopFirebaseSearch]);
 
+  const onSignalingEventRef = useRef<((event: string, payload: any) => void) | null>(null);
+  useEffect(() => {
+    onSignalingEventRef.current = (event: string, payload: any) => {
+      callbacksRef.current?.onSignaling?.(event, payload);
+    };
+  });
+
+  // Stable callback — identity never changes, reads latest handler via ref
+  const stableOnEvent = useCallback((event: string, payload: any) => {
+    onSignalingEventRef.current?.(event, payload);
+  }, []); // empty deps — intentionally stable
+
   const { sendEvent: sendFirebaseSignalingEvent } = useFirebaseSignaling({
     sessionId,
     roomId: roomIdRef.current,
-    onEvent: (event, payload) => {
-      callbacksRef.current?.onSignaling?.(event, payload);
-    }
+    onEvent: stableOnEvent,
   });
 
   const clearReconnectTimer = useCallback(() => {

@@ -451,6 +451,15 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
           }
           if (!pc) break;
 
+          // Guard: only process offer if we're in a state that can receive one.
+          // "stable" with a local description means we're the offer side (caller) — skip.
+          // "have-remote-offer" means we already processed this offer — skip duplicate.
+          const sigState = pc.signalingState;
+          if (sigState === "have-local-offer" || sigState === "have-remote-offer") {
+            console.warn(`WebRTC: Ignoring duplicate webrtc:offer in state "${sigState}"`);
+            break;
+          }
+
           await pc.setRemoteDescription(new RTCSessionDescription(offer));
           // Now safe to drain buffered ICE candidates
           await drainPendingCandidates(pc);
@@ -463,6 +472,11 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         case "webrtc:answer": {
           const pc = pcRef.current;
           if (!pc) break;
+          // Guard: only set remote answer if we're expecting one
+          if (pc.signalingState !== "have-local-offer") {
+            console.warn(`WebRTC: Ignoring duplicate webrtc:answer in state "${pc.signalingState}"`);
+            break;
+          }
           const answer = payload.answer as RTCSessionDescriptionInit;
           await pc.setRemoteDescription(new RTCSessionDescription(answer));
           // Drain after setRemoteDescription
