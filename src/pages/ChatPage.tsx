@@ -109,6 +109,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [pendingRoomCode, setPendingRoomCode] = useState<string | null>(null);
   const [showPrivateWaiting, setShowPrivateWaiting] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  // Video call reaction state
+  const [incomingReaction, setIncomingReaction] = useState<{ emoji: string; id: number } | null>(null);
+  const [strangerHandRaised, setStrangerHandRaised] = useState(false);
 
   const effectiveRoomId = roomId ?? (privateRoomCode ? `private_${privateRoomCode}` : null);
 
@@ -343,6 +346,38 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     setShowInterests(false);
     return createPrivateRoom();
   };
+
+  // ── Video call reactions & hand raise ──────────────────────────────────────
+  const handleSendReaction = useCallback((emoji: string) => {
+    sendSignalingEvent("call:reaction", { senderId: sessionId, emoji });
+  }, [sendSignalingEvent, sessionId]);
+
+  const handleRaiseHand = useCallback(() => {
+    sendSignalingEvent("call:raise_hand", { senderId: sessionId });
+  }, [sendSignalingEvent, sessionId]);
+
+  // Listen for incoming reactions and hand-raise via signaling
+  useEffect(() => {
+    if (!roomChannel) return;
+    // We re-use the roomChannel broadcast for call reactions (fast, no Firebase write)
+    const handleCallEvent = (payload: any) => {
+      const data = payload.payload as { senderId: string; emoji?: string; type?: string };
+      if (data.senderId === sessionId) return;
+      if (payload.event === "call:reaction" && data.emoji) {
+        setIncomingReaction({ emoji: data.emoji, id: Date.now() });
+      }
+      if (payload.event === "call:raise_hand") {
+        setStrangerHandRaised(true);
+        setTimeout(() => setStrangerHandRaised(false), 5000);
+      }
+    };
+    roomChannel.on("broadcast", { event: "call:reaction" }, handleCallEvent);
+    roomChannel.on("broadcast", { event: "call:raise_hand" }, handleCallEvent);
+    return () => {
+      roomChannel.off?.("broadcast", { event: "call:reaction" });
+      roomChannel.off?.("broadcast", { event: "call:raise_hand" });
+    };
+  }, [roomChannel, sessionId]);
 
   const handleJoinRoom = (code: string) => {
     setShowInterests(false);
@@ -712,6 +747,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         inCallMessages={inCallMessages}
         supportsScreenShare={supportsScreenShare}
         strangerTyping={strangerTyping}
+        onSendReaction={handleSendReaction}
+        incomingReaction={incomingReaction}
+        onRaiseHand={handleRaiseHand}
+        strangerHandRaised={strangerHandRaised}
       />
 
       <MatchCelebration

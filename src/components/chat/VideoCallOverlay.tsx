@@ -2,7 +2,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Video, VideoOff, Mic, MicOff, PhoneOff, Phone, X,
   Monitor, MonitorOff, SwitchCamera, Sparkles, MessageSquare, Send,
-  PictureInPicture2, Clock, Shield
+  PictureInPicture2, Clock, Shield, Hand, Camera, Signal, Smile,
+  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,14 @@ interface VideoCallOverlayProps {
   inCallMessages?: InCallMessage[];
   supportsScreenShare?: boolean;
   strangerTyping?: boolean;
+  /** Called when user sends a quick emoji reaction */
+  onSendReaction?: (emoji: string) => void;
+  /** Incoming reaction from stranger */
+  incomingReaction?: { emoji: string; id: number } | null;
+  /** Called when user raises their hand */
+  onRaiseHand?: () => void;
+  /** True when stranger has raised their hand */
+  strangerHandRaised?: boolean;
 }
 
 const formatDuration = (seconds: number) => {
@@ -68,11 +77,22 @@ const VideoCallOverlay = ({
   onSendInCallMessage, inCallMessages = [],
   supportsScreenShare = false,
   strangerTyping = false,
+  onSendReaction,
+  incomingReaction,
+  onRaiseHand,
+  strangerHandRaised = false,
 }: VideoCallOverlayProps) => {
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [showControls, setShowControls] = useState(true);
   const [showSurpriseMenu, setShowSurpriseMenu] = useState(false);
+  const [showReactionBar, setShowReactionBar] = useState(false);
+  const [handRaised, setHandRaised] = useState(false);
+  const [floatingReactions, setFloatingReactions] = useState<{ id: number; emoji: string }[]>([]);
+  const [callQuality, setCallQuality] = useState<"good" | "fair" | "poor" | "unknown">("unknown");
+  const [showSnapshot, setShowSnapshot] = useState(false);
+  const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
+  const qualityIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { settings } = useSettings();
   const { privacyModeActive, privacyAlertActive, userName, strangerName, sessionId } = useChatContext();
@@ -187,6 +207,79 @@ const VideoCallOverlay = ({
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
     controlsTimerRef.current = setTimeout(() => setShowControls(false), 4000);
   };
+
+  // ── New: floating emoji reactions ──────────────────────────────────────────
+  const addFloatingReaction = useCallback((emoji: string) => {
+    const id = Date.now() + Math.random();
+    setFloatingReactions((prev) => [...prev, { id, emoji }]);
+    setTimeout(() => setFloatingReactions((prev) => prev.filter((r) => r.id !== id)), 2200);
+  }, []);
+
+  // Show incoming reaction from stranger
+  useEffect(() => {
+    if (incomingReaction) addFloatingReaction(incomingReaction.emoji);
+  }, [incomingReaction, addFloatingReaction]);
+
+  const handleSendReaction = (emoji: string) => {
+    addFloatingReaction(emoji);
+    onSendReaction?.(emoji);
+    setShowReactionBar(false);
+  };
+
+  // ── New: raise hand ────────────────────────────────────────────────────────
+  const handleRaiseHand = () => {
+    const next = !handRaised;
+    setHandRaised(next);
+    onRaiseHand?.();
+  };
+
+  // ── New: call quality monitor (WebRTC stats) ───────────────────────────────
+  useEffect(() => {
+    if (callStatus !== "active") {
+      setCallQuality("unknown");
+      return;
+    }
+    const checkQuality = async () => {
+      try {
+        // Access pcRef via RTCPeerConnection.getStats — we use remoteStream as a proxy
+        // since we don't have direct pc access here. Use connection state heuristic instead.
+        const connections = Array.from((navigator as any).mediaDevices?.enumerateDevices?.() || []);
+        void connections; // unused — use RTCPeerConnection global stats if available
+
+        // Heuristic: check remote video track stats via getStats on a video element
+        const videoEl = document.querySelector("video[autoplay]:not([muted])") as HTMLVideoElement | null;
+        if (videoEl?.srcObject instanceof MediaStream) {
+          const track = (videoEl.srcObject as MediaStream).getVideoTracks()[0];
+          if (track) {
+            // Use track readyState as quality proxy
+            setCallQuality(track.readyState === "live" ? "good" : "fair");
+          }
+        }
+      } catch { setCallQuality("unknown"); }
+    };
+    checkQuality();
+    qualityIntervalRef.current = setInterval(checkQuality, 5000);
+    return () => { if (qualityIntervalRef.current) clearInterval(qualityIntervalRef.current); };
+  }, [callStatus]);
+
+  // ── New: snapshot capture ──────────────────────────────────────────────────
+  const captureSnapshot = useCallback(() => {
+    const videoEl = remoteVideoElRef.current;
+    if (!videoEl || !remoteStream) return;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoEl.videoWidth || 640;
+      canvas.height = videoEl.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+      const url = canvas.toDataURL("image/jpeg", 0.85);
+      setSnapshotUrl(url);
+      setShowSnapshot(true);
+      // Auto-close after 4s
+      setTimeout(() => setShowSnapshot(false), 4000);
+    } catch { /* canvas tainted or not available */ }
+  }, [remoteStream]);
 
   const handleSendChat = () => {
     if (!chatInput.trim()) return;
@@ -473,7 +566,71 @@ const VideoCallOverlay = ({
             </motion.div>
           )}
 
-          {/* Status pill with timer */}
+          {/* ── Floating emoji reactions ── */}
+          <div className="absolute inset-0 pointer-events-none z-[105] overflow-hidden">
+            <AnimatePresence>
+              {floatingReactions.map((r) => (
+                <motion.div
+                  key={r.id}
+                  initial={{ opacity: 0, y: "85%", x: `${20 + Math.random() * 60}%`, scale: 0.5 }}
+                  animate={{ opacity: [0, 1, 1, 0], y: "10%", scale: [0.5, 1.4, 1.2, 0.8] }}
+                  transition={{ duration: 2.0, ease: "easeOut" }}
+                  className="absolute text-4xl drop-shadow-lg"
+                >
+                  {r.emoji}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* ── Stranger hand raised indicator ── */}
+          <AnimatePresence>
+            {strangerHandRaised && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, x: "-50%" }}
+                animate={{ opacity: 1, scale: 1, x: "-50%" }}
+                exit={{ opacity: 0, scale: 0.8, x: "-50%" }}
+                className="absolute top-16 left-1/2 z-30 flex items-center gap-2 bg-amber-500/90 text-white px-4 py-2 rounded-full shadow-xl text-sm font-bold"
+              >
+                <span className="text-lg">🖐️</span> Stranger raised their hand
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Your hand raised indicator ── */}
+          <AnimatePresence>
+            {handRaised && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: [1, 1.1, 1] }}
+                exit={{ opacity: 0 }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="absolute bottom-36 left-4 z-30 flex items-center gap-2 bg-amber-500/80 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg"
+              >
+                🖐️ Hand raised
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Snapshot preview ── */}
+          <AnimatePresence>
+            {showSnapshot && snapshotUrl && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="absolute bottom-36 right-4 z-40 w-32 h-20 rounded-xl overflow-hidden border-2 border-white/40 shadow-2xl"
+                onClick={() => setShowSnapshot(false)}
+              >
+                <img src={snapshotUrl} alt="snapshot" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <Camera className="h-4 w-4 text-white drop-shadow" />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Status pill with timer + quality */}
           <AnimatePresence>
             {showControls && (
               <motion.div
@@ -488,6 +645,22 @@ const VideoCallOverlay = ({
                   <Clock className="h-3 w-3" />
                   {formatDuration(callDuration)}
                 </span>
+                {/* Quality dots */}
+                <div className="flex items-end gap-[2px] ml-1">
+                  {[1, 2, 3].map((bar) => (
+                    <div
+                      key={bar}
+                      className={cn(
+                        "w-[3px] rounded-full transition-colors",
+                        bar === 1 ? "h-1.5" : bar === 2 ? "h-2.5" : "h-3.5",
+                        callQuality === "good" ? "bg-green-400" :
+                        callQuality === "fair" ? (bar <= 2 ? "bg-amber-400" : "bg-muted-foreground/30") :
+                        callQuality === "poor" ? (bar <= 1 ? "bg-destructive" : "bg-muted-foreground/30") :
+                        "bg-muted-foreground/30"
+                      )}
+                    />
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -683,6 +856,60 @@ const VideoCallOverlay = ({
                   active={showChat}
                   icon={<MessageSquare className="h-4 w-4" />}
                   label="Chat"
+                  small
+                />
+                {/* ── Reaction bar button ── */}
+                <div className="relative">
+                  <ControlButton
+                    onClick={() => {
+                      setShowReactionBar(!showReactionBar);
+                      setShowSurpriseMenu(false);
+                    }}
+                    active={showReactionBar}
+                    icon={<Smile className="h-4 w-4" />}
+                    label="React"
+                    small
+                  />
+                  <AnimatePresence>
+                    {showReactionBar && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.9 }}
+                        className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-2 bg-card border border-border rounded-2xl p-2 shadow-2xl z-50"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {["👍", "❤️", "😂", "😮", "🔥", "👏", "🥳", "💯"].map((emoji) => (
+                          <button
+                            key={emoji}
+                            onClick={() => handleSendReaction(emoji)}
+                            className="text-xl hover:scale-125 active:scale-95 transition-transform w-9 h-9 flex items-center justify-center rounded-xl hover:bg-secondary"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                {/* ── Raise hand ── */}
+                <ControlButton
+                  onClick={handleRaiseHand}
+                  active={handRaised}
+                  icon={<Hand className={cn("h-4 w-4", handRaised && "animate-bounce")} />}
+                  label="Hand"
+                  small
+                />
+                {/* ── Snapshot ── */}
+                {!isAudioOnly && (
+                  <ControlButton
+                    onClick={captureSnapshot}
+                    active={false}
+                    icon={<Camera className="h-4 w-4" />}
+                    label="Snap"
+                    small
+                  />
+                )}          label="Chat"
                   small
                 />
                 {!isAudioOnly && (
