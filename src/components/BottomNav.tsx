@@ -17,14 +17,15 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
   const { settings } = useSettings();
 
   return (
-    <nav 
-      ref={ref} 
+    <nav
+      ref={ref}
       className={cn(
-        "fixed z-50 transition-all duration-300 lg:hidden",
+        "fixed z-50 lg:hidden",
         settings.liquidGlassEnabled
           ? "bottom-4 left-4 right-4 rounded-[1.75rem] glass shadow-lg border-t-0 py-1"
           : "bottom-0 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-xl safe-area-bottom"
       )}
+      style={{ willChange: "transform" }}
     >
       <div className="mx-auto flex max-w-md justify-around py-1 sm:py-1.5">
         {navItems.map((item) => {
@@ -34,19 +35,18 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
               key={item.label}
               to={item.path}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200",
-                isActive
-                  ? "text-primary"
-                  : settings.liquidGlassEnabled
-                    ? "text-muted-foreground/80 hover:text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                "flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl",
+                isActive ? "text-primary" : "text-muted-foreground"
               )}
               aria-label={item.label}
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              <div className={cn(
-                "flex items-center justify-center h-7 w-7 rounded-lg transition-colors",
-                isActive && (settings.liquidGlassEnabled ? "bg-primary/20 text-foreground" : "bg-primary/15")
-              )}>
+              <div
+                className={cn(
+                  "flex items-center justify-center h-7 w-7 rounded-lg",
+                  isActive && "bg-primary/15"
+                )}
+              >
                 <item.icon className="h-[18px] w-[18px]" />
               </div>
               <span className={cn(

@@ -305,17 +305,22 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
     // Apply Liquid Glass CSS variables dynamically
     const root = document.documentElement;
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
     if (settings.liquidGlassEnabled) {
       root.classList.add("liquid-glass-active");
       root.style.setProperty("--glass-opacity", String(settings.glassOpacity));
-      root.style.setProperty("--glass-blur", `${settings.glassBlur}px`);
+      // Cap blur on mobile to keep GPU usage sane
+      const effectiveBlur = isMobile ? Math.min(settings.glassBlur, 10) : settings.glassBlur;
+      root.style.setProperty("--glass-blur", `${effectiveBlur}px`);
       root.style.setProperty("--glass-border-opacity", String(settings.glassBorderOpacity));
       root.style.setProperty("--glass-glow-intensity", String(settings.glassGlowIntensity));
       root.style.setProperty("--glass-tint-hsl", settings.glassTintHSL);
       root.style.setProperty("--glass-noise-opacity", String(settings.glassTextureIntensity));
       root.style.setProperty("--glass-border-width", `${settings.glassBorderWidth}px`);
-      // Map speed slider (1 to 10) to CSS animation duration (e.g. 10 -> 4s, 1 -> 40s)
-      const duration = settings.liquidBgSpeed === 0 ? 0 : Math.max(4, 30 - settings.liquidBgSpeed * 3.5);
+      // Map speed slider (1 to 10) to CSS animation duration
+      // On mobile, enforce a minimum of 12s to avoid thrashing compositing layers
+      const baseDuration = settings.liquidBgSpeed === 0 ? 0 : Math.max(4, 30 - settings.liquidBgSpeed * 3.5);
+      const duration = isMobile ? Math.max(baseDuration, 12) : baseDuration;
       root.style.setProperty("--liquid-speed", duration > 0 ? `${duration}s` : "0s");
     } else {
       root.classList.remove("liquid-glass-active");
