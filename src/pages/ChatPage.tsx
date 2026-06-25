@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { Message } from "@/hooks/use-chat";
 import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
+import MobileNav from "@/components/MobileNav";
 import ChatStatusBar from "@/components/chat/ChatStatusBar";
 import ChatMessageList from "@/components/chat/ChatMessageList";
 import ChatInput from "@/components/chat/ChatInput";
@@ -721,7 +721,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       />
 
       <div className="relative z-20">
-        <BottomNav />
+        <MobileNav />
       </div>
       </div>
 

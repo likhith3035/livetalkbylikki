@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Pencil, Check, Shield, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
+import MobileNav from "@/components/MobileNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useProfile } from "@/hooks/use-profile";
 import { Button } from "@/components/ui/button";
@@ -166,7 +166,7 @@ const ProfilePage = () => {
         </motion.div>
       </main>
 
-      <BottomNav />
+      <MobileNav />
     </div>
   );
 };

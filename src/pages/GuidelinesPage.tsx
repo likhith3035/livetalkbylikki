@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, Heart, UserX, MessageSquare, AlertCircle, CheckCircle2, HandMetal } from "lucide-react";
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
+import MobileNav from "@/components/MobileNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSEO } from "@/hooks/use-seo";
 import { Link } from "react-router-dom";
@@ -151,7 +151,7 @@ const GuidelinesPage = () => {
         </motion.div>
       </main>
 
-      <BottomNav />
+      <MobileNav />
     </div>
   );
 };

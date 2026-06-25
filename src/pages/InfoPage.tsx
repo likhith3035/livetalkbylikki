@@ -18,7 +18,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
+import MobileNav from "@/components/MobileNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSEO } from "@/hooks/use-seo";
 
@@ -964,7 +964,7 @@ const InfoPage = () => {
         </div>
       </main>
 
-      <BottomNav />
+      <MobileNav />
     </div>
   );
 };

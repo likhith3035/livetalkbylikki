@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
+import MobileNav from "@/components/MobileNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useToast } from "@/hooks/use-toast";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -746,7 +746,7 @@ Likhith Kami (Likki)</a>
         </DialogContent>
       </Dialog>
 
-      <BottomNav />
+      <MobileNav />
     </div>
   );
 };

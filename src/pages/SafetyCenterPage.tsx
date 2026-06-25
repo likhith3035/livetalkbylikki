@@ -6,7 +6,7 @@ import {
     Zap, Info, LifeBuoy, HandMetal
 } from "lucide-react";
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
+import MobileNav from "@/components/MobileNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSEO } from "@/hooks/use-seo";
 
@@ -198,7 +198,7 @@ const SafetyCenterPage = () => {
         </motion.div>
       </main>
 
-      <BottomNav />
+      <MobileNav />
     </div>
     );
 };

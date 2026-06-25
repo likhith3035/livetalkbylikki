@@ -1,6 +1,6 @@
 import { Moon, Sun, Volume2, Bell, Info, Palette, Image as ImageIcon, Keyboard, ShieldCheck, EyeOff, Ban, Sliders, Layers, Sparkles, Upload, RotateCcw, Crop } from "lucide-react";
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
+import MobileNav from "@/components/MobileNav";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineCount } from "@/hooks/use-online-count";
@@ -1212,7 +1212,7 @@ const SettingsPage = () => {
         )}
       </AnimatePresence>
 
-      <BottomNav />
+      <MobileNav />
     </div>
   );
 };
