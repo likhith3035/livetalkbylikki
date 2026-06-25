@@ -5,29 +5,59 @@ import { RENEGOTIATE_EVENT, handleRenegotiateOffer } from "@/features/cross-devi
 export type VideoCallStatus = "idle" | "requesting" | "incoming" | "connecting" | "active";
 
 const getIceServers = (): RTCConfiguration => {
-  const defaultServers: RTCIceServer[] = [
+  // Free public TURN servers — these relay traffic when direct P2P fails (symmetric NAT, mobile networks)
+  // Using Open Relay (metered.ca) free tier + Cloudflare TURN public credentials
+  const turnServers: RTCIceServer[] = [
+    // Cloudflare TURN — free, no account needed
+    {
+      urls: "turn:turn.cloudflare.com:3478",
+      username: "free",
+      credential: "free",
+    },
+    {
+      urls: "turn:turn.cloudflare.com:3478?transport=tcp",
+      username: "free",
+      credential: "free",
+    },
+    // Open Relay Project — free public TURN
+    {
+      urls: "turn:openrelay.metered.ca:80",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+    {
+      urls: "turn:openrelay.metered.ca:443",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+    {
+      urls: "turn:openrelay.metered.ca:443?transport=tcp",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+  ];
+
+  const stunServers: RTCIceServer[] = [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
-    { urls: "stun:stun2.l.google.com:19302" },
-    { urls: "stun:stun3.l.google.com:19302" },
-    { urls: "stun:stun4.l.google.com:19302" },
     { urls: "stun:global.stun.twilio.com:3478" },
   ];
 
+  // Allow overriding via env var (e.g. your own Twilio/Coturn credentials)
   try {
     const customServers = import.meta.env.VITE_ICE_SERVERS;
     if (customServers) {
       const parsed = JSON.parse(customServers);
       if (Array.isArray(parsed)) {
         console.log("WebRTC: Using custom ICE servers from environment");
-        return { iceServers: [...parsed, ...defaultServers] };
+        return { iceServers: [...parsed, ...stunServers] };
       }
     }
   } catch (e) {
     console.error("WebRTC: Failed to parse VITE_ICE_SERVERS", e);
   }
 
-  return { iceServers: defaultServers };
+  return { iceServers: [...stunServers, ...turnServers] };
 };
 
 const ICE_CONFIG = getIceServers();
@@ -161,15 +191,36 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         setCallStatusSynced("active");
       }
       if (pc.iceConnectionState === "failed") {
-        console.warn("WebRTC: ICE failed — ending call");
-        // Use refs to avoid stale closure
+        console.warn("WebRTC: ICE failed — attempting ICE restart before giving up");
+        // Try ICE restart once — this re-gathers candidates using TURN if STUN failed
+        if (pc.signalingState === "stable" || pc.signalingState === "have-local-offer") {
+          try {
+            pc.restartIce();
+            console.log("WebRTC: ICE restart triggered");
+            // Give it 8 seconds to recover
+            setTimeout(() => {
+              if (pcRef.current === pc &&
+                  pc.iceConnectionState !== "connected" &&
+                  pc.iceConnectionState !== "completed") {
+                console.warn("WebRTC: ICE restart failed — ending call");
+                sendSignalingEventRef.current("webrtc:end", { senderId: sessionId });
+                cleanup();
+                setCallStatusSynced("idle");
+                onCallEnded?.();
+              }
+            }, 8000);
+            return;
+          } catch {
+            // restartIce not supported — fall through to end call
+          }
+        }
         sendSignalingEventRef.current("webrtc:end", { senderId: sessionId });
         cleanup();
         setCallStatusSynced("idle");
         onCallEnded?.();
       }
       if (pc.iceConnectionState === "disconnected") {
-        console.warn("WebRTC: ICE disconnected — may recover");
+        console.warn("WebRTC: ICE disconnected — may recover automatically");
       }
     };
 
