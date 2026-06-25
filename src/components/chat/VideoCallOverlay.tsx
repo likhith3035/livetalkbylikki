@@ -909,9 +909,7 @@ const VideoCallOverlay = ({
                     label="Snap"
                     small
                   />
-                )}          label="Chat"
-                  small
-                />
+                )}
                 {!isAudioOnly && (
                   <ControlButton
                     onClick={togglePiP}
