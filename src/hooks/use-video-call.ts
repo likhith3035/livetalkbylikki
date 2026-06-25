@@ -60,10 +60,25 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
   const screenStreamRef = useRef<MediaStream | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const sendSignalingEventRef = useRef(sendSignalingEvent);
+  // Keep a ref for callStatus so callbacks capture the latest value without stale closures
+  const callStatusRef = useRef<VideoCallStatus>("idle");
+  // Keep a ref for isAudioOnly so async handlers always read the latest value
+  const isAudioOnlyRef = useRef(false);
+  // Ref for toggleScreenShare to avoid stale closure in onended
+  const toggleScreenShareRef = useRef<() => void>(() => {});
 
-  useEffect(() => {
-    sendSignalingEventRef.current = sendSignalingEvent;
-  }, [sendSignalingEvent]);
+  useEffect(() => { sendSignalingEventRef.current = sendSignalingEvent; }, [sendSignalingEvent]);
+
+  // Keep refs in sync with state
+  const setCallStatusSynced = useCallback((status: VideoCallStatus) => {
+    callStatusRef.current = status;
+    setCallStatus(status);
+  }, []);
+
+  const setIsAudioOnlySynced = useCallback((val: boolean) => {
+    isAudioOnlyRef.current = val;
+    setIsAudioOnly(val);
+  }, []);
 
   const cleanup = useCallback(() => {
     console.log("WebRTC: Cleaning up call...");
@@ -86,24 +101,51 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     setIsScreenSharing(false);
     setRemoteIsScreenSharing(false);
     setIsBlurred(false);
-    setIsAudioOnly(false);
+    setIsAudioOnlySynced(false);
     setFacingMode("user");
     setRemoteMuted(false);
     setRemoteCameraOff(false);
     setRemoteBlurred(false);
     pendingCandidatesRef.current = [];
+  }, [setIsAudioOnlySynced]);
+
+  // Drain buffered ICE candidates — safe to call multiple times
+  const drainPendingCandidates = useCallback(async (pc: RTCPeerConnection) => {
+    if (!pc.remoteDescription || pendingCandidatesRef.current.length === 0) return;
+    const candidates = [...pendingCandidatesRef.current];
+    pendingCandidatesRef.current = [];
+    for (const c of candidates) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(c));
+      } catch (err) {
+        console.warn("WebRTC: Failed to add buffered ICE candidate:", err);
+      }
+    }
   }, []);
 
   const createPeerConnection = useCallback(() => {
     console.log("WebRTC: Creating PeerConnection...", ICE_CONFIG);
     const pc = new RTCPeerConnection(ICE_CONFIG);
+    // Use a single stable MediaStream for remote tracks — no new object on every track
     const remote = new MediaStream();
     setRemoteStream(remote);
 
     pc.ontrack = (e) => {
       console.log("WebRTC: Received remote track", e.track.kind);
-      e.streams[0]?.getTracks().forEach((track) => remote.addTrack(track));
-      setRemoteStream(new MediaStream(remote.getTracks()));
+      // Add tracks to the existing stream instead of creating a new one each time
+      e.streams[0]?.getTracks().forEach((track) => {
+        if (!remote.getTrackById(track.id)) {
+          remote.addTrack(track);
+        }
+      });
+      // Force a React re-render by updating state with same object reference trick
+      setRemoteStream((prev) => {
+        if (prev === remote) {
+          // Create a shallow copy to trigger re-render while preserving tracks
+          return new MediaStream(remote.getTracks());
+        }
+        return remote;
+      });
     };
 
     pc.onicecandidate = (e) => {
@@ -116,13 +158,18 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     pc.oniceconnectionstatechange = () => {
       console.log("WebRTC: ICE Connection State:", pc.iceConnectionState);
       if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
-        setCallStatus("active");
+        setCallStatusSynced("active");
       }
-      if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "closed") {
-        console.warn("WebRTC: Connection state changed to:", pc.iceConnectionState);
-        if (pc.iceConnectionState === "failed") {
-          endCall();
-        }
+      if (pc.iceConnectionState === "failed") {
+        console.warn("WebRTC: ICE failed — ending call");
+        // Use refs to avoid stale closure
+        sendSignalingEventRef.current("webrtc:end", { senderId: sessionId });
+        cleanup();
+        setCallStatusSynced("idle");
+        onCallEnded?.();
+      }
+      if (pc.iceConnectionState === "disconnected") {
+        console.warn("WebRTC: ICE disconnected — may recover");
       }
     };
 
@@ -132,21 +179,19 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
 
     pcRef.current = pc;
     return pc;
-  }, [sessionId]);
+  }, [sessionId, cleanup, setCallStatusSynced, onCallEnded]);
 
   const getMedia = useCallback(async (facing: "user" | "environment" = "user", audioOnly = false) => {
-    // Try progressively looser constraints — Android WebView is strict about exact constraints
-    const videoConstraints: MediaTrackConstraints[] = [
-      { facingMode: { exact: facing } },   // 1. exact facing mode
-      { facingMode: facing },               // 2. ideal facing mode
-      { facingMode: "user" },               // 3. front camera fallback
-      true,                                 // 4. any camera
+    const videoConstraints: (MediaTrackConstraints | boolean)[] = [
+      { facingMode: { exact: facing } },
+      { facingMode: facing },
+      { facingMode: "user" },
+      true,
     ];
 
     let lastError: unknown;
 
     if (audioOnly) {
-      // Audio-only path — straightforward
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
         localStreamRef.current = stream;
@@ -158,7 +203,6 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       }
     }
 
-    // Video path — try each constraint set until one works
     for (const videoConstraint of videoConstraints) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -175,59 +219,57 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       }
     }
 
-    // All video attempts failed — try audio only as last resort
+    // All video attempts failed — fall back to audio-only
     try {
       console.warn("WebRTC: All video constraints failed, falling back to audio-only");
       const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
       localStreamRef.current = stream;
       setLocalStream(stream);
-      setIsAudioOnly(true);
+      setIsAudioOnlySynced(true);
       return stream;
     } catch (err) {
       console.error("WebRTC: All getUserMedia attempts failed:", lastError);
       throw lastError;
     }
-  }, []);
+  }, [setIsAudioOnlySynced]);
 
   const supportsScreenShare = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 
   const startCall = useCallback(async (audioOnly = false) => {
-    setCallStatus("requesting");
-    setIsAudioOnly(audioOnly);
+    setCallStatusSynced("requesting");
+    setIsAudioOnlySynced(audioOnly);
     sendSignalingEventRef.current("webrtc:request", { senderId: sessionId, audioOnly });
-  }, [sessionId]);
+  }, [sessionId, setCallStatusSynced, setIsAudioOnlySynced]);
 
   const acceptCall = useCallback(async () => {
     try {
-      setCallStatus("connecting");
-      const stream = await getMedia("user", isAudioOnly);
+      setCallStatusSynced("connecting");
+      // Read isAudioOnly from ref to get the latest value set by webrtc:request handler
+      const audioOnly = isAudioOnlyRef.current;
+      const stream = await getMedia("user", audioOnly);
       const pc = createPeerConnection();
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-      for (const c of pendingCandidatesRef.current) {
-        await pc.addIceCandidate(new RTCIceCandidate(c));
-      }
-      pendingCandidatesRef.current = [];
-
-      sendSignalingEventRef.current("webrtc:accept", { senderId: sessionId, audioOnly: isAudioOnly });
+      // DO NOT drain pendingCandidatesRef here — remote description not set yet.
+      // Candidates will be drained in webrtc:offer handler after setRemoteDescription.
+      sendSignalingEventRef.current("webrtc:accept", { senderId: sessionId, audioOnly });
     } catch (err) {
       console.error("WebRTC: acceptCall failed:", err);
-      setCallStatus("idle");
+      setCallStatusSynced("idle");
       cleanup();
     }
-  }, [sessionId, isAudioOnly, getMedia, createPeerConnection, cleanup]);
+  }, [sessionId, getMedia, createPeerConnection, cleanup, setCallStatusSynced]);
 
   const declineCall = useCallback(() => {
     sendSignalingEventRef.current("webrtc:decline", { senderId: sessionId });
-    setCallStatus("idle");
-  }, [sessionId]);
+    setCallStatusSynced("idle");
+  }, [sessionId, setCallStatusSynced]);
 
   const endCall = useCallback(() => {
     sendSignalingEventRef.current("webrtc:end", { senderId: sessionId });
     cleanup();
-    setCallStatus("idle");
+    setCallStatusSynced("idle");
     onCallEnded?.();
-  }, [sessionId, cleanup, onCallEnded]);
+  }, [sessionId, cleanup, onCallEnded, setCallStatusSynced]);
 
   const toggleMute = useCallback(() => {
     if (localStreamRef.current) {
@@ -253,86 +295,57 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     }
   }, [sessionId]);
 
-  // Flip camera (front/back)
   const flipCamera = useCallback(async () => {
     if (!localStreamRef.current || !pcRef.current) return;
     const newFacing = facingMode === "user" ? "environment" : "user";
     try {
-      // Stop old video track
       const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
       oldVideoTrack?.stop();
-
-      // Get new stream with flipped camera
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: newFacing },
         audio: false,
       });
       const newVideoTrack = newStream.getVideoTracks()[0];
-
-      // Replace track in peer connection
       const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
-      if (sender && newVideoTrack) {
-        await sender.replaceTrack(newVideoTrack);
-      }
-
-      // Update local stream
-      if (oldVideoTrack) {
-        localStreamRef.current.removeTrack(oldVideoTrack);
-      }
+      if (sender && newVideoTrack) await sender.replaceTrack(newVideoTrack);
+      if (oldVideoTrack) localStreamRef.current.removeTrack(oldVideoTrack);
       localStreamRef.current.addTrack(newVideoTrack);
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
       setFacingMode(newFacing);
     } catch {
-      // Camera flip not supported
+      // Camera flip not supported on this device
     }
   }, [facingMode]);
 
-  // Screen sharing
   const toggleScreenShare = useCallback(async () => {
     if (!pcRef.current) return;
 
     if (isScreenSharing) {
-      // Stop screen sharing, restore camera
       if (screenStreamRef.current) {
         screenStreamRef.current.getTracks().forEach((t) => t.stop());
         screenStreamRef.current = null;
       }
-      const cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
-        audio: false,
-      });
-      const cameraTrack = cameraStream.getVideoTracks()[0];
-      const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
-      if (sender && cameraTrack) {
-        await sender.replaceTrack(cameraTrack);
-      }
-      // Update local stream
-      const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
-      if (oldVideoTrack && localStreamRef.current) {
-        localStreamRef.current.removeTrack(oldVideoTrack);
-      }
-      localStreamRef.current?.addTrack(cameraTrack);
-      setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
+      try {
+        const cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: false });
+        const cameraTrack = cameraStream.getVideoTracks()[0];
+        const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
+        if (sender && cameraTrack) await sender.replaceTrack(cameraTrack);
+        const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+        if (oldVideoTrack && localStreamRef.current) localStreamRef.current.removeTrack(oldVideoTrack);
+        localStreamRef.current?.addTrack(cameraTrack);
+        setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
+      } catch { /* camera not available */ }
       setIsScreenSharing(false);
-      // Notify remote
       sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: false });
     } else {
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         screenStreamRef.current = screenStream;
         const screenTrack = screenStream.getVideoTracks()[0];
-
         const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
-        if (sender && screenTrack) {
-          await sender.replaceTrack(screenTrack);
-        }
-
-        // When user stops sharing via browser UI
-        screenTrack.onended = () => {
-          toggleScreenShare();
-        };
-
-        // Update local stream for preview
+        if (sender && screenTrack) await sender.replaceTrack(screenTrack);
+        // Use ref so onended always calls the latest version — avoids stale closure
+        screenTrack.onended = () => { toggleScreenShareRef.current(); };
         const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
         if (oldVideoTrack && localStreamRef.current) {
           localStreamRef.current.removeTrack(oldVideoTrack);
@@ -341,33 +354,28 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         localStreamRef.current?.addTrack(screenTrack);
         setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
         setIsScreenSharing(true);
-        // Notify remote
         sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: true });
-      } catch {
-        // User cancelled screen share picker
-      }
+      } catch { /* user cancelled */ }
     }
   }, [isScreenSharing, facingMode, sessionId]);
 
-  // Upgrade audio call to video
+  // Keep the ref pointing to the latest version
+  useEffect(() => { toggleScreenShareRef.current = toggleScreenShare; }, [toggleScreenShare]);
+
   const upgradeToVideo = useCallback(async () => {
     if (!pcRef.current || !localStreamRef.current) return;
     try {
       const videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       const videoTrack = videoStream.getVideoTracks()[0];
-      // Add video track to peer connection
       pcRef.current.addTrack(videoTrack, localStreamRef.current);
       localStreamRef.current.addTrack(videoTrack);
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
-      setIsAudioOnly(false);
+      setIsAudioOnlySynced(false);
       onCallUpgraded?.();
       sendSignalingEventRef.current("webrtc:upgrade-video", { senderId: sessionId });
-    } catch {
-      // Camera access denied
-    }
-  }, [sessionId]);
+    } catch { /* camera access denied */ }
+  }, [sessionId, onCallUpgraded, setIsAudioOnlySynced]);
 
-  // Background blur toggle
   const toggleBlur = useCallback(() => {
     setIsBlurred((prev) => {
       const next = !prev;
@@ -376,15 +384,13 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     });
   }, [sessionId]);
 
-  // Send a surprise reaction FX
   const sendSurprise = useCallback((type: string) => {
-    // Show locally too
     setSurpriseEffect({ type, id: Date.now() });
     sounds.surprise();
     sendSignalingEventRef.current("webrtc:surprise", { senderId: sessionId, type });
   }, [sessionId]);
 
-  // Handle signaling events
+  // Handle signaling events — all mutable values accessed via refs to avoid stale closures
   const handleSignalingEvent = useCallback(
     async (event: string, payload: Record<string, unknown>) => {
       const senderId = payload.senderId as string;
@@ -393,34 +399,37 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       switch (event) {
         case "webrtc:request": {
           const reqAudioOnly = payload.audioOnly as boolean | undefined;
-          if (reqAudioOnly) setIsAudioOnly(true);
-          setCallStatus("incoming");
+          if (reqAudioOnly) setIsAudioOnlySynced(true);
+          setCallStatusSynced("incoming");
           break;
         }
 
         case "webrtc:accept": {
-          const accAudioOnly = payload.audioOnly as boolean | undefined;
-          if (accAudioOnly) setIsAudioOnly(true);
+          // Use the payload value directly — don't rely on state which may be stale
+          const accAudioOnly = !!(payload.audioOnly as boolean | undefined);
+          // Sync state + ref together
+          if (accAudioOnly) setIsAudioOnlySynced(true);
+          const effectiveAudioOnly = isAudioOnlyRef.current || accAudioOnly;
           try {
-            setCallStatus("connecting");
-            const stream = await getMedia("user", isAudioOnly || !!accAudioOnly);
+            setCallStatusSynced("connecting");
+            const stream = await getMedia("user", effectiveAudioOnly);
             const pc = createPeerConnection();
             stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
-
+            // Drain any early ICE candidates from callee that arrived before we had a PC
+            await drainPendingCandidates(pc);
             sendSignalingEventRef.current("webrtc:offer", { senderId: sessionId, offer: pc.localDescription?.toJSON() });
           } catch (err) {
             console.error("WebRTC: webrtc:accept handler failed:", err);
-            setCallStatus("idle");
+            setCallStatusSynced("idle");
             cleanup();
           }
           break;
         }
 
         case "webrtc:decline":
-          setCallStatus("idle");
+          setCallStatusSynced("idle");
           cleanup();
           break;
 
@@ -431,8 +440,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
 
           if (!pc && isRenegotiation) {
             try {
-              setCallStatus("connecting");
-              const stream = await getMedia("user", isAudioOnly);
+              setCallStatusSynced("connecting");
+              const stream = await getMedia("user", isAudioOnlyRef.current);
               pc = createPeerConnection();
               stream.getTracks().forEach((track) => pc!.addTrack(track, stream));
             } catch (err) {
@@ -443,15 +452,10 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
           if (!pc) break;
 
           await pc.setRemoteDescription(new RTCSessionDescription(offer));
-
-          for (const c of pendingCandidatesRef.current) {
-            await pc.addIceCandidate(new RTCIceCandidate(c));
-          }
-          pendingCandidatesRef.current = [];
-
+          // Now safe to drain buffered ICE candidates
+          await drainPendingCandidates(pc);
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
-
           sendSignalingEventRef.current("webrtc:answer", { senderId: sessionId, answer: pc.localDescription?.toJSON() });
           break;
         }
@@ -461,11 +465,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
           if (!pc) break;
           const answer = payload.answer as RTCSessionDescriptionInit;
           await pc.setRemoteDescription(new RTCSessionDescription(answer));
-
-          for (const c of pendingCandidatesRef.current) {
-            await pc.addIceCandidate(new RTCIceCandidate(c));
-          }
-          pendingCandidatesRef.current = [];
+          // Drain after setRemoteDescription
+          await drainPendingCandidates(pc);
           break;
         }
 
@@ -473,18 +474,21 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
           const candidate = payload.candidate as RTCIceCandidateInit;
           const pc = pcRef.current;
           if (pc?.remoteDescription) {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (err) {
+              console.warn("WebRTC: addIceCandidate failed:", err);
+            }
           } else {
+            // Buffer until remote description is set
             pendingCandidatesRef.current.push(candidate);
           }
           break;
         }
 
-        case "webrtc:screenshare": {
-          const sharing = payload.sharing as boolean;
-          setRemoteIsScreenSharing(sharing);
+        case "webrtc:screenshare":
+          setRemoteIsScreenSharing(payload.sharing as boolean);
           break;
-        }
 
         case "webrtc:state": {
           const key = payload.key as string;
@@ -496,8 +500,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         }
 
         case "webrtc:upgrade-video": {
-          // Remote upgraded to video — add local video track too
-          setIsAudioOnly(false);
+          setIsAudioOnlySynced(false);
           onCallUpgraded?.();
           try {
             const videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -507,16 +510,16 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
               localStreamRef.current.addTrack(videoTrack);
               setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
             }
-          } catch {
-            // Camera not available on remote side
-          }
+          } catch { /* camera not available */ }
           break;
         }
 
         case RENEGOTIATE_EVENT:
         case "webrtc:renegotiate": {
           const pc = pcRef.current;
-          if (pc && (callStatus === "active" || callStatus === "connecting")) {
+          // Use ref to read latest callStatus — avoids stale closure
+          const cs = callStatusRef.current;
+          if (pc && (cs === "active" || cs === "connecting")) {
             try {
               await handleRenegotiateOffer(pc, sendSignalingEventRef.current, sessionId);
             } catch (err) {
@@ -528,7 +531,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
 
         case "webrtc:end":
           cleanup();
-          setCallStatus("idle");
+          setCallStatusSynced("idle");
           onCallEnded?.();
           break;
 
@@ -540,7 +543,9 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         }
       }
     },
-    [sessionId, getMedia, createPeerConnection, cleanup, onCallEnded]
+    // Only truly stable deps — mutable values accessed via refs
+    [sessionId, getMedia, createPeerConnection, cleanup, drainPendingCandidates,
+     onCallEnded, onCallUpgraded, setCallStatusSynced, setIsAudioOnlySynced]
   );
 
   // Cleanup on unmount

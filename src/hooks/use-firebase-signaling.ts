@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { ref, onChildAdded, push, remove, off, onDisconnect, serverTimestamp } from "firebase/database";
+import { ref, onChildAdded, push, remove } from "firebase/database";
 
 interface SignalingOptions {
   sessionId: string;
@@ -46,7 +46,8 @@ export function useFirebaseSignaling({ sessionId, roomId, onEvent }: SignalingOp
     // causing the other user to think you left.
 
     return () => {
-      off(roomSignalingRef, "child_added", unsubscribe as any);
+      // unsubscribe() is the function returned by onChildAdded — call it directly
+      unsubscribe();
     };
   }, [roomId, sessionId, onEvent]);
 
