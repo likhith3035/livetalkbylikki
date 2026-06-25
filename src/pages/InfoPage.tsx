@@ -428,14 +428,14 @@ const InfoPage = () => {
                 key={item.title}
                 className="group flex items-start gap-4 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 p-6 hover:bg-card/50 hover:border-primary/30 transition-colors duration-200"
               >
-                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                <div className="rounded-2xl bg-primary/10 p-4 shrink-0 group-hover:bg-primary/20 transition-colors">
                   <item.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div className="space-y-1">
                   <p className="text-lg font-bold text-foreground">{item.title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed font-medium">{item.desc}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </motion.section>
@@ -673,7 +673,7 @@ const InfoPage = () => {
             </div>
             <div className="space-y-3 pl-1">
               {[
-                { n: "1", t: "Be in an active chat or private room", d: "The cross-device panel only appears when you have a live connection. Start a chat or join a private room first.' },
+                { n: "1", t: "Be in an active chat or private room", d: "The cross-device panel only appears when you have a live connection. Start a chat or join a private room first." },
                 { n: "2", t: "Look for the QR panel (desktop)", d: "On desktop/laptop, a compact panel appears in the top-right corner showing a QR code and a handoff code like 'ABCD1234'." },
                 { n: "3", t: "On mobile — private room waiting screen", d: "When waiting in a private room, the handoff panel is visible inside the waiting screen. It shows both a QR and the code." },
                 { n: "4", t: "Scan the QR on your other device", d: "Open your phone camera (or a QR scanner app) and scan the code. It opens a link like /handoff?room=...&token=..." },
