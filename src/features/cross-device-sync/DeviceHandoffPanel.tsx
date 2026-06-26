@@ -19,10 +19,10 @@ interface DeviceHandoffPanelProps {
 }
 
 const STEPS = [
-  "Open LiveTalk on your other device",
-  "Scan this QR code or copy the code below",
-  'Go to the /handoff page and enter the code',
-  "Session syncs instantly — no login needed",
+  "Open LiveTalk on your other device (phone, tablet, PC)",
+  "Scan the QR code — your camera will open the handoff page automatically",
+  "Or: go to /handoff and enter the code shown below (you'll also need the Room ID from the URL)",
+  "Your session syncs instantly — no login needed",
 ];
 
 export function DeviceHandoffPanel({
