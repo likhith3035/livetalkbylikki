@@ -119,10 +119,7 @@ function QRDisplay({ value, isDark }: { value: string; isDark: boolean }) {
 
   if (!svgString) {
     return (
-      <div
-        className="flex items-center justify-center rounded-[2rem] border border-white/10 bg-black/20"
-        style={{ width: 228, height: 228 }}
-      >
+      <div className="flex items-center justify-center rounded-[2rem] border border-white/10 bg-black/20 w-full h-full">
         <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
@@ -131,11 +128,7 @@ function QRDisplay({ value, isDark }: { value: string; isDark: boolean }) {
   return (
     <div
       ref={containerRef}
-      className="relative rounded-[2rem] p-3 overflow-hidden bg-black/40 border border-white/15 backdrop-blur-xl shadow-xl flex items-center justify-center"
-      style={{
-        width: 228,
-        height: 228,
-      }}
+      className="relative rounded-[2rem] p-3 overflow-hidden bg-black/40 border border-white/15 backdrop-blur-xl shadow-xl flex items-center justify-center w-full h-full"
     >
       {/* QR SVG */}
       <div
@@ -293,213 +286,213 @@ export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined,
   const expiryPercent = (secondsLeft / ROOM_EXPIRY_SECONDS) * 100;
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 overflow-y-auto">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: 20 }}
-        transition={{ type: "spring", stiffness: 260, damping: 22 }}
-        className="w-full max-w-sm mx-auto"
-      >
-        <div className="relative rounded-[2.5rem] border border-white/10 bg-zinc-950/70 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
-          {/* Top aesthetic glow bar */}
-          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-violet-500 via-primary to-blue-500" />
-          
-          {/* Internal ambient glow */}
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="fixed inset-0 z-[150] flex items-start justify-center bg-black/60 backdrop-blur-md overflow-y-auto">
+      {/* Scroll padding so content doesn't touch edges on very short screens */}
+      <div className="w-full max-w-sm mx-auto px-3 py-4 sm:py-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.92, y: 20 }}
+          transition={{ type: "spring", stiffness: 260, damping: 22 }}
+        >
+          <div className="relative rounded-[2rem] border border-white/10 bg-zinc-950/80 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+            {/* Top glow bar */}
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-violet-500 via-primary to-blue-500" />
+            {/* Ambient glow */}
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 p-7 flex flex-col items-center gap-6">
+            <div className="relative z-10 p-5 sm:p-6 flex flex-col items-center gap-4 sm:gap-5">
 
-            {/* Header info */}
-            <div className="w-full flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-2xl bg-primary/15 flex items-center justify-center border border-primary/20">
-                  <QrCode className="h-4.5 w-4.5 text-primary" />
+              {/* Header */}
+              <div className="w-full flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center border border-primary/20 shrink-0">
+                    <QrCode className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-widest text-white leading-none">Invite Friend</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Scan QR or share the link</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-widest text-white">Invite Friend</p>
-                  <p className="text-[10px] text-muted-foreground">Scan or share the link</p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onCancel}
+                  className="h-8 w-8 rounded-xl text-white/60 hover:text-white hover:bg-white/10 shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* QR / Connected state */}
+              <div className="relative w-full flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  {connectionStatus === "partner_joined" ? (
+                    <motion.div
+                      key="joined"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="flex flex-col items-center justify-center gap-3 py-6"
+                    >
+                      <div className="relative flex items-center justify-center">
+                        <motion.div
+                          className="absolute w-20 h-20 rounded-full bg-green-500/10 border border-green-500/20"
+                          animate={{ scale: [1, 1.35, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        />
+                        <Checkmark />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-base font-black text-green-400 uppercase tracking-widest italic">Connected!</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">Redirecting to chat...</p>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="qr"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="relative"
+                    >
+                      <QRBackgroundRipples />
+                      {/* Responsive QR: full width on tiny screens */}
+                      <div className="w-[clamp(180px,60vw,220px)] aspect-square">
+                        <QRDisplay value={joinUrl} isDark={true} />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Room Code */}
+              <div className="w-full flex flex-col items-center gap-1">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">Room Code</span>
+                <div className="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-2.5 flex items-center justify-between gap-2">
+                  <Hash className="h-4 w-4 text-primary shrink-0" />
+                  <span className="font-mono text-lg sm:text-xl font-black tracking-[0.2em] text-white text-center select-all flex-1">
+                    {roomCode}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCopyCode}
+                    className="h-8 w-8 p-0 rounded-xl text-white/60 hover:text-white hover:bg-white/10 shrink-0"
+                  >
+                    {copiedCode ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8 rounded-xl text-white/60 hover:text-white hover:bg-white/10">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
 
-            {/* QR display with background pulses */}
-            <div className="relative my-2">
+              {/* Action buttons */}
+              <div className="w-full flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleCopyCode}
+                    className="h-10 gap-1.5 text-[10px] font-bold uppercase tracking-wide rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10"
+                  >
+                    {copiedCode ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+                    Copy Code
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleCopyLink}
+                    className="h-10 gap-1.5 text-[10px] font-bold uppercase tracking-wide rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10"
+                  >
+                    {copiedLink ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Link2 className="h-3.5 w-3.5" />}
+                    Copy Link
+                  </Button>
+                </div>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleShare}
+                  className="h-10 gap-2 text-[10px] font-bold uppercase tracking-wide rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  Share Invite
+                </Button>
+              </div>
+
+              {/* Waiting status / offline */}
               <AnimatePresence mode="wait">
-                {connectionStatus === "partner_joined" ? (
+                {connectionStatus === "waiting" && (
                   <motion.div
-                    key="joined"
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    className="flex flex-col items-center justify-center gap-4 py-8"
-                    style={{ width: 228, height: 228 }}
+                    key="waiting"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex flex-col items-center gap-2"
                   >
-                    <div className="relative flex items-center justify-center">
-                      <motion.div
-                        className="absolute w-24 h-24 rounded-full bg-green-500/10 border border-green-500/20"
-                        animate={{ scale: [1, 1.35, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
-                      <Checkmark />
-                    </div>
-                    <div className="text-center space-y-1">
-                      <p className="text-lg font-black text-green-400 uppercase tracking-widest italic">
-                        Connected!
-                      </p>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                        Redirecting to active chat...
-                      </p>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="qr"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="relative"
-                  >
-                    <QRBackgroundRipples />
-                    <QRDisplay value={joinUrl} isDark={true} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Room Code Display */}
-            <div className="w-full flex flex-col items-center gap-1.5">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">Room Code</span>
-              <div className="w-full rounded-2xl bg-white/5 border border-white/10 px-5 py-3 flex items-center justify-between">
-                <Hash className="h-4.5 w-4.5 text-primary shrink-0" />
-                <span className="font-mono text-xl font-black tracking-[0.25em] text-white text-center select-all pl-3">
-                  {roomCode}
-                </span>
-                <Button size="sm" variant="ghost" onClick={handleCopyCode} className="h-8 w-8 p-0 rounded-xl text-white/60 hover:text-white hover:bg-white/10 shrink-0">
-                  {copiedCode ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-
-            {/* Action buttons matching specifications */}
-            <div className="w-full flex flex-col gap-2">
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleCopyCode}
-                  className="h-11 gap-2 text-[10px] font-bold uppercase tracking-wider rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10"
-                >
-                  {copiedCode ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
-                  Copy Room Code
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleCopyLink}
-                  className="h-11 gap-2 text-[10px] font-bold uppercase tracking-wider rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10"
-                >
-                  {copiedLink ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Link2 className="h-3.5 w-3.5" />}
-                  Copy Invite Link
-                </Button>
-              </div>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleShare}
-                className="h-11 gap-2 text-[10px] font-bold uppercase tracking-wider rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                Share Invite
-              </Button>
-            </div>
-
-            {/* Realtime Waiting Status & Expiry Bar */}
-            <AnimatePresence mode="wait">
-              {connectionStatus === "waiting" && (
-                <motion.div
-                  key="waiting"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  className="w-full rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col items-center gap-3"
-                >
-                  <div className="flex flex-col items-center gap-1 text-center">
                     <div className="flex items-center gap-2 text-xs font-bold text-primary">
-                      <span className="relative flex h-2 w-2">
+                      <span className="relative flex h-2 w-2 shrink-0">
                         <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 animate-ping" />
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                       </span>
-                      <span>Waiting for connection</span>
+                      Waiting for your friend to join
+                      <WaitingDots />
                     </div>
-                    <motion.p
-                      className="text-[11px] font-semibold text-white/70 mt-1"
-                      animate={{ opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      Waiting for your friend to join<WaitingDots />
-                    </motion.p>
-                  </div>
-                  
-                  {/* Countdown Expiry Progress */}
-                  <div className="w-full flex items-center gap-3 pt-1">
-                    <Clock className="h-3.5 w-3.5 text-white/40 shrink-0" />
-                    <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all duration-1000",
-                          expiryPercent > 50 ? "bg-primary" : expiryPercent > 20 ? "bg-yellow-500" : "bg-red-500"
-                        )}
-                        style={{ width: `${expiryPercent}%` }}
-                      />
+                    <div className="w-full flex items-center gap-2.5">
+                      <Clock className="h-3 w-3 text-white/40 shrink-0" />
+                      <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all duration-1000",
+                            expiryPercent > 50 ? "bg-primary" : expiryPercent > 20 ? "bg-yellow-500" : "bg-red-500"
+                          )}
+                          style={{ width: `${expiryPercent}%` }}
+                        />
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-mono font-bold tabular-nums shrink-0",
+                        expiryPercent > 50 ? "text-white/60" : expiryPercent > 20 ? "text-yellow-500" : "text-red-500"
+                      )}>
+                        {formatTime(secondsLeft)}
+                      </span>
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-mono font-bold tabular-nums shrink-0",
-                      expiryPercent > 50 ? "text-white/60" : expiryPercent > 20 ? "text-yellow-500" : "text-red-500"
-                    )}>
-                      {formatTime(secondsLeft)}
-                    </span>
-                  </div>
-                </motion.div>
-              )}
-              {connectionStatus === "offline" && (
-                <motion.div
-                  key="offline"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  className="w-full rounded-2xl bg-destructive/10 border border-destructive/20 p-4 flex items-center justify-center gap-2.5"
-                >
-                  <WifiOff className="h-4 w-4 text-destructive shrink-0" />
-                  <p className="text-xs font-bold text-destructive">Waiting for connection · Offline</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  </motion.div>
+                )}
+                {connectionStatus === "offline" && (
+                  <motion.div
+                    key="offline"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="w-full rounded-2xl bg-destructive/10 border border-destructive/20 p-3 flex items-center gap-2.5"
+                  >
+                    <WifiOff className="h-4 w-4 text-destructive shrink-0" />
+                    <p className="text-xs font-bold text-destructive">You appear to be offline</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {handoffPanel && (
-              <div className="w-full">{handoffPanel}</div>
-            )}
+              {/* Cross-device handoff panel — only shown if provided */}
+              {handoffPanel && (
+                <div className="w-full">{handoffPanel}</div>
+              )}
 
-            {/* Cancel Invitation Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCancel}
-              className="w-full text-xs text-white/50 hover:text-destructive hover:bg-destructive/10 rounded-2xl h-10 mt-1"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Cancel Invitation
-            </Button>
+              {/* Cancel */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCancel}
+                className="w-full text-xs text-white/40 hover:text-destructive hover:bg-destructive/10 rounded-2xl h-9"
+              >
+                <X className="h-3.5 w-3.5 mr-1.5" />
+                Cancel Invitation
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <p className="text-center text-[10px] text-white/40 mt-3 font-medium">
-          Room expires in {formatTime(secondsLeft)} · Keep this screen open
-        </p>
-      </motion.div>
+          <p className="text-center text-[10px] text-white/30 mt-2.5 font-medium">
+            Room expires in {formatTime(secondsLeft)} · Keep this screen open
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }
