@@ -19,10 +19,10 @@ interface DeviceHandoffPanelProps {
 }
 
 const STEPS = [
-  "This is FOR YOU — lets you continue THIS chat on another device you own",
+  "This is FOR YOU — lets you continue this chat on another device you own",
   "Scan this QR on your other device (phone/laptop) to join the same room",
   "Or go to /handoff on your other device and enter the code + Room ID",
-  "Your friend uses the top QR/code in the 'Invite Friend' panel — NOT this one",
+  "New messages from that point forward will appear on both devices",
 ];
 
 export function DeviceHandoffPanel({

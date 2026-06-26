@@ -117,13 +117,13 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   const effectiveRoomId = roomId ?? (privateRoomCode ? `private_${privateRoomCode}` : null);
 
-  // Cross-device sync only for private rooms — random chats have no persistent room to transfer
+  // Cross-device sync works for both private rooms and random chats
   const isPrivateRoom = !!privateRoomCode;
 
   const crossDevice = useCrossDeviceSync({
     roomId: effectiveRoomId,
     sessionId,
-    enabled: isPrivateRoom && !!effectiveRoomId && (status === "connected" || showPrivateWaiting),
+    enabled: !!effectiveRoomId && (status === "connected" || showPrivateWaiting),
     sendSignaling: sendSignalingEvent,
   });
 
@@ -193,16 +193,35 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     const savedName = localStorage.getItem("livetalk_user_name");
     if (savedName) setUserName(savedName);
 
-    // Check for handoff redirect — ?handoff=private_XXXXXX
+    // ?handoff=roomId — from HandoffPage redirect after token claim
     const handoffRoomId = searchParams.get("handoff") ?? "";
     if (handoffRoomId) {
       const privateMatch = handoffRoomId.match(/^private_([A-Z0-9]+)$/i);
       if (privateMatch) {
+        // Private room — use existing join-by-code flow
         const code = privateMatch[1].toUpperCase();
         if (!sessionStorage.getItem("echo_join_room")) {
           sessionStorage.setItem("echo_join_room", code);
         }
+      } else {
+        // Random match room — join directly by roomId, no lobby check needed
+        const name = localStorage.getItem("livetalk_user_name") || "";
+        if (name) {
+          joinRoomById(handoffRoomId);
+        } else {
+          // Need name first — store roomId and join after name entry
+          sessionStorage.setItem("echo.handoff.room", handoffRoomId);
+        }
+        return;
       }
+    }
+
+    // Restore random room handoff after name entry
+    const pendingHandoffRoom = sessionStorage.getItem("echo.handoff.room");
+    if (pendingHandoffRoom && (savedName || userName)) {
+      sessionStorage.removeItem("echo.handoff.room");
+      joinRoomById(pendingHandoffRoom);
+      return;
     }
 
     const storedCode = sessionStorage.getItem("echo_join_room");
@@ -224,7 +243,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       }
       joinPrivateRoom(pendingCode, isCreator);
     }
-  }, [initialRoomCode, joinPrivateRoom, userName, searchParams]);
+  }, [initialRoomCode, joinPrivateRoom, joinRoomById, userName, searchParams]);
 
   const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -804,7 +823,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onSendMessage={sendMessage}
       />
 
-      {status === "connected" && isPrivateRoom && crossDevice.sessionToken && (
+      {status === "connected" && crossDevice.sessionToken && (
         <div className="hidden lg:block fixed top-20 right-6 z-30 w-72">
           <DeviceHandoffPanel
             sessionToken={crossDevice.sessionToken}
