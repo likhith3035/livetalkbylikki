@@ -41,10 +41,9 @@ const LiquidBackground = () => {
         .lg-orb-3 { animation: lg-float-3 ${duration3}s ease-in-out infinite; }
         .lg-orb-4 { animation: lg-float-4 ${duration4}s ease-in-out infinite; }
 
-        /* Mobile: fewer orbs, no blend mode, reduced blur, no animation */
+        /* Mobile: hide all orbs to prevent heavy rendering/scrolling lag */
         @media (max-width: 768px) {
-          .lg-orb-3, .lg-orb-4 { display: none !important; }
-          .lg-orb-1, .lg-orb-2 { animation: none !important; }
+          .lg-orb-1, .lg-orb-2, .lg-orb-3, .lg-orb-4 { display: none !important; }
         }
       `}</style>
 

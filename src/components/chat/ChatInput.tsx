@@ -61,11 +61,11 @@ const ChatInput = ({
   const isConnected = status === "connected";
 
   return (
-    <div className="fixed bottom-14 lg:bottom-0 left-0 lg:left-[220px] right-0 z-40">
+    <div className="fixed bottom-0 left-0 lg:left-[220px] right-0 z-40 pb-[env(safe-area-inset-bottom,0px)] glass-heavy border-t border-border/20">
       {/* Gradient fade above input - more subtle */}
-      <div className="h-4 bg-gradient-to-t from-background/40 to-transparent pointer-events-none" />
+      <div className="h-4 bg-gradient-to-t from-background/40 to-transparent pointer-events-none absolute bottom-full left-0 right-0" />
 
-      <div className="glass-heavy px-3 sm:px-4 py-2.5 sm:py-3 border-t border-border/20">
+      <div className="px-3 sm:px-4 py-2.5 sm:py-3">
         <AnimatePresence>
           {replyingTo && (
             <motion.div

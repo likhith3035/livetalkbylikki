@@ -308,14 +308,12 @@
   }
   .animated-gradient-bg {
     background: linear-gradient(
-      -45deg,
-      hsl(var(--primary) / 0.06),
-      hsl(var(--accent) / 0.04),
-      hsl(265 90% 70% / 0.05),
-      hsl(var(--primary) / 0.03)
+      135deg,
+      hsl(var(--primary) / 0.06) 0%,
+      hsl(var(--accent) / 0.04) 33%,
+      hsl(265 90% 70% / 0.05) 66%,
+      hsl(var(--primary) / 0.03) 100%
     );
-    background-size: 400% 400%;
-    animation: gradient-shift 15s ease infinite;
   }
 
   /* Floating orb animation */
@@ -565,3 +563,60 @@
     background-color: rgba(120, 120, 120, 0.6) !important;
   }
 }
+
+/* ─── Native WebApp WebView Optimizations ─── */
+html, body {
+  /* Prevent pull-to-refresh reload jank in webviews */
+  overscroll-behavior-y: none;
+  /* Disable double-tap to zoom, making clicks feel instantaneous */
+  touch-action: manipulation;
+}
+
+/* Disable selection on controls to prevent copy/paste tooltips and selection jank */
+button, 
+a, 
+img, 
+svg, 
+span, 
+div.select-none,
+[role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* Prevents context menu on iOS WebView long-press */
+}
+
+/* Re-allow selection in chat content and text inputs */
+input, 
+textarea, 
+[contenteditable="true"],
+.chat-message-text {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent image dragging in app */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* ─── Sci-Fi Cyberpunk Animations ─── */
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+  will-change: transform;
+}
+
+@keyframes phone-scanner {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+.animate-phone-scanner {
+  animation: phone-scanner 5s ease-in-out infinite alternate;
+}
+
