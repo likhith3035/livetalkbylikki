@@ -24,11 +24,12 @@ const DesktopSidebar = () => {
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col shrink-0 z-40 transition-all duration-500",
+        "hidden lg:flex flex-col shrink-0 z-40",
         settings.liquidGlassEnabled
-          ? "w-[220px] rounded-[2.25rem] glass shadow-lg sticky top-0 self-start h-[calc(100svh-2rem)]"
-          : "w-[220px] sticky top-0 self-stretch min-h-svh border-r border-border bg-card/50 backdrop-blur-xl"
+          ? "w-[220px] rounded-[2.25rem] glass shadow-lg sticky top-4 self-start h-[calc(100svh-2rem)]"
+          : "w-[220px] sticky top-0 self-start h-svh border-r border-border bg-card/50 backdrop-blur-xl"
       )}
+      style={{ willChange: "transform" }}
     >
       {/* Logo */}
       <Link 
@@ -48,7 +49,7 @@ const DesktopSidebar = () => {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 flex flex-col gap-1 px-3 py-4">
+      <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
           return (
