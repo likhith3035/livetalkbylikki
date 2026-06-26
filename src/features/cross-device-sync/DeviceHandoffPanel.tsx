@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import QRCodeLib from "qrcode";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Copy, Check, Smartphone, QrCode, RefreshCw,
-  ChevronDown, ChevronUp, Wifi, CheckCircle2, Clock,
+  Copy, Check, RefreshCw, ChevronDown, ChevronUp,
+  CheckCircle2, Clock, Smartphone, Link2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { SessionToken, ParticipantRecord } from "./types";
@@ -20,10 +19,10 @@ interface DeviceHandoffPanelProps {
 }
 
 const STEPS = [
-  { num: "1", text: "Open LiveTalk on your other device (phone, tablet, PC)" },
-  { num: "2", text: "Scan the QR code below with your camera, or copy the handoff code" },
-  { num: "3", text: "On the other device, go to /handoff and paste the code" },
-  { num: "4", text: "The session transfers instantly — no login needed" },
+  "Open LiveTalk on your other device",
+  "Scan this QR code or copy the code below",
+  'Go to the /handoff page and enter the code',
+  "Session syncs instantly — no login needed",
 ];
 
 export function DeviceHandoffPanel({
@@ -35,31 +34,37 @@ export function DeviceHandoffPanel({
   className,
 }: DeviceHandoffPanelProps) {
   const { toast } = useToast();
-  const [copied, setCopied] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState(false);
-  const [qrSvg, setQrSvg] = useState("");
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState("");
   const [tokenProgress, setTokenProgress] = useState(100);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [showSteps, setShowSteps] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // QR generation — consistent 200px regardless of compact mode
+  // Generate QR as a data URL (PNG) — avoids SVG sizing issues entirely
   useEffect(() => {
     if (!handoffUrl) return;
-    QRCodeLib.toString(handoffUrl, { type: "svg", margin: 1, width: 200, errorCorrectionLevel: "M" })
-      .then(setQrSvg)
-      .catch(() => setQrSvg(""));
+    setQrDataUrl("");
+    QRCodeLib.toDataURL(handoffUrl, {
+      type: "image/png",
+      margin: 2,
+      width: 180,
+      errorCorrectionLevel: "M",
+      color: { dark: "#000000", light: "#ffffff" },
+    })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(""));
   }, [handoffUrl]);
 
-  // Live expiry countdown
+  // Live countdown
   useEffect(() => {
     if (!sessionToken) return;
     const tick = () => {
       const total = sessionToken.expiresAt - sessionToken.createdAt;
-      const remaining = sessionToken.expiresAt - Date.now();
-      const progress = Math.max(0, Math.min(100, (remaining / total) * 100));
-      setTokenProgress(progress);
-      setSecondsLeft(Math.max(0, Math.floor(remaining / 1000)));
+      const remaining = Math.max(0, sessionToken.expiresAt - Date.now());
+      setTokenProgress((remaining / total) * 100);
+      setSecondsLeft(Math.floor(remaining / 1000));
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -69,173 +74,164 @@ export function DeviceHandoffPanel({
   const copyCode = async () => {
     if (!sessionToken) return;
     await navigator.clipboard.writeText(sessionToken.token);
-    setCopied(true);
-    toast({ title: "Handoff code copied!", description: "Paste it on your other device at /handoff." });
-    setTimeout(() => setCopied(false), 2500);
+    setCopiedCode(true);
+    toast({ title: "Code copied!", description: "Paste it on your other device." });
+    setTimeout(() => setCopiedCode(false), 2500);
   };
 
   const copyLink = async () => {
     if (!handoffUrl) return;
     await navigator.clipboard.writeText(handoffUrl);
-    setCopiedUrl(true);
-    toast({ title: "Handoff link copied!", description: "Open this link on your other device." });
-    setTimeout(() => setCopiedUrl(false), 2500);
+    setCopiedLink(true);
+    toast({ title: "Link copied!", description: "Open this link on your other device." });
+    setTimeout(() => setCopiedLink(false), 2500);
   };
 
   const handleRefresh = async () => {
     if (!onRefreshToken || refreshing) return;
     setRefreshing(true);
-    setQrSvg("");
+    setQrDataUrl("");
     await onRefreshToken();
-    setTimeout(() => setRefreshing(false), 800);
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
   if (!sessionToken) return null;
 
   const onlineDevices = participants.filter((p) => p.online).length;
   const isConnected = onlineDevices >= 2;
-
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-  const isExpiringSoon = tokenProgress < 25;
+  const isExpiringSoon = tokenProgress < 20;
+  const formatTime = (s: number) =>
+    `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   return (
-    <div className={cn(
-      "rounded-2xl border bg-card/60 backdrop-blur-md overflow-hidden",
-      isConnected ? "border-green-500/40" : "border-border/40",
-      className
-    )}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
+    <div
+      className={cn(
+        "rounded-2xl border bg-card text-card-foreground overflow-hidden shadow-sm",
+        isConnected ? "border-green-500/40" : "border-border/60",
+        className
+      )}
+    >
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-muted/30">
         <div className="flex items-center gap-2">
-          <Smartphone className="h-4 w-4 text-primary shrink-0" />
-          <span className="text-xs font-bold text-primary uppercase tracking-wider">Cross-device sync</span>
+          <Smartphone className="h-3.5 w-3.5 text-primary" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
+            Cross-device sync
+          </span>
         </div>
 
-        {/* Connection status badge */}
-        <AnimatePresence mode="wait">
-          {isConnected ? (
-            <motion.div
-              key="connected"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-2.5 py-1"
-            >
-              <CheckCircle2 className="h-3 w-3 text-green-500" />
-              <span className="text-[10px] font-bold text-green-500">Connected</span>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="waiting"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-1"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] font-bold text-primary">Waiting</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Status pill */}
+        {isConnected ? (
+          <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 border border-green-500/30 px-2.5 py-0.5">
+            <CheckCircle2 className="h-3 w-3 text-green-500" />
+            <span className="text-[10px] font-bold text-green-500">Synced</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 rounded-full bg-muted border border-border px-2.5 py-0.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-medium text-muted-foreground">Waiting</span>
+          </div>
+        )}
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Connection success banner */}
+      <div className="p-4 space-y-3">
+
+        {/* ── Connected banner ── */}
         <AnimatePresence>
           {isConnected && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="rounded-xl bg-green-500/10 border border-green-500/25 px-3 py-2.5 flex items-center gap-2.5"
+              className="rounded-xl bg-green-500/10 border border-green-500/20 px-3 py-2 flex items-center gap-2"
             >
-              <Wifi className="h-4 w-4 text-green-500 shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-green-500">Session active on {onlineDevices} devices</p>
-                <p className="text-[10px] text-muted-foreground">Your chat is synced across devices</p>
-              </div>
+              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+              <p className="text-xs font-semibold text-green-600 dark:text-green-400">
+                {onlineDevices} devices connected — session is synced
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* QR + code side by side */}
-        <div className="flex gap-3 items-start">
-          {/* QR code — fixed square, never truncated */}
-          <div className="shrink-0">
-            {qrSvg ? (
-              <div
-                className="rounded-xl bg-white p-1.5 shadow-sm border border-border/20"
-                style={{ width: 88, height: 88 }}
-                dangerouslySetInnerHTML={{ __html: qrSvg }}
-              />
-            ) : (
-              <div
-                className="rounded-xl bg-white/10 border border-border/20 flex items-center justify-center"
-                style={{ width: 88, height: 88 }}
-              >
-                <QrCode className="h-6 w-6 text-muted-foreground animate-pulse" />
-              </div>
-            )}
+        {/* ── Handoff code row ── */}
+        <div className="rounded-xl bg-muted/60 border border-border/50 px-3 py-2.5 flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
+              Handoff code
+            </p>
+            {/* Full code on one line — monospaced, wide letter-spacing */}
+            <p className="font-mono font-black text-base leading-none tracking-[0.15em] text-foreground select-all">
+              {sessionToken.token}
+            </p>
           </div>
-
-          {/* Code + actions */}
-          <div className="flex-1 min-w-0 space-y-2">
-            {/* Full handoff code — never truncated */}
-            <div className="rounded-xl bg-secondary/60 border border-border/30 px-3 py-2.5">
-              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Handoff code</p>
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-mono text-base font-black tracking-[0.18em] text-foreground select-all leading-none">
-                  {sessionToken.token}
-                </p>
-                <button
-                  onClick={copyCode}
-                  className="shrink-0 h-7 w-7 rounded-lg bg-card flex items-center justify-center border border-border/40 hover:bg-primary/10 transition-colors"
-                  aria-label="Copy code"
-                >
-                  {copied
-                    ? <Check className="h-3.5 w-3.5 text-green-500" />
-                    : <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                  }
-                </button>
-              </div>
-            </div>
-
-            {/* Copy link + refresh */}
-            <div className="flex gap-1.5">
-              <button
-                onClick={copyLink}
-                className="flex-1 h-8 rounded-lg bg-primary/10 border border-primary/20 text-[10px] font-bold text-primary hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5"
-              >
-                {copiedUrl ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                {copiedUrl ? "Copied!" : "Copy link"}
-              </button>
-              {onRefreshToken && (
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="h-8 w-8 rounded-lg bg-secondary/60 border border-border/30 flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-50"
-                  aria-label="New handoff code"
-                >
-                  <RefreshCw className={cn("h-3.5 w-3.5 text-muted-foreground", refreshing && "animate-spin")} />
-                </button>
-              )}
-            </div>
-          </div>
+          <button
+            onClick={copyCode}
+            className="shrink-0 h-8 w-8 rounded-lg bg-background border border-border/60 flex items-center justify-center hover:bg-accent transition-colors"
+            aria-label="Copy code"
+          >
+            {copiedCode
+              ? <Check className="h-3.5 w-3.5 text-green-500" />
+              : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+          </button>
         </div>
 
-        {/* Expiry progress */}
-        <div className="space-y-1.5">
+        {/* ── QR code ── centered, constrained, never overflows */}
+        <div className="flex justify-center">
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt="Handoff QR code"
+              className="rounded-xl border border-border/40 shadow-sm"
+              style={{ width: 140, height: 140, imageRendering: "pixelated" }}
+            />
+          ) : (
+            <div
+              className="rounded-xl bg-muted border border-border/40 flex items-center justify-center"
+              style={{ width: 140, height: 140 }}
+            >
+              <RefreshCw className="h-6 w-6 text-muted-foreground animate-spin" />
+            </div>
+          )}
+        </div>
+
+        {/* ── Action buttons ── */}
+        <div className="flex gap-2">
+          <button
+            onClick={copyLink}
+            className="flex-1 h-9 rounded-xl bg-primary/10 border border-primary/25 text-[11px] font-bold text-primary hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5"
+          >
+            {copiedLink
+              ? <><Check className="h-3.5 w-3.5" /> Copied!</>
+              : <><Link2 className="h-3.5 w-3.5" /> Copy link</>}
+          </button>
+          {onRefreshToken && (
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="h-9 w-9 rounded-xl bg-muted border border-border/50 flex items-center justify-center hover:bg-accent transition-colors disabled:opacity-40"
+              aria-label="Generate new code"
+              title="New code"
+            >
+              <RefreshCw
+                className={cn("h-3.5 w-3.5 text-muted-foreground", refreshing && "animate-spin")}
+              />
+            </button>
+          )}
+        </div>
+
+        {/* ── Expiry bar ── */}
+        <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground">
-                Code expires in{" "}
-                <span className={cn(
-                  "font-bold tabular-nums",
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              Expires in{" "}
+              <span
+                className={cn(
+                  "font-bold tabular-nums ml-0.5",
                   isExpiringSoon ? "text-destructive" : "text-foreground"
-                )}>
-                  {formatTime(secondsLeft)}
-                </span>
+                )}
+              >
+                {formatTime(secondsLeft)}
               </span>
             </div>
             {isExpiringSoon && onRefreshToken && (
@@ -243,16 +239,19 @@ export function DeviceHandoffPanel({
                 onClick={handleRefresh}
                 className="text-[10px] font-bold text-destructive hover:underline"
               >
-                Refresh now
+                Refresh
               </button>
             )}
           </div>
-          <div className="h-1 rounded-full bg-secondary overflow-hidden">
+          <div className="h-1 rounded-full bg-muted overflow-hidden">
             <motion.div
               className={cn(
-                "h-full rounded-full transition-colors",
-                tokenProgress > 50 ? "bg-primary" :
-                tokenProgress > 25 ? "bg-amber-500" : "bg-destructive"
+                "h-full rounded-full",
+                tokenProgress > 50
+                  ? "bg-primary"
+                  : tokenProgress > 20
+                  ? "bg-amber-500"
+                  : "bg-destructive"
               )}
               animate={{ width: `${tokenProgress}%` }}
               transition={{ duration: 0.8 }}
@@ -260,43 +259,42 @@ export function DeviceHandoffPanel({
           </div>
         </div>
 
-        {/* How to use — collapsible */}
-        <div className="rounded-xl border border-border/30 overflow-hidden">
+        {/* ── How to use (collapsible) ── */}
+        <div className="rounded-xl border border-border/40 overflow-hidden">
           <button
             onClick={() => setShowSteps((v) => !v)}
-            className="w-full flex items-center justify-between px-3 py-2.5 bg-secondary/30 hover:bg-secondary/50 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 bg-muted/40 hover:bg-muted/70 transition-colors"
           >
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               How to use
             </span>
             {showSteps
               ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
-              : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-            }
+              : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
           </button>
-          <AnimatePresence>
+
+          <AnimatePresence initial={false}>
             {showSteps && (
               <motion.div
+                key="steps"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.18 }}
                 className="overflow-hidden"
               >
-                <div className="px-3 py-3 space-y-2.5 bg-secondary/10">
-                  {STEPS.map((step) => (
-                    <div key={step.num} className="flex items-start gap-2.5">
-                      <span className="shrink-0 h-5 w-5 rounded-full bg-primary/20 text-primary text-[10px] font-black flex items-center justify-center mt-0.5">
-                        {step.num}
+                <div className="px-3 py-3 space-y-2 bg-background/40">
+                  {STEPS.map((text, i) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <span className="shrink-0 h-4 w-4 rounded-full bg-primary/15 text-primary text-[9px] font-black flex items-center justify-center mt-0.5">
+                        {i + 1}
                       </span>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">{step.text}</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">{text}</p>
                     </div>
                   ))}
-                  <div className="pt-1 border-t border-border/20">
-                    <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-                      ✓ No login required · ✓ Expires automatically · ✓ Single-use code
-                    </p>
-                  </div>
+                  <p className="text-[10px] text-muted-foreground/50 pt-1 border-t border-border/20">
+                    ✓ No login · ✓ Auto-expires · ✓ One-time use
+                  </p>
                 </div>
               </motion.div>
             )}
