@@ -1,4 +1,4 @@
-import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Users, Shield, ShieldAlert } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Shield, ShieldAlert, Smartphone } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import OnlineBadge from "@/components/OnlineBadge";
@@ -93,7 +93,22 @@ const DesktopSidebar = () => {
           {settings.darkMode ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
           {settings.darkMode ? "Dark Mode" : "Light Mode"}
         </button>
-        <div className="flex flex-col items-center gap-1 text-[10px]">
+
+        {/* Handoff entry */}
+        <Link
+          to="/handoff"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
+            pathname === "/handoff"
+              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20"
+              : settings.liquidGlassEnabled
+                ? "text-muted-foreground hover:text-amber-500 hover:bg-amber-500/5"
+                : "text-muted-foreground hover:text-amber-600 hover:bg-amber-500/8"
+          )}
+        >
+          <Smartphone className="h-[18px] w-[18px] shrink-0" />
+          Join via Code
+        </Link>        <div className="flex flex-col items-center gap-1 text-[10px]">
           <a
             href="https://devlikhith.vercel.app/"
             target="_blank"
