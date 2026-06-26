@@ -43,6 +43,7 @@ interface ChatContextValue {
   blockStranger: () => void;
   createPrivateRoom: () => string;
   joinPrivateRoom: (code: string, isCreator?: boolean) => void;
+  joinRoomById: (roomId: string) => void;
   deleteMessage: (messageId: string) => void;
   pinMessage: (messageId: string) => void;
   setDisappearTimer: (t: number | null) => void;
@@ -130,7 +131,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
-    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
+    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom, joinRoomById,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
     sendSignalingEvent, reportStranger, stableId,
     userName, setUserName, strangerName, addMessage,
@@ -376,7 +377,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, roomId, roomChannel, searchElapsed, disappearTimer,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
-    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
+    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom, joinRoomById,
     deleteMessage, pinMessage, setDisappearTimer,
     privateRoomCode, sendSignalingEvent,
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,

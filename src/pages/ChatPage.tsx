@@ -72,6 +72,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     localPrivacyModeActive, strangerPrivacyModeActive, privacyModeActive, privacyAlertActive, sendPrivacyAlert,
     privateRoomCode, roomId, sendSignalingEvent,
     registerCrossDeviceSignaling,
+    joinRoomById,
   } = useChatContext();
 
   const { isBanned, submitAppeal } = useSafety();
@@ -116,10 +117,13 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   const effectiveRoomId = roomId ?? (privateRoomCode ? `private_${privateRoomCode}` : null);
 
+  // Cross-device sync only for private rooms — random chats have no persistent room to transfer
+  const isPrivateRoom = !!privateRoomCode;
+
   const crossDevice = useCrossDeviceSync({
     roomId: effectiveRoomId,
     sessionId,
-    enabled: !!effectiveRoomId && (status === "connected" || showPrivateWaiting),
+    enabled: isPrivateRoom && !!effectiveRoomId && (status === "connected" || showPrivateWaiting),
     sendSignaling: sendSignalingEvent,
   });
 
@@ -800,7 +804,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onSendMessage={sendMessage}
       />
 
-      {status === "connected" && crossDevice.sessionToken && (
+      {status === "connected" && isPrivateRoom && crossDevice.sessionToken && (
         <div className="hidden lg:block fixed top-20 right-6 z-30 w-72">
           <DeviceHandoffPanel
             sessionToken={crossDevice.sessionToken}

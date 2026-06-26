@@ -713,13 +713,22 @@ export function useChat(callbacks?: ChatCallbacks) {
     return () => clearInterval(checkBanStatus);
   }, [status, isBanned, addMessage, leaveRoom]);
 
+  /** Direct join by roomId — bypasses lobby checks. Used for handoff/reconnect flows
+   *  where the roomId is already known and verified externally. */
+  const joinRoomById = useCallback((targetRoomId: string) => {
+    // Use a synthetic strangerId so the channel opens — the real peer will be whoever
+    // is already in the room. The "connected" status is set immediately.
+    joinRoom(targetRoomId, `handoff-${Date.now()}`);
+    setPrivateRoomCode(null);
+  }, [joinRoom]);
+
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, stableId, searchElapsed, privateRoomCode, roomId,
     userName, setUserName, strangerName,
     roomChannel, sendSignalingEvent: sendFirebaseSignalingEvent,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
-    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
+    reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom, joinRoomById,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
     reportStranger, addMessage
   };
