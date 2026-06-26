@@ -892,17 +892,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             isMatched={status === "connected"}
             onCancel={handleCancelRoom}
             onPartnerJoined={() => setShowPrivateWaiting(false)}
-            handoffPanel={
-              crossDevice.sessionToken ? (
-                <DeviceHandoffPanel
-                  sessionToken={crossDevice.sessionToken}
-                  handoffUrl={crossDevice.handoffUrl}
-                  participants={crossDevice.participants}
-                  onRefreshToken={() => crossDevice.issueToken()}
-                  compact
-                />
-              ) : undefined
-            }
           />
         )}
       </AnimatePresence>

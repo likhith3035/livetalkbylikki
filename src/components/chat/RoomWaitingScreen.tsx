@@ -311,7 +311,7 @@ export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined,
                   </div>
                   <div>
                     <p className="text-xs font-black uppercase tracking-widest text-white leading-none">Invite Friend</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Scan QR or share the link</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Share this QR with your friend to join</p>
                   </div>
                 </div>
                 <Button

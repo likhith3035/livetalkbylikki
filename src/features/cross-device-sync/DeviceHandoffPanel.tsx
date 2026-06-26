@@ -19,10 +19,10 @@ interface DeviceHandoffPanelProps {
 }
 
 const STEPS = [
-  "Open LiveTalk on your other device (phone, tablet, PC)",
-  "Scan the QR code — your camera will open the handoff page automatically",
-  "Or: go to /handoff and enter the code shown below (you'll also need the Room ID from the URL)",
-  "Your session syncs instantly — no login needed",
+  "This is FOR YOU — lets you continue THIS chat on another device you own",
+  "Scan this QR on your other device (phone/laptop) to join the same room",
+  "Or go to /handoff on your other device and enter the code + Room ID",
+  "Your friend uses the top QR/code in the 'Invite Friend' panel — NOT this one",
 ];
 
 export function DeviceHandoffPanel({
@@ -116,7 +116,7 @@ export function DeviceHandoffPanel({
         <div className="flex items-center gap-2">
           <Smartphone className="h-3.5 w-3.5 text-primary" />
           <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
-            Cross-device sync
+            Open on YOUR other device
           </span>
         </div>
 
