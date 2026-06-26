@@ -175,6 +175,14 @@ export function DeviceHandoffPanel({
           </button>
         </div>
 
+        {/* Room ID hint — shown so users can copy it for manual entry */}
+        <div className="rounded-xl bg-muted/40 border border-border/30 px-3 py-2">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Room ID (needed for manual entry)</p>
+          <p className="font-mono text-[11px] text-foreground/70 break-all select-all leading-relaxed">
+            {sessionToken.roomId}
+          </p>
+        </div>
+
         {/* ── QR code ── centered, constrained, never overflows */}
         <div className="flex justify-center">
           {qrDataUrl ? (

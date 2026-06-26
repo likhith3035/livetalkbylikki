@@ -27,7 +27,7 @@ import SharedCanvas from "@/components/chat/SharedCanvas";
 import { useSoundNotifications } from "@/hooks/use-sound-notifications";
 import { useProtectionDetection } from "@/hooks/use-protection-detection";
 import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import RoomWaitingScreen from "@/components/chat/RoomWaitingScreen";
 import HumanVerifyModal from "@/components/chat/HumanVerifyModal";
 import SessionStatsBar from "@/components/chat/SessionStatsBar";
@@ -51,6 +51,7 @@ const RANDOM_NICKNAMES = [
 ];
 
 const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
+  const [searchParams] = useSearchParams();
   const {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
@@ -183,10 +184,22 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     }
   }, [privateRoomCode]);
 
-  // Auto-join private room from URL/code
+  // Auto-join private room from URL/code or handoff redirect
   useEffect(() => {
     const savedName = localStorage.getItem("livetalk_user_name");
     if (savedName) setUserName(savedName);
+
+    // Check for handoff redirect — ?handoff=private_XXXXXX
+    const handoffRoomId = searchParams.get("handoff") ?? "";
+    if (handoffRoomId) {
+      const privateMatch = handoffRoomId.match(/^private_([A-Z0-9]+)$/i);
+      if (privateMatch) {
+        const code = privateMatch[1].toUpperCase();
+        if (!sessionStorage.getItem("echo_join_room")) {
+          sessionStorage.setItem("echo_join_room", code);
+        }
+      }
+    }
 
     const storedCode = sessionStorage.getItem("echo_join_room");
     const pendingCode = (initialRoomCode || storedCode || "").toUpperCase();
@@ -207,7 +220,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       }
       joinPrivateRoom(pendingCode, isCreator);
     }
-  }, [initialRoomCode, joinPrivateRoom, userName]);
+  }, [initialRoomCode, joinPrivateRoom, userName, searchParams]);
 
   const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
