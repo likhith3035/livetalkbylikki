@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { trackRoomMediaUpload } from "@/features/temp-rooms/registerMediaUpload";
 
 interface ImageUploadButtonProps {
   disabled: boolean;
@@ -13,10 +15,25 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ImageUploadButton = ({ disabled, onUpload, roomId }: ImageUploadButtonProps) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    if (file.size > MAX_SIZE) return;
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file type",
+        description: "Please select an image file (JPEG, PNG, GIF, WEBP)."
+      });
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "The selected image exceeds the maximum size limit of 5MB."
+      });
+      return;
+    }
 
     setUploading(true);
     try {
@@ -31,14 +48,18 @@ const ImageUploadButton = ({ disabled, onUpload, roomId }: ImageUploadButtonProp
       if (error) throw error;
 
       if (roomId) {
-        const { trackRoomMediaUpload } = await import("@/features/temp-rooms/registerMediaUpload");
         await trackRoomMediaUpload(roomId, path);
       }
 
       const { data } = supabase.storage.from("chat-images").getPublicUrl(path);
       onUpload(data.publicUrl);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload failed:", err);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: err.message || "An error occurred while uploading the image."
+      });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";

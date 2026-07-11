@@ -455,7 +455,7 @@ export function useChat(callbacks?: ChatCallbacks) {
         payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: userName || p.nickname, avatar: p.avatar, replyTo },
       });
     },
-    [status, addMessage, playSoundIfEnabled, checkProfanity]
+    [status, addMessage, playSoundIfEnabled, checkProfanity, userName, stableId, sessionId, handleViolation]
   );
 
   const nextChat = useCallback(() => {

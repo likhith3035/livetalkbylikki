@@ -10,6 +10,10 @@ export async function cleanupExpiredRoom(roomId: string): Promise<void> {
   if (paths.length > 0) {
     const { error } = await supabase.storage.from("chat-images").remove(paths);
     if (error) console.warn("[TempRoom] Supabase media cleanup:", error.message);
+
+    // Delete database tracking references from room_media table in Supabase
+    const { error: dbError } = await supabase.from("room_media").delete().eq("room_id", roomId);
+    if (dbError) console.warn("[TempRoom] Supabase room_media deletion:", dbError.message);
   }
 
   await deleteRoomTree(roomId);

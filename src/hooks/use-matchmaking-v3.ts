@@ -23,6 +23,30 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     }
   }, [status, sessionId]);
 
+  const createMatchRecord = useCallback((matchId: string, strangerId: string, shared: string[], strangerData: any) => {
+    const matchRef = ref(db, `matches/${matchId}`);
+    
+    // Since signaling won the race, we can just use set() here.
+    // This BYPASSES the 'Error: set' crash seen with transactions.
+    const record = {
+      user1: sessionId,
+      user2: strangerId,
+      stable1: stableId || sessionId,
+      stable2: strangerData?.stableId || strangerId,
+      name1: userName || "You",
+      name2: strangerData?.userName || "Stranger",
+      sharedInterests: shared || [],
+      roomId: matchId,
+      createdAt: Date.now(),
+      ready1: false,
+      ready2: false
+    };
+
+    set(matchRef, record)
+      .then(() => console.log("[V4] Match Record Created Successfully"))
+      .catch(err => console.error("[V4] Failed to set match record:", err));
+  }, [sessionId, stableId, userName]);
+
   const findMatch = useCallback(async () => {
     if (matchedGuardRef.current || status !== "searching") return;
 
@@ -83,34 +107,36 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
         }).catch(err => console.error("[V4] Signal race error:", err));
       }
     });
-  }, [sessionId, stableId, interests, status, userName]);
+  }, [sessionId, stableId, interests, status, userName, createMatchRecord]);
 
-  const createMatchRecord = (matchId: string, strangerId: string, shared: string[], strangerData: any) => {
-    const matchRef = ref(db, `matches/${matchId}`);
+  const finalize = useCallback((mId: string, match: any) => {
+    if (matchedGuardRef.current) return;
+    matchedGuardRef.current = true;
     
-    // Since signaling won the race, we can just use set() here.
-    // This BYPASSES the 'Error: set' crash seen with transactions.
-    const record = {
-      user1: sessionId,
-      user2: strangerId,
-      stable1: stableId || sessionId,
-      stable2: strangerData?.stableId || strangerId,
-      name1: userName || "You",
-      name2: strangerData?.userName || "Stranger",
-      sharedInterests: shared || [],
-      roomId: matchId,
-      createdAt: Date.now(),
-      ready1: false,
-      ready2: false
-    };
+    const amIUser1 = match.user1 === sessionId;
+    const strangerId = amIUser1 ? match.user2 : match.user1;
+    const strangerStableId = amIUser1 ? match.stable2 : match.stable1;
+    const strangerName = amIUser1 ? match.name2 : match.name1;
 
-    set(matchRef, record)
-      .then(() => console.log("[V4] Match Record Created Successfully"))
-      .catch(err => console.error("[V4] Failed to set match record:", err));
-  };
+    const myLobbyRef = ref(db, `lobby/${sessionId}`);
+    // Cancel the onDisconnect so background/foreground doesn't remove lobby entry
+    // for users who are already matched (they're no longer in lobby anyway)
+    import("firebase/database").then(({ onDisconnect: fbOnDisconnect }) => {
+      fbOnDisconnect(myLobbyRef).cancel().catch(() => {});
+    }).catch(() => {});
+
+    remove(myLobbyRef).catch(() => {});
+    setTimeout(() => remove(ref(db, `matches/${mId}`)).catch(() => {}), 5000);
+
+    setStatus("idle");
+    onMatched(match.roomId || mId, strangerId, strangerStableId, strangerName, match.sharedInterests || []);
+  }, [sessionId, onMatched]);
 
   useEffect(() => {
     if (status !== "searching") return;
+
+    let activeMatchRef: any = null;
+    let activeMatchHandler: any = null;
 
     // 1. Listen for signals TO ME
     const mySignalRef = ref(db, `lobby/${sessionId}/signal`);
@@ -128,10 +154,15 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
            const match = snap.val();
            checkAndReadyMatch(signal.matchId, match);
         };
+        
+        // Clean up previous specific match listener if registered
+        if (activeMatchRef && activeMatchHandler) {
+          off(activeMatchRef, "value", activeMatchHandler);
+        }
+
+        activeMatchRef = specificMatchRef;
+        activeMatchHandler = handleSpecificMatch;
         onValue(specificMatchRef, handleSpecificMatch);
-        // We don't need to manually cleanup this specific listener inside the effect 
-        // because it's scoped, but for safety:
-        return () => off(specificMatchRef, "value", handleSpecificMatch);
       }
     };
     onValue(mySignalRef, handleSignal);
@@ -183,31 +214,11 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     return () => {
       off(mySignalRef, "value", handleSignal);
       off(matchesRef, "value", handleMatches);
+      if (activeMatchRef && activeMatchHandler) {
+        off(activeMatchRef, "value", activeMatchHandler);
+      }
     };
-  }, [status, sessionId, onMatched]);
-
-  const finalize = (mId: string, match: any) => {
-    if (matchedGuardRef.current) return;
-    matchedGuardRef.current = true;
-    
-    const amIUser1 = match.user1 === sessionId;
-    const strangerId = amIUser1 ? match.user2 : match.user1;
-    const strangerStableId = amIUser1 ? match.stable2 : match.stable1;
-    const strangerName = amIUser1 ? match.name2 : match.name1;
-
-    const myLobbyRef = ref(db, `lobby/${sessionId}`);
-    // Cancel the onDisconnect so background/foreground doesn't remove lobby entry
-    // for users who are already matched (they're no longer in lobby anyway)
-    import("firebase/database").then(({ onDisconnect: fbOnDisconnect }) => {
-      fbOnDisconnect(myLobbyRef).cancel().catch(() => {});
-    }).catch(() => {});
-
-    remove(myLobbyRef).catch(() => {});
-    setTimeout(() => remove(ref(db, `matches/${mId}`)).catch(() => {}), 5000);
-
-    setStatus("idle");
-    onMatched(match.roomId || mId, strangerId, strangerStableId, strangerName, match.sharedInterests || []);
-  };
+  }, [status, sessionId, finalize]);
 
   const startSearch = useCallback((code: string | null = null) => {
     matchedGuardRef.current = false;

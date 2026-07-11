@@ -14,3 +14,9 @@ CREATE POLICY "Anyone can view chat images"
 ON storage.objects FOR SELECT
 TO anon, authenticated
 USING (bucket_id = 'chat-images');
+
+-- Allow anyone to delete chat images (necessary for client-side cleanup)
+CREATE POLICY "Anyone can delete chat images"
+ON storage.objects FOR DELETE
+TO anon, authenticated
+USING (bucket_id = 'chat-images');
