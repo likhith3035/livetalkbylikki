@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,19 +12,20 @@ import AppShell from "@/components/AppShell";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import LiquidBackground from "@/components/LiquidBackground";
-import Index from "./pages/Index";
-import ChatPage from "./pages/ChatPage";
-import RoomPage from "./pages/RoomPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import SafetyCenterPage from "./pages/SafetyCenterPage";
-import InfoPage from "./pages/InfoPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import TermsPage from "./pages/TermsPage";
-import GuidelinesPage from "./pages/GuidelinesPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
-import HandoffPage from "./pages/HandoffPage";
+
+const Index = lazy(() => import("./pages/Index"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const RoomPage = lazy(() => import("./pages/RoomPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SafetyCenterPage = lazy(() => import("./pages/SafetyCenterPage"));
+const InfoPage = lazy(() => import("./pages/InfoPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const GuidelinesPage = lazy(() => import("./pages/GuidelinesPage"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const HandoffPage = lazy(() => import("./pages/HandoffPage"));
 
 const queryClient = new QueryClient();
 
@@ -88,7 +89,13 @@ const AppContent = () => {
           <AppShell>
             <NotificationPrompt />
             <FeedbackSharePopup />
-            <AnimatedRoutes />
+            <Suspense fallback={
+              <div className="flex-1 flex items-center justify-center bg-[#09090B] text-muted-foreground text-sm animate-pulse min-h-[50vh]">
+                Loading...
+              </div>
+            }>
+              <AnimatedRoutes />
+            </Suspense>
           </AppShell>
         </ChatProvider>
       </BrowserRouter>

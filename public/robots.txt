@@ -1,9 +1,13 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /chat
+Disallow: /profile
+Disallow: /settings
+Disallow: /room/
+Disallow: /handoff
 
 # Developer: Likhith Kami (Likki)
-# Website: https://livetalkbylikki.netlify.app
 # Contact: kamilikhith@gmail.com
 
 Sitemap: https://livetalkbylikki.netlify.app/sitemap.xml

@@ -44,11 +44,15 @@ const CursorOverlay = memo(({ roomChannel, sessionId }: { roomChannel?: RoomChan
     if (!roomChannel) return;
 
     const handleCursor = (payload: any) => {
-      const { x, y, color: remoteColor, senderId } = payload.payload;
+      const { x: xRatio, y: yRatio, color: remoteColor, senderId } = payload.payload;
       if (senderId !== sessionId) {
+        const canvas = document.querySelector("canvas");
+        const rect = canvas?.getBoundingClientRect();
+        const width = rect?.width || 1;
+        const height = rect?.height || 1;
         setRemoteCursors(prev => ({
           ...prev,
-          [senderId]: { x, y, color: remoteColor, lastUpdated: Date.now() }
+          [senderId]: { x: xRatio * width, y: yRatio * height, color: remoteColor, lastUpdated: Date.now() }
         }));
       }
     };
@@ -349,11 +353,24 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     drawShape(ctx, tool, x0, y0, x1, y1, c, s, glow);
     
     if (!isRemote) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      const width = rect?.width || 1;
+      const height = rect?.height || 1;
       const { color: currentColor, brushSize: currentSize, isGlow: currentGlow } = stateRef.current;
       roomChannel?.send({
         type: "broadcast",
         event: "shape",
-        payload: { tool, x0, y0, x1, y1, color: currentColor, size: currentSize, glow: currentGlow, senderId: sessionId },
+        payload: { 
+          tool, 
+          x0: x0 / width, 
+          y0: y0 / height, 
+          x1: x1 / width, 
+          y1: y1 / height, 
+          color: currentColor, 
+          size: currentSize, 
+          glow: currentGlow, 
+          senderId: sessionId 
+        },
       });
       saveSnapshot();
     }
@@ -398,9 +415,15 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     ctx.shadowBlur = 0;
 
     if (!isRemote) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      const width = rect?.width || 1;
+      const height = rect?.height || 1;
       const { color: currentColor, brushSize: currentSize, activeTool, isGlow: currentGlow } = stateRef.current;
       drawingBufferRef.current.push({ 
-        x0, y0, x1, y1, 
+        x0: x0 / width, 
+        y0: y0 / height, 
+        x1: x1 / width, 
+        y1: y1 / height, 
         color: activeTool === "eraser" ? "eraser" : currentColor, 
         size: currentSize,
         glow: currentGlow
@@ -432,12 +455,15 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
 
       if (cursorRef.current) {
         const { color: currentColor, activeTool } = stateRef.current;
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const width = rect?.width || 1;
+        const height = rect?.height || 1;
         roomChannel.send({
           type: "broadcast",
           event: "cursor",
           payload: { 
-            x: cursorRef.current.x, 
-            y: cursorRef.current.y, 
+            x: cursorRef.current.x / width, 
+            y: cursorRef.current.y / height, 
             color: activeTool === "eraser" ? "eraser" : currentColor, 
             senderId: sessionId 
           },
@@ -517,8 +543,11 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     const handleDrawingBatch = (payload: any) => {
       const { batch, senderId } = payload.payload;
       if (senderId !== sessionId) {
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const width = rect?.width || 1;
+        const height = rect?.height || 1;
         batch.forEach((line: any) => {
-          drawLine(line.x0, line.y0, line.x1, line.y1, line.color, line.size, true, line.glow);
+          drawLine(line.x0 * width, line.y0 * height, line.x1 * width, line.y1 * height, line.color, line.size, true, line.glow);
         });
       }
     };
@@ -526,14 +555,20 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     const handleDrawing = (payload: any) => {
       const { x0, y0, x1, y1, color: remoteColor, size: remoteSize, senderId, glow } = payload.payload;
       if (senderId !== sessionId) {
-        drawLine(x0, y0, x1, y1, remoteColor, remoteSize, true, glow);
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const width = rect?.width || 1;
+        const height = rect?.height || 1;
+        drawLine(x0 * width, y0 * height, x1 * width, y1 * height, remoteColor, remoteSize, true, glow);
       }
     };
 
     const handleShape = (payload: any) => {
       const { tool, x0, y0, x1, y1, color: remoteColor, size: remoteSize, senderId, glow } = payload.payload;
       if (senderId !== sessionId) {
-        commitShape(tool, x0, y0, x1, y1, remoteColor, remoteSize, true, glow);
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const width = rect?.width || 1;
+        const height = rect?.height || 1;
+        commitShape(tool, x0 * width, y0 * height, x1 * width, y1 * height, remoteColor, remoteSize, true, glow);
       }
     };
 
@@ -542,15 +577,16 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     };
 
     const handleTextRemote = (payload: any) => {
-      const { text, x, y, color: remoteColor, size, senderId, glow } = payload.payload;
+      const { text, x: xRatio, y: yRatio, color: remoteColor, size, senderId, glow } = payload.payload;
       if (senderId !== sessionId) {
         const ctx = contextRef.current;
-        if (!ctx) return;
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (!ctx || !rect) return;
         ctx.save();
         ctx.font = `bold ${size}px Inter, sans-serif`;
         ctx.fillStyle = remoteColor;
         if (glow) { ctx.shadowBlur = 12; ctx.shadowColor = remoteColor; }
-        ctx.fillText(text, x, y);
+        ctx.fillText(text, xRatio * rect.width, yRatio * rect.height);
         ctx.restore();
       }
     };
@@ -611,10 +647,13 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
     ctx.restore();
 
     // Sync text to remote
+    const rect = canvasRef.current?.getBoundingClientRect();
+    const width = rect?.width || 1;
+    const height = rect?.height || 1;
     roomChannel?.send({
       type: "broadcast",
       event: "text_draw",
-      payload: { text: textInput.trim(), x: textOverlay.x, y: textOverlay.y, color: actualColor, size: fontSize, glow: currentGlow, senderId: sessionId },
+      payload: { text: textInput.trim(), x: textOverlay.x / width, y: textOverlay.y / height, color: actualColor, size: fontSize, glow: currentGlow, senderId: sessionId },
     });
 
     saveSnapshot();

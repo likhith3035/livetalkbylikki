@@ -23,11 +23,14 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
     setIsTriggered(true);
     onTriggeredRef.current(type);
 
-    // Auto-reset triggered mask after 3 seconds so the screen doesn't stay blacked out forever
-    if (triggerTimeoutRef.current) clearTimeout(triggerTimeoutRef.current);
-    triggerTimeoutRef.current = setTimeout(() => {
-      setIsTriggered(false);
-    }, 3000);
+    // Focus/Visibility loss triggers permanent blackout until focus is regained.
+    // Transient actions (keystrokes, printscreen, copy) reset after 3 seconds.
+    if (type !== "Window Focus Lost" && type !== "Tab Switched") {
+      if (triggerTimeoutRef.current) clearTimeout(triggerTimeoutRef.current);
+      triggerTimeoutRef.current = setTimeout(() => {
+        setIsTriggered(false);
+      }, 3000);
+    }
   };
 
   useEffect(() => {
@@ -71,6 +74,8 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         triggerViolation("Tab Switched");
+      } else {
+        setIsTriggered(false);
       }
     };
 
@@ -78,16 +83,22 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
       triggerViolation("Window Focus Lost");
     };
 
+    const handleWindowFocus = () => {
+      setIsTriggered(false);
+    };
+
     window.addEventListener("keydown", handleKeyDown, true);
     window.addEventListener("keyup", handleKeyUp, true);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("blur", handleWindowBlur);
+    window.addEventListener("focus", handleWindowFocus);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
       window.removeEventListener("keyup", handleKeyUp, true);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
+      window.removeEventListener("focus", handleWindowFocus);
       if (triggerTimeoutRef.current) clearTimeout(triggerTimeoutRef.current);
     };
   }, [active, settings.protectionEnabled]);

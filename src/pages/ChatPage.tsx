@@ -897,7 +897,15 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       )}
 
       {isTriggered && (
-        <div className="fixed inset-0 bg-black z-[9999] pointer-events-auto flex items-center justify-center" />
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[9999] pointer-events-auto flex flex-col items-center justify-center text-center p-6 select-none animate-in fade-in duration-200">
+          <div className="h-16 w-16 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mb-4 text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield-alert animate-bounce"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+          </div>
+          <h2 className="font-display text-lg font-bold text-foreground mb-1.5">Privacy Shield Active</h2>
+          <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
+            The screen is temporarily hidden to protect chat media and conversation privacy.
+          </p>
+        </div>
       )}
 
       {/* Human Verification Modal */}

@@ -3,10 +3,10 @@ import { db } from "@/lib/firebase";
 import { ref, onValue, set, onDisconnect, serverTimestamp } from "firebase/database";
 
 const getSessionId = () => {
-  let id = sessionStorage.getItem("echo_session_id");
+  let id = localStorage.getItem("echo_session_id_v2");
   if (!id) {
     id = crypto.randomUUID();
-    sessionStorage.setItem("echo_session_id", id);
+    localStorage.setItem("echo_session_id_v2", id);
   }
   return id;
 };

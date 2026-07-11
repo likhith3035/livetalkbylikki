@@ -12,8 +12,8 @@ export interface ApkInfo {
 // APK is served from your own Netlify domain — no CORS issues
 export const APK_INFO: ApkInfo = {
   version: "1.0.0",
-  size: "13.6 MB",
-  sizeBytes: 14272409,
+  size: "26.5 MB",
+  sizeBytes: 27787705,
   lastUpdated: "June 26, 2026",
   url: "/LiveTalk-v1.0.0.apk",   // served from public/ via Netlify
   isNew: true,

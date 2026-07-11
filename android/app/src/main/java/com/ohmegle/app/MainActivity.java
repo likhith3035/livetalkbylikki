@@ -67,15 +67,7 @@ public class MainActivity extends BridgeActivity {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         }
 
-        // Override WebChromeClient to auto-grant WebRTC permission requests from JS
-        // We extend the existing client set by Capacitor's bridge to avoid breaking it
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onPermissionRequest(final PermissionRequest request) {
-                // Grant all requested resources (camera, microphone, etc.)
-                runOnUiThread(() -> request.grant(request.getResources()));
-            }
-        });
+
 
         // Enable hardware acceleration
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null);
