@@ -683,11 +683,14 @@ export function useChat(callbacks?: ChatCallbacks) {
         // Firebase SDK auto-reconnects, but we nudge it by checking connection
         import("firebase/database").then(({ getDatabase, ref: fbRef, onValue, off: fbOff }) => {
           const connRef = fbRef(getDatabase(), ".info/connected");
-          const unsub = onValue(connRef, (snap) => {
+          let unsub: () => void;
+          unsub = onValue(connRef, (snap) => {
             if (snap.val() === true) {
               console.log("[Chat] Firebase reconnected after background");
             }
-            fbOff(connRef, "value", unsub as any);
+            setTimeout(() => {
+              if (unsub) unsub();
+            }, 0);
           });
         }).catch(() => {});
       }
