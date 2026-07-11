@@ -61,7 +61,7 @@ const LiquidBackground = () => {
             left: "5%", top: "5%",
             background: `radial-gradient(circle, ${colors[0]} 0%, transparent 70%)`,
             filter: "blur(70px)",
-            opacity: 0.2,
+            opacity: settings.darkMode ? 0.28 : 0.38,
             willChange: isAnimated ? "transform" : "auto",
           }}
         />
@@ -73,7 +73,7 @@ const LiquidBackground = () => {
             right: "5%", top: "30%",
             background: `radial-gradient(circle, ${colors[1] || colors[0]} 0%, transparent 70%)`,
             filter: "blur(70px)",
-            opacity: 0.18,
+            opacity: settings.darkMode ? 0.25 : 0.35,
             willChange: isAnimated ? "transform" : "auto",
           }}
         />
@@ -85,7 +85,7 @@ const LiquidBackground = () => {
             left: "20%", bottom: "10%",
             background: `radial-gradient(circle, ${colors[2] || colors[0]} 0%, transparent 70%)`,
             filter: "blur(65px)",
-            opacity: 0.16,
+            opacity: settings.darkMode ? 0.22 : 0.32,
             willChange: isAnimated ? "transform" : "auto",
           }}
         />
@@ -97,7 +97,7 @@ const LiquidBackground = () => {
             right: "20%", bottom: "15%",
             background: `radial-gradient(circle, ${colors[3] || colors[1] || colors[0]} 0%, transparent 70%)`,
             filter: "blur(65px)",
-            opacity: 0.14,
+            opacity: settings.darkMode ? 0.20 : 0.30,
             willChange: isAnimated ? "transform" : "auto",
           }}
         />

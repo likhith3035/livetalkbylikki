@@ -479,7 +479,7 @@ const Index = () => {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-primary rounded-lg"
+                        className="absolute right-1 top-1 h-10 w-10 text-muted-foreground hover:text-primary rounded-xl"
                         onClick={() => setShowScanner(true)}
                         title="Scan QR Code"
                       >
@@ -561,7 +561,7 @@ const Index = () => {
                   initial={{ opacity: 0, x: 30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.7, type: "spring" }}
-                  className="absolute right-[calc(100%+24px)] top-12 z-20 glass p-4 rounded-2xl border border-primary/20 w-44 font-mono text-[9px] space-y-2 shadow-2xl hover:scale-105 transition-transform hidden lg:block"
+                  className="absolute right-[calc(100%+24px)] top-12 z-20 glass p-4 rounded-2xl border border-primary/20 w-44 font-mono text-[9px] space-y-2 shadow-2xl hover:scale-105 transition-transform hidden xl:block"
                 >
                   <CyberCorners />
                   <p className="text-primary font-bold border-b border-primary/10 pb-1 flex items-center justify-between">
@@ -584,7 +584,7 @@ const Index = () => {
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.8, type: "spring" }}
-                  className="absolute left-[calc(100%+24px)] bottom-12 z-20 glass p-4 rounded-2xl border border-primary/20 w-44 font-mono text-[9px] space-y-2 shadow-2xl hover:scale-105 transition-transform hidden lg:block"
+                  className="absolute left-[calc(100%+24px)] bottom-12 z-20 glass p-4 rounded-2xl border border-primary/20 w-44 font-mono text-[9px] space-y-2 shadow-2xl hover:scale-105 transition-transform hidden xl:block"
                 >
                   <CyberCorners />
                   <p className="text-primary font-bold border-b border-primary/10 pb-1 flex items-center justify-between">

@@ -3,6 +3,7 @@ import { Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const THEMES = [
   { name: "Default", you: "265 90% 55%", stranger: "260 20% 92%", youFg: "0 0% 100%", strangerFg: "270 20% 20%" },
@@ -21,6 +22,7 @@ interface ChatThemePickerProps {
 
 const ChatThemePicker = ({ onApply }: ChatThemePickerProps) => {
   const [open, setOpen] = useState(false);
+  const { settings } = useSettings();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -28,7 +30,12 @@ const ChatThemePicker = ({ onApply }: ChatThemePickerProps) => {
         <Button
           variant="ghost"
           size="sm"
-          className="gap-1 h-8 px-2 text-xs"
+          className={cn(
+            "gap-1.5 h-8 px-2.5 text-xs font-bold transition-all hover:scale-[1.03] border shadow-sm",
+            settings.liquidGlassEnabled
+              ? "bg-white/5 border-white/10 hover:bg-white/10 text-foreground"
+              : "bg-secondary/40 border-border/40 hover:bg-secondary/60 text-foreground"
+          )}
           title="Chat theme"
         >
           <Palette className="h-3.5 w-3.5" />
@@ -37,7 +44,12 @@ const ChatThemePicker = ({ onApply }: ChatThemePickerProps) => {
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="z-50 rounded-xl border border-border bg-card shadow-xl p-2 grid grid-cols-4 gap-1.5 min-w-[200px]"
+        className={cn(
+          "z-50 rounded-xl border shadow-xl p-2 grid grid-cols-4 gap-1.5 min-w-[200px]",
+          settings.liquidGlassEnabled
+            ? "glass-heavy border-white/10 dark:border-white/5"
+            : "bg-card border-border"
+        )}
       >
         {THEMES.map((t) => (
           <button

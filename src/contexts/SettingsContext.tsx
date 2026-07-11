@@ -48,8 +48,8 @@ const DEFAULT_SETTINGS: SettingsState = {
   notifyAlerts: true,
   autoStopOnScreenshot: false,
   
-  // Liquid Glass defaults — OFF by default to prevent glitches on first load
-  liquidGlassEnabled: false,
+  // Liquid Glass defaults — enabled by default for premium glassmorphism
+  liquidGlassEnabled: true,
   glassOpacity: 0.4,
   glassBlur: 20,
   glassBorderOpacity: 0.25,

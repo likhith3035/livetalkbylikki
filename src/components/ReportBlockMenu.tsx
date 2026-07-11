@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useChatContext } from "@/contexts/ChatContext";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface ReportBlockMenuProps {
   onBlock: () => void;
@@ -22,6 +23,7 @@ const ReportBlockMenu = ({ onBlock }: ReportBlockMenuProps) => {
   const [showReport, setShowReport] = useState(false);
   const { toast } = useToast();
   const { reportStranger } = useChatContext();
+  const { settings } = useSettings();
 
   const handleReport = (reason: string) => {
     reportStranger(reason);
@@ -52,7 +54,12 @@ const ReportBlockMenu = ({ onBlock }: ReportBlockMenuProps) => {
         <Button
           variant="ghost"
           size="sm"
-          className="gap-1.5 text-muted-foreground hover:text-destructive h-8 px-2 text-xs"
+          className={cn(
+            "gap-1.5 h-8 px-2.5 text-xs font-bold transition-all hover:scale-[1.03] border shadow-sm",
+            settings.liquidGlassEnabled
+              ? "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground hover:text-destructive"
+              : "bg-secondary/40 border-border/40 hover:bg-secondary/60 text-muted-foreground hover:text-destructive"
+          )}
           title="Report or Block Stranger"
         >
           <AlertTriangle className="h-3.5 w-3.5" />
@@ -61,7 +68,12 @@ const ReportBlockMenu = ({ onBlock }: ReportBlockMenuProps) => {
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="z-50 rounded-xl border border-border bg-card p-1.5 shadow-lg w-44 flex flex-col gap-0.5"
+        className={cn(
+          "z-50 rounded-xl border p-1.5 shadow-xl w-44 flex flex-col gap-0.5",
+          settings.liquidGlassEnabled
+            ? "glass-heavy border-white/10 dark:border-white/5"
+            : "bg-card border-border"
+        )}
       >
         {showReport ? (
           <div className="flex flex-col gap-0.5 w-full">
@@ -72,14 +84,24 @@ const ReportBlockMenu = ({ onBlock }: ReportBlockMenuProps) => {
               <button
                 key={reason}
                 onClick={() => handleReport(reason)}
-                className="w-full rounded-lg px-2.5 py-1.5 text-left text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                className={cn(
+                  "w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors",
+                  settings.liquidGlassEnabled
+                    ? "text-white/70 hover:bg-white/10 hover:text-white"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
               >
                 {reason}
               </button>
             ))}
             <button
               onClick={() => setShowReport(false)}
-              className="w-full rounded-lg px-2.5 py-1.5 text-left text-xs text-muted-foreground/60 hover:text-foreground hover:bg-secondary/40 transition-colors mt-1 border-t border-border/40 pt-1.5"
+              className={cn(
+                "w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors mt-1 border-t pt-1.5",
+                settings.liquidGlassEnabled
+                  ? "border-white/10 text-white/50 hover:bg-white/10 hover:text-white"
+                  : "border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-secondary/40"
+              )}
             >
               Back
             </button>
@@ -88,14 +110,24 @@ const ReportBlockMenu = ({ onBlock }: ReportBlockMenuProps) => {
           <div className="flex flex-col gap-0.5 w-full">
             <button
               onClick={() => setShowReport(true)}
-              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              className={cn(
+                "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition-colors",
+                settings.liquidGlassEnabled
+                  ? "text-white/70 hover:bg-white/10 hover:text-white"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              )}
             >
               <Flag className="h-3.5 w-3.5" />
               Report user
             </button>
             <button
               onClick={handleBlock}
-              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-destructive hover:bg-destructive/10 transition-colors"
+              className={cn(
+                "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition-colors",
+                settings.liquidGlassEnabled
+                  ? "text-rose-400 hover:bg-rose-500/20"
+                  : "text-destructive hover:bg-destructive/10"
+              )}
             >
               <Ban className="h-3.5 w-3.5" />
               Block user

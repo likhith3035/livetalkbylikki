@@ -12,6 +12,7 @@ import AppShell from "@/components/AppShell";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import LiquidBackground from "@/components/LiquidBackground";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const Index = lazy(() => import("./pages/Index"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
@@ -85,6 +86,7 @@ const AppContent = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ScrollToTop />
         <ChatProvider>
           <AppShell>
             <NotificationPrompt />

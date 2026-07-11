@@ -186,10 +186,15 @@ const ChatStatusBar = ({
         {/* ALWAYS VISIBLE ACTIONS (Next / Stop) */}
         {(status === "connected" || status === "disconnected") && (
           <Button
-            variant="secondary"
+            variant="ghost"
             size="sm"
             onClick={onNext}
-            className="gap-1 h-8 px-2 sm:px-3 text-xs"
+            className={cn(
+              "gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03]",
+              settings.liquidGlassEnabled
+                ? "bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 dark:border-primary/20 shadow-sm"
+                : "bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20"
+            )}
             title="Skip to a new stranger"
           >
             <SkipForward className="h-3.5 w-3.5" />
@@ -198,10 +203,15 @@ const ChatStatusBar = ({
         )}
         {status === "connected" && (
           <Button
-            variant="danger"
+            variant="ghost"
             size="sm"
             onClick={onStop}
-            className="gap-1 h-8 px-2 sm:px-3 text-xs"
+            className={cn(
+              "gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03]",
+              settings.liquidGlassEnabled
+                ? "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 shadow-sm"
+                : "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20"
+            )}
             title="End this conversation"
           >
             <X className="h-3.5 w-3.5" />
@@ -213,7 +223,12 @@ const ChatStatusBar = ({
             variant="ghost"
             size="sm"
             onClick={onStop}
-            className="gap-1 h-8 px-2 sm:px-3 text-xs text-muted-foreground"
+            className={cn(
+              "gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03]",
+              settings.liquidGlassEnabled
+                ? "bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground"
+                : "bg-muted border border-border hover:bg-secondary text-muted-foreground"
+            )}
             title="Cancel auto-reconnect"
           >
             <X className="h-3.5 w-3.5" />
@@ -224,22 +239,32 @@ const ChatStatusBar = ({
         {status === "connected" && (
           <>
             <Button
-              variant="default"
+              variant="ghost"
               size="sm"
               onClick={onAudioCall}
               disabled={isVideoCallActive}
-              className="gap-1 h-8 px-2 sm:px-3 text-xs bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 hover:text-primary"
+              className={cn(
+                "gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03] border",
+                settings.liquidGlassEnabled
+                  ? "bg-primary/15 text-primary border-primary/30 dark:border-primary/20 hover:bg-primary/25 hover:text-primary shadow-sm"
+                  : "bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 hover:text-primary"
+              )}
               title="Start an audio call"
             >
               <Phone className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Call</span>
             </Button>
             <Button
-              variant="default"
+              variant="ghost"
               size="sm"
               onClick={onVideoCall}
               disabled={isVideoCallActive}
-              className="gap-1 h-8 px-2 sm:px-3 text-xs bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 hover:text-primary"
+              className={cn(
+                "gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03] border",
+                settings.liquidGlassEnabled
+                  ? "bg-primary/15 text-primary border-primary/30 dark:border-primary/20 hover:bg-primary/25 hover:text-primary shadow-sm"
+                  : "bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 hover:text-primary"
+              )}
               title="Start a video call"
             >
               <Video className="h-3.5 w-3.5" />
@@ -247,7 +272,7 @@ const ChatStatusBar = ({
             </Button>
             {/* Disappearing messages toggle */}
             <Button
-              variant={disappearTimer ? "default" : "ghost"}
+              variant="ghost"
               size="sm"
               onClick={() => {
                 const timers = [null, 30, 60, 300];
@@ -256,8 +281,12 @@ const ChatStatusBar = ({
                 onSetDisappearTimer?.(next);
               }}
               className={cn(
-                "gap-1 h-8 px-2 text-xs",
-                disappearTimer && "bg-primary/15 text-primary border border-primary/30"
+                "gap-1.5 h-8 px-2.5 text-xs font-bold transition-all hover:scale-[1.03] border",
+                disappearTimer
+                  ? "bg-amber-500/15 text-amber-500 border-amber-500/30 dark:border-amber-500/20"
+                  : settings.liquidGlassEnabled
+                  ? "bg-white/5 border-white/10 hover:bg-white/10"
+                  : "bg-secondary/40 border-border/40 hover:bg-secondary/60"
               )}
               title={disappearTimer ? `Messages disappear after ${disappearTimer}s` : "Enable disappearing messages"}
             >
@@ -270,11 +299,15 @@ const ChatStatusBar = ({
             <Popover open={showPrivacyPopover} onOpenChange={setShowPrivacyPopover}>
               <PopoverTrigger asChild>
                 <Button
-                  variant={localPrivacyModeActive ? "default" : "ghost"}
+                  variant="ghost"
                   size="sm"
                   className={cn(
-                    "gap-1 h-8 px-2 text-xs relative",
-                    localPrivacyModeActive && "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/25 hover:text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                    "gap-1.5 h-8 px-2.5 text-xs font-bold transition-all hover:scale-[1.03] border relative",
+                    localPrivacyModeActive
+                      ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30 dark:border-emerald-500/20 hover:bg-emerald-500/25 hover:text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                      : settings.liquidGlassEnabled
+                      ? "bg-white/5 border-white/10 hover:bg-white/10"
+                      : "bg-secondary/40 border-border/40 hover:bg-secondary/60"
                   )}
                   title="Privacy & Screen Protection Settings"
                 >
@@ -358,10 +391,32 @@ const ChatStatusBar = ({
         {/* Export buttons */}
         {messages.length > 0 && (status === "connected" || status === "disconnected") && (
           <>
-            <Button variant="ghost" size="sm" onClick={handleCopyChat} className="gap-1 h-8 px-2 text-xs" title="Copy chat to clipboard">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyChat}
+              className={cn(
+                "gap-1 h-8 px-2 text-xs border transition-all hover:scale-[1.03]",
+                settings.liquidGlassEnabled
+                  ? "bg-white/5 border-white/10 hover:bg-white/10 text-foreground"
+                  : "bg-secondary/40 border-border/40 hover:bg-secondary/60 text-foreground"
+              )}
+              title="Copy chat to clipboard"
+            >
               <Copy className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleDownloadChat} className="gap-1 h-8 px-2 text-xs" title="Download chat as text">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDownloadChat}
+              className={cn(
+                "gap-1 h-8 px-2 text-xs border transition-all hover:scale-[1.03]",
+                settings.liquidGlassEnabled
+                  ? "bg-white/5 border-white/10 hover:bg-white/10 text-foreground"
+                  : "bg-secondary/40 border-border/40 hover:bg-secondary/60 text-foreground"
+              )}
+              title="Download chat as text"
+            >
               <Download className="h-3.5 w-3.5" />
             </Button>
           </>
@@ -376,7 +431,12 @@ const ChatStatusBar = ({
             variant="glow"
             size="sm"
             onClick={onStart}
-            className="h-8 px-3 sm:px-4 text-xs sm:text-sm gap-1"
+            className={cn(
+              "h-8 px-4 text-xs font-bold transition-all hover:scale-[1.03] gap-1.5 shadow-lg",
+              settings.liquidGlassEnabled
+                ? "bg-primary text-primary-foreground border border-primary/20 hover:bg-primary/95 hover:shadow-primary/10"
+                : "h-8 px-3 sm:px-4 text-xs sm:text-sm gap-1"
+            )}
             title="Find a random stranger to chat with"
           >
             <Play className="h-3 w-3" />

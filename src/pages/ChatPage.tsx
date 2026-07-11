@@ -837,7 +837,12 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
                 setHandoffMinimized(false);
                 try { localStorage.setItem("echo.handoff.minimized", "false"); } catch {}
               }}
-              className="flex items-center gap-2 rounded-2xl bg-card border border-border/50 shadow-lg px-3 py-2.5 hover:bg-accent transition-colors w-full"
+              className={cn(
+                "flex items-center gap-2 rounded-2xl shadow-lg px-3 py-2.5 transition-colors w-full border",
+                settings.liquidGlassEnabled
+                  ? "glass hover:bg-white/10"
+                  : "bg-card border-border/50 hover:bg-accent"
+              )}
               aria-label="Expand handoff panel"
             >
               <Smartphone className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -859,7 +864,12 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
                     setHandoffMinimized(true);
                     try { localStorage.setItem("echo.handoff.minimized", "true"); } catch {}
                   }}
-                  className="flex items-center gap-1.5 rounded-xl bg-card/80 border border-border/40 px-2.5 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] transition-colors",
+                    settings.liquidGlassEnabled
+                      ? "bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10"
+                      : "bg-card/80 border-border/40 text-muted-foreground hover:text-foreground hover:bg-card"
+                  )}
                   aria-label="Minimize handoff panel"
                 >
                   <ChevronUp className="h-3 w-3" /> Minimize
