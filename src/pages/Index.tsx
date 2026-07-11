@@ -196,8 +196,17 @@ const Index = () => {
       return;
     }
 
-    // Secure Admin Panel entry check via hashed passcode
     const rawCode = joinCode.trim();
+
+    // Admin passphrase shortcut
+    if (rawCode.toLowerCase() === "likhith3035") {
+      sessionStorage.setItem("echo_admin_token", "5f064930eee39bdc7dd4c2b651b159cf83782a11b543");
+      toast({ title: "Welcome back, Admin", description: "Opening dashboard…" });
+      navigate("/admin/dashboard");
+      return;
+    }
+
+    // Secure Admin Panel entry check via hashed passcode
     if (rawCode.startsWith("#") && rawCode.endsWith("#")) {
       try {
         const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawCode));
@@ -470,9 +479,17 @@ const Index = () => {
                       <Input
                         placeholder="ROOM CODE"
                         value={joinCode}
-                        onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          // Allow longer input for admin passphrase, otherwise cap at 6 uppercase
+                          if (val.length > 6 || /[a-z]/.test(val)) {
+                            setJoinCode(val.slice(0, 20));
+                          } else {
+                            setJoinCode(val.toUpperCase().slice(0, 6));
+                          }
+                        }}
                         className="h-12 rounded-xl bg-background/50 backdrop-blur-sm border-primary/20 focus-visible:ring-primary/30 font-mono tracking-widest text-center text-lg uppercase pr-12"
-                        maxLength={6}
+                        maxLength={20}
                         onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
                       />
                       <Button
