@@ -50,7 +50,8 @@ export function useSafety() {
     if (!text) return false;
     const lowerText = text.toLowerCase();
     return bannedWords.some(word => {
-      const regex = new RegExp(`\\b${word}\\b`, 'i');
+      const escapedWord = word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
       return regex.test(lowerText);
     });
   }, [bannedWords]);

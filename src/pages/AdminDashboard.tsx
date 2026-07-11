@@ -95,6 +95,22 @@ const AdminDashboard = () => {
   const { settings } = useSettings();
   const { toast } = useToast();
   const isDark = settings.darkMode;
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("echo_admin_token");
+    if (token !== "5f064930eee39bdc7dd4c2b651b159cf83782a11b543") {
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "You are not authorized to view this page."
+      });
+      navigate("/");
+    } else {
+      setAuthorized(true);
+    }
+  }, [navigate, toast]);
+
   const [visitData, setVisitData] = useState<any[]>([]);
   const [matchData, setMatchData] = useState<any[]>([]);
   const [hourlyData, setHourlyData] = useState<any[]>([]);
@@ -341,6 +357,14 @@ const AdminDashboard = () => {
       .then(() => toast({ title: "Report Dismissed" }))
       .catch(() => toast({ variant: "destructive", title: "Error", description: "Failed to dismiss report." }));
   };
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen bg-[#09090B] flex items-center justify-center">
+        <p className="text-muted-foreground animate-pulse text-sm">Authenticating session...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen lg:h-screen lg:overflow-hidden overflow-y-auto flex flex-col ${isDark ? "bg-[#09090B] text-white" : "bg-[#F8F9FA] text-[#1A1A1E]"} transition-colors duration-500`}>

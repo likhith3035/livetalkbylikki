@@ -1,11 +1,12 @@
 {
   "rules": {
-    ".read": true,
+    ".read": false,
     ".write": false, 
     
     "settings": {
       "safety": {
         "profanity_list": {
+          ".read": true,
           ".write": true 
         }
       }
@@ -41,7 +42,6 @@
     "lobby": {
       ".read": true,
       "$sessionId": {
-        // Since Firebase Auth is not used, we rely on schema validation
         ".write": true
       }
     },

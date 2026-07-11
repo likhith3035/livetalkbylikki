@@ -15,33 +15,11 @@ interface HeaderProps {
 const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName }, ref) => {
   const { settings, updateSetting } = useSettings();
   const navigate = useNavigate();
-  const [logoClicks, setLogoClicks] = useState(0);
-  const clickTimer = useRef<NodeJS.Timeout | null>(null);
-
-  const handleLogoClick = () => {
-    setLogoClicks(prev => {
-      const newVal = prev + 1;
-      if (newVal >= 5) {
-        const password = window.prompt("Enter Admin Password:");
-        if (password === "88854") navigate("/admin/dashboard");
-        else alert("You're not the admin");
-        return 0;
-      }
-      return newVal;
-    });
-    if (clickTimer.current) clearTimeout(clickTimer.current);
-    clickTimer.current = setTimeout(() => setLogoClicks(0), 2000);
-  };
-
-  useEffect(() => {
-    return () => { if (clickTimer.current) clearTimeout(clickTimer.current); };
-  }, []);
-
   return (
     <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40 lg:hidden" style={{ willChange: "transform", contain: "layout style" }}>
       {/* Left: Logo */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2.5 cursor-pointer" onClick={handleLogoClick}>
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate("/")}>
           <BrandLogo
             className="h-8 w-8 sm:h-9 sm:w-9 drop-shadow-md hover:scale-105 transition-transform"
             aria-label="LiveTalk Home"

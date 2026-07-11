@@ -187,39 +187,34 @@ const Index = () => {
     }
   };
 
-  // Magic Word Access Logic
-  useEffect(() => {
-    let input = "";
-    const secretWord = "likki";
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Basic safeguard: don't trigger if user is typing in an input field (if any were present)
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-
-      input += e.key.toLowerCase();
-      // Keep only the last N characters where N is secretWord length
-      if (input.length > secretWord.length) {
-        input = input.substring(input.length - secretWord.length);
-      }
-
-      if (input === secretWord) {
-        input = ""; // Reset
-        navigate("/admin/dashboard");
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigate]);
-
   const appOrigin = "https://LiveTalkbylikki.netlify.app";
   const getRoomUrl = (code: string) => `${appOrigin}/room/${code}`;
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     if (!joinCode) {
       toast({ title: "Error", description: "Please enter a room code.", variant: "destructive" });
       return;
     }
+
+    // Secure Admin Panel entry check via hashed passcode
+    const rawCode = joinCode.trim();
+    if (rawCode.startsWith("#") && rawCode.endsWith("#")) {
+      try {
+        const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawCode));
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+        if (hashHex === "5f064930eee39bdc7dd4c2b651b159cf83782a11b543f87facd0fed6eb84ad14") {
+          sessionStorage.setItem("echo_admin_token", "5f064930eee39bdc7dd4c2b651b159cf83782a11b543");
+          toast({ title: "Authorized", description: "Navigating to Telemetry Control..." });
+          navigate("/admin/dashboard");
+          return;
+        }
+      } catch (err) {
+        console.error("Cryptographic verification failed", err);
+      }
+    }
+
     if (joinCode.length !== 6) {
       toast({ title: "Invalid code", description: "Room code must be 6 characters.", variant: "destructive" });
       return;
