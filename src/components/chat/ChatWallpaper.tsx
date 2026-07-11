@@ -67,7 +67,7 @@ const ChatWallpaperBg = ({ opacity: overrideOpacity }: { opacity?: number }) => 
   return (
     <div
       className={cn(
-        "pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none transition-transform duration-[600ms] ease-out",
+        "pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none transition-transform duration-500 ease-out",
         !isCustomImage && wallpaperStyles[settings.chatWallpaper]
       )}
       style={{
