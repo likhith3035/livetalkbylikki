@@ -8,7 +8,8 @@ import { db } from "@/lib/firebase";
 import { ref, onValue, set, push, remove, serverTimestamp } from "firebase/database";
 import { 
   ArrowLeft, ChevronUp, ChevronDown, Users, MessageSquare, Zap, 
-  ShieldAlert, Trash2, ShieldCheck, UserX, Plus
+  ShieldAlert, Trash2, ShieldCheck, UserX, Plus, Activity, TrendingUp,
+  Gauge, BarChart3, Grid3X3, Eye, Clock
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,21 +24,21 @@ const DEFAULT_BANNED_WORDS = [
   "modda", "lanja", "puku", "kojja", "denga", "dengutha"
 ];
 
-// --- Custom Components ---
+// --- Custom Tooltip ---
 
 const CustomTooltip = ({ active, payload, label, isDark }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className={`p-3 rounded-xl shadow-2xl backdrop-blur-md z-50 border ${isDark ? "bg-black/90 border-white/10" : "bg-white/95 border-black/5"}`}>
-        <p className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">{label}</p>
+      <div className={`px-3 py-2.5 rounded-xl shadow-xl backdrop-blur-xl z-50 border ${isDark ? "bg-black/80 border-white/10" : "bg-white border-black/5 shadow-lg"}`}>
+        <p className="text-[11px] text-muted-foreground mb-1.5 font-semibold">{label}</p>
         <div className="space-y-1">
           {payload.map((p: any, i: number) => (
-            <p key={i} className="text-sm font-black flex items-center justify-between gap-4">
+            <p key={i} className="text-sm font-bold flex items-center justify-between gap-6">
               <span className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
-                <span className="opacity-70 text-[10px] uppercase font-bold">{p.name || p.dataKey}</span>
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
+                <span className="text-muted-foreground text-[11px] font-medium">{p.name || p.dataKey}</span>
               </span>
-              <span className="font-mono text-xs" style={{ color: p.color || p.stroke }}>{p.value.toLocaleString()}</span>
+              <span className="font-mono text-[13px] font-bold" style={{ color: p.color || p.stroke }}>{p.value?.toLocaleString()}</span>
             </p>
           ))}
         </div>
@@ -47,43 +48,58 @@ const CustomTooltip = ({ active, payload, label, isDark }: any) => {
   return null;
 };
 
-// --- UI Sub-Components ---
+// --- Summary Card ---
 
-const SummaryCard = ({ title, value, data, trend }: any) => {
+const SummaryCard = ({ title, value, icon: Icon, color, data, trend }: any) => {
   const isUp = trend >= 0;
   return (
-    <Card className="border-none shadow-sm dark:bg-card/40 bg-white shadow-gray-200/50 dark:shadow-none hover:shadow-md transition-shadow">
-      <CardContent className="p-3 lg:p-4 flex items-center justify-between">
-        <div className="space-y-0.5">
-          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">{title}</p>
-          <div className="flex items-baseline gap-1.5">
-            <h4 className="text-xl lg:text-2xl font-black tracking-tight">{value}</h4>
-            {trend !== undefined && (
-              <span className={`text-[9px] font-bold flex items-center ${isUp ? "text-green-500" : "text-red-500"}`}>
-                {isUp ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
-                {Math.abs(trend)}%
-              </span>
-            )}
+    <Card className="border-none shadow-sm dark:bg-card/50 bg-white hover:shadow-md transition-all duration-300 overflow-hidden group">
+      <CardContent className="p-0">
+        <div className="flex items-stretch">
+          {/* Color accent stripe */}
+          <div className={`w-1 ${color} shrink-0`} />
+          <div className="flex-1 p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className={`h-10 w-10 rounded-xl ${color} bg-opacity-10 flex items-center justify-center shrink-0`}
+                   style={{ backgroundColor: `var(--${color}-bg, rgba(139,92,246,0.1))` }}>
+                <Icon className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium text-muted-foreground leading-tight">{title}</p>
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <h4 className="text-2xl font-bold tracking-tight">{value}</h4>
+                  {trend !== undefined && (
+                    <span className={`text-[11px] font-semibold flex items-center ${isUp ? "text-emerald-500" : "text-red-500"}`}>
+                      {isUp ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      {Math.abs(trend)}%
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="h-10 w-20 opacity-50 group-hover:opacity-80 transition-opacity">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data}>
+                  <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={1.5} fill="hsl(var(--primary))" fillOpacity={0.08} isAnimationActive={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-        <div className="h-8 lg:h-10 w-20">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
-              <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} fill="hsl(var(--primary))" fillOpacity={0.1} isAnimationActive={false} />
-            </AreaChart>
-          </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>
   );
 };
 
+// --- Heatmap Cell ---
+
 const HeatmapCell = ({ value, max }: { value: number; max: number }) => {
-  const opacity = value / max;
+  const intensity = max > 0 ? value / max : 0;
   return (
     <div 
-      className="w-full h-full min-h-[0.8rem] rounded-[2px] transition-all hover:scale-110 cursor-pointer" 
-      style={{ backgroundColor: `rgba(59, 130, 246, ${Math.max(0.1, opacity)})` }}
+      className="w-full aspect-square rounded-[3px] transition-all hover:scale-110 cursor-pointer" 
+      style={{ backgroundColor: `hsl(265 90% 60% / ${Math.max(0.08, intensity * 0.8)})` }}
+      title={`${value} visits`}
     />
   );
 };
@@ -136,16 +152,15 @@ const AdminDashboard = () => {
     const loadPercent = Math.min(100, (onlineCount / capacity) * 100);
     const gaugeData = [
       { name: "Active", value: loadPercent, color: "hsl(var(--primary))" },
-      { name: "Idle", value: 100 - loadPercent, color: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }
+      { name: "Idle", value: 100 - loadPercent, color: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)" }
     ];
 
-    // 3. Operational Heatmap Distribution (Simulated from Real Daily Totals)
+    // 3. Operational Heatmap Distribution
     const hours = ["6am", "10am", "12pm", "5pm", "8pm"];
     const last7Days = visitData.slice(-7);
     const heatmap = hours.map((time, hIdx) => {
       const row: any = { time };
       last7Days.forEach((day, dIdx) => {
-        // Distribute the real daily total visits based on a typical traffic curve
         const curve = [0.1, 0.4, 0.8, 1, 0.6][hIdx]; 
         const dailyTotal = (day.visits || 0);
         row[`day_${dIdx}`] = Math.max(1, Math.round(dailyTotal * curve * (0.8 + Math.random() * 0.4)));
@@ -155,14 +170,14 @@ const AdminDashboard = () => {
 
     // 4. Chart Content Switcher
     let chartData = visitData.map(v => ({ ...v, value: v.visits }));
-    let chartConfig = { name: "Actual Visits", threshold: "Service Threshold", unit: "Visit Density" };
+    let chartConfig = { name: "Visits", threshold: "Projected", unit: "Visit count" };
 
     if (selectedMetric === "ENGAGEMENT") {
       chartData = matchData.map(m => ({ ...m, value: m.matches }));
-      chartConfig = { name: "Peer Matches", threshold: "Target Engagement", unit: "Match Rate" };
+      chartConfig = { name: "Matches", threshold: "Target", unit: "Match count" };
     } else if (selectedMetric === "INTENSITY") {
       chartData = hourlyData.map(h => ({ ...h, value: h.visits }));
-      chartConfig = { name: "Direct Load", threshold: "Node Baseline", unit: "Load Spikes" };
+      chartConfig = { name: "Load", threshold: "Baseline", unit: "Requests" };
     }
 
     return { weeklyVelocity, gaugeData, heatmap, loadPercent, chartData, chartConfig };
@@ -360,145 +375,185 @@ const AdminDashboard = () => {
 
   if (!authorized) {
     return (
-      <div className="min-h-screen bg-[#09090B] flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse text-sm">Authenticating session...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm font-medium">Authenticating…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen lg:h-screen lg:overflow-hidden overflow-y-auto flex flex-col ${isDark ? "bg-[#09090B] text-white" : "bg-[#F8F9FA] text-[#1A1A1E]"} transition-colors duration-500`}>
+    <div className={`min-h-screen lg:h-screen lg:overflow-hidden overflow-y-auto flex flex-col bg-background text-foreground transition-colors duration-300`}>
       
-      <div className="flex-1 flex flex-col p-3 lg:p-6 space-y-3 min-h-0 lg:min-h-0">
+      <div className="flex-1 flex flex-col p-4 lg:p-6 gap-5 min-h-0">
         
-        {/* Compact Header */}
-        <div className="flex items-center justify-between shrink-0">
+        {/* ─── Header ─── */}
+        <header className="flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <Button 
               variant="outline" size="icon" 
               onClick={() => navigate("/")}
-              className="rounded-xl border-border bg-card/50 backdrop-blur-sm group shadow-sm h-8 w-8"
+              className="rounded-xl h-9 w-9 shrink-0"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-lg font-black tracking-tight uppercase leading-none">Telemetry Control</h1>
-              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Node Status: Active</p>
+              <h1 className="text-xl font-bold tracking-tight leading-none">Dashboard</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Admin overview & analytics</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className={`flex items-center gap-2 px-2.5 py-1 rounded-xl ${isDark ? "bg-primary/10 border-primary/20" : "bg-white shadow-sm border-black/5"} border text-[9px] font-black uppercase tracking-widest text-primary`}>
-              <span className="h-1 w-1 rounded-full bg-primary animate-pulse" /> Signal Stable
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${isDark ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border border-emerald-200"}`}>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {onlineCount} online
             </div>
           </div>
+        </header>
+
+        {/* ─── Summary Cards ─── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
+          <SummaryCard 
+            title="Online Now" 
+            value={onlineCount} 
+            icon={Users}
+            color="bg-emerald-500"
+            data={derivedMetrics.weeklyVelocity} 
+            trend={12} 
+          />
+          <SummaryCard 
+            title="Total Visits" 
+            value={totalVisits > 1000 ? (totalVisits / 1000).toFixed(1) + "k" : totalVisits} 
+            icon={Eye}
+            color="bg-blue-500"
+            data={visitData.map(v => ({ value: v.visits }))} 
+            trend={growth} 
+          />
+          <SummaryCard 
+            title="Server Load" 
+            value={`${derivedMetrics.loadPercent.toFixed(0)}%`} 
+            icon={Activity}
+            color="bg-purple-500"
+            data={derivedMetrics.weeklyVelocity.map(v => ({ value: (v.value / 50) * 100 }))} 
+            trend={0.1} 
+          />
         </div>
 
-        {/* Top Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 shrink-0">
-          <SummaryCard title="Live Ingress" value={onlineCount} data={derivedMetrics.weeklyVelocity} trend={12} />
-          <SummaryCard title="Traffic Volume" value={totalVisits > 1000 ? (totalVisits / 1000).toFixed(1) + "k" : totalVisits} data={visitData.map(v => ({ value: v.visits }))} trend={growth} />
-          <SummaryCard title="Load Intensity" value={`${derivedMetrics.loadPercent.toFixed(1)}%`} data={derivedMetrics.weeklyVelocity.map(v => ({ value: (v.value / 50) * 100 }))} trend={0.1} />
-        </div>
-
-        {/* Main Grid */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-3 min-h-0">
+        {/* ─── Main Grid ─── */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
           
-          {/* Growth Chart */}
+          {/* ─── Chart Area (3/4) ─── */}
           <div className="lg:col-span-3 min-h-0 flex flex-col">
-            <Card className="border-none shadow-sm dark:bg-card/40 bg-white shadow-gray-200/50 p-4 h-full flex flex-col">
-              <div className="flex flex-col sm:flex-row items-center justify-between mb-2 gap-3 shrink-0">
-                 <div className="flex items-center gap-4">
-                   <h3 className="text-[9px] font-black uppercase tracking-widest opacity-40">
-                     {selectedMetric === "SAFETY" ? "Safety & Policy Hub" : "Load Propagation Analysis"}
-                   </h3>
-                   {selectedMetric !== "SAFETY" && (
-                     <div className="flex gap-2 text-[8px] font-black uppercase tracking-widest">
-                        <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-primary" /> {derivedMetrics.chartConfig.name}</span>
-                        <span className="flex items-center gap-1 opacity-30"><span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> {derivedMetrics.chartConfig.threshold}</span>
-                     </div>
-                   )}
-                 </div>
+            <Card className="border-none shadow-sm dark:bg-card/50 bg-white h-full flex flex-col overflow-hidden">
+              <div className="p-4 pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
+                <div>
+                  <h3 className="text-sm font-semibold">
+                    {selectedMetric === "SAFETY" ? "Safety & Moderation" : "Analytics"}
+                  </h3>
+                  {selectedMetric !== "SAFETY" && (
+                    <div className="flex gap-4 mt-1.5 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-primary" /> 
+                        {derivedMetrics.chartConfig.name}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-blue-400 opacity-50" /> 
+                        {derivedMetrics.chartConfig.threshold}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-                 <Tabs value={selectedMetric} onValueChange={(v: any) => setSelectedMetric(v)} className="w-auto">
-                    <TabsList className="h-7 bg-muted/30 border border-border/50 p-0.5 rounded-lg">
-                      <TabsTrigger value="TRAFFIC" className="h-6 text-[8px] font-black uppercase tracking-widest px-3 gap-1.5 transition-all">
-                        <Users className="h-2.5 w-2.5" /> Traffic
-                      </TabsTrigger>
-                      <TabsTrigger value="ENGAGEMENT" className="h-6 text-[8px] font-black uppercase tracking-widest px-3 gap-1.5 transition-all">
-                        <MessageSquare className="h-2.5 w-2.5" /> Engagement
-                      </TabsTrigger>
-                      <TabsTrigger value="INTENSITY" className="h-6 text-[8px] font-black uppercase tracking-widest px-3 gap-1.5 transition-all">
-                        <Zap className="h-2.5 w-2.5" /> Intensity
-                      </TabsTrigger>
-                      <TabsTrigger value="SAFETY" className="h-6 text-[8px] font-black uppercase tracking-widest px-3 gap-1.5 transition-all">
-                        <ShieldAlert className="h-2.5 w-2.5" /> Safety
-                      </TabsTrigger>
-                    </TabsList>
-                 </Tabs>
+                <Tabs value={selectedMetric} onValueChange={(v: any) => setSelectedMetric(v)} className="w-auto">
+                  <TabsList className="h-8 bg-muted/40 border border-border/50 p-0.5 rounded-lg">
+                    <TabsTrigger value="TRAFFIC" className="h-7 text-[11px] font-medium px-3 gap-1.5 rounded-md">
+                      <Users className="h-3 w-3" /> Traffic
+                    </TabsTrigger>
+                    <TabsTrigger value="ENGAGEMENT" className="h-7 text-[11px] font-medium px-3 gap-1.5 rounded-md">
+                      <MessageSquare className="h-3 w-3" /> Engage
+                    </TabsTrigger>
+                    <TabsTrigger value="INTENSITY" className="h-7 text-[11px] font-medium px-3 gap-1.5 rounded-md">
+                      <Zap className="h-3 w-3" /> Load
+                    </TabsTrigger>
+                    <TabsTrigger value="SAFETY" className="h-7 text-[11px] font-medium px-3 gap-1.5 rounded-md">
+                      <ShieldAlert className="h-3 w-3" /> Safety
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
 
-              <div className="flex-1 min-h-0 w-full overflow-hidden">
+              <div className="flex-1 min-h-0 w-full overflow-hidden p-4 pt-2">
                 {selectedMetric === "SAFETY" ? (
-                  <div className="h-full flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
-                    {/* Profanity Manager */}
-                    <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Profanity Filter</h4>
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <div className="h-full flex flex-col gap-6 overflow-y-auto pr-1 custom-scrollbar">
+                    
+                    {/* ── Profanity Manager ── */}
+                    <section className="space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h4 className="text-[13px] font-semibold text-foreground">Profanity Filter</h4>
+                        <div className="flex gap-2 w-full sm:w-auto">
                           <Input 
-                            placeholder="Add banned word..." 
+                            placeholder="Add banned word…" 
                             value={newWord}
                             onChange={(e) => setNewWord(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddWord()}
-                            className="h-8 w-full sm:w-48 text-[10px] bg-muted/20 border-border/50"
+                            className="h-8 w-full sm:w-48 text-xs"
                           />
-                          <Button size="sm" onClick={handleAddWord} className="h-8 gap-2 rounded-lg text-[10px] font-bold w-full sm:w-auto">
-                            <Plus className="h-3 w-3" /> Add
+                          <Button size="sm" onClick={handleAddWord} className="h-8 gap-1.5 rounded-lg text-xs font-semibold shrink-0">
+                            <Plus className="h-3.5 w-3.5" /> Add
                           </Button>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {bannedWords.map((word) => (
-                          <div key={word} className="flex items-center gap-2 px-3 py-1.5 bg-muted/30 hover:bg-muted/50 rounded-lg border border-border/50 transition-colors group">
-                            <span className="text-[10px] font-bold">{word}</span>
-                            <button onClick={() => handleDeleteWord(word)} className="text-muted-foreground hover:text-destructive transition-colors">
+                          <div key={word} className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 hover:bg-muted/60 rounded-lg border border-border/50 transition-colors group">
+                            <span className="text-xs font-medium">{word}</span>
+                            <button onClick={() => handleDeleteWord(word)} className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100">
                               <Trash2 className="h-3 w-3" />
                             </button>
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </section>
 
-                    {/* Reports Table */}
-                    <div className="space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Recent User Reports</h4>
-                      <div className="border border-border/50 rounded-xl overflow-x-auto bg-muted/5 custom-scrollbar">
+                    {/* ── Reports Table ── */}
+                    <section className="space-y-3">
+                      <h4 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                        <ShieldAlert className="h-4 w-4 text-destructive/70" />
+                        User Reports
+                        {safetyReports.length > 0 && (
+                          <span className="ml-1 text-[10px] font-bold bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">
+                            {safetyReports.length}
+                          </span>
+                        )}
+                      </h4>
+                      <div className="border border-border/50 rounded-xl overflow-x-auto bg-muted/5">
                         <div className="min-w-[600px]">
-                        <table className="w-full text-[10px]">
+                        <table className="w-full text-xs">
                           <thead>
-                            <tr className="bg-muted/10 border-b border-border/50">
-                              <th className="px-4 py-3 text-left font-black uppercase tracking-wider opacity-40">Reason</th>
-                              <th className="px-4 py-3 text-left font-black uppercase tracking-wider opacity-40">Reported ID</th>
-                              <th className="px-4 py-3 text-left font-black uppercase tracking-wider opacity-40">Timestamp</th>
-                              <th className="px-4 py-3 text-right font-black uppercase tracking-wider opacity-40">Action</th>
+                            <tr className="border-b border-border/50">
+                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Reason</th>
+                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Reported ID</th>
+                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Time</th>
+                              <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Action</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-border/50">
+                          <tbody className="divide-y divide-border/30">
                             {safetyReports.length === 0 ? (
-                              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground opacity-50 font-bold">No active reports. Community is clean!</td></tr>
+                              <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground text-sm">No active reports — community is clean ✨</td></tr>
                             ) : safetyReports.map((r) => (
                               <tr key={r.id} className="hover:bg-muted/10 transition-colors group">
-                                <td className="px-4 py-3 font-bold text-destructive flex items-center gap-2">
-                                  <ShieldAlert className="h-3 w-3 opacity-50" /> {r.reason}
+                                <td className="px-4 py-3 font-medium text-destructive/80 flex items-center gap-2">
+                                  <ShieldAlert className="h-3.5 w-3.5 opacity-50" /> {r.reason}
                                 </td>
-                                <td className="px-4 py-3 font-mono opacity-60">{r.reportedId.slice(0, 12)}...</td>
-                                <td className="px-4 py-3 opacity-40">{new Date(r.timestamp).toLocaleString()}</td>
+                                <td className="px-4 py-3 font-mono text-muted-foreground text-[11px]">{r.reportedId.slice(0, 12)}…</td>
+                                <td className="px-4 py-3 text-muted-foreground">{new Date(r.timestamp).toLocaleString()}</td>
                                 <td className="px-4 py-3 text-right space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button size="sm" variant="outline" className="h-6 px-2 text-[8px] font-black uppercase tracking-widest gap-1 border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white" onClick={() => handleBanUser(r.reportedId)}>
-                                    <UserX className="h-2.5 w-2.5" /> Ban
+                                  <Button size="sm" variant="outline" className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white" onClick={() => handleBanUser(r.reportedId)}>
+                                    <UserX className="h-3 w-3" /> Ban
                                   </Button>
-                                  <Button size="sm" variant="outline" className="h-6 px-2 text-[8px] font-black uppercase tracking-widest gap-1" onClick={() => handleDismissReport(r.id)}>
-                                    <ShieldCheck className="h-2.5 w-2.5" /> Dismiss
+                                  <Button size="sm" variant="outline" className="h-7 px-2.5 text-[11px] font-semibold gap-1" onClick={() => handleDismissReport(r.id)}>
+                                    <ShieldCheck className="h-3 w-3" /> Dismiss
                                   </Button>
                                 </td>
                               </tr>
@@ -507,39 +562,45 @@ const AdminDashboard = () => {
                         </table>
                         </div>
                       </div>
-                    </div>
+                    </section>
 
-                    {/* Appeals Section */}
-                    <div className="space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Pending Ban Appeals</h4>
-                      <div className="border border-border/50 rounded-xl overflow-x-auto bg-muted/5 custom-scrollbar">
+                    {/* ── Appeals ── */}
+                    <section className="space-y-3">
+                      <h4 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-primary/70" />
+                        Ban Appeals
+                        {appeals.length > 0 && (
+                          <span className="ml-1 text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            {appeals.length}
+                          </span>
+                        )}
+                      </h4>
+                      <div className="border border-border/50 rounded-xl overflow-x-auto bg-muted/5">
                         <div className="min-w-[600px]">
-                        <table className="w-full text-[10px]">
+                        <table className="w-full text-xs">
                           <thead>
-                            <tr className="bg-muted/10 border-b border-border/50">
-                              <th className="px-4 py-3 text-left font-black uppercase tracking-wider opacity-40">Appeal Reason</th>
-                              <th className="px-4 py-3 text-left font-black uppercase tracking-wider opacity-40">User ID</th>
-                              <th className="px-4 py-3 text-left font-black uppercase tracking-wider opacity-40">Timestamp</th>
-                              <th className="px-4 py-3 text-right font-black uppercase tracking-wider opacity-40">Action</th>
+                            <tr className="border-b border-border/50">
+                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Reason</th>
+                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">User ID</th>
+                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Time</th>
+                              <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Action</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-border/50">
+                          <tbody className="divide-y divide-border/30">
                             {appeals.length === 0 ? (
-                              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground opacity-50 font-bold">No pending appeals.</td></tr>
+                              <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground text-sm">No pending appeals</td></tr>
                             ) : appeals.map((a) => (
                               <tr key={a.uid} className="hover:bg-muted/10 transition-colors group">
-                                <td className="px-4 py-3 font-medium text-foreground/90">
-                                  {a.reason}
-                                </td>
-                                <td className="px-4 py-3 font-mono opacity-60">{a.uid.slice(0, 12)}...</td>
-                                <td className="px-4 py-3 opacity-40">{new Date(a.timestamp).toLocaleString()}</td>
+                                <td className="px-4 py-3 font-medium">{a.reason}</td>
+                                <td className="px-4 py-3 font-mono text-muted-foreground text-[11px]">{a.uid.slice(0, 12)}…</td>
+                                <td className="px-4 py-3 text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</td>
                                 <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Button 
                                     size="sm" variant="glow" 
-                                    className="h-6 px-3 text-[8px] font-black uppercase tracking-widest gap-1"
+                                    className="h-7 px-3 text-[11px] font-semibold gap-1"
                                     onClick={() => handleUnbanUser(a.uid)}
                                   >
-                                    <ShieldCheck className="h-2.5 w-2.5" /> Unban User
+                                    <ShieldCheck className="h-3 w-3" /> Unban
                                   </Button>
                                 </td>
                               </tr>
@@ -548,30 +609,26 @@ const AdminDashboard = () => {
                         </table>
                         </div>
                       </div>
-                    </div>
+                    </section>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={derivedMetrics.chartData} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
-                      <CartesianGrid vertical={false} stroke={isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"} />
+                    <AreaChart data={derivedMetrics.chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <CartesianGrid vertical={false} stroke={isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"} />
                       <XAxis 
                         dataKey="date" axisLine={false} tickLine={false} 
-                        tick={{ fill: "currentColor", fontSize: 8, opacity: 0.4 }} 
+                        tick={{ fill: "currentColor", fontSize: 10, opacity: 0.4 }} 
                         dy={5}
                         tickFormatter={(v) => {
                           if (v === "BASE") return "";
                           if (v.includes(":00")) return v;
-                          return v.split("-").slice(2).join("/");
+                          return v.split("-").slice(1).join("/");
                         }}
-                      >
-                         <Label value="Temporal Axis" offset={-10} position="insideBottom" style={{ fontSize: '7px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.2, fill: 'currentColor' }} />
-                      </XAxis>
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, opacity: 0.4 }}>
-                         <Label value={derivedMetrics.chartConfig.unit} angle={-90} position="insideLeft" style={{ fontSize: '7px', fontWeight: 900, textTransform: 'uppercase', opacity: 0.2, fill: 'currentColor', textAnchor: 'middle' }} />
-                      </YAxis>
+                      />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, opacity: 0.4 }} width={35} />
                       <Tooltip content={<CustomTooltip isDark={isDark} />} />
-                      <Area type="monotone" dataKey="value" name={derivedMetrics.chartConfig.name} stroke="hsl(var(--primary))" strokeWidth={2.5} fill="hsl(var(--primary))" fillOpacity={0.05} connectNulls />
-                      <Area type="monotone" dataKey="projected" name={derivedMetrics.chartConfig.threshold} stroke="#3b82f6" strokeWidth={1} fillOpacity={0} strokeDasharray="3 3" />
+                      <Area type="monotone" dataKey="value" name={derivedMetrics.chartConfig.name} stroke="hsl(var(--primary))" strokeWidth={2} fill="hsl(var(--primary))" fillOpacity={0.06} connectNulls />
+                      <Area type="monotone" dataKey="projected" name={derivedMetrics.chartConfig.threshold} stroke="#3b82f6" strokeWidth={1} fillOpacity={0} strokeDasharray="4 4" />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
@@ -579,62 +636,90 @@ const AdminDashboard = () => {
             </Card>
           </div>
 
-          {/* Right Column */}
+          {/* ─── Sidebar Widgets (1/4) ─── */}
           <div className="lg:col-span-1 flex flex-col gap-3 min-h-0">
-            <Card className="border-none shadow-sm dark:bg-card/40 bg-white p-4 flex-1 flex flex-col items-center justify-center min-h-0">
-              <h5 className="text-[8px] font-black uppercase tracking-widest opacity-30 w-full mb-2">Efficiency Gauge</h5>
-              <div className="flex-1 w-full relative min-h-[100px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart><Pie data={derivedMetrics.gaugeData} cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius="70%" outerRadius="95%" dataKey="value" stroke="none">
-                    {derivedMetrics.gaugeData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                  </Pie></PieChart>
-                </ResponsiveContainer>
-                <div className="absolute bottom-0 left-0 right-0 text-center pb-1">
-                   <span className="text-xl lg:text-2xl font-black block leading-none">{derivedMetrics.loadPercent.toFixed(1)}%</span>
-                   <span className="text-[7px] font-black uppercase opacity-30">Load Integrity</span>
+            
+            {/* Gauge Card */}
+            <Card className="border-none shadow-sm dark:bg-card/50 bg-white flex-1 flex flex-col items-center justify-center min-h-0 overflow-hidden">
+              <CardContent className="p-4 w-full flex flex-col items-center">
+                <div className="flex items-center gap-2 w-full mb-2">
+                  <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h5 className="text-[11px] font-medium text-muted-foreground">Server Load</h5>
                 </div>
-              </div>
+                <div className="w-full relative" style={{ minHeight: 100 }}>
+                  <ResponsiveContainer width="100%" height={100}>
+                    <PieChart><Pie data={derivedMetrics.gaugeData} cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius="65%" outerRadius="95%" dataKey="value" stroke="none">
+                      {derivedMetrics.gaugeData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Pie></PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute bottom-0 left-0 right-0 text-center pb-1">
+                    <span className="text-2xl font-bold block leading-none">{derivedMetrics.loadPercent.toFixed(0)}%</span>
+                    <span className="text-[10px] text-muted-foreground">capacity</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm dark:bg-card/40 bg-white p-4 flex-1 flex flex-col min-h-[120px]">
-              <h5 className="text-[8px] font-black uppercase tracking-widest opacity-30 mb-2">Weekly Velocity</h5>
-              <div className="flex-1 min-h-0">
-                <ResponsiveContainer width="100%" height="100%" minHeight={60}>
-                  <BarChart data={derivedMetrics.weeklyVelocity}>
-                    <Tooltip content={<CustomTooltip isDark={isDark} />} cursor={{ fill: 'transparent' }} />
-                    <Bar dataKey="value" name="Visits" fill="#3B82F6" radius={1.5} barSize={8} key="bar-visits" />
-                    <XAxis dataKey="uniqueKey" axisLine={false} tickLine={false} tick={{ fontSize: 7, opacity: 0.2 }} tickFormatter={(val) => {
-                      const entry = derivedMetrics.weeklyVelocity.find(v => v.uniqueKey === val);
-                      return entry ? entry.day : "";
-                    }} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            {/* Weekly Bar Chart */}
+            <Card className="border-none shadow-sm dark:bg-card/50 bg-white flex-1 flex flex-col min-h-[120px] overflow-hidden">
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h5 className="text-[11px] font-medium text-muted-foreground">Weekly Activity</h5>
+                </div>
+                <div className="flex-1 min-h-0">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={60}>
+                    <BarChart data={derivedMetrics.weeklyVelocity}>
+                      <Tooltip content={<CustomTooltip isDark={isDark} />} cursor={{ fill: 'transparent' }} />
+                      <Bar dataKey="value" name="Visits" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} barSize={10} key="bar-visits" />
+                      <XAxis dataKey="uniqueKey" axisLine={false} tickLine={false} tick={{ fontSize: 9, opacity: 0.35 }} tickFormatter={(val) => {
+                        const entry = derivedMetrics.weeklyVelocity.find(v => v.uniqueKey === val);
+                        return entry ? entry.day : "";
+                      }} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm dark:bg-card/40 bg-white p-4 flex-1 flex flex-col min-h-0">
-              <h5 className="text-[8px] font-black uppercase tracking-widest opacity-30 mb-2">Sync Distribution</h5>
-              <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-hidden">
-                <div className="grid grid-cols-7 gap-1 shrink-0 px-1">
-                   {["M","T","W","T","F","S","S"].map((d, i) => <div key={`${d}-${i}`} className="text-[6px] font-black opacity-20 text-center">{d}</div>)}
+            {/* Heatmap */}
+            <Card className="border-none shadow-sm dark:bg-card/50 bg-white flex-1 flex flex-col min-h-0 overflow-hidden">
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-3">
+                  <Grid3X3 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h5 className="text-[11px] font-medium text-muted-foreground">Activity Heatmap</h5>
                 </div>
-                {derivedMetrics.heatmap.map((row) => (
-                  <div key={row.time} className="flex-1 grid grid-cols-7 gap-1 px-1">
-                    {[0,1,2,3,4,5,6].map(idx => (
-                        <HeatmapCell key={idx} value={row[`day_${idx}`] || 0} max={Math.max(...visitData.map(v => v.visits || 0)) || 10} />
+                <div className="flex-1 flex flex-col gap-1.5">
+                  {/* Day headers */}
+                  <div className="grid grid-cols-[40px_repeat(7,1fr)] gap-1 px-0.5">
+                    <div />
+                    {["M","T","W","T","F","S","S"].map((d, i) => (
+                      <div key={`${d}-${i}`} className="text-[9px] font-medium text-muted-foreground text-center">{d}</div>
                     ))}
                   </div>
-                ))}
-              </div>
+                  {/* Heatmap rows */}
+                  {derivedMetrics.heatmap.map((row) => (
+                    <div key={row.time} className="flex-1 grid grid-cols-[40px_repeat(7,1fr)] gap-1 px-0.5">
+                      <div className="text-[9px] font-medium text-muted-foreground flex items-center">{row.time}</div>
+                      {[0,1,2,3,4,5,6].map(idx => (
+                        <HeatmapCell key={idx} value={row[`day_${idx}`] || 0} max={Math.max(...visitData.map(v => v.visits || 0)) || 10} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
             </Card>
           </div>
 
         </div>
 
-        {/* Footer info */}
-        <div className="shrink-0 flex justify-between opacity-10 text-[6px] font-black uppercase tracking-[0.5em] pb-1">
-           <p>LiveTalk Global Node Link // Secure</p>
-           <p>Likhith Kami // Admin</p>
+        {/* ─── Footer ─── */}
+        <div className="shrink-0 flex justify-between text-[10px] text-muted-foreground/40 font-medium pb-1">
+          <p>LiveTalk Admin</p>
+          <p className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {new Date().toLocaleDateString()}
+          </p>
         </div>
 
       </div>
