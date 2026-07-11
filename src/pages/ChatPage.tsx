@@ -112,7 +112,12 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [showPrivateWaiting, setShowPrivateWaiting] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [handoffMinimized, setHandoffMinimized] = useState(() => {
-    try { return localStorage.getItem("echo.handoff.minimized") === "true"; } catch { return false; }
+    try {
+      const saved = localStorage.getItem("echo.handoff.minimized");
+      return saved !== "false"; // Default to true (minimized) if not explicitly set to "false"
+    } catch {
+      return true;
+    }
   });
   // Video call reaction state
   const [incomingReaction, setIncomingReaction] = useState<{ emoji: string; id: number } | null>(null);
