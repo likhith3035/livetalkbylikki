@@ -510,7 +510,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }
 
   return (
-    <div className={cn("flex flex-col bg-background relative z-0", status === "idle" ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh]", status === "connected" && privacyModeActive && "select-none")}>
+    <div className={cn("flex flex-col bg-background relative z-0 h-[100dvh] lg:h-full overflow-hidden", status === "connected" && privacyModeActive && "select-none")}>
       <ChatWallpaper />
       <div className={cn("flex flex-col flex-1 min-h-0", privacyAlertActive && "blur-lg pointer-events-none transition-all duration-300")}>
         <div className="relative z-20">
@@ -804,9 +804,11 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onDismiss={() => setShowMatchCelebration(false)}
       />
 
-      <div className="relative z-20">
-        <MobileNav />
-      </div>
+      {status === "idle" && (
+        <div className="relative z-20">
+          <MobileNav />
+        </div>
+      )}
       </div>
 
 
