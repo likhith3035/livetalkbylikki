@@ -24,6 +24,7 @@ interface ChatGamesProps {
   sessionId?: string;
   activeGame: "none" | "ttt" | "canvas" | "rps";
   setActiveGame: (game: "none" | "ttt" | "canvas" | "rps") => void;
+  onToggleAI?: () => void;
 }
 
 type TicTacToeCell = "X" | "O" | null;
@@ -164,7 +165,7 @@ const FloatingParticles = ({ active }: { active: boolean }) => {
   );
 };
 
-const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeGame, setActiveGame }: ChatGamesProps) => {
+const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeGame, setActiveGame, onToggleAI }: ChatGamesProps) => {
   const [showGames, setShowGames] = useState(false);
   const { toast } = useToast();
   const [showConfetti, setShowConfetti] = useState(false);
@@ -536,6 +537,19 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
               <p className="text-sm font-medium text-foreground">✊✋✌️ Rock Paper Scissors</p>
               <p className="text-[10px] text-muted-foreground">Co-op hand challenge!</p>
             </button>
+            {onToggleAI && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowGames(false);
+                  onToggleAI();
+                }}
+                className="w-full text-left rounded-xl bg-primary/10 border border-primary/20 px-3 py-3 hover:bg-primary/20 transition-colors"
+              >
+                <p className="text-sm font-medium text-primary">🤖 Play vs AI Bot</p>
+                <p className="text-[10px] text-primary/80">Play mini-games against AI opponent!</p>
+              </button>
+            )}
           </div>
         );
       case "ttt":

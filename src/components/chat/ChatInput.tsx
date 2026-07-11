@@ -27,12 +27,13 @@ interface ChatInputProps {
   hasMessages?: boolean;
   activeGame: "none" | "ttt" | "canvas" | "rps";
   setActiveGame: (game: "none" | "ttt" | "canvas" | "rps") => void;
+  onToggleAI?: () => void;
 }
 
 const ChatInput = ({ 
   status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, 
   roomChannel, sessionId, roomId, hideGames, hasMessages,
-  activeGame, setActiveGame
+  activeGame, setActiveGame, onToggleAI
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -109,6 +110,7 @@ const ChatInput = ({
                   sessionId={sessionId}
                   activeGame={activeGame}
                   setActiveGame={setActiveGame}
+                  onToggleAI={onToggleAI}
                 />
               )}
               <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
@@ -152,6 +154,7 @@ const ChatInput = ({
                   sessionId={sessionId}
                   activeGame={activeGame}
                   setActiveGame={setActiveGame}
+                  onToggleAI={onToggleAI}
                 />
               )}
               <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />

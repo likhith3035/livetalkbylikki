@@ -759,6 +759,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           hasMessages={messages.length > 0}
           activeGame={activeGame}
           setActiveGame={setActiveGame}
+          onToggleAI={() => setShowAIPanel((v) => !v)}
         />
       </div>
 
@@ -808,20 +809,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       </div>
       </div>
 
-      {status === "connected" && (
-        <Button
-          type="button"
-          size="icon"
-          onClick={() => setShowAIPanel((v) => !v)}
-          className={cn(
-            "fixed bottom-28 lg:bottom-8 right-4 z-[45] h-12 w-12 rounded-2xl shadow-lg border border-primary/30",
-            showAIPanel && "bg-primary text-primary-foreground"
-          )}
-          aria-label="AI opponent games"
-        >
-          <Bot className="h-5 w-5" />
-        </Button>
-      )}
+
 
       <AIOpponentPanel
         roomId={roomId}
