@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useChatContext } from "@/contexts/ChatContext";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useSettings } from "@/contexts/SettingsContext";
+import { cn } from "@/lib/utils";
 
 interface ReportBlockMenuProps {
   onBlock: () => void;
