@@ -48,8 +48,8 @@ const DEFAULT_SETTINGS: SettingsState = {
   notifyAlerts: true,
   autoStopOnScreenshot: false,
   
-  // Liquid Glass defaults — enabled by default for premium glassmorphism
-  liquidGlassEnabled: true,
+  // Liquid Glass defaults
+  liquidGlassEnabled: false,
   glassOpacity: 0.4,
   glassBlur: 20,
   glassBorderOpacity: 0.25,
@@ -206,7 +206,7 @@ const loadSettings = (): SettingsState => {
     autoStopOnScreenshot: localStorage.getItem("echo.autoStopOnScreenshot") === "true",
     
     // Liquid Glass settings parsing
-    liquidGlassEnabled: getBool("echo.liquidGlassEnabled", DEFAULT_SETTINGS.liquidGlassEnabled),
+    liquidGlassEnabled: false,
     glassOpacity: getNum("echo.glassOpacity", DEFAULT_SETTINGS.glassOpacity),
     glassBlur: getNum("echo.glassBlur", DEFAULT_SETTINGS.glassBlur),
     glassBorderOpacity: getNum("echo.glassBorderOpacity", DEFAULT_SETTINGS.glassBorderOpacity),
