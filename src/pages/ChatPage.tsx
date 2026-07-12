@@ -332,28 +332,32 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     }
   });
 
-  // Prevent right-clicks, selection, copying, dragging in Privacy Mode
+  // Prevent right-clicks, copying, cutting in Privacy Mode (except in input fields)
   useEffect(() => {
     if (status !== "connected" || !privacyModeActive) return;
 
     const preventDefault = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
       e.preventDefault();
       toast({
         title: "🔒 Security Feature Active",
-        description: "Gestures like right-clicks, selection, dragging, and copying are disabled in Privacy Mode."
+        description: "Right-clicks and copying are disabled in Privacy Mode to protect conversation media."
       });
     };
 
     document.addEventListener("contextmenu", preventDefault);
-    document.addEventListener("selectstart", preventDefault);
-    document.addEventListener("dragstart", preventDefault);
     document.addEventListener("copy", preventDefault);
     document.addEventListener("cut", preventDefault);
 
     return () => {
       document.removeEventListener("contextmenu", preventDefault);
-      document.removeEventListener("selectstart", preventDefault);
-      document.removeEventListener("dragstart", preventDefault);
       document.removeEventListener("copy", preventDefault);
       document.removeEventListener("cut", preventDefault);
     };
