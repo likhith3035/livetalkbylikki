@@ -233,7 +233,7 @@ const ChatMessageList = ({
     <div
       className={cn(
         "flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 space-y-1.5 mx-auto w-full max-w-3xl transition-all duration-300",
-        isReplying ? "pb-28 lg:pb-36" : "pb-20 lg:pb-24"
+        isReplying ? "pb-12" : "pb-6"
       )}
     >
       {/* Pinned messages bar */}

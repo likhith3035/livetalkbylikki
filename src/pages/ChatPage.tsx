@@ -534,7 +534,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         isVerified={isVerified}
       />
 
-      <div className={cn("transition-opacity duration-500", status === "idle" && "opacity-0 pointer-events-none")}>
+      <div className={cn("transition-opacity duration-500", status === "idle" && "hidden")}>
         <ChatStatusBar
           status={status}
           matchedInterests={matchedInterests}
@@ -562,7 +562,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
       {/* Stranger Profile Card — floating overlay, removed from flow */}
 
-      <div className={cn("transition-opacity duration-500", status === "idle" && "opacity-0 pointer-events-none")}>
+      <div className={cn("transition-opacity duration-500", status === "idle" && "hidden")}>
         <InterestBar
           interests={interests}
           onChangeInterests={setInterests}
@@ -719,49 +719,48 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           interests={interests}
         />
       ) : (
-        <div className="relative flex-1 min-h-0">
-          {/* Floating stranger profile card — top-right, no layout impact */}
-          <StrangerProfileCard
-            strangerName={strangerName}
-            matchedInterests={matchedInterests}
-            connectedAt={connectedAt}
-            isVerified={isVerified}
-            show={showProfileCard && status === "connected"}
-            onClose={() => setShowProfileCard(false)}
+        <>
+          <div className="relative flex-1 min-h-0 overflow-hidden flex flex-col">
+            {/* Floating stranger profile card — top-right, no layout impact */}
+            <StrangerProfileCard
+              strangerName={strangerName}
+              matchedInterests={matchedInterests}
+              connectedAt={connectedAt}
+              isVerified={isVerified}
+              show={showProfileCard && status === "connected"}
+              onClose={() => setShowProfileCard(false)}
+            />
+            <ChatMessageList
+              messages={messages}
+              strangerTyping={strangerTyping}
+              strangerTypingText={strangerTypingText}
+              onReact={reactToMessage}
+              onReply={(msg) => setReplyingTo(msg)}
+              onDelete={deleteMessage}
+              onPin={pinMessage}
+              onForward={handleForwardMessage}
+              disappearTimer={disappearTimer}
+              highlightMessageId={searchHighlight}
+              isReplying={!!replyingTo}
+            />
+          </div>
+          <ChatInput
+            status={status}
+            onSend={sendMessage}
+            onImageUpload={handleImageUpload}
+            onTyping={sendTyping}
+            replyingTo={replyingTo}
+            onCancelReply={() => setReplyingTo(null)}
+            roomChannel={roomChannel}
+            sessionId={sessionId}
+            roomId={roomId}
+            hasMessages={messages.length > 0}
+            activeGame={activeGame}
+            setActiveGame={setActiveGame}
+            onToggleAI={() => setShowAIPanel((v) => !v)}
           />
-          <ChatMessageList
-            messages={messages}
-            strangerTyping={strangerTyping}
-            strangerTypingText={strangerTypingText}
-            onReact={reactToMessage}
-            onReply={(msg) => setReplyingTo(msg)}
-            onDelete={deleteMessage}
-            onPin={pinMessage}
-            onForward={handleForwardMessage}
-            disappearTimer={disappearTimer}
-            highlightMessageId={searchHighlight}
-            isReplying={!!replyingTo}
-          />
-        </div>
+        </>
       )}
-
-      <div className={cn("transition-opacity duration-500", (status === "idle" || status === "searching") && "opacity-0 pointer-events-none")}>
-        <ChatInput
-          status={status}
-          onSend={sendMessage}
-          onImageUpload={handleImageUpload}
-          onTyping={sendTyping}
-          replyingTo={replyingTo}
-          onCancelReply={() => setReplyingTo(null)}
-          roomChannel={roomChannel}
-          sessionId={sessionId}
-          roomId={roomId}
-          hasMessages={messages.length > 0}
-          activeGame={activeGame}
-          setActiveGame={setActiveGame}
-          onToggleAI={() => setShowAIPanel((v) => !v)}
-        />
-      </div>
 
       <VideoCallOverlay
         callStatus={callStatus}

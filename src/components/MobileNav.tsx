@@ -1,17 +1,20 @@
 import { useState, useEffect, useRef } from "react";
-import { Home, MessageSquare, User, Settings, Info, X, Smartphone } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, X, Smartphone, Shield, ShieldAlert, Menu } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { icon: Home,          path: "/",         label: "Home",    accent: "#10b981" },
-  { icon: MessageSquare, path: "/chat",      label: "Chat",    accent: "hsl(var(--primary))" },
-  { icon: Info,          path: "/info",      label: "Info",    accent: "#0ea5e9" },
-  { icon: User,          path: "/profile",   label: "Profile", accent: "#8b5cf6" },
-  { icon: Settings,      path: "/settings",  label: "Settings",accent: "#64748b" },
+  { icon: Home,          path: "/",         label: "Home",       accent: "#10b981" },
+  { icon: MessageSquare, path: "/chat",      label: "Chat",       accent: "hsl(var(--primary))" },
+  { icon: Shield,        path: "/safety",    label: "Safety",     accent: "#14b8a6" },
+  { icon: User,          path: "/profile",   label: "Profile",    accent: "#8b5cf6" },
+  { icon: Settings,      path: "/settings",  label: "Settings",   accent: "#64748b" },
+  { icon: ShieldAlert,   path: "/guidelines",label: "Guidelines", accent: "#f59e0b" },
+  { icon: Info,          path: "/info",      label: "Info",       accent: "#0ea5e9" },
 ];
+
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -20,7 +23,8 @@ export default function MobileNav() {
   const { settings } = useSettings();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const activeItem = navItems.find((i) => i.path === pathname) ?? navItems[0];
+  const matchedItem = navItems.find((i) => i.path === pathname);
+  const activeItem = matchedItem ?? navItems[0];
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -180,14 +184,18 @@ export default function MobileNav() {
                 transition={{ duration: 0.15 }}
                 className="relative z-10"
               >
-                <activeItem.icon className="h-6 w-6 text-white" />
+                {matchedItem ? (
+                  <matchedItem.icon className="h-6 w-6 text-white" />
+                ) : (
+                  <Menu className="h-6 w-6 text-white" />
+                )}
               </motion.span>
             )}
           </AnimatePresence>
-          {!open && (
+          {!open && matchedItem && (
             <span
               className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full border-2 border-primary"
-              style={{ backgroundColor: activeItem.accent }}
+              style={{ backgroundColor: matchedItem.accent }}
             />
           )}
         </motion.button>

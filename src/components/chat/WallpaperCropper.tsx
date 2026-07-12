@@ -89,8 +89,8 @@ const WallpaperCropper = ({ imageSrc, onCropComplete, onCancel }: WallpaperCropp
       viewportWidth = 220;
       viewportHeight = 124;
     } else if (aspect === "free") {
-      viewportWidth = 280;
-      viewportHeight = 280;
+      viewportWidth = 220;
+      viewportHeight = 220;
     }
 
     // Calculate crop parameters
@@ -134,7 +134,7 @@ const WallpaperCropper = ({ imageSrc, onCropComplete, onCancel }: WallpaperCropp
     if (aspect === "9:16") return "w-[220px] h-[391px]";
     if (aspect === "1:1") return "w-[220px] h-[220px]";
     if (aspect === "16:9") return "w-[220px] h-[124px]";
-    return "w-[280px] h-[280px] rounded-full";
+    return "w-[220px] h-[220px] rounded-full";
   };
 
   return (
@@ -228,7 +228,7 @@ const WallpaperCropper = ({ imageSrc, onCropComplete, onCancel }: WallpaperCropp
                 left: "50%",
                 top: "50%",
                 width: "auto",
-                height: aspect === "free" ? "280px" : aspect === "9:16" ? "391px" : aspect === "1:1" ? "220px" : "124px",
+                height: aspect === "free" ? "220px" : aspect === "9:16" ? "391px" : aspect === "1:1" ? "220px" : "124px",
                 objectFit: "cover",
                 transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
                 transformOrigin: "center center"

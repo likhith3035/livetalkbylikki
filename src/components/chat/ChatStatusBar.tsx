@@ -162,8 +162,10 @@ const ChatStatusBar = ({
         </AnimatePresence>
       </div>
 
-      {/* Action buttons with labels */}
-      <div className="flex gap-0.5 sm:gap-1.5 items-center shrink-0 overflow-x-auto sm:overflow-visible max-w-[65vw] sm:max-w-none scrollbar-none">
+      {/* Scrollable Action bar container with fading gradient overlays on mobile */}
+      <div className="relative flex items-center min-w-0">
+        <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none lg:hidden opacity-50" />
+        <div className="flex gap-0.5 sm:gap-1.5 items-center shrink-0 overflow-x-auto sm:overflow-visible max-w-[65vw] sm:max-w-none scrollbar-none pr-4">
         {status === "idle" && (
           <>
             <Button
@@ -443,6 +445,8 @@ const ChatStatusBar = ({
             Start
           </Button>
         )}
+        </div>
+        <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none lg:hidden" />
       </div>
     </div>
   );
