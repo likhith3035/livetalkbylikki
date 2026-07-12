@@ -138,6 +138,12 @@ const AdminDashboard = () => {
   const [appeals, setAppeals] = useState<any[]>([]);
   const [newWord, setNewWord] = useState("");
 
+  const [blacklist, setBlacklist] = useState<string[]>([]);
+  const [searchWord, setSearchWord] = useState("");
+  const [searchReport, setSearchReport] = useState("");
+  const [searchBlacklist, setSearchBlacklist] = useState("");
+  const [manualUid, setManualUid] = useState("");
+
   // Derive Real Data for Secondary Charts
   const derivedMetrics = useMemo(() => {
     // 1. Weekly Velocity (Bar Chart)
@@ -182,6 +188,21 @@ const AdminDashboard = () => {
 
     return { weeklyVelocity, gaugeData, heatmap, loadPercent, chartData, chartConfig };
   }, [visitData, matchData, hourlyData, onlineCount, isDark, selectedMetric]);
+
+  const filteredBannedWords = useMemo(() => {
+    return bannedWords.filter(w => w.toLowerCase().includes(searchWord.trim().toLowerCase()));
+  }, [bannedWords, searchWord]);
+
+  const filteredReports = useMemo(() => {
+    return safetyReports.filter(r => 
+      r.reason.toLowerCase().includes(searchReport.trim().toLowerCase()) || 
+      r.reportedId.toLowerCase().includes(searchReport.trim().toLowerCase())
+    );
+  }, [safetyReports, searchReport]);
+
+  const filteredBlacklist = useMemo(() => {
+    return blacklist.filter(uid => uid.toLowerCase().includes(searchBlacklist.trim().toLowerCase()));
+  }, [blacklist, searchBlacklist]);
 
   useEffect(() => {
     if (!db) return;
@@ -306,9 +327,21 @@ const AdminDashboard = () => {
       console.error("[Admin] Appeals Sync Error:", error);
     });
 
+    // Blacklist Sync
+    const blacklistRef = ref(db, "admin/blacklist");
+    const unsubBlacklist = onValue(blacklistRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setBlacklist(Object.keys(snapshot.val()));
+      } else {
+        setBlacklist([]);
+      }
+    }, (error) => {
+      console.error("[Admin] Blacklist Sync Error:", error);
+    });
+
     return () => { 
       unsubVisits(); unsubMatches(); unsubHourly(); unsubPresence(); 
-      unsubReports(); unsubWords(); unsubAppeals();
+      unsubReports(); unsubWords(); unsubAppeals(); unsubBlacklist();
     };
   }, []);
 
@@ -367,10 +400,54 @@ const AdminDashboard = () => {
       });
   };
 
+  const handleManualBan = () => {
+    if (!manualUid.trim()) return;
+    handleBanUser(manualUid.trim());
+    setManualUid("");
+  };
+
+  const handleManualUnban = () => {
+    if (!manualUid.trim()) return;
+    handleUnbanUser(manualUid.trim());
+    setManualUid("");
+  };
+
   const handleDismissReport = (reportId: string) => {
     remove(ref(db, `admin/reports/${reportId}`))
       .then(() => toast({ title: "Report Dismissed" }))
       .catch(() => toast({ variant: "destructive", title: "Error", description: "Failed to dismiss report." }));
+  };
+
+  const handleDismissAllReports = () => {
+    if (safetyReports.length === 0) return;
+    const promises = safetyReports.map(r => remove(ref(db, `admin/reports/${r.id}`)));
+    Promise.all(promises)
+      .then(() => toast({ title: "All Reports Dismissed" }))
+      .catch(() => toast({ variant: "destructive", title: "Error", description: "Failed to clear reports." }));
+  };
+
+  const handleInjectDemoData = () => {
+    const today = new Date();
+    const batchVisits: any = {};
+    const batchMatches: any = {};
+    const batchHourly: any = {};
+
+    for (let i = 13; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+      batchVisits[dateStr] = Math.floor(25 + Math.random() * 45);
+      batchMatches[dateStr] = Math.floor(10 + Math.random() * 25);
+    }
+
+    const todayStr = today.toISOString().split("T")[0];
+    const hoursData = Array.from({ length: 24 }, () => Math.floor(2 + Math.random() * 12));
+    
+    set(ref(db, "analytics/daily_visits"), batchVisits)
+      .then(() => set(ref(db, "analytics/daily_matches"), batchMatches))
+      .then(() => set(ref(db, `analytics/hourly_visits/${todayStr}`), hoursData))
+      .then(() => toast({ title: "Demo Data Injected", description: "Vibrant stats now populated for testing." }))
+      .catch(() => toast({ variant: "destructive", title: "Error", description: "Failed to inject demo data." }));
   };
 
   if (!authorized) {
@@ -405,6 +482,14 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleInjectDemoData}
+              className="h-8 text-xs gap-1.5 rounded-lg border-primary/20 text-primary hover:bg-primary/5"
+            >
+              <Activity className="h-3.5 w-3.5" /> Inject Stats
+            </Button>
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${isDark ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border border-emerald-200"}`}>
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {onlineCount} online
@@ -485,131 +570,185 @@ const AdminDashboard = () => {
 
               <div className="flex-1 min-h-0 w-full overflow-hidden p-4 pt-2">
                 {selectedMetric === "SAFETY" ? (
-                  <div className="h-full flex flex-col gap-6 overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="h-full grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pr-1 custom-scrollbar">
                     
-                    {/* ── Profanity Manager ── */}
-                    <section className="space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <h4 className="text-[13px] font-semibold text-foreground">Profanity Filter</h4>
-                        <div className="flex gap-2 w-full sm:w-auto">
+                    {/* ── LEFT COLUMN ── */}
+                    <div className="space-y-6">
+                      {/* Profanity Manager */}
+                      <section className="space-y-3 p-4 rounded-2xl border border-border/40 bg-secondary/5">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="text-[13px] font-bold text-foreground">Profanity Filter ({bannedWords.length})</h4>
+                          <p className="text-[10px] text-muted-foreground leading-tight">Add words to block matches matching those interests.</p>
+                        </div>
+                        <div className="flex gap-2">
                           <Input 
                             placeholder="Add banned word…" 
                             value={newWord}
                             onChange={(e) => setNewWord(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddWord()}
-                            className="h-8 w-full sm:w-48 text-xs"
+                            className="h-8 text-xs rounded-lg"
                           />
-                          <Button size="sm" onClick={handleAddWord} className="h-8 gap-1.5 rounded-lg text-xs font-semibold shrink-0">
-                            <Plus className="h-3.5 w-3.5" /> Add
+                          <Button size="sm" onClick={handleAddWord} className="h-8 gap-1 rounded-lg text-xs font-semibold shrink-0">
+                            <Plus className="h-3 w-3" /> Add
                           </Button>
                         </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {bannedWords.map((word) => (
-                          <div key={word} className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 hover:bg-muted/60 rounded-lg border border-border/50 transition-colors group">
-                            <span className="text-xs font-medium">{word}</span>
-                            <button onClick={() => handleDeleteWord(word)} className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100">
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-
-                    {/* ── Reports Table ── */}
-                    <section className="space-y-3">
-                      <h4 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-                        <ShieldAlert className="h-4 w-4 text-destructive/70" />
-                        User Reports
-                        {safetyReports.length > 0 && (
-                          <span className="ml-1 text-[10px] font-bold bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">
-                            {safetyReports.length}
-                          </span>
-                        )}
-                      </h4>
-                      <div className="border border-border/50 rounded-xl overflow-x-auto bg-muted/5">
-                        <div className="min-w-[600px]">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="border-b border-border/50">
-                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Reason</th>
-                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Reported ID</th>
-                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Time</th>
-                              <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/30">
-                            {safetyReports.length === 0 ? (
-                              <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground text-sm">No active reports — community is clean ✨</td></tr>
-                            ) : safetyReports.map((r) => (
-                              <tr key={r.id} className="hover:bg-muted/10 transition-colors group">
-                                <td className="px-4 py-3 font-medium text-destructive/80 flex items-center gap-2">
-                                  <ShieldAlert className="h-3.5 w-3.5 opacity-50" /> {r.reason}
-                                </td>
-                                <td className="px-4 py-3 font-mono text-muted-foreground text-[11px]">{r.reportedId.slice(0, 12)}…</td>
-                                <td className="px-4 py-3 text-muted-foreground">{new Date(r.timestamp).toLocaleString()}</td>
-                                <td className="px-4 py-3 text-right space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button size="sm" variant="outline" className="h-7 px-2.5 text-[11px] font-semibold gap-1 border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white" onClick={() => handleBanUser(r.reportedId)}>
-                                    <UserX className="h-3 w-3" /> Ban
-                                  </Button>
-                                  <Button size="sm" variant="outline" className="h-7 px-2.5 text-[11px] font-semibold gap-1" onClick={() => handleDismissReport(r.id)}>
-                                    <ShieldCheck className="h-3 w-3" /> Dismiss
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                        <Input 
+                          placeholder="Search filter list..."
+                          value={searchWord}
+                          onChange={(e) => setSearchWord(e.target.value)}
+                          className="h-8 text-xs rounded-lg bg-background/50"
+                        />
+                        <div className="h-44 overflow-y-auto border border-border/30 rounded-lg p-2 flex flex-wrap gap-1.5 bg-background/30 content-start custom-scrollbar">
+                          {filteredBannedWords.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground m-auto text-center">No matching words</p>
+                          ) : filteredBannedWords.map((word) => (
+                            <div key={word} className="flex items-center gap-1.5 px-2 py-1 bg-card/60 hover:bg-muted/80 rounded-md border border-border/40 transition-colors group">
+                              <span className="text-[11px] font-medium">{word}</span>
+                              <button onClick={() => handleDeleteWord(word)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0">
+                                <Trash2 className="h-2.5 w-2.5" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    </section>
+                      </section>
 
-                    {/* ── Appeals ── */}
-                    <section className="space-y-3">
-                      <h4 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4 text-primary/70" />
-                        Ban Appeals
-                        {appeals.length > 0 && (
-                          <span className="ml-1 text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                            {appeals.length}
-                          </span>
-                        )}
-                      </h4>
-                      <div className="border border-border/50 rounded-xl overflow-x-auto bg-muted/5">
-                        <div className="min-w-[600px]">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="border-b border-border/50">
-                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Reason</th>
-                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">User ID</th>
-                              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Time</th>
-                              <th className="px-4 py-3 text-right font-semibold text-muted-foreground">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/30">
-                            {appeals.length === 0 ? (
-                              <tr><td colSpan={4} className="px-4 py-10 text-center text-muted-foreground text-sm">No pending appeals</td></tr>
-                            ) : appeals.map((a) => (
-                              <tr key={a.uid} className="hover:bg-muted/10 transition-colors group">
-                                <td className="px-4 py-3 font-medium">{a.reason}</td>
-                                <td className="px-4 py-3 font-mono text-muted-foreground text-[11px]">{a.uid.slice(0, 12)}…</td>
-                                <td className="px-4 py-3 text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</td>
-                                <td className="px-4 py-3 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button 
-                                    size="sm" variant="glow" 
-                                    className="h-7 px-3 text-[11px] font-semibold gap-1"
-                                    onClick={() => handleUnbanUser(a.uid)}
-                                  >
-                                    <ShieldCheck className="h-3 w-3" /> Unban
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      {/* Manual Ban/Unban Control */}
+                      <section className="space-y-3 p-4 rounded-2xl border border-border/40 bg-secondary/5">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="text-[13px] font-bold text-foreground">Manual Moderation</h4>
+                          <p className="text-[10px] text-muted-foreground leading-tight">Restrict or restore user sessions instantly using their unique ID.</p>
                         </div>
-                      </div>
-                    </section>
+                        <Input 
+                          placeholder="Paste User Session ID..."
+                          value={manualUid}
+                          onChange={(e) => setManualUid(e.target.value)}
+                          className="h-9 text-xs rounded-lg"
+                        />
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="destructive"
+                            className="flex-1 h-9 text-xs font-bold rounded-lg gap-1.5"
+                            onClick={handleManualBan}
+                            disabled={!manualUid.trim()}
+                          >
+                            <UserX className="h-3.5 w-3.5" /> Ban Session
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            className="flex-1 h-9 text-xs font-bold rounded-lg gap-1.5"
+                            onClick={handleManualUnban}
+                            disabled={!manualUid.trim()}
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" /> Restore Access
+                          </Button>
+                        </div>
+                      </section>
+                    </div>
+
+                    {/* ── RIGHT COLUMN ── */}
+                    <div className="space-y-6">
+                      {/* Active Reports */}
+                      <section className="space-y-3 p-4 rounded-2xl border border-border/40 bg-secondary/5">
+                        <div className="flex items-center justify-between gap-3">
+                          <h4 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                            <ShieldAlert className="h-3.5 w-3.5 text-destructive/80" /> User Reports ({safetyReports.length})
+                          </h4>
+                          {safetyReports.length > 0 && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleDismissAllReports}
+                              className="h-6 text-[10px] text-destructive hover:bg-destructive/10 font-bold px-2 rounded-md"
+                            >
+                              Dismiss All
+                            </Button>
+                          )}
+                        </div>
+                        <Input 
+                          placeholder="Search reports..."
+                          value={searchReport}
+                          onChange={(e) => setSearchReport(e.target.value)}
+                          className="h-8 text-xs rounded-lg bg-background/50"
+                        />
+                        <div className="h-44 overflow-y-auto border border-border/30 rounded-lg bg-background/30 divide-y divide-border/30 custom-scrollbar">
+                          {filteredReports.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground p-8 text-center m-auto">No pending reports ✨</p>
+                          ) : filteredReports.map((r) => (
+                            <div key={r.id} className="p-3 flex items-start justify-between gap-3 hover:bg-card/10 transition-colors">
+                              <div className="space-y-1 min-w-0">
+                                <p className="text-xs font-bold text-destructive/90 truncate leading-none">{r.reason}</p>
+                                <p className="text-[9px] font-mono text-muted-foreground truncate leading-none">{r.reportedId}</p>
+                                <p className="text-[9px] text-muted-foreground/60 leading-none">{new Date(r.timestamp).toLocaleTimeString()}</p>
+                              </div>
+                              <div className="flex gap-1 shrink-0">
+                                <Button size="sm" variant="outline" className="h-6 px-2 text-[10px] font-bold border-red-500/25 text-red-500 hover:bg-red-500 hover:text-white" onClick={() => handleBanUser(r.reportedId)}>
+                                  Ban
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => handleDismissReport(r.id)}>
+                                  Dismiss
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      {/* Blacklist Directory */}
+                      <section className="space-y-3 p-4 rounded-2xl border border-border/40 bg-secondary/5">
+                        <h4 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                          <UserX className="h-3.5 w-3.5 text-muted-foreground" /> Banned Directory ({blacklist.length})
+                        </h4>
+                        <Input 
+                          placeholder="Search blacklist..."
+                          value={searchBlacklist}
+                          onChange={(e) => setSearchBlacklist(e.target.value)}
+                          className="h-8 text-xs rounded-lg bg-background/50"
+                        />
+                        <div className="h-32 overflow-y-auto border border-border/30 rounded-lg bg-background/30 divide-y divide-border/30 custom-scrollbar">
+                          {filteredBlacklist.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground p-8 text-center m-auto">No blacklisted sessions</p>
+                          ) : filteredBlacklist.map((uid) => (
+                            <div key={uid} className="p-2 px-3 flex items-center justify-between gap-3 hover:bg-card/10 transition-colors">
+                              <span className="text-[11px] font-mono text-muted-foreground truncate">{uid}</span>
+                              <Button 
+                                size="sm" variant="ghost" 
+                                className="h-6 px-2 text-[10px] font-bold text-primary hover:bg-primary/10 shrink-0"
+                                onClick={() => handleUnbanUser(uid)}
+                              >
+                                Restore
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      {/* Ban Appeals */}
+                      <section className="space-y-3 p-4 rounded-2xl border border-border/40 bg-secondary/5">
+                        <h4 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                          <ShieldCheck className="h-3.5 w-3.5 text-primary/80" /> Appeals Inbox ({appeals.length})
+                        </h4>
+                        <div className="h-32 overflow-y-auto border border-border/30 rounded-lg bg-background/30 divide-y divide-border/30 custom-scrollbar">
+                          {appeals.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground p-8 text-center m-auto">No appeals pending</p>
+                          ) : appeals.map((a) => (
+                            <div key={a.uid} className="p-3 flex items-start justify-between gap-3 hover:bg-card/10 transition-colors">
+                              <div className="space-y-1 min-w-0">
+                                <p className="text-xs font-bold text-foreground/90 leading-tight">{a.reason}</p>
+                                <p className="text-[9px] font-mono text-muted-foreground truncate leading-none">{a.uid}</p>
+                              </div>
+                              <Button 
+                                size="sm" variant="glow" 
+                                className="h-6 px-2 text-[10px] font-bold shrink-0"
+                                onClick={() => handleUnbanUser(a.uid)}
+                              >
+                                Grant Appeal
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    </div>
+
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
