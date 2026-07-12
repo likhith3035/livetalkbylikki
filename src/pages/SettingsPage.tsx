@@ -325,22 +325,10 @@ const SettingsPage = () => {
       </AnimatePresence>
       {/* Premium Background Orbs & Fluid Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 page-bg-orbs">
-        {settings.liquidGlassEnabled ? (
-          <div className="absolute inset-0 opacity-[0.25] dark:opacity-[0.32] filter blur-[95px] transition-opacity duration-500">
-            {/* Morphing glass color shapes */}
-            <div className="absolute w-[50vw] h-[50vw] rounded-full bg-primary/40 -left-[10%] -top-[10%] animate-pulse" 
-                 style={{ animationDuration: "12s" }} />
-            <div className="absolute w-[45vw] h-[45vw] rounded-full bg-accent/35 -right-[10%] bottom-[10%] animate-pulse" 
-                 style={{ animationDuration: "16s" }} />
-            <div className="absolute w-[35vw] h-[35vw] rounded-full bg-emerald-500/20 left-[15%] top-[30%] animate-pulse" 
-                 style={{ animationDuration: "20s" }} />
-          </div>
-        ) : (
           <>
             <div className="absolute top-[10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse" />
             <div className="absolute bottom-[20%] right-[-5%] w-[30%] h-[30%] rounded-full bg-accent/5 blur-[100px]" />
           </>
-        )}
       </div>
 
       <Header onlineCount={onlineCount} />
@@ -1126,31 +1114,7 @@ const SettingsPage = () => {
             <h2 className="text-[11px] font-extrabold text-primary/75 dark:text-primary/65 uppercase tracking-[0.22em] px-2.5 flex items-center gap-2">
               <Keyboard className="h-3.5 w-3.5 text-primary" /> Accessibility
             </h2>
-            <div 
-              className={cn(
-                "rounded-[2rem] border overflow-hidden divide-y transition-all duration-300",
-                settings.liquidGlassEnabled 
-                  ? "border-border/20 backdrop-blur-md divide-border/10" 
-                  : "bg-card border-border/40 divide-border/15"
-              )}
-              style={{
-                background: settings.liquidGlassEnabled 
-                  ? `hsla(var(--glass-tint-hsl) / calc(var(--glass-opacity) * 0.45))` 
-                  : undefined,
-                border: settings.liquidGlassEnabled 
-                  ? `${settings.glassBorderWidth}px solid hsla(var(--glass-tint-hsl) / calc(var(--glass-border-opacity) * 0.6))` 
-                  : undefined,
-                backdropFilter: settings.liquidGlassEnabled 
-                  ? `blur(${settings.glassBlur}px) saturate(1.4)` 
-                  : undefined,
-                WebkitBackdropFilter: settings.liquidGlassEnabled 
-                  ? `blur(${settings.glassBlur}px) saturate(1.4)` 
-                  : undefined,
-                boxShadow: settings.liquidGlassEnabled
-                  ? `0 4px 20px 0 rgba(0, 0, 0, 0.05), 0 0 12px 1px hsla(var(--glass-tint-hsl) / calc(var(--glass-glow-intensity) * 0.08))`
-                  : undefined
-              }}
-            >
+            <div className="rounded-[2rem] border overflow-hidden divide-y transition-all duration-300 bg-card border-border/40 divide-border/15">
               <ShortcutRow keys={["Enter"]} desc="Start matching when idle" />
               <ShortcutRow keys={["Esc"]} desc="Quick stop or disconnect" />
               <ShortcutRow keys={["Ctrl", "N"]} desc="Skip to next stranger" />
@@ -1218,41 +1182,10 @@ const SettingsPage = () => {
 };
 
 const SettingRow = ({ icon, title, desc, children }: { icon: React.ReactNode; title: string; desc: string; children: React.ReactNode }) => {
-  const { settings } = useSettings();
-  
   return (
-    <div 
-      className={cn(
-        "flex items-center justify-between rounded-[2rem] px-5 py-4 shadow-sm hover:shadow-md border transition-all duration-300",
-        settings.liquidGlassEnabled 
-          ? "border-border/20 backdrop-blur-md" 
-          : "bg-card border-border/40"
-      )}
-      style={{
-        background: settings.liquidGlassEnabled 
-          ? `hsla(var(--glass-tint-hsl) / calc(var(--glass-opacity) * 0.45))` 
-          : undefined,
-        border: settings.liquidGlassEnabled 
-          ? `${settings.glassBorderWidth}px solid hsla(var(--glass-tint-hsl) / calc(var(--glass-border-opacity) * 0.6))` 
-          : undefined,
-        backdropFilter: settings.liquidGlassEnabled 
-          ? `blur(${settings.glassBlur}px) saturate(1.4)` 
-          : undefined,
-        WebkitBackdropFilter: settings.liquidGlassEnabled 
-          ? `blur(${settings.glassBlur}px) saturate(1.4)` 
-          : undefined,
-        boxShadow: settings.liquidGlassEnabled
-          ? `0 4px 20px 0 rgba(0, 0, 0, 0.05), 0 0 12px 1px hsla(var(--glass-tint-hsl) / calc(var(--glass-glow-intensity) * 0.08))`
-          : undefined
-      }}
-    >
+    <div className="flex items-center justify-between rounded-[2rem] px-5 py-4 shadow-sm hover:shadow-md border transition-all duration-300 bg-card border-border/40">
       <div className="flex items-center gap-4">
-        <div className={cn(
-          "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300",
-          settings.liquidGlassEnabled 
-            ? "bg-primary/10 text-primary border border-primary/20 animate-pulse-slow" 
-            : "bg-primary/5 text-primary/70 border border-border/20"
-        )}>
+        <div className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 bg-primary/5 text-primary/70 border border-border/20">
           {icon}
         </div>
         <div>

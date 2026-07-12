@@ -23,21 +23,13 @@ const DesktopSidebar = () => {
 
   return (
     <aside
-      className={cn(
-        "hidden lg:flex flex-col shrink-0 z-40",
-        settings.liquidGlassEnabled
-          ? "w-[220px] rounded-[2.25rem] glass shadow-lg sticky top-4 self-start h-[calc(100svh-2rem)]"
-          : "w-[220px] sticky top-0 self-start h-svh border-r border-border bg-card/50 backdrop-blur-xl"
-      )}
+      className="hidden lg:flex flex-col shrink-0 z-40 w-[220px] sticky top-0 self-start h-svh border-r border-border bg-card/50 backdrop-blur-xl"
       style={{ willChange: "transform" }}
     >
       {/* Logo */}
       <Link 
         to="/" 
-        className={cn(
-          "flex items-center gap-3 px-5 py-5 group border-b",
-          settings.liquidGlassEnabled ? "border-border/10" : "border-border/50"
-        )}
+        className="flex items-center gap-3 px-5 py-5 group border-b border-border/50"
       >
         <BrandLogo className="h-10 w-10 drop-shadow-md group-hover:scale-105 transition-transform" />
         <span className="font-display text-lg font-bold text-foreground group-hover:text-primary transition-colors">LiveTalk</span>
@@ -59,12 +51,8 @@ const DesktopSidebar = () => {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
                 isActive
-                  ? settings.liquidGlassEnabled
-                    ? "bg-primary/20 text-foreground border-primary/20 shadow-sm"
-                    : "bg-primary/15 text-primary shadow-sm"
-                  : settings.liquidGlassEnabled
-                    ? "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                  ? "bg-primary/15 text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               )}
             >
               <item.icon className="h-[18px] w-[18px] shrink-0" />
@@ -75,20 +63,10 @@ const DesktopSidebar = () => {
       </nav>
 
       {/* Theme toggle + footer */}
-      <div 
-        className={cn(
-          "px-4 py-4 space-y-3 border-t",
-          settings.liquidGlassEnabled ? "border-border/10" : "border-border/50"
-        )}
-      >
+      <div className="px-4 py-4 space-y-3 border-t border-border/50">
         <button
           onClick={() => updateSetting("darkMode", !settings.darkMode)}
-          className={cn(
-            "flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
-            settings.liquidGlassEnabled
-              ? "text-muted-foreground hover:text-foreground hover:bg-white/5"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-          )}
+          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/60"
         >
           {settings.darkMode ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
           {settings.darkMode ? "Dark Mode" : "Light Mode"}
@@ -101,14 +79,13 @@ const DesktopSidebar = () => {
             "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
             pathname === "/handoff"
               ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20"
-              : settings.liquidGlassEnabled
-                ? "text-muted-foreground hover:text-amber-500 hover:bg-amber-500/5"
-                : "text-muted-foreground hover:text-amber-600 hover:bg-amber-500/8"
+              : "text-muted-foreground hover:text-amber-600 hover:bg-amber-500/8"
           )}
         >
           <Smartphone className="h-[18px] w-[18px] shrink-0" />
           Join via Code
-        </Link>        <div className="flex flex-col items-center gap-1 text-[10px]">
+        </Link>
+        <div className="flex flex-col items-center gap-1 text-[10px]">
           <a
             href="https://devlikhith.vercel.app/"
             target="_blank"

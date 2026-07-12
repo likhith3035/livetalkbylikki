@@ -80,13 +80,8 @@ export default function MobileNav() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 420, damping: 32 }}
-              className={cn(
-                "flex flex-col gap-1 p-2 rounded-3xl shadow-2xl border",
-                settings.liquidGlassEnabled
-                  ? "glass border-white/10"
-                  : "bg-card border-border/50"
-              )}
-              style={settings.liquidGlassEnabled ? {} : { backgroundColor: "hsl(var(--card))" }}
+              className="flex flex-col gap-1 p-2 rounded-3xl shadow-2xl border bg-card border-border/50"
+              style={{ backgroundColor: "hsl(var(--card))" }}
             >
               {/* Main nav items */}
               {navItems.map((item, i) => {

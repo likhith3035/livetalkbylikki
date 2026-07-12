@@ -11,7 +11,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import FeedbackSharePopup from "@/components/FeedbackSharePopup";
-import LiquidBackground from "@/components/LiquidBackground";
 import ScrollToTop from "@/components/ScrollToTop";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -142,7 +141,6 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
-        <LiquidBackground />
         <AppContent />
       </SettingsProvider>
     </QueryClientProvider>

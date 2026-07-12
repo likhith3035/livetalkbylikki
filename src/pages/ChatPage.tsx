@@ -23,6 +23,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { useToast } from "@/hooks/use-toast";
 import { useSettings } from "@/contexts/SettingsContext";
 import { FindingAnimation } from "@/components/chat/FindingAnimation";
+import LiquidBackground from "@/components/LiquidBackground";
 import SharedCanvas from "@/components/chat/SharedCanvas";
 import { useSoundNotifications } from "@/hooks/use-sound-notifications";
 import { useProtectionDetection } from "@/hooks/use-protection-detection";
@@ -515,6 +516,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   return (
     <div className={cn("flex flex-col bg-background relative z-0 h-[100dvh] lg:h-full overflow-hidden", status === "connected" && privacyModeActive && "select-none")}>
+      <LiquidBackground />
       <ChatWallpaper />
       <div className={cn("flex flex-col flex-1 min-h-0", privacyAlertActive && "blur-lg pointer-events-none transition-all duration-300")}>
         <div className="relative z-20">

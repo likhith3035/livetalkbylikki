@@ -19,23 +19,9 @@ const BottomNav = forwardRef<HTMLElement>((_, ref) => {
   return (
     <nav
       ref={ref}
-      className={cn(
-        // Base: fixed, full-width, above everything, hidden on desktop
-        "fixed z-[60] lg:hidden",
-        settings.liquidGlassEnabled
-          // Liquid glass mode: floating pill
-          ? "left-4 right-4 rounded-[1.75rem] glass shadow-xl border-t-0 py-1"
-          // Standard mode: full-width bar with a guaranteed opaque background
-          : "bottom-0 left-0 right-0 border-t border-border/60 safe-area-bottom"
-      )}
+      className="fixed z-[60] lg:hidden bottom-0 left-0 right-0 border-t border-border/60 safe-area-bottom"
       style={{
-        bottom: settings.liquidGlassEnabled
-          ? "calc(16px + env(safe-area-inset-bottom, 0px))"
-          : undefined,
-        // Guarantee a visible background even when backdrop-filter is unsupported
-        backgroundColor: settings.liquidGlassEnabled
-          ? undefined
-          : "hsl(var(--card))",
+        backgroundColor: "hsl(var(--card))",
         willChange: "transform",
       }}
     >
