@@ -826,66 +826,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onSendMessage={sendMessage}
       />
 
-      {status === "connected" && crossDevice.sessionToken && (
-        <div className="hidden lg:block fixed top-20 right-6 z-30 w-72">
-          {/* Minimized pill */}
-          {handoffMinimized ? (
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              onClick={() => {
-                setHandoffMinimized(false);
-                try { localStorage.setItem("echo.handoff.minimized", "false"); } catch {}
-              }}
-              className={cn(
-                "flex items-center gap-2 rounded-2xl shadow-lg px-3 py-2.5 transition-colors w-full border",
-                settings.liquidGlassEnabled
-                  ? "glass hover:bg-white/10"
-                  : "bg-card border-border/50 hover:bg-accent"
-              )}
-              aria-label="Expand handoff panel"
-            >
-              <Smartphone className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="text-[11px] font-bold text-primary flex-1 text-left truncate">Open on your device</span>
-              {crossDevice.participants.filter(p => p.online).length >= 2 && (
-                <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-              )}
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            </motion.button>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              {/* Minimize button row */}
-              <div className="flex justify-end mb-1">
-                <button
-                  onClick={() => {
-                    setHandoffMinimized(true);
-                    try { localStorage.setItem("echo.handoff.minimized", "true"); } catch {}
-                  }}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] transition-colors",
-                    settings.liquidGlassEnabled
-                      ? "bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10"
-                      : "bg-card/80 border-border/40 text-muted-foreground hover:text-foreground hover:bg-card"
-                  )}
-                  aria-label="Minimize handoff panel"
-                >
-                  <ChevronUp className="h-3 w-3" /> Minimize
-                </button>
-              </div>
-              <DeviceHandoffPanel
-                sessionToken={crossDevice.sessionToken}
-                handoffUrl={crossDevice.handoffUrl}
-                participants={crossDevice.participants}
-                onRefreshToken={() => crossDevice.issueToken()}
-                compact
-              />
-            </motion.div>
-          )}
-        </div>
-      )}
+
 
       <motion.div className="z-[200]">
         <AnimatePresence>

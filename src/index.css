@@ -566,8 +566,6 @@
 
 /* ─── Native WebApp WebView Optimizations ─── */
 html, body {
-  /* Prevent pull-to-refresh reload jank in webviews */
-  overscroll-behavior-y: none;
   /* Disable double-tap to zoom, making clicks feel instantaneous */
   touch-action: manipulation;
 }
