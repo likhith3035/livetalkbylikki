@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globIgnores: ["**/AdminDashboard-*.js", "**/QrScanner-*.js"],
         importScripts: ["sw-custom.js"],
       },
       manifest: {
