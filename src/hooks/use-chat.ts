@@ -13,9 +13,9 @@ import { createTempRoom, getRoomMeta, touchRoomExpiry } from "@/features/temp-ro
 const getProfile = () => {
   try {
     const raw = localStorage.getItem("lchat.profile");
-    if (raw) return JSON.parse(raw) as { nickname: string; avatar: string };
+    if (raw) return JSON.parse(raw) as { nickname: string; avatar: string; mood?: string };
   } catch { }
-  return { nickname: "", avatar: "😀" };
+  return { nickname: "", avatar: "😀", mood: "" };
 };
 
 export interface Message {
@@ -27,6 +27,7 @@ export interface Message {
   reactions: Record<string, string[]>;
   senderNickname?: string;
   senderAvatar?: string;
+  senderMood?: string;
   read?: boolean;
   replyTo?: { id: string; text: string; sender: string };
   deleted?: boolean;
@@ -91,7 +92,14 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [status, setStatus] = useState<ChatStatus>("idle");
   const onlineCount = useOnlineCount();
   const { checkProfanity, reportUser, isBanned, handleViolation } = useSafety();
-  const [interests, setInterests] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem("lchat.interests");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
   const [matchedInterests, setMatchedInterests] = useState<string[]>([]);
   const [strangerTyping, setStrangerTyping] = useState(false);
   const [strangerTypingText, setStrangerTypingText] = useState("");
@@ -99,6 +107,8 @@ export function useChat(callbacks?: ChatCallbacks) {
   const [searchElapsed, setSearchElapsed] = useState(0);
   const [userName, setUserName] = useState<string>("");
   const [strangerName, setStrangerName] = useState<string>("Stranger");
+  const [strangerAvatar, setStrangerAvatar] = useState<string>("😀");
+  const [strangerMood, setStrangerMood] = useState<string>("");
   const [privateRoomCode, setPrivateRoomCode] = useState<string | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
   const privateRoomCodeRef = useRef<string | null>(null);
@@ -122,6 +132,9 @@ export function useChat(callbacks?: ChatCallbacks) {
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
   useEffect(() => { 
     interestsRef.current = (interests || []).map(i => i.toLowerCase().trim()).filter(Boolean); 
+    try {
+      localStorage.setItem("lchat.interests", JSON.stringify(interests));
+    } catch {}
   }, [interests]);
   useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
@@ -135,13 +148,13 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body, type);
   }, []);
 
-  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"]) => {
+  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"], senderMood?: string) => {
     const id = existingId || crypto.randomUUID();
     const dt = disappearTimerRef.current;
     const disappearAt = dt && sender !== "system" ? Date.now() + dt * 1000 : undefined;
     setMessages((prev) => [
       ...prev,
-      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, read: false, replyTo, disappearAt },
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, senderMood, read: false, replyTo, disappearAt },
     ]);
     return id;
   }, []);
@@ -245,9 +258,9 @@ export function useChat(callbacks?: ChatCallbacks) {
 
         switch (data.event) {
           case "message": {
-            const payloadData = data.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string; replyTo?: Message["replyTo"] };
+            const payloadData = data.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string; replyTo?: Message["replyTo"]; mood?: string };
             setStrangerTyping(false);
-            addMessage("stranger", payloadData.text, payloadData.imageUrl, payloadData.nickname, payloadData.avatar, payloadData.messageId, payloadData.replyTo);
+            addMessage("stranger", payloadData.text, payloadData.imageUrl, payloadData.nickname, payloadData.avatar, payloadData.messageId, payloadData.replyTo, payloadData.mood);
             playSoundIfEnabled("messageReceived");
             if (callbacksRef.current?.soundEnabled) haptics.vibrate(50);
             notifyIfEnabled("L Chat", payloadData.imageUrl ? "📷 Image" : payloadData.text.slice(0, 100), "message");
@@ -332,9 +345,11 @@ export function useChat(callbacks?: ChatCallbacks) {
     [addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]
   );
 
-  const onMatched = useCallback((roomId: string, strangerId: string, strangerStableId: string, strName: string, sharedInterests: string[]) => {
+  const onMatched = useCallback((roomId: string, strangerId: string, strangerStableId: string, strName: string, sharedInterests: string[], strAvatar?: string, strMood?: string) => {
     strangerStableIdRef.current = strangerStableId;
-    setStrangerName(strName);
+    setStrangerName(strName || "Stranger");
+    setStrangerAvatar(strAvatar || "😀");
+    setStrangerMood(strMood || "");
     joinRoom(roomId, strangerId, sharedInterests);
   }, [joinRoom]);
 
@@ -447,12 +462,12 @@ export function useChat(callbacks?: ChatCallbacks) {
       }
       const p = getProfile();
       const messageId = crypto.randomUUID();
-      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId, replyTo);
+      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId, replyTo, p.mood);
       playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: userName || p.nickname, avatar: p.avatar, replyTo },
+        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: userName || p.nickname, avatar: p.avatar, replyTo, mood: p.mood },
       });
     },
     [status, addMessage, playSoundIfEnabled, checkProfanity, userName, stableId, sessionId, handleViolation]
@@ -728,7 +743,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   return {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, stableId, searchElapsed, privateRoomCode, roomId,
-    userName, setUserName, strangerName,
+    userName, setUserName, strangerName, strangerAvatar, strangerMood,
     roomChannel, sendSignalingEvent: sendFirebaseSignalingEvent,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom, joinRoomById,

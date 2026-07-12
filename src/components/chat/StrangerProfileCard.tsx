@@ -10,6 +10,8 @@ interface StrangerProfileCardProps {
   isVerified?: boolean;
   show: boolean;
   onClose: () => void;
+  strangerAvatar?: string;
+  strangerMood?: string;
 }
 
 function useElapsed(startMs: number | null) {
@@ -54,12 +56,14 @@ export default function StrangerProfileCard({
   isVerified = false,
   show,
   onClose,
+  strangerAvatar,
+  strangerMood,
 }: StrangerProfileCardProps) {
   const elapsed = useElapsed(connectedAt);
   const [expanded, setExpanded] = useState(false);
   const h = nameHash(strangerName);
   const gradient = GRADIENTS[h % GRADIENTS.length];
-  const emoji = AVATARS[h % AVATARS.length];
+  const emoji = strangerAvatar || AVATARS[h % AVATARS.length];
 
   // Auto-collapse after 4s
   useEffect(() => {
@@ -91,16 +95,25 @@ export default function StrangerProfileCard({
             >
               {/* Mini avatar */}
               <div className={cn(
-                "h-6 w-6 rounded-lg bg-gradient-to-br flex items-center justify-center text-sm shrink-0",
-                gradient
+                "h-6 w-6 rounded-lg bg-gradient-to-br flex items-center justify-center text-sm shrink-0 overflow-hidden",
+                !emoji.startsWith("data:image/") && gradient
               )}>
-                {emoji}
+                {emoji.startsWith("data:image/") ? (
+                  <img src={emoji} alt="Avatar" className="h-full w-full object-cover rounded-lg" />
+                ) : (
+                  emoji
+                )}
               </div>
 
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-[11px] font-black text-foreground truncate leading-tight">
-                  {strangerName}
-                </p>
+                <div className="flex items-center gap-1.5 truncate">
+                  <p className="text-[11px] font-black text-foreground truncate leading-tight">
+                    {strangerName}
+                  </p>
+                  {strangerMood && (
+                    <span className="text-[7px] font-bold px-1 rounded bg-primary/10 text-primary border border-primary/20 leading-none shrink-0 normal-case tracking-normal">{strangerMood}</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1.5">
                   <div className="h-1.5 w-1.5 rounded-full bg-online animate-pulse shrink-0" />
                   {connectedAt && (

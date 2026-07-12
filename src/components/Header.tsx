@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils";
 interface HeaderProps {
   onlineCount: number;
   strangerName?: string;
+  strangerAvatar?: string;
+  strangerMood?: string;
 }
 
-const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName }, ref) => {
+const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName, strangerAvatar, strangerMood }, ref) => {
   const { settings, updateSetting } = useSettings();
   const navigate = useNavigate();
   return (
@@ -31,13 +33,25 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({ onlineCount, strangerName
 
         {/* Stranger name (chat page) */}
         {strangerName && (
-          <div className="flex flex-col ml-1 border-l border-border/50 pl-3 h-8 justify-center">
-            <span className="text-[9px] sm:text-[10px] font-black uppercase text-primary italic tracking-widest leading-none">
-              Stranger
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[90px] sm:max-w-[140px] leading-tight">
-              {strangerName}
-            </span>
+          <div className="flex items-center gap-2 ml-1 border-l border-border/50 pl-3 h-8">
+            {strangerAvatar && (
+              strangerAvatar.startsWith("data:image/") ? (
+                <img src={strangerAvatar} alt="avatar" className="h-6 w-6 rounded-full object-cover shrink-0 border border-primary/30" />
+              ) : (
+                <span className="text-sm shrink-0">{strangerAvatar}</span>
+              )
+            )}
+            <div className="flex flex-col justify-center min-w-0">
+              <span className="text-[8px] sm:text-[9px] font-black uppercase text-primary italic tracking-widest leading-none flex items-center gap-1">
+                Stranger
+                {strangerMood && (
+                  <span className="normal-case text-[8px] font-semibold text-muted-foreground tracking-normal">{strangerMood}</span>
+                )}
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[80px] sm:max-w-[120px] leading-tight">
+                {strangerName}
+              </span>
+            </div>
           </div>
         )}
       </div>

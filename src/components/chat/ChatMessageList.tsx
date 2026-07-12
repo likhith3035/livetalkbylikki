@@ -418,11 +418,22 @@ const ChatMessageList = ({
                 )}
 
                 {msg.sender !== "system" && (
-                  <p className="text-[10px] font-semibold opacity-60 mb-0.5 tracking-wide uppercase flex items-center gap-1">
-                    {msg.senderAvatar && <span className="text-xs">{msg.senderAvatar}</span>}
+                  <p className="text-[10px] font-semibold opacity-60 mb-0.5 tracking-wide uppercase flex items-center gap-1.5">
+                    {msg.senderAvatar && (
+                      msg.senderAvatar.startsWith("data:image/") ? (
+                        <img src={msg.senderAvatar} alt="Avatar" className="h-4.5 w-4.5 rounded-full object-cover shrink-0 border border-primary/20" />
+                      ) : (
+                        <span className="text-xs">{msg.senderAvatar}</span>
+                      )
+                    )}
                     {msg.sender === "you"
                       ? (msg.senderNickname?.trim() || "You")
                       : (msg.senderNickname?.trim() || "Stranger")}
+                    {msg.senderMood && (
+                      <span className="text-[8px] font-bold px-1 py-0.25 rounded-md bg-primary/10 text-primary border border-primary/20 normal-case tracking-normal shrink-0">
+                        {msg.senderMood}
+                      </span>
+                    )}
                   </p>
                 )}
 

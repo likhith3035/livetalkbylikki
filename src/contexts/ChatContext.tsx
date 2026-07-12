@@ -31,6 +31,8 @@ interface ChatContextValue {
   userName: string;
   setUserName: (n: string) => void;
   strangerName: string;
+  strangerAvatar: string;
+  strangerMood: string;
 
   // Chat actions
   setInterests: (i: string[]) => void;
@@ -134,7 +136,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom, joinRoomById,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
     sendSignalingEvent, reportStranger, stableId,
-    userName, setUserName, strangerName, addMessage,
+    userName, setUserName, strangerName, strangerAvatar, strangerMood, addMessage,
     privateRoomCode, roomId,
   } = chatHook;
 
@@ -391,7 +393,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     inCallMessages, sendInCallMessage,
     supportsScreenShare,
     reportStranger, stableId,
-    userName, setUserName, strangerName,
+    userName, setUserName, strangerName, strangerAvatar, strangerMood,
     localPrivacyModeActive,
     strangerPrivacyModeActive,
     privacyModeActive,
