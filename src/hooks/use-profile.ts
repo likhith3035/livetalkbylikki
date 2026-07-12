@@ -9,6 +9,7 @@ const AVATAR_OPTIONS = [
 export interface UserProfile {
   nickname: string;
   avatar: string;
+  mood?: string;
 }
 
 const STORAGE_KEY = "lchat.profile";
@@ -18,7 +19,7 @@ const getStoredProfile = (): UserProfile => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { nickname: "", avatar: "😀" };
+  return { nickname: "", avatar: "😀", mood: "" };
 };
 
 export function useProfile() {
@@ -36,7 +37,11 @@ export function useProfile() {
     setProfile((p) => ({ ...p, avatar }));
   }, []);
 
+  const updateMood = useCallback((mood: string) => {
+    setProfile((p) => ({ ...p, mood }));
+  }, []);
+
   const displayName = profile.nickname.trim() || "Anonymous";
 
-  return { profile, displayName, updateNickname, updateAvatar, AVATAR_OPTIONS };
+  return { profile, displayName, updateNickname, updateAvatar, updateMood, AVATAR_OPTIONS };
 }
