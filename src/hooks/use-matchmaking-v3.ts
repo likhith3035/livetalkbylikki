@@ -2,12 +2,28 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { ref, onValue, set, onDisconnect, serverTimestamp, runTransaction, off, remove, get } from "firebase/database";
 
+const getProfile = () => {
+  try {
+    const raw = localStorage.getItem("lchat.profile");
+    if (raw) return JSON.parse(raw) as { nickname: string; avatar: string; mood?: string };
+  } catch {}
+  return { nickname: "", avatar: "😀", mood: "" };
+};
+
 interface MatchmakingOptions {
   sessionId: string;
   stableId: string;
   userName: string;
   interests: string[];
-  onMatched: (roomId: string, strangerId: string, strangerStableId: string, strangerName: string, sharedInterests: string[]) => void;
+  onMatched: (
+    roomId: string, 
+    strangerId: string, 
+    strangerStableId: string, 
+    strangerName: string, 
+    sharedInterests: string[],
+    strangerAvatar?: string,
+    strangerMood?: string
+  ) => void;
 }
 
 export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, interests, onMatched }: MatchmakingOptions) {
@@ -25,6 +41,7 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
 
   const createMatchRecord = useCallback((matchId: string, strangerId: string, shared: string[], strangerData: any) => {
     const matchRef = ref(db, `matches/${matchId}`);
+    const p = getProfile();
     
     // Since signaling won the race, we can just use set() here.
     // This BYPASSES the 'Error: set' crash seen with transactions.
@@ -33,8 +50,12 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
       user2: strangerId,
       stable1: stableId || sessionId,
       stable2: strangerData?.stableId || strangerId,
-      name1: userName || "You",
+      name1: p.nickname || "You",
       name2: strangerData?.userName || "Stranger",
+      avatar1: p.avatar || "😀",
+      avatar2: strangerData?.avatar || "😀",
+      mood1: p.mood || "",
+      mood2: strangerData?.mood || "",
       sharedInterests: shared || [],
       roomId: matchId,
       createdAt: Date.now(),
@@ -45,7 +66,7 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     set(matchRef, record)
       .then(() => console.log("[V4] Match Record Created Successfully"))
       .catch(err => console.error("[V4] Failed to set match record:", err));
-  }, [sessionId, stableId, userName]);
+  }, [sessionId, stableId]);
 
   const findMatch = useCallback(async () => {
     if (matchedGuardRef.current || status !== "searching") return;
@@ -84,8 +105,25 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
           return { id: uid, shared: sharedInterests, score: sharedInterests.length };
         });
         candidates.sort((a, b) => b.score - a.score);
-        matchedUserId = candidates[0].id;
-        shared = candidates[0].shared;
+
+        let strictMatching = false;
+        try {
+          strictMatching = localStorage.getItem("lchat.strictMatching") === "true";
+        } catch {}
+
+        if (strictMatching && interests && interests.length > 0) {
+          const strictCandidates = candidates.filter(c => c.score > 0);
+          if (strictCandidates.length > 0) {
+            matchedUserId = strictCandidates[0].id;
+            shared = strictCandidates[0].shared;
+          } else {
+            // Wait for a candidate with matching interests
+            return;
+          }
+        } else {
+          matchedUserId = candidates[0].id;
+          shared = candidates[0].shared;
+        }
       }
 
       const pair = [sessionId, matchedUserId].sort();
@@ -117,6 +155,8 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     const strangerId = amIUser1 ? match.user2 : match.user1;
     const strangerStableId = amIUser1 ? match.stable2 : match.stable1;
     const strangerName = amIUser1 ? match.name2 : match.name1;
+    const strangerAvatar = amIUser1 ? match.avatar2 : match.avatar1;
+    const strangerMood = amIUser1 ? match.mood2 : match.mood1;
 
     const myLobbyRef = ref(db, `lobby/${sessionId}`);
     // Cancel the onDisconnect so background/foreground doesn't remove lobby entry
@@ -129,7 +169,7 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     setTimeout(() => remove(ref(db, `matches/${mId}`)).catch(() => {}), 5000);
 
     setStatus("idle");
-    onMatched(match.roomId || mId, strangerId, strangerStableId, strangerName, match.sharedInterests || []);
+    onMatched(match.roomId || mId, strangerId, strangerStableId, strangerName, match.sharedInterests || [], strangerAvatar, strangerMood);
   }, [sessionId, onMatched]);
 
   useEffect(() => {
@@ -225,11 +265,14 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     searchCodeRef.current = code ? code.trim().toUpperCase() : null;
     setStatus("searching");
     
+    const p = getProfile();
     const myRef = ref(db, `lobby/${sessionId}`);
     set(myRef, {
       interests: interests || [],
       stableId: stableId || sessionId,
-      userName: userName || "",
+      userName: p.nickname || "Stranger",
+      avatar: p.avatar || "😀",
+      mood: p.mood || "",
       code: searchCodeRef.current,
       joinedAt: serverTimestamp(),
       signal: null
@@ -239,7 +282,7 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     // disconnect while searching, we want to leave the lobby.
     // But we cancel it immediately when we get matched (in finalize).
     onDisconnect(myRef).remove();
-  }, [sessionId, stableId, interests, userName]);
+  }, [sessionId, stableId, interests]);
 
   const stopSearch = useCallback(() => {
     setStatus("idle");
