@@ -25,6 +25,7 @@ interface ChatGamesProps {
   activeGame: "none" | "ttt" | "canvas" | "rps";
   setActiveGame: (game: "none" | "ttt" | "canvas" | "rps") => void;
   onToggleAI?: () => void;
+  customTrigger?: React.ReactNode;
 }
 
 type TicTacToeCell = "X" | "O" | null;
@@ -58,7 +59,6 @@ const getRpsResult = (p: "R" | "P" | "S", o: "R" | "P" | "S"): "win" | "lose" | 
   return "lose";
 };
 
-// Web Audio API Synthesizer Helper
 const playTone = (frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.15) => {
   try {
     const isMuted = localStorage.getItem("lchat_games_muted") === "true";

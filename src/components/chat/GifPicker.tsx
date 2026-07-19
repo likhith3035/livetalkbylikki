@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 interface GifPickerProps {
   isConnected: boolean;
   onSendGif: (url: string) => void;
+  customTrigger?: React.ReactNode;
 }
 
 // Use Tenor's free anonymous API (no key needed for limited use)
@@ -20,11 +21,12 @@ interface TenorResult {
   };
 }
 
-const GifPicker = ({ isConnected, onSendGif }: GifPickerProps) => {
+const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<TenorResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [trending, setTrending] = useState<TenorResult[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -32,11 +34,20 @@ const GifPicker = ({ isConnected, onSendGif }: GifPickerProps) => {
     if (trending.length > 0) return;
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch(`${TENOR_API}/featured?key=${TENOR_KEY}&limit=20&media_filter=tinygif,gif`);
+      if (res.status === 403) {
+        throw new Error("Tenor API Key is unauthorized or restricted (403).");
+      }
+      if (!res.ok) {
+        throw new Error(`Failed to load trending GIFs (${res.status})`);
+      }
       const data = await res.json();
       setTrending(data.results || []);
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      console.warn("Failed to fetch trending GIFs:", err);
+      setError(err.message || "Failed to load GIFs.");
+      setTrending([]);
     } finally {
       setLoading(false);
     }
@@ -49,29 +60,43 @@ const GifPicker = ({ isConnected, onSendGif }: GifPickerProps) => {
     }
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch(`${TENOR_API}/search?key=${TENOR_KEY}&q=${encodeURIComponent(q)}&limit=20&media_filter=tinygif,gif`);
+      if (res.status === 403) {
+        throw new Error("Tenor API Key is unauthorized or restricted (403).");
+      }
+      if (!res.ok) {
+        throw new Error(`Failed to search GIFs (${res.status})`);
+      }
       const data = await res.json();
       setResults(data.results || []);
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      console.warn("GIF search failed:", err);
+      setError(err.message || "GIF search failed.");
+      setResults([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const handleQueryChange = (val: string) => {
-    setQuery(val);
+  const handleQueryChange = (q: string) => {
+    setQuery(q);
+    setError(null);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchGifs(val), 400);
+    debounceRef.current = setTimeout(() => {
+      searchGifs(q);
+    }, 400);
   };
 
   const handleOpen = () => {
     setOpen(true);
+    setError(null);
     fetchTrending();
   };
 
   const handleSelect = (gif: TenorResult) => {
     const url = gif.media_formats.gif?.url || gif.media_formats.tinygif?.url;
+    setOpen(false);
     if (url) {
       onSendGif(url);
     }
@@ -83,15 +108,24 @@ const GifPicker = ({ isConnected, onSendGif }: GifPickerProps) => {
 
   return (
     <div className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => open ? setOpen(false) : handleOpen()}
-        className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
-        title="GIFs"
-      >
-        <span className="text-xs font-bold">GIF</span>
-      </Button>
+      {customTrigger ? (
+        <div
+          onClick={() => open ? setOpen(false) : handleOpen()}
+          className="cursor-pointer select-none"
+        >
+          {customTrigger}
+        </div>
+      ) : (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => open ? setOpen(false) : handleOpen()}
+          className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
+          title="GIFs"
+        >
+          <span className="text-xs font-bold">GIF</span>
+        </Button>
+      )}
 
       <AnimatePresence>
         {open && (
@@ -118,7 +152,12 @@ const GifPicker = ({ isConnected, onSendGif }: GifPickerProps) => {
 
             {/* Results grid */}
             <div className="h-56 overflow-y-auto p-1.5">
-              {loading && displayResults.length === 0 ? (
+              {error ? (
+                <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                  <p className="text-xs font-bold text-destructive mb-1">GIF Service Unavailable</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">{error}</p>
+                </div>
+              ) : loading && displayResults.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>

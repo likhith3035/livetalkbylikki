@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 interface ChatSearchBarProps {
   onSearchResult: (messageId: string | null) => void;
   messages: { id: string; text: string; sender: string }[];
+  alwaysOpen?: boolean;
 }
 
-const ChatSearchBar = ({ onSearchResult, messages }: ChatSearchBarProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ChatSearchBar = ({ onSearchResult, messages, alwaysOpen }: ChatSearchBarProps) => {
+  const [isOpen, setIsOpen] = useState(alwaysOpen || false);
   const [query, setQuery] = useState("");
   const [currentIdx, setCurrentIdx] = useState(0);
 
@@ -44,7 +45,9 @@ const ChatSearchBar = ({ onSearchResult, messages }: ChatSearchBarProps) => {
   };
 
   const close = () => {
-    setIsOpen(false);
+    if (!alwaysOpen) {
+      setIsOpen(false);
+    }
     setQuery("");
     onSearchResult(null);
   };
@@ -64,37 +67,30 @@ const ChatSearchBar = ({ onSearchResult, messages }: ChatSearchBarProps) => {
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, width: 0 }}
-        animate={{ opacity: 1, width: "auto" }}
-        exit={{ opacity: 0, width: 0 }}
-        className="flex items-center gap-1 rounded-lg border border-border bg-secondary/60 px-2 py-1"
-      >
-        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        <input
-          autoFocus
-          value={query}
-          onChange={(e) => handleChange(e.target.value)}
-          placeholder="Search..."
-          className="w-24 sm:w-36 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
-        />
-        {results.length > 0 && (
-          <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
-            {currentIdx + 1}/{results.length}
-          </span>
-        )}
-        <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground" disabled={results.length === 0}>
-          <ChevronUp className="h-3.5 w-3.5" />
-        </button>
-        <button onClick={() => navigate(1)} className="text-muted-foreground hover:text-foreground" disabled={results.length === 0}>
-          <ChevronDown className="h-3.5 w-3.5" />
-        </button>
-        <button onClick={close} className="text-muted-foreground hover:text-foreground">
-          <X className="h-3 w-3" />
-        </button>
-      </motion.div>
-    </AnimatePresence>
+    <div className="flex items-center gap-1 rounded-lg border border-border bg-secondary/60 px-2 py-1 w-full">
+      <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <input
+        autoFocus={!alwaysOpen}
+        value={query}
+        onChange={(e) => handleChange(e.target.value)}
+        placeholder="Search..."
+        className="flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+      />
+      {results.length > 0 && (
+        <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+          {currentIdx + 1}/{results.length}
+        </span>
+      )}
+      <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground shrink-0" disabled={results.length === 0}>
+        <ChevronUp className="h-3.5 w-3.5" />
+      </button>
+      <button onClick={() => navigate(1)} className="text-muted-foreground hover:text-foreground shrink-0" disabled={results.length === 0}>
+        <ChevronDown className="h-3.5 w-3.5" />
+      </button>
+      <button onClick={close} className="text-muted-foreground hover:text-foreground shrink-0">
+        <X className="h-3 w-3" />
+      </button>
+    </div>
   );
 };
 

@@ -49,11 +49,12 @@ const ChatWallpaperBg = ({ opacity: overrideOpacity }: { opacity?: number }) => 
   if (settings.chatWallpaper === "none") return null;
   if (settings.chatWallpaper === "custom" && !settings.chatWallpaperImage) return null;
 
-  const finalOpacity = overrideOpacity !== undefined 
+  const rawOpacity = overrideOpacity !== undefined 
     ? overrideOpacity 
     : settings.chatWallpaperOpacity !== undefined 
       ? settings.chatWallpaperOpacity 
       : 0.8;
+  const finalOpacity = Number.isNaN(rawOpacity) ? 0.8 : rawOpacity;
 
   const isCustomImage = settings.chatWallpaper === "custom" && settings.chatWallpaperImage;
 
@@ -62,7 +63,8 @@ const ChatWallpaperBg = ({ opacity: overrideOpacity }: { opacity?: number }) => 
   const brightness = settings.chatWallpaperBrightness ?? 1.0;
   const saturation = settings.chatWallpaperSaturation ?? 1.0;
   const overlayPattern = settings.chatWallpaperOverlayPattern ?? "none";
-  const overlayOpacity = settings.chatWallpaperOverlayOpacity ?? 0.35;
+  const rawOverlayOpacity = settings.chatWallpaperOverlayOpacity ?? 0.35;
+  const overlayOpacity = Number.isNaN(rawOverlayOpacity) ? 0.35 : rawOverlayOpacity;
 
   return (
     <div

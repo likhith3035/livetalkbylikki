@@ -15,9 +15,10 @@ const CATEGORY_LABELS = Object.keys(EMOJI_CATEGORIES);
 interface EmojiPickerProps {
   disabled?: boolean;
   onSelect: (emoji: string) => void;
+  customTrigger?: React.ReactNode;
 }
 
-const EmojiPicker = ({ disabled, onSelect }: EmojiPickerProps) => {
+const EmojiPicker = ({ disabled, onSelect, customTrigger }: EmojiPickerProps) => {
   const [open, setOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(CATEGORY_LABELS[0]);
   const ref = useRef<HTMLDivElement>(null);
@@ -32,14 +33,23 @@ const EmojiPicker = ({ disabled, onSelect }: EmojiPickerProps) => {
 
   return (
     <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        disabled={disabled}
-        className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
-        aria-label="Emoji picker"
-      >
-        <Smile className="h-4 w-4" />
-      </button>
+      {customTrigger ? (
+        <div
+          onClick={() => !disabled && setOpen(!open)}
+          className={cn("cursor-pointer select-none", disabled && "opacity-40 pointer-events-none")}
+        >
+          {customTrigger}
+        </div>
+      ) : (
+        <button
+          onClick={() => setOpen(!open)}
+          disabled={disabled}
+          className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
+          aria-label="Emoji picker"
+        >
+          <Smile className="h-4 w-4" />
+        </button>
+      )}
 
       <AnimatePresence>
         {open && (

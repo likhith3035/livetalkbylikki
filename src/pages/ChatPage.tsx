@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
 import MobileNav from "@/components/MobileNav";
 import ChatStatusBar from "@/components/chat/ChatStatusBar";
+import { ChatToolsMenu } from "@/components/chat/ChatToolsMenu";
 import ChatMessageList from "@/components/chat/ChatMessageList";
 import ChatInput from "@/components/chat/ChatInput";
 import InterestBar from "@/components/chat/InterestBar";
@@ -14,7 +15,7 @@ import { useChatContext } from "@/contexts/ChatContext";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Zap, Shield, ArrowRight, X, AlertTriangle, Send, Dices, RefreshCw, Bot, Smartphone, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, Zap, Shield, ArrowRight, X, AlertTriangle, Send, Dices, RefreshCw, Bot, Smartphone, ChevronDown, ChevronUp, Phone, Video } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSafety } from "@/hooks/use-safety";
 import { motion, AnimatePresence } from "framer-motion";
@@ -515,7 +516,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }
 
   return (
-    <div className={cn("flex flex-col bg-background relative z-0 h-[100dvh] lg:h-full overflow-hidden", status === "connected" && privacyModeActive && "select-none")}>
+    <div className={cn("flex flex-col bg-background relative z-0 h-svh lg:h-full overflow-hidden", status === "connected" && privacyModeActive && "select-none")}>
       <LiquidBackground />
       <ChatWallpaper />
       <div className={cn("flex flex-col flex-1 min-h-0", privacyAlertActive && "blur-lg pointer-events-none transition-all duration-300")}>
@@ -525,25 +526,68 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             strangerName={status === "connected" ? strangerName : undefined} 
             strangerAvatar={status === "connected" ? strangerAvatar : undefined}
             strangerMood={status === "connected" ? strangerMood : undefined}
+            onBack={stopChat}
+            onVideoCall={() => startCall(false)}
+            onAudioCall={() => startCall(true)}
+            toolsMenu={
+              status === "connected" && (
+                <ChatToolsMenu
+                  messages={messages}
+                  onSearchResult={setSearchHighlight}
+                  disappearTimer={disappearTimer}
+                  onSetDisappearTimer={setDisappearTimer}
+                  onBlock={blockStranger}
+                  onThemeChange={handleThemeChange}
+                />
+              )
+            }
           />
         </div>
         {/* Desktop-only compact info bar */}
         {status === "connected" && strangerName && (
-          <div className="hidden lg:flex items-center gap-3 px-6 py-3 z-20 relative bg-secondary/15 border-b border-border/10">
-            <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-            {strangerAvatar && (
-              strangerAvatar.startsWith("data:image/") ? (
-                <img src={strangerAvatar} alt="avatar" className="h-5 w-5 rounded-full object-cover shrink-0 border border-primary/25" />
-              ) : (
-                <span className="text-sm shrink-0">{strangerAvatar}</span>
-              )
-            )}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase text-primary/70 tracking-widest leading-none">Chatting with</span>
-              <span className="text-sm font-bold text-foreground leading-none">{strangerName}</span>
-              {strangerMood && (
-                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 leading-none shrink-0 normal-case tracking-normal">{strangerMood}</span>
+          <div className="hidden lg:flex items-center justify-between px-6 py-3 z-20 relative bg-secondary/15 border-b border-border/10">
+            <div className="flex items-center gap-3">
+              <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+              {strangerAvatar && (
+                strangerAvatar.startsWith("data:image/") ? (
+                  <img src={strangerAvatar} alt="avatar" className="h-5 w-5 rounded-full object-cover shrink-0 border border-primary/25" />
+                ) : (
+                  <span className="text-sm shrink-0">{strangerAvatar}</span>
+                )
               )}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase text-primary/70 tracking-widest leading-none">Chatting with</span>
+                <span className="text-sm font-bold text-foreground leading-none">{strangerName}</span>
+                {strangerMood && (
+                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 leading-none shrink-0 normal-case tracking-normal">{strangerMood}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop Call buttons side-by-side */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => startCall(true)}
+                disabled={callStatus !== "idle"}
+                className="gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03] border bg-secondary/40 border-border/40 hover:bg-secondary/60 text-foreground"
+                title="Start audio call"
+              >
+                <Phone className="h-3.5 w-3.5 text-primary" />
+                <span>Call</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => startCall(false)}
+                disabled={callStatus !== "idle"}
+                className="gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03] border bg-secondary/40 border-border/40 hover:bg-secondary/60 text-foreground"
+                title="Start video call"
+              >
+                <Video className="h-3.5 w-3.5 text-primary" />
+                <span>Video</span>
+              </Button>
             </div>
           </div>
         )}
@@ -557,7 +601,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         isVerified={isVerified}
       />
 
-      <div className={cn("transition-opacity duration-500", status === "idle" && "hidden")}>
+      <div className={cn("transition-opacity duration-500 hidden lg:block", status === "idle" && "hidden")}>
         <ChatStatusBar
           status={status}
           matchedInterests={matchedInterests}
@@ -783,6 +827,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             activeGame={activeGame}
             setActiveGame={setActiveGame}
             onToggleAI={() => setShowAIPanel((v) => !v)}
+            onNext={nextChat}
           />
         </>
       )}

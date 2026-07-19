@@ -2,13 +2,15 @@ import { useState, useCallback } from "react";
 import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface LocationShareButtonProps {
   isConnected: boolean;
   onSend: (text: string) => void;
+  customTrigger?: React.ReactNode;
 }
 
-const LocationShareButton = ({ isConnected, onSend }: LocationShareButtonProps) => {
+const LocationShareButton = ({ isConnected, onSend, customTrigger }: LocationShareButtonProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -41,6 +43,17 @@ const LocationShareButton = ({ isConnected, onSend }: LocationShareButtonProps) 
   }, [onSend, toast]);
 
   if (!isConnected) return null;
+
+  if (customTrigger) {
+    return (
+      <div
+        onClick={loading ? undefined : shareLocation}
+        className={cn("cursor-pointer select-none", loading && "opacity-60 pointer-events-none")}
+      >
+        {customTrigger}
+      </div>
+    );
+  }
 
   return (
     <Button
