@@ -80,7 +80,9 @@ const ProfilePage = () => {
     setInterests(newInterests);
     try {
       localStorage.setItem("lchat.interests", JSON.stringify(newInterests));
-    } catch {}
+    } catch (err) {
+      // Ignore localStorage write errors
+    }
   };
 
   const handleAddInterest = () => {
@@ -159,7 +161,9 @@ const ProfilePage = () => {
     setStrictMatch(val);
     try {
       localStorage.setItem("lchat.strictMatching", String(val));
-    } catch {}
+    } catch (err) {
+      // Ignore localStorage write errors
+    }
   };
 
   // Custom Image Upload + Canvas Resize/Compression

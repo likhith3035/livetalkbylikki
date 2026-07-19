@@ -16,7 +16,6 @@ export const AnimatedCounter = ({ value, duration = 1.5 }: AnimatedCounterProps)
 
     let targetNumber = 0;
     let suffix = "";
-    let isSpecial = false;
     let specialType: "percent" | "slash" | "infinity" | "simple" = "simple";
 
     if (value.includes("%")) {

@@ -26,7 +26,9 @@ function loadStats(): DayStats {
       const data = JSON.parse(raw) as DayStats;
       if (data.date === todayStr()) return data;
     }
-  } catch { }
+  } catch (err) {
+    // Ignore localStorage read/parse errors
+  }
   return { date: todayStr(), conversations: 0, totalSeconds: 0 };
 }
 
@@ -38,7 +40,9 @@ function loadStreak(): StreakData {
   try {
     const raw = localStorage.getItem(STREAK_KEY);
     if (raw) return JSON.parse(raw) as StreakData;
-  } catch { }
+  } catch (err) {
+    // Ignore localStorage read/parse errors
+  }
   return { currentStreak: 0, lastDate: "", longestStreak: 0 };
 }
 
@@ -54,7 +58,7 @@ function updateStreak(streak: StreakData): StreakData {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().slice(0, 10);
 
-  let newStreak = streak.lastDate === yesterdayStr ? streak.currentStreak + 1 : 1;
+  const newStreak = streak.lastDate === yesterdayStr ? streak.currentStreak + 1 : 1;
   const longest = Math.max(newStreak, streak.longestStreak);
   const updated = { currentStreak: newStreak, lastDate: today, longestStreak: longest };
   saveStreak(updated);

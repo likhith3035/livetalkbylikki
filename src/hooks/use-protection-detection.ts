@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 
 interface UseProtectionDetectionProps {
@@ -17,7 +17,7 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
     onTriggeredRef.current = onTriggered;
   }, [onTriggered]);
 
-  const triggerViolation = (type: string) => {
+  const triggerViolation = useCallback((type: string) => {
     if (!settings.protectionEnabled || !active) return;
     
     setIsTriggered(true);
@@ -31,7 +31,7 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
         setIsTriggered(false);
       }, 3000);
     }
-  };
+  }, [active, settings.protectionEnabled]);
 
   useEffect(() => {
     if (!active || !settings.protectionEnabled) {
@@ -101,7 +101,7 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
       window.removeEventListener("focus", handleWindowFocus);
       if (triggerTimeoutRef.current) clearTimeout(triggerTimeoutRef.current);
     };
-  }, [active, settings.protectionEnabled]);
+  }, [active, settings.protectionEnabled, triggerViolation]);
 
   // 4. Overrides for Screen Sharing (getDisplayMedia) and Video Recording (MediaRecorder)
   useEffect(() => {
@@ -117,7 +117,7 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
     // Override MediaRecorder
     const OriginalMediaRecorder = window.MediaRecorder;
     if (OriginalMediaRecorder) {
-      // @ts-ignore
+      // @ts-expect-error window.MediaRecorder override requires constructor signature match
       window.MediaRecorder = function(stream, options) {
         triggerViolation("Media Recorder Blocked");
         throw new Error("Recording is disabled in Protected Mode.");
@@ -134,7 +134,7 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
         window.MediaRecorder = OriginalMediaRecorder;
       }
     };
-  }, [active, settings.protectionEnabled]);
+  }, [active, settings.protectionEnabled, triggerViolation]);
 
   return { isTriggered };
 }

@@ -27,7 +27,9 @@ const FeedbackSharePopup = () => {
         }
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch { }
+      } catch (err) {
+        // Ignore storage access errors
+      }
     }, 180000); // 3 minutes (180 seconds)
 
     return () => clearTimeout(timer);
@@ -40,7 +42,9 @@ const FeedbackSharePopup = () => {
       const state = raw ? JSON.parse(raw) : { visits: 0 };
       state.lastShare = state.visits;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch { }
+    } catch (err) {
+      // Ignore storage access errors
+    }
   };
 
   const shareApp = async () => {
@@ -51,7 +55,9 @@ const FeedbackSharePopup = () => {
       try {
         await navigator.share({ title: "LiveTalk by Likki", text, url });
         toast({ title: "Thanks for sharing! 🙌" });
-      } catch { }
+      } catch (err) {
+        // Ignore user cancel or Web Share API errors
+      }
     } else {
       await navigator.clipboard.writeText(`${text} ${url}`);
       toast({ title: "Link copied!", description: "Share it with your friends!" });

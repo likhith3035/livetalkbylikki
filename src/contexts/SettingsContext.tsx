@@ -186,7 +186,9 @@ const loadSettings = (): SettingsState => {
   };
   const getNum = (key: string, def: number): number => {
     const val = localStorage.getItem(key);
-    return val !== null ? Number(val) : def;
+    if (val === null) return def;
+    const parsed = Number(val);
+    return Number.isNaN(parsed) ? def : parsed;
   };
   const getStr = (key: string, def: string): string => {
     const val = localStorage.getItem(key);

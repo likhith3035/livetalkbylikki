@@ -705,11 +705,11 @@ const InfoPage = () => {
             </div>
             <div className="space-y-3 pl-1">
               {[
-                { n: "1", t: "Automatic — no setup needed", d: "Every time you connect with someone (random or private room), a temporary room is created in the background. You don\'t do anything." },
+                { n: "1", t: "Automatic — no setup needed", d: "Every time you connect with someone (random or private room), a temporary room is created in the background. You don't do anything." },
                 { n: "2", t: "30-minute lifetime", d: "The room stays alive as long as someone is in it. Every message or action refreshes the 30-minute countdown. When both users leave, the timer starts." },
                 { n: "3", t: "Images are cleaned up too", d: "Any photos you send are registered under the room. When the room expires, they are automatically deleted from storage — no traces left." },
-                { n: "4", t: "You\'ll get a toast if it expires", d: "If you leave a chat open for a very long time with no activity, you\'ll see a notification: \"Session expired — this room was auto-deleted for privacy.\" Just start a new chat." },
-                { n: "5", t: "Private rooms work the same way", d: "Private rooms (6-letter codes) also have a 30-minute idle timer. Share your code and join quickly — the room won\'t wait forever." },
+                { n: "4", t: "You'll get a toast if it expires", d: "If you leave a chat open for a very long time with no activity, you'll see a notification: \"Session expired — this room was auto-deleted for privacy.\" Just start a new chat." },
+                { n: "5", t: "Private rooms work the same way", d: "Private rooms (6-letter codes) also have a 30-minute idle timer. Share your code and join quickly — the room won't wait forever." },
               ].map((s) => (
                 <div key={s.n} className="flex items-start gap-3">
                   <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/20 text-primary text-[11px] font-bold shrink-0 mt-0.5">{s.n}</span>
