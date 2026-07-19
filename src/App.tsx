@@ -13,19 +13,41 @@ import NotificationPrompt from "@/components/NotificationPrompt";
 import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import ScrollToTop from "@/components/ScrollToTop";
 
-const Index = lazy(() => import("./pages/Index"));
-const ChatPage = lazy(() => import("./pages/ChatPage"));
-const RoomPage = lazy(() => import("./pages/RoomPage"));
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const SettingsPage = lazy(() => import("./pages/SettingsPage"));
-const SafetyCenterPage = lazy(() => import("./pages/SafetyCenterPage"));
-const InfoPage = lazy(() => import("./pages/InfoPage"));
-const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
-const TermsPage = lazy(() => import("./pages/TermsPage"));
-const GuidelinesPage = lazy(() => import("./pages/GuidelinesPage"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const HandoffPage = lazy(() => import("./pages/HandoffPage"));
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>
+) {
+  return lazy(async () => {
+    const pageHasBeenRefreshed = JSON.parse(
+      window.sessionStorage.getItem("lazy_retry_refreshed") || "false"
+    );
+
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem("lazy_retry_refreshed", "false");
+      return component;
+    } catch (error) {
+      if (!pageHasBeenRefreshed) {
+        window.sessionStorage.setItem("lazy_retry_refreshed", "true");
+        window.location.reload();
+      }
+      throw error;
+    }
+  });
+}
+
+const Index = lazyWithRetry(() => import("./pages/Index"));
+const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
+const RoomPage = lazyWithRetry(() => import("./pages/RoomPage"));
+const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
+const SettingsPage = lazyWithRetry(() => import("./pages/SettingsPage"));
+const SafetyCenterPage = lazyWithRetry(() => import("./pages/SafetyCenterPage"));
+const InfoPage = lazyWithRetry(() => import("./pages/InfoPage"));
+const PrivacyPage = lazyWithRetry(() => import("./pages/PrivacyPage"));
+const TermsPage = lazyWithRetry(() => import("./pages/TermsPage"));
+const GuidelinesPage = lazyWithRetry(() => import("./pages/GuidelinesPage"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const HandoffPage = lazyWithRetry(() => import("./pages/HandoffPage"));
 
 const queryClient = new QueryClient();
 
@@ -108,6 +130,21 @@ const App = () => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    const handleChunkError = (e: ErrorEvent | PromiseRejectionEvent) => {
+      const message = "reason" in e ? e.reason?.message : e.message;
+      if (
+        message &&
+        (message.includes("Failed to fetch dynamically imported module") ||
+         message.includes("Expected a JavaScript-or-Wasm module script"))
+      ) {
+        console.warn("[App] Dynamic import chunk failed (new deployment detected). Reloading page...");
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener("error", handleChunkError);
+    window.addEventListener("unhandledrejection", handleChunkError);
+
     // Ping Supabase to make sure it's awake before showing the app
     const checkConnection = async () => {
       // 5-second timeout to prevent being stuck forever if Supabase is down
@@ -127,6 +164,11 @@ const App = () => {
     };
 
     checkConnection();
+
+    return () => {
+      window.removeEventListener("error", handleChunkError);
+      window.removeEventListener("unhandledrejection", handleChunkError);
+    };
   }, []);
 
   if (!isReady) {
