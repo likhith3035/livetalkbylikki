@@ -30,22 +30,22 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
     return (
       <header
         ref={ref}
-        className="flex items-center justify-between px-4 py-3 bg-background border-b border-border/30 sticky top-0 z-40 lg:hidden"
+        className="flex items-center justify-between px-2.5 sm:px-4 py-1.5 sm:py-3 bg-background border-b border-border/30 sticky top-0 z-40 lg:hidden"
         style={{ willChange: "transform" }}
       >
         {/* Left: Circular back button */}
         <button
           onClick={onBack ? onBack : () => navigate("/")}
-          className="h-10 w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm"
+          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
           aria-label="Exit chat"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
         {/* Center: Stranger Avatar, Name and Status — tappable */}
         <button
           onClick={onProfileTap}
-          className="flex items-center gap-2 flex-1 min-w-0 mx-2 active:scale-[0.98] transition-transform text-left"
+          className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 mx-1.5 sm:mx-2 active:scale-[0.98] transition-transform text-left"
           aria-label="View profile"
         >
           {strangerAvatar && (
@@ -53,43 +53,43 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
               <img
                 src={strangerAvatar}
                 alt="avatar"
-                className="h-8 w-8 rounded-full object-cover shrink-0 border border-primary/20 shadow-sm"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover shrink-0 border border-primary/20 shadow-sm"
               />
             ) : (
-              <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold shrink-0">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[11px] sm:text-xs font-bold shrink-0">
                 {strangerAvatar}
               </div>
             )
           )}
           <div className="flex flex-col min-w-0">
-            <h1 className="text-sm font-bold text-foreground truncate leading-snug">
+            <h1 className="text-xs sm:text-sm font-bold text-foreground truncate leading-snug">
               {strangerName || "Stranger"}
             </h1>
-            <p className="text-[9px] text-emerald-500 font-bold flex items-center gap-1 leading-none mt-0.5">
+            <p className="text-[8px] sm:text-[9px] text-emerald-500 font-bold flex items-center gap-1 leading-none mt-0.5">
               <span className="h-1 w-1 rounded-full bg-emerald-500 inline-block animate-pulse shrink-0" />
-              <span className="truncate max-w-[90px]">{strangerMood || "Online"}</span>
+              <span className="truncate max-w-[80px] sm:max-w-[90px]">{strangerMood || "Online"}</span>
             </p>
           </div>
         </button>
 
         {/* Right: Circular call buttons side-by-side */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {onAudioCall && (
             <button
               onClick={onAudioCall}
-              className="h-10 w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm"
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
               aria-label="Start audio call"
             >
-              <Phone className="h-4.5 w-4.5 text-primary" />
+              <Phone className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-primary" />
             </button>
           )}
           {onVideoCall && (
             <button
               onClick={onVideoCall}
-              className="h-10 w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm"
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
               aria-label="Start video call"
             >
-              <Video className="h-4.5 w-4.5 text-primary" />
+              <Video className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-primary" />
             </button>
           )}
           {toolsMenu}

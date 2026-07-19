@@ -66,13 +66,13 @@ export const ChatToolsMenu = ({
           variant="ghost"
           size="sm"
           className={cn(
-            "gap-1.5 h-10 w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm p-0 shrink-0",
+            "h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm p-0 shrink-0",
             localPrivacyModeActive && "border-emerald-500/30 text-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]",
             triggerClassName
           )}
           title="More Features"
         >
-          <Settings className="h-4.5 w-4.5" />
+          <Settings className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
