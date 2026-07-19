@@ -34,8 +34,12 @@ export default defineConfig(({ mode }) => ({
     viteCompression({ algorithm: 'brotliCompress' }),
     VitePWA({
       registerType: "autoUpdate",
+      devOptions: {
+        enabled: false,
+      },
       includeAssets: ["robots.txt", "logo.png", "og-image.jpg"],
       workbox: {
+        cleanupOutdatedCaches: true,
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         globIgnores: ["**/AdminDashboard-*.js", "**/QrScanner-*.js"],
