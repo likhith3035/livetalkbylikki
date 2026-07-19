@@ -132,25 +132,25 @@ const ChatInput = ({
         }}
       />
 
-      <div className="px-3 sm:px-4 py-2.5 sm:py-3">
+      <div className="px-2 sm:px-4 py-1.5 sm:py-3">
         <AnimatePresence>
           {replyingTo && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mx-auto max-w-3xl mb-2"
+              className="mx-auto max-w-3xl mb-1.5 sm:mb-2"
             >
-              <div className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-3 py-2 shadow-sm backdrop-blur-md">
-                <Reply className="h-3.5 w-3.5 text-primary shrink-0" />
+              <div className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl bg-primary/10 border border-primary/20 px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-sm backdrop-blur-md">
+                <Reply className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                  <p className="text-[9px] sm:text-[10px] font-bold text-primary uppercase tracking-wider">
                     Replying to {replyingTo.sender === "you" ? "yourself" : "Stranger"}
                   </p>
-                  <p className="text-xs text-foreground/80 truncate font-medium">{replyingTo.text || "📷 Attachment"}</p>
+                  <p className="text-[11px] sm:text-xs text-foreground/80 truncate font-medium">{replyingTo.text || "📷 Attachment"}</p>
                 </div>
-                <button onClick={onCancelReply} className="text-muted-foreground hover:text-foreground shrink-0 hover:scale-110 transition-all p-1">
-                  <X className="h-3.5 w-3.5" />
+                <button onClick={onCancelReply} className="text-muted-foreground hover:text-foreground shrink-0 hover:scale-110 transition-all p-0.5 sm:p-1">
+                  <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </button>
               </div>
             </motion.div>
@@ -159,14 +159,14 @@ const ChatInput = ({
 
         {/* Scrolling Action Pills above input */}
         {isConnected && (
-          <div className="mx-auto max-w-3xl flex gap-2 overflow-x-auto pb-2.5 mb-1.5 scrollbar-none select-none px-0.5">
+          <div className="mx-auto max-w-3xl flex gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 sm:pb-2.5 mb-1 sm:mb-1.5 scrollbar-none select-none px-0.5">
             {/* Images Pill */}
             <button
               onClick={() => triggerFileSelect("image/*")}
               disabled={uploading}
-              className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0"
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0"
             >
-              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Image className="h-3.5 w-3.5 text-emerald-500" />}
+              {uploading ? <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <Image className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />}
               Images
             </button>
 
@@ -174,9 +174,9 @@ const ChatInput = ({
             {onVideoCall && (
               <button
                 onClick={onVideoCall}
-                className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0"
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0"
               >
-                <Video className="h-3.5 w-3.5 text-rose-500" />
+                <Video className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500" />
                 Video
               </button>
             )}
@@ -186,9 +186,9 @@ const ChatInput = ({
               disabled={!isConnected}
               onSelect={(emoji) => handleChange(input + emoji)}
               customTrigger={
-                <div className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0">
-                  <Smile className="h-3.5 w-3.5 text-violet-500" />
-                  Emojis
+                <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0">
+                  <Smile className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-violet-500" />
+                  Emoji
                 </div>
               }
             />
@@ -204,8 +204,8 @@ const ChatInput = ({
                 setActiveGame={setActiveGame}
                 onToggleAI={onToggleAI}
                 customTrigger={
-                  <div className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0">
-                    <Gamepad2 className="h-3.5 w-3.5 text-blue-500" />
+                  <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0">
+                    <Gamepad2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500" />
                     Games
                   </div>
                 }
@@ -217,8 +217,8 @@ const ChatInput = ({
               isConnected={isConnected}
               onSendGif={(url) => onSend("", url)}
               customTrigger={
-                <div className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0">
-                  <Smile className="h-3.5 w-3.5 text-pink-500" />
+                <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0">
+                  <Smile className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-pink-500" />
                   GIFs
                 </div>
               }
@@ -229,8 +229,8 @@ const ChatInput = ({
               isConnected={isConnected}
               onSend={onSend}
               customTrigger={
-                <div className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0">
-                  <MapPin className="h-3.5 w-3.5 text-yellow-500" />
+                <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0">
+                  <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-500" />
                   Location
                 </div>
               }
@@ -239,21 +239,21 @@ const ChatInput = ({
         )}
 
         {!hasMessages && (
-          <div className="mx-auto max-w-3xl mb-2 sm:mb-3">
+          <div className="mx-auto max-w-3xl mb-1.5 sm:mb-3">
             <Icebreakers onSelect={(text) => onSend(text)} disabled={!isConnected} />
           </div>
         )}
 
         {/* Input box and circular Send Button */}
-        <div className="mx-auto flex max-w-3xl gap-2.5 items-center">
+        <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2.5 items-center">
           {onNext && (isConnected || status === "disconnected") && (
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={onNext}
-              className="h-11 w-11 rounded-full shrink-0 flex items-center justify-center bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 active:scale-95 transition-all lg:hidden shadow-sm"
+              className="h-9 w-9 sm:h-11 sm:w-11 rounded-full shrink-0 flex items-center justify-center bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 active:scale-95 transition-all lg:hidden shadow-sm"
               title="Skip to next stranger"
             >
-              <SkipForward className="h-4.5 w-4.5" />
+              <SkipForward className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
             </motion.button>
           )}
 
@@ -265,9 +265,9 @@ const ChatInput = ({
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder={isConnected ? "Got it, thanks 🚀" : "Connect to start chatting"}
+              placeholder={isConnected ? "Type a message..." : "Connect to start chatting"}
               disabled={!isConnected}
-              className="w-full rounded-full border border-border/60 bg-secondary/30 px-5 py-3 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-border/80 focus:bg-card disabled:opacity-40 transition-all duration-300 shadow-sm"
+              className="w-full rounded-full border border-border/60 bg-secondary/30 px-4 sm:px-5 py-2 sm:py-3 text-sm sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-border/80 focus:bg-card disabled:opacity-40 transition-all duration-300 shadow-sm"
             />
           </div>
 
@@ -275,9 +275,9 @@ const ChatInput = ({
             whileTap={{ scale: 0.95 }}
             onClick={handleSend}
             disabled={!isConnected || !input.trim()}
-            className="h-11 w-11 rounded-full shrink-0 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none shadow-md"
+            className="h-9 w-9 sm:h-11 sm:w-11 rounded-full shrink-0 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none shadow-md"
           >
-            <Send className="h-4.5 w-4.5" />
+            <Send className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
           </motion.button>
         </div>
       </div>

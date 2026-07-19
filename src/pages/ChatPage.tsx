@@ -34,6 +34,7 @@ import RoomWaitingScreen from "@/components/chat/RoomWaitingScreen";
 import HumanVerifyModal from "@/components/chat/HumanVerifyModal";
 import SessionStatsBar from "@/components/chat/SessionStatsBar";
 import StrangerProfileCard from "@/components/chat/StrangerProfileCard";
+import StrangerProfileSheet from "@/components/chat/StrangerProfileSheet";
 import { useHumanVerify } from "@/hooks/use-human-verify";
 import { useSessionStats } from "@/hooks/use-session-stats";
 import {
@@ -93,6 +94,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   // Feature: Stranger Profile Card
   const [showProfileCard, setShowProfileCard] = useState(false);
+  const [showProfileSheet, setShowProfileSheet] = useState(false);
   const [connectedAt, setConnectedAt] = useState<number | null>(null);
 
   useSEO({
@@ -529,6 +531,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             onBack={stopChat}
             onVideoCall={() => startCall(false)}
             onAudioCall={() => startCall(true)}
+            onProfileTap={() => setShowProfileSheet(true)}
             toolsMenu={
               status === "connected" && (
                 <ChatToolsMenu
@@ -546,7 +549,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         {/* Desktop-only compact info bar */}
         {status === "connected" && strangerName && (
           <div className="hidden lg:flex items-center justify-between px-6 py-3 z-20 relative bg-secondary/15 border-b border-border/10">
-            <div className="flex items-center gap-3">
+            <button onClick={() => setShowProfileSheet(true)} className="flex items-center gap-3 hover:opacity-80 active:scale-[0.99] transition-all">
               <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
               {strangerAvatar && (
                 strangerAvatar.startsWith("data:image/") ? (
@@ -562,7 +565,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
                   <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 leading-none shrink-0 normal-case tracking-normal">{strangerMood}</span>
                 )}
               </div>
-            </div>
+            </button>
 
             {/* Desktop Call buttons side-by-side */}
             <div className="flex items-center gap-2">
@@ -871,6 +874,20 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         show={showMatchCelebration}
         matchedInterests={matchedInterests}
         onDismiss={() => setShowMatchCelebration(false)}
+      />
+
+      <StrangerProfileSheet
+        show={showProfileSheet && status === "connected"}
+        onClose={() => setShowProfileSheet(false)}
+        strangerName={strangerName}
+        strangerAvatar={strangerAvatar}
+        strangerMood={strangerMood}
+        matchedInterests={matchedInterests}
+        connectedAt={connectedAt}
+        isVerified={isVerified}
+        messageCount={messages.filter(m => m.sender !== "system").length}
+        onAudioCall={() => startCall(true)}
+        onVideoCall={() => startCall(false)}
       />
 
       {status === "idle" && (

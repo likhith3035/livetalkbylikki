@@ -14,11 +14,12 @@ interface HeaderProps {
   onBack?: () => void;
   onVideoCall?: () => void;
   onAudioCall?: () => void;
+  onProfileTap?: () => void;
   toolsMenu?: React.ReactNode;
 }
 
 const Header = forwardRef<HTMLElement, HeaderProps>(({ 
-  onlineCount, strangerName, strangerAvatar, strangerMood, onBack, onVideoCall, onAudioCall, toolsMenu
+  onlineCount, strangerName, strangerAvatar, strangerMood, onBack, onVideoCall, onAudioCall, onProfileTap, toolsMenu
 }, ref) => {
   const { settings, updateSetting } = useSettings();
   const navigate = useNavigate();
@@ -41,8 +42,12 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        {/* Center: Stranger Avatar, Name and Status */}
-        <div className="flex items-center gap-2 flex-1 min-w-0 mx-2">
+        {/* Center: Stranger Avatar, Name and Status — tappable */}
+        <button
+          onClick={onProfileTap}
+          className="flex items-center gap-2 flex-1 min-w-0 mx-2 active:scale-[0.98] transition-transform text-left"
+          aria-label="View profile"
+        >
           {strangerAvatar && (
             strangerAvatar.startsWith("data:image/") ? (
               <img
@@ -56,7 +61,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
               </div>
             )
           )}
-          <div className="flex flex-col min-w-0 text-left">
+          <div className="flex flex-col min-w-0">
             <h1 className="text-sm font-bold text-foreground truncate leading-snug">
               {strangerName || "Stranger"}
             </h1>
@@ -65,7 +70,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
               <span className="truncate max-w-[90px]">{strangerMood || "Online"}</span>
             </p>
           </div>
-        </div>
+        </button>
 
         {/* Right: Circular call buttons side-by-side */}
         <div className="flex items-center gap-1.5 shrink-0">
