@@ -258,6 +258,50 @@ const COMPARISON = [
   { feature: "Dark Mode 🌙", LiveTalk: true, others: false },
 ];
 
+const RELEASES = [
+  {
+    version: "v1.5.0",
+    tag: "Latest Release",
+    date: "July 20, 2026",
+    isCurrent: true,
+    highlights: [
+      { category: "🎨 Profile & Cropper", desc: "Redesigned ProfilePage with Instagram style. Added touch pinch-to-zoom, scroll wheel zoom, and real-time 'How others see you' live preview card inside avatar cropper modal." },
+      { category: "📱 Mobile UX", desc: "Ultra-compact mobile top header bar, smaller action pills with icon+text, and optimized vertical padding for max chat space." },
+      { category: "⚡ Performance & Fixes", desc: "Resolved PWA Service Worker stale chunk caching (net::ERR_FAILED) with automated workbox cache purging (cleanupOutdatedCaches)." }
+    ]
+  },
+  {
+    version: "v1.4.0",
+    tag: "Major Update",
+    date: "July 19, 2026",
+    isCurrent: false,
+    highlights: [
+      { category: "💬 Stranger Profile Sheet", desc: "Slide-up bottom sheet to view stranger profile details, chat duration, message count, verified badge, and shared interests." },
+      { category: "🛠️ Consolidated Tools Menu", desc: "Unified theme picker, message search, disappearing timers, and report/block actions into Radix popover menu." },
+      { category: "🎮 Games & Media", desc: "Added Truth or Dare, Tic-Tac-Toe, Tenor GIF search, Google Maps location sharing, and custom wallpapers." }
+    ]
+  },
+  {
+    version: "v1.3.0",
+    tag: "Feature Update",
+    date: "July 15, 2026",
+    isCurrent: false,
+    highlights: [
+      { category: "📹 WebRTC Video & Voice", desc: "Added peer-to-peer WebRTC video and audio calls with camera flip, background blur, and screen sharing." },
+      { category: "🔒 Security & Protection", desc: "Screen capture protection, local privacy mode, and automated AI moderation detection." }
+    ]
+  },
+  {
+    version: "v1.0.0",
+    tag: "Initial Launch",
+    date: "June 2026",
+    isCurrent: false,
+    highlights: [
+      { category: "🚀 Core Platform", desc: "Stateless random anonymous matching engine with zero logs, instant messaging, and mobile PWA support." }
+    ]
+  }
+];
+
 const fadeUp = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
@@ -382,6 +426,7 @@ const InfoPage = () => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
             {[
+              { id: "updates", label: "🚀 Release & Deploy History" },
               { id: "advanced", label: "🤖 AI Games & Cross-device" },
               { id: "what", label: "What is LiveTalk?" },
               { id: "howto", label: "How to use it" },
@@ -408,6 +453,60 @@ const InfoPage = () => {
             ))}
           </div>
         </motion.nav>
+
+        {/* ─── Section: Release & Deploy History ─── */}
+        <motion.section id="updates" {...fadeUp} transition={{ delay: 0.09 }} className="space-y-8 scroll-mt-24">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" /> Deployment Timeline & Changelog
+              </span>
+            </div>
+            <h2 className="text-3xl font-bold text-foreground">🚀 Release & Deploy History</h2>
+            <p className="text-base text-muted-foreground leading-relaxed font-medium">
+              Track what features, improvements, and bug fixes were added with each deployment update.
+            </p>
+          </div>
+
+          <div className="space-y-6 relative before:absolute before:left-6 before:top-4 before:bottom-4 before:w-0.5 before:bg-border/40">
+            {RELEASES.map((rel) => (
+              <div key={rel.version} className="relative pl-12 space-y-3">
+                {/* Timeline Dot */}
+                <div className={cn(
+                  "absolute left-4 top-1.5 -translate-x-1/2 h-4 w-4 rounded-full border-2 bg-background transition-all",
+                  rel.isCurrent ? "border-primary bg-primary shadow-[0_0_12px_hsl(var(--primary))]" : "border-muted-foreground/40"
+                )} />
+
+                {/* Release Card */}
+                <div className="rounded-[2rem] bg-card/40 backdrop-blur-sm border border-border/50 p-6 space-y-4 shadow-sm hover:border-primary/30 transition-all">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/20 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg font-extrabold text-foreground">{rel.version}</span>
+                      <span className={cn(
+                        "text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider",
+                        rel.isCurrent ? "bg-primary/20 text-primary border border-primary/30 animate-pulse" : "bg-muted text-muted-foreground"
+                      )}>
+                        {rel.tag}
+                      </span>
+                    </div>
+                    <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5 text-primary" /> {rel.date}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {rel.highlights.map((h, idx) => (
+                      <div key={idx} className="space-y-0.5">
+                        <span className="text-xs font-bold text-primary">{h.category}</span>
+                        <p className="text-xs text-muted-foreground/90 font-medium leading-relaxed">{h.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.section>
 
         {/* ─── Section: What is LiveTalk ─── */}
         <motion.section id="what" {...fadeUp} transition={{ delay: 0.1 }} className="space-y-8 scroll-mt-24">
