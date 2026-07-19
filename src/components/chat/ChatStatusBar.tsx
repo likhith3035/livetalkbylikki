@@ -1,22 +1,18 @@
-import { SkipForward, X, Tags, Video, Phone, Play, Download, Copy, Timer, Shield, EyeOff, Ban, Settings } from "lucide-react";
+import { SkipForward, X, Tags, Video, Phone, Play, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ReportBlockMenu from "@/components/ReportBlockMenu";
 import PrivateRoomDialog from "@/components/chat/PrivateRoomDialog";
-import ChatSearchBar from "@/components/chat/ChatSearchBar";
-import ChatThemePicker from "@/components/chat/ChatThemePicker";
 import ChatTimer from "@/components/chat/ChatTimer";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
 import { cn } from "@/lib/utils";
 import type { ChatStatus } from "@/hooks/use-chat";
 import type { Message } from "@/hooks/use-chat";
-import { exportChatAsText, copyToClipboard, downloadAsFile } from "@/lib/chat-export";
 import { useToast } from "@/hooks/use-toast";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Switch } from "@/components/ui/switch";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { ChatToolsMenu } from "@/components/chat/ChatToolsMenu";
 
 interface ChatStatusBarProps {
   status: ChatStatus;
@@ -240,194 +236,20 @@ const ChatStatusBar = ({
 
         {status === "connected" && (
           <>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onAudioCall}
-              disabled={isVideoCallActive}
-              className={cn(
-                "gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03] border",
-                settings.liquidGlassEnabled
-                  ? "bg-primary/15 text-primary border-primary/30 dark:border-primary/20 hover:bg-primary/25 hover:text-primary shadow-sm"
-                  : "bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 hover:text-primary"
-              )}
-              title="Start an audio call"
-            >
-              <Phone className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Call</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onVideoCall}
-              disabled={isVideoCallActive}
-              className={cn(
-                "gap-1.5 h-8 px-3 text-xs font-bold transition-all hover:scale-[1.03] border",
-                settings.liquidGlassEnabled
-                  ? "bg-primary/15 text-primary border-primary/30 dark:border-primary/20 hover:bg-primary/25 hover:text-primary shadow-sm"
-                  : "bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 hover:text-primary"
-              )}
-              title="Start a video call"
-            >
-              <Video className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Video</span>
-            </Button>
-            {/* Disappearing messages toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const timers = [null, 30, 60, 300];
-                const currentIdx = timers.indexOf(disappearTimer ?? null);
-                const next = timers[(currentIdx + 1) % timers.length];
-                onSetDisappearTimer?.(next);
-              }}
-              className={cn(
-                "gap-1.5 h-8 px-2.5 text-xs font-bold transition-all hover:scale-[1.03] border",
-                disappearTimer
-                  ? "bg-amber-500/15 text-amber-500 border-amber-500/30 dark:border-amber-500/20"
-                  : settings.liquidGlassEnabled
-                  ? "bg-white/5 border-white/10 hover:bg-white/10"
-                  : "bg-secondary/40 border-border/40 hover:bg-secondary/60"
-              )}
-              title={disappearTimer ? `Messages disappear after ${disappearTimer}s` : "Enable disappearing messages"}
-            >
-              <Timer className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{disappearTimer ? `${disappearTimer}s` : ""}</span>
-            </Button>
-            {onThemeChange && <ChatThemePicker onApply={onThemeChange} />}
-            
-            {/* Privacy Protection Dropdown Toggle */}
-            <Popover open={showPrivacyPopover} onOpenChange={setShowPrivacyPopover}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "gap-1.5 h-8 px-2.5 text-xs font-bold transition-all hover:scale-[1.03] border relative",
-                    localPrivacyModeActive
-                      ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30 dark:border-emerald-500/20 hover:bg-emerald-500/25 hover:text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-                      : settings.liquidGlassEnabled
-                      ? "bg-white/5 border-white/10 hover:bg-white/10"
-                      : "bg-secondary/40 border-border/40 hover:bg-secondary/60"
-                  )}
-                  title="Privacy & Screen Protection Settings"
-                >
-                  <Shield className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">Privacy</span>
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent
-                align="end"
-                sideOffset={8}
-                className="w-64 rounded-2xl border border-border bg-card p-4 shadow-xl z-50 glass-heavy flex flex-col gap-3"
-              >
-                <div className="flex items-center gap-1.5 pb-2 border-b border-border/40">
-                  <Shield className="h-4 w-4 text-primary" />
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Privacy Protection</h4>
-                </div>
-
-                {/* Row 1: Privacy Mode */}
-                <div 
-                  className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer select-none"
-                  onClick={() => togglePrivacyMode(!localPrivacyModeActive)}
-                >
-                  <div className="flex flex-col flex-1">
-                    <span className="text-[11.5px] font-bold text-foreground">Privacy Mode</span>
-                    <span className="text-[9.5px] text-muted-foreground">Encrypt screen & block shots</span>
-                  </div>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Switch
-                      checked={localPrivacyModeActive}
-                      onCheckedChange={(c) => togglePrivacyMode(c)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 2: Share Violations (alerts) */}
-                <div 
-                  className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer select-none"
-                  onClick={() => updateSetting("notifyAlerts", !settings.notifyAlerts)}
-                >
-                  <div className="flex flex-col flex-1">
-                    <span className="text-[11.5px] font-bold text-foreground">Alert Partner</span>
-                    <span className="text-[9.5px] text-muted-foreground">Notify peer on capture attempts</span>
-                  </div>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Switch
-                      checked={settings.notifyAlerts}
-                      onCheckedChange={(c) => updateSetting("notifyAlerts", c)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 3: Auto-Stop */}
-                <div 
-                  className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer select-none"
-                  onClick={() => updateSetting("autoStopOnScreenshot", !settings.autoStopOnScreenshot)}
-                >
-                  <div className="flex flex-col flex-1">
-                    <span className="text-[11.5px] font-bold text-foreground">Auto-Stop Chat</span>
-                    <span className="text-[9.5px] text-muted-foreground">Disconnect immediately if captured</span>
-                  </div>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Switch
-                      checked={settings.autoStopOnScreenshot}
-                      onCheckedChange={(c) => updateSetting("autoStopOnScreenshot", c)}
-                    />
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <ChatToolsMenu
+              messages={messages}
+              onSearchResult={onSearchResult}
+              disappearTimer={disappearTimer}
+              onSetDisappearTimer={onSetDisappearTimer}
+              onBlock={onBlock}
+              onThemeChange={onThemeChange}
+              triggerClassName="h-8 w-8"
+            />
 
             <ChatTimer isConnected={status === "connected"} onAutoDisconnect={onStop} />
           </>
         )}
 
-        {/* Search */}
-        {messages.length > 0 && (status === "connected" || status === "disconnected") && onSearchResult && (
-          <ChatSearchBar messages={messages} onSearchResult={onSearchResult} />
-        )}
-
-        {/* Export buttons */}
-        {messages.length > 0 && (status === "connected" || status === "disconnected") && (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCopyChat}
-              className={cn(
-                "gap-1 h-8 px-2 text-xs border transition-all hover:scale-[1.03]",
-                settings.liquidGlassEnabled
-                  ? "bg-white/5 border-white/10 hover:bg-white/10 text-foreground"
-                  : "bg-secondary/40 border-border/40 hover:bg-secondary/60 text-foreground"
-              )}
-              title="Copy chat to clipboard"
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDownloadChat}
-              className={cn(
-                "gap-1 h-8 px-2 text-xs border transition-all hover:scale-[1.03]",
-                settings.liquidGlassEnabled
-                  ? "bg-white/5 border-white/10 hover:bg-white/10 text-foreground"
-                  : "bg-secondary/40 border-border/40 hover:bg-secondary/60 text-foreground"
-              )}
-              title="Download chat as text"
-            >
-              <Download className="h-3.5 w-3.5" />
-            </Button>
-          </>
-        )}
-
-        {/* Removed Stop and Next from here, moved to top */}
-        {status === "connected" && (
-          <ReportBlockMenu onBlock={onBlock} />
-        )}
         {(status === "idle" || (status === "disconnected" && !autoReconnectCountdown)) && (
           <Button
             variant="glow"

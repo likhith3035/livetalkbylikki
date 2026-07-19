@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X } from "lucide-react";
+import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X, File as FileIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -232,7 +232,7 @@ const ChatMessageList = ({
   return (
     <div
       className={cn(
-        "flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 space-y-1.5 mx-auto w-full max-w-3xl transition-all duration-300",
+        "flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 space-y-3 mx-auto w-full max-w-3xl transition-all duration-300",
         isReplying ? "pb-12" : "pb-6"
       )}
     >
@@ -305,46 +305,32 @@ const ChatMessageList = ({
                     exit={{ opacity: 0, scale: 0.85, y: 8 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     className={cn(
-                      "absolute bottom-full mb-2 z-30 flex flex-col items-center gap-1.5",
-                      msg.sender === "you" ? "right-0" : "left-0"
+                      "absolute bottom-full mb-2 z-35 flex flex-col items-center gap-1.5",
+                      msg.sender === "you" ? "right-0" : "left-12"
                     )}
                   >
-                    {/* Emoji reaction row */}
-                    <div className="flex gap-0.5 rounded-full bg-card border border-border px-2 py-1.5 shadow-xl backdrop-blur-sm">
-                      {REACTION_EMOJIS.map((emoji) => (
+                    {/* Reactions Selector */}
+                    <div className="flex items-center gap-1 bg-background/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 rounded-full px-2.5 py-1.5 shadow-xl">
+                      {["❤️", "👍", "🔥", "😂", "😮", "😢"].map((emoji) => (
                         <button
                           key={emoji}
                           onClick={() => { onReact(msg.id, emoji); closeMenu(); }}
-                          className="text-xl hover:scale-125 active:scale-90 transition-transform px-1 py-0.5"
+                          className="hover:scale-125 active:scale-95 transition-all text-base px-0.5"
                         >
                           {emoji}
                         </button>
                       ))}
                     </div>
-                    {/* Action buttons or Submenu */}
-                    {showTranslateFor === msg.id ? (
-                      <div className="flex flex-wrap gap-1 max-w-[280px] p-1.5 rounded-xl bg-card border border-border shadow-xl backdrop-blur-sm justify-center items-center">
+
+                    {/* Actions Menu */}
+                    {msg.sender !== "system" && (
+                      <div className="flex items-center gap-1 bg-background/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 rounded-xl p-1 shadow-xl shrink-0">
                         <button
-                          onClick={() => setShowTranslateFor(null)}
-                          className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-[10px] font-bold text-muted-foreground hover:bg-secondary transition-colors"
+                          onClick={() => { onReply?.(msg); closeMenu(); }}
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                         >
-                          ← Back
+                          <ReplyIcon className="h-3 w-3" /> Reply
                         </button>
-                        {SUPPORTED_LANGUAGES.map((lang) => (
-                          <button
-                            key={lang.code}
-                            onClick={() => {
-                              handleTranslate(msg.id, msg.text || "", lang.code, lang.name);
-                              closeMenu();
-                            }}
-                            className="rounded-lg px-2 py-1 text-[10px] font-semibold text-foreground hover:bg-secondary hover:text-primary transition-all"
-                          >
-                            {lang.name}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex gap-0.5 rounded-xl bg-card border border-border shadow-xl p-1 backdrop-blur-sm">
                         <button
                           onClick={() => { navigator.clipboard.writeText(msg.text || ""); closeMenu(); }}
                           className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
@@ -352,26 +338,16 @@ const ChatMessageList = ({
                           <Copy className="h-3 w-3" /> Copy
                         </button>
                         <button
-                          onClick={() => { onReply?.(msg); closeMenu(); }}
+                          onClick={() => { setShowTranslateFor(msg.id); }}
                           className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                         >
-                          <ReplyIcon className="h-3 w-3" /> Reply
+                          <Globe className="h-3 w-3" /> Translate
                         </button>
-                        
-                        {msg.text && (
-                          <button
-                            onClick={() => setShowTranslateFor(msg.id)}
-                            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                          >
-                            <Globe className="h-3 w-3 text-primary" /> Translate
-                          </button>
-                        )}
-
                         <button
                           onClick={() => { onPin?.(msg.id); closeMenu(); }}
                           className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                         >
-                          <Pin className="h-3 w-3" /> {msg.pinned ? "Unpin" : "Pin"}
+                          <Pin className="h-3 w-3" /> Pin
                         </button>
                         <button
                           onClick={() => { onForward?.(msg); closeMenu(); }}
@@ -393,94 +369,229 @@ const ChatMessageList = ({
                 )}
               </AnimatePresence>
 
-              {/* Bubble */}
-              <div
-                onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
-                onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
-                onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
-                onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
-                className={cn(
-                  "relative break-words select-none transition-all duration-500",
-                  msg.sender === "you" &&
-                    "bg-[hsl(var(--bubble-you)/0.85)] backdrop-blur-md text-[hsl(var(--bubble-you-foreground))] rounded-[22px] rounded-br-[4px] shadow-lg border border-white/10 min-w-[100px] w-fit max-w-[85%] sm:max-w-[75%] px-4 sm:px-5 py-2.5 sm:py-3 text-[15px] sm:text-base leading-relaxed hover:brightness-110",
-                  msg.sender === "stranger" &&
-                    "bg-[hsl(var(--bubble-stranger)/0.8)] backdrop-blur-md text-[hsl(var(--bubble-stranger-foreground))] rounded-[22px] rounded-bl-[4px] shadow-sm border border-black/5 min-w-[100px] w-fit max-w-[85%] sm:max-w-[75%] px-4 sm:px-5 py-2.5 sm:py-3 text-[15px] sm:text-base leading-relaxed hover:brightness-105",
-                  msg.replyTo && !msg.deleted && "min-w-[220px] sm:min-w-[260px]",
-                  msg.sender === "system" &&
-                    "max-w-fit bg-white/5 backdrop-blur-sm text-muted-foreground text-[11px] text-center italic px-4 py-1.5 rounded-full border border-white/5",
-                  msg.deleted && "opacity-60 italic",
-                  msg.pinned && !msg.deleted && "ring-1 ring-primary/30",
-                  activeMenuId === msg.id && "ring-2 ring-primary/40 shadow-xl scale-[1.02]"
-                )}
-              >
-                {msg.pinned && !msg.deleted && msg.sender !== "system" && (
-                  <Pin className="absolute -top-1.5 -right-1.5 h-3 w-3 text-primary" />
-                )}
-
-                {msg.sender !== "system" && (
-                  <p className="text-[10px] font-semibold opacity-60 mb-0.5 tracking-wide uppercase flex items-center gap-1.5">
-                    {msg.senderAvatar && (
+              {/* Message Structure */}
+              {msg.sender === "stranger" ? (
+                <div className="flex items-end gap-2.5 max-w-[85%] sm:max-w-[75%]">
+                  {/* Stranger Avatar on the left */}
+                  <div className="shrink-0 mb-1">
+                    {msg.senderAvatar ? (
                       msg.senderAvatar.startsWith("data:image/") ? (
-                        <img src={msg.senderAvatar} alt="Avatar" className="h-4.5 w-4.5 rounded-full object-cover shrink-0 border border-primary/20" />
+                        <img src={msg.senderAvatar} alt="Avatar" className="h-9 w-9 rounded-full object-cover border border-border/50 shadow-sm" />
                       ) : (
-                        <span className="text-xs">{msg.senderAvatar}</span>
+                        <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-lg border border-border/50 shadow-sm">
+                          {msg.senderAvatar}
+                        </div>
                       )
+                    ) : (
+                      <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-xs font-bold border border-border/50 shadow-sm">
+                        S
+                      </div>
                     )}
-                    {msg.sender === "you"
-                      ? (msg.senderNickname?.trim() || "You")
-                      : (msg.senderNickname?.trim() || "Stranger")}
-                    {msg.senderMood && (
-                      <span className="text-[8px] font-bold px-1 py-0.25 rounded-md bg-primary/10 text-primary border border-primary/20 normal-case tracking-normal shrink-0">
-                        {msg.senderMood}
-                      </span>
-                    )}
-                  </p>
-                )}
+                  </div>
 
-                {msg.replyTo && !msg.deleted && (
-                  <button
-                    onClick={() => scrollToMessage(msg.replyTo!.id)}
+                  {/* Stranger Message Bubble */}
+                  <div
+                    onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
+                    onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
+                    onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
+                    onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
+                    style={{
+                      backgroundColor: `hsl(var(--bubble-stranger))`,
+                      color: `hsl(var(--bubble-stranger-foreground))`
+                    }}
                     className={cn(
-                      "w-full text-left mb-1.5 rounded-lg px-2.5 py-1.5 border-l-2 border-primary/50 flex items-start gap-1.5",
-                      msg.sender === "you" ? "bg-black/10" : "bg-white/10"
+                      "relative break-words select-text transition-all duration-500",
+                      "border border-border/80 rounded-[1.5rem] rounded-bl-sm shadow-sm min-w-[150px] w-fit max-w-full px-4 py-3 text-sm sm:text-base leading-relaxed hover:brightness-105",
+                      msg.replyTo && !msg.deleted && "min-w-[220px] sm:min-w-[260px]",
+                      msg.deleted && "opacity-60 italic",
+                      msg.pinned && !msg.deleted && "ring-1 ring-primary/30",
+                      activeMenuId === msg.id && "ring-2 ring-primary/40 shadow-xl scale-[1.02]"
                     )}
                   >
-                    <ReplyIcon className="h-3 w-3 mt-0.5 shrink-0 opacity-50" />
-                    <div className="min-w-0">
-                      <p className="text-[9px] font-bold opacity-70">
-                        {msg.replyTo.sender === "you" ? "You" : "Stranger"}
-                      </p>
-                      <p className="text-[11px] opacity-70 truncate">{msg.replyTo.text || "📷 Image"}</p>
-                    </div>
-                  </button>
-                )}
-
-                {!msg.deleted && msg.imageUrl && /\.(webm|m4a|ogg|mp3|wav)$/i.test(msg.imageUrl) ? (
-                  <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
-                ) : !msg.deleted && msg.imageUrl ? (
-                  <ChatImage src={msg.imageUrl} isMine={msg.sender === "you"} />
-                ) : null}
-                {msg.text && <FormattedText text={msg.text} />}
-                {msg.text && !msg.deleted && msg.sender !== "system" && <LinkPreview text={msg.text} />}
-
-                {msg.sender !== "system" && (
-                  <p className={cn(
-                    "text-[9px] mt-1 opacity-40 tabular-nums flex items-center gap-1",
-                    msg.sender === "you" ? "justify-end" : "justify-start"
-                  )}>
-                    {format(msg.timestamp, "h:mm a")}
-                    {msg.sender === "you" && !msg.deleted && (
-                      <CheckCheck className={cn(
-                        "h-3 w-3 tick-appear transition-colors",
-                        msg.read ? "text-blue-400 opacity-100" : "opacity-60"
-                      )} />
+                    {/* Header: Name and Time */}
+                    {msg.sender !== "system" && (
+                      <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-black/5 dark:border-white/5 pb-1">
+                        <span className="text-xs font-bold flex items-center gap-1.5 truncate opacity-90">
+                          {msg.senderNickname?.trim() || "Stranger"}
+                          {msg.senderMood && (
+                            <span className="text-[8px] font-bold px-1 py-0.25 rounded bg-primary/10 text-primary border border-primary/20 normal-case tracking-normal shrink-0">
+                              {msg.senderMood}
+                            </span>
+                          )}
+                        </span>
+                        <div className="flex items-center gap-1 text-[10px] opacity-75 font-semibold whitespace-nowrap">
+                          {msg.pinned && !msg.deleted && (
+                            <Pin className="h-2.5 w-2.5 text-primary rotate-45 shrink-0" />
+                          )}
+                          <span>{format(msg.timestamp, "h:mm a")}</span>
+                        </div>
+                      </div>
                     )}
+
+                    {/* Replied block */}
+                    {msg.replyTo && !msg.deleted && (
+                      <button
+                        onClick={() => scrollToMessage(msg.replyTo!.id)}
+                        className="w-full text-left mb-2 rounded-xl px-3 py-2 border-l-2 border-primary/50 flex items-start gap-2 text-xs bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-inherit"
+                      >
+                        <ReplyIcon className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-50" />
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold opacity-75">
+                            {msg.replyTo.sender === "you" ? "You" : "Stranger"}
+                          </p>
+                          <p className="text-[11px] opacity-75 truncate">{msg.replyTo.text || "📷 Attachment"}</p>
+                        </div>
+                      </button>
+                    )}
+
+                    {/* Media content */}
+                    {!msg.deleted && msg.imageUrl && /\.(webm|m4a|ogg|mp3|wav)$/i.test(msg.imageUrl) ? (
+                      <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
+                    ) : !msg.deleted && msg.imageUrl && /\.(jpe?g|png|gif|webp|svg)$/i.test(msg.imageUrl) ? (
+                      <ChatImage src={msg.imageUrl} isMine={false} />
+                    ) : !msg.deleted && msg.imageUrl ? (
+                      <a 
+                        href={msg.imageUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex items-center gap-2 p-3 rounded-xl border border-border/85 my-1 text-xs font-bold hover:underline transition-all bg-secondary/60 text-foreground shadow-sm max-w-[240px]"
+                      >
+                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <FileIcon className="h-4.5 w-4.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold text-[11px]">
+                            {msg.imageUrl.split("/").pop()?.split(".").shift() || "Attachment"}
+                          </p>
+                          <p className="text-[9px] opacity-50 uppercase font-black tracking-wider">
+                            .{msg.imageUrl.split(".").pop()?.split("?").shift() || "file"}
+                          </p>
+                        </div>
+                      </a>
+                    ) : null}
+
+                    {/* Message Text */}
+                    {msg.text && <FormattedText text={msg.text} />}
+                    {msg.text && !msg.deleted && <LinkPreview text={msg.text} />}
+
+                    {/* Timer/Disappear Indicator */}
                     {msg.disappearAt && !msg.deleted && (
-                      <Timer className="h-2.5 w-2.5 opacity-50" />
+                      <div className="flex justify-start mt-1 opacity-45">
+                        <Timer className="h-3 w-3 text-muted-foreground" />
+                      </div>
                     )}
-                  </p>
-                )}
-              </div>
+                  </div>
+                </div>
+              ) : msg.sender === "you" ? (
+                /* User (You) bubble: aligned right, no avatar */
+                <div
+                  onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
+                  onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
+                  onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
+                  onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
+                  style={{
+                    backgroundColor: `hsl(var(--bubble-you))`,
+                    color: `hsl(var(--bubble-you-foreground))`
+                  }}
+                  className={cn(
+                    "relative break-words select-text transition-all duration-500",
+                    "border border-white/5 rounded-[1.5rem] rounded-br-sm shadow-md min-w-[150px] w-fit max-w-[85%] sm:max-w-[75%] px-4 py-3 text-sm sm:text-base leading-relaxed hover:brightness-110",
+                    msg.replyTo && !msg.deleted && "min-w-[220px] sm:min-w-[260px]",
+                    msg.deleted && "opacity-60 italic",
+                    msg.pinned && !msg.deleted && "ring-1 ring-primary/30",
+                    activeMenuId === msg.id && "ring-2 ring-primary/40 shadow-xl scale-[1.02]"
+                  )}
+                >
+                  {/* Header: You and Time/Ticks */}
+                  {msg.sender !== "system" && (
+                    <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-white/10 pb-1">
+                      <span className="text-xs font-bold flex items-center gap-1.5 truncate opacity-90">
+                        {msg.senderNickname?.trim() || "You"}
+                        {msg.senderMood && (
+                          <span className="text-[8px] font-bold px-1 py-0.25 rounded bg-primary/10 text-primary border border-primary/20 normal-case tracking-normal shrink-0">
+                            {msg.senderMood}
+                          </span>
+                        )}
+                      </span>
+                      <div className="flex items-center gap-1 text-[10px] opacity-70 font-semibold whitespace-nowrap">
+                        {msg.pinned && !msg.deleted && (
+                          <Pin className="h-2.5 w-2.5 text-primary rotate-45 shrink-0" />
+                        )}
+                        {!msg.deleted && (
+                          <CheckCheck className={cn(
+                            "h-3.5 w-3.5 tick-appear",
+                            msg.read ? "text-blue-400 opacity-100" : "text-inherit/40"
+                          )} />
+                        )}
+                        <span>{format(msg.timestamp, "h:mm a")}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Replied block */}
+                  {msg.replyTo && !msg.deleted && (
+                    <button
+                      onClick={() => scrollToMessage(msg.replyTo!.id)}
+                      className="w-full text-left mb-2 rounded-xl px-3 py-2 border-l-2 border-primary/50 flex items-start gap-2 text-xs bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-inherit"
+                    >
+                      <ReplyIcon className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-50" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold opacity-75">
+                          {msg.replyTo.sender === "you" ? "You" : "Stranger"}
+                        </p>
+                        <p className="text-[11px] opacity-75 truncate">{msg.replyTo.text || "📷 Attachment"}</p>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Media content */}
+                  {!msg.deleted && msg.imageUrl && /\.(webm|m4a|ogg|mp3|wav)$/i.test(msg.imageUrl) ? (
+                    <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
+                  ) : !msg.deleted && msg.imageUrl && /\.(jpe?g|png|gif|webp|svg)$/i.test(msg.imageUrl) ? (
+                    <ChatImage src={msg.imageUrl} isMine={true} />
+                  ) : !msg.deleted && msg.imageUrl ? (
+                    <a 
+                      href={msg.imageUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-2 p-3 rounded-xl border border-white/10 my-1 text-xs font-bold hover:underline transition-all bg-white/5 text-white shadow-sm max-w-[240px]"
+                    >
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <FileIcon className="h-4.5 w-4.5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-[11px]">
+                          {msg.imageUrl.split("/").pop()?.split(".").shift() || "Attachment"}
+                        </p>
+                        <p className="text-[9px] opacity-50 uppercase font-black tracking-wider">
+                          .{msg.imageUrl.split(".").pop()?.split("?").shift() || "file"}
+                        </p>
+                      </div>
+                    </a>
+                  ) : null}
+
+                  {/* Message Text */}
+                  {msg.text && <FormattedText text={msg.text} />}
+                  {msg.text && !msg.deleted && <LinkPreview text={msg.text} />}
+
+                  {/* Timer/Disappear Indicator */}
+                  {msg.disappearAt && !msg.deleted && (
+                    <div className="flex justify-end mt-1 opacity-45">
+                      <Timer className="h-3 w-3 text-zinc-400" />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* System messages */
+                <div
+                  className={cn(
+                    "max-w-fit bg-white/5 backdrop-blur-sm text-muted-foreground text-[11px] text-center italic px-4 py-1.5 rounded-full border border-white/5",
+                    msg.deleted && "opacity-60 italic"
+                  )}
+                >
+                  {msg.text && <FormattedText text={msg.text} />}
+                </div>
+              )}
             </SwipeableMessage>
 
             {/* Translation Card */}

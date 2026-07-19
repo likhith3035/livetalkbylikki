@@ -1,9 +1,8 @@
 import { useState, useRef } from "react";
 import { RoomChannel } from "@/lib/types";
-import { Send, X, Reply, Plus } from "lucide-react";
+import { Send, X, Reply, File, Image, Music, Video, Gamepad2, Smile, MapPin, Loader2, SkipForward } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import ImageUploadButton from "@/components/ImageUploadButton";
 import EmojiPicker from "@/components/chat/EmojiPicker";
 import ChatGames from "@/components/chat/ChatGames";
 import GifPicker from "@/components/chat/GifPicker";
@@ -12,6 +11,9 @@ import Icebreakers from "@/components/chat/Icebreakers";
 import type { ChatStatus, Message } from "@/hooks/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { trackRoomMediaUpload } from "@/features/temp-rooms/registerMediaUpload";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
   status: ChatStatus;
@@ -28,18 +30,23 @@ interface ChatInputProps {
   activeGame: "none" | "ttt" | "canvas" | "rps";
   setActiveGame: (game: "none" | "ttt" | "canvas" | "rps") => void;
   onToggleAI?: () => void;
+  onVideoCall?: () => void;
+  onNext?: () => void;
 }
 
 const ChatInput = ({ 
   status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, 
   roomChannel, sessionId, roomId, hideGames, hasMessages,
-  activeGame, setActiveGame, onToggleAI
+  activeGame, setActiveGame, onToggleAI, onVideoCall, onNext
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [showActions, setShowActions] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileTypeFilter, setFileTypeFilter] = useState<string>("*");
   const throttleRef = useRef<number>(0);
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -47,7 +54,6 @@ const ChatInput = ({
     onSend(input, undefined, reply);
     setInput("");
     onCancelReply?.();
-    setShowActions(false);
   };
 
   const handleChange = (value: string) => {
@@ -59,10 +65,72 @@ const ChatInput = ({
     }
   };
 
+  const handleGenericFileUpload = async (file: File) => {
+    if (!isConnected) return;
+    
+    // Limits: Max 5MB
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "The selected file exceeds the maximum size limit of 5MB."
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "bin";
+      const fileName = `${crypto.randomUUID()}.${ext}`;
+      const path = roomId ? `${roomId}/${fileName}` : fileName;
+
+      const { error } = await supabase.storage
+        .from("chat-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+
+      if (error) throw error;
+
+      if (roomId) {
+        await trackRoomMediaUpload(roomId, path).catch(() => {});
+      }
+
+      const { data } = supabase.storage.from("chat-images").getPublicUrl(path);
+      onImageUpload(data.publicUrl);
+    } catch (err: any) {
+      console.error("Upload failed:", err);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: err.message || "An error occurred while uploading the file."
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const triggerFileSelect = (filter: string) => {
+    if (!isConnected) return;
+    setFileTypeFilter(filter);
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 50);
+  };
+
   const isConnected = status === "connected";
 
   return (
-    <div className="w-full shrink-0 pb-[env(safe-area-inset-bottom,0px)] glass-heavy border-t border-border/20">
+    <div className="w-full shrink-0 pb-[env(safe-area-inset-bottom,0px)] bg-background border-t border-border/30">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept={fileTypeFilter}
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleGenericFileUpload(file);
+        }}
+      />
 
       <div className="px-3 sm:px-4 py-2.5 sm:py-3">
         <AnimatePresence>
@@ -79,7 +147,7 @@ const ChatInput = ({
                   <p className="text-[10px] font-bold text-primary uppercase tracking-wider">
                     Replying to {replyingTo.sender === "you" ? "yourself" : "Stranger"}
                   </p>
-                  <p className="text-xs text-foreground/80 truncate font-medium">{replyingTo.text || "📷 Image"}</p>
+                  <p className="text-xs text-foreground/80 truncate font-medium">{replyingTo.text || "📷 Attachment"}</p>
                 </div>
                 <button onClick={onCancelReply} className="text-muted-foreground hover:text-foreground shrink-0 hover:scale-110 transition-all p-1">
                   <X className="h-3.5 w-3.5" />
@@ -89,32 +157,85 @@ const ChatInput = ({
           )}
         </AnimatePresence>
 
-        {isMobile && showActions && (
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, y: 15, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 15, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="mx-auto max-w-3xl mb-3 flex items-center justify-around gap-2 px-4 py-2 bg-secondary/80 border border-border/40 rounded-2xl glass-heavy shadow-lg relative z-30"
+        {/* Scrolling Action Pills above input */}
+        {isConnected && (
+          <div className="mx-auto max-w-3xl flex gap-2 overflow-x-auto pb-2.5 mb-1.5 scrollbar-none select-none px-0.5">
+            {/* Images Pill */}
+            <button
+              onClick={() => triggerFileSelect("image/*")}
+              disabled={uploading}
+              className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0"
             >
-              <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} roomId={roomId} />
-              <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
-              {!hideGames && (
-                <ChatGames 
-                  onSendMessage={onSend} 
-                  isConnected={isConnected} 
-                  roomChannel={roomChannel} 
-                  sessionId={sessionId}
-                  activeGame={activeGame}
-                  setActiveGame={setActiveGame}
-                  onToggleAI={onToggleAI}
-                />
-              )}
-              <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
-              <LocationShareButton isConnected={isConnected} onSend={onSend} />
-            </motion.div>
-          </AnimatePresence>
+              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Image className="h-3.5 w-3.5 text-emerald-500" />}
+              Images
+            </button>
+
+            {/* Video Pill */}
+            {onVideoCall && (
+              <button
+                onClick={onVideoCall}
+                className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0"
+              >
+                <Video className="h-3.5 w-3.5 text-rose-500" />
+                Video
+              </button>
+            )}
+
+            {/* Emoji Pill */}
+            <EmojiPicker
+              disabled={!isConnected}
+              onSelect={(emoji) => handleChange(input + emoji)}
+              customTrigger={
+                <div className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0">
+                  <Smile className="h-3.5 w-3.5 text-violet-500" />
+                  Emojis
+                </div>
+              }
+            />
+
+            {/* Games Pill */}
+            {!hideGames && (
+              <ChatGames
+                onSendMessage={onSend}
+                isConnected={isConnected}
+                roomChannel={roomChannel}
+                sessionId={sessionId}
+                activeGame={activeGame}
+                setActiveGame={setActiveGame}
+                onToggleAI={onToggleAI}
+                customTrigger={
+                  <div className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0">
+                    <Gamepad2 className="h-3.5 w-3.5 text-blue-500" />
+                    Games
+                  </div>
+                }
+              />
+            )}
+
+            {/* GIFs Pill */}
+            <GifPicker
+              isConnected={isConnected}
+              onSendGif={(url) => onSend("", url)}
+              customTrigger={
+                <div className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0">
+                  <Smile className="h-3.5 w-3.5 text-pink-500" />
+                  GIFs
+                </div>
+              }
+            />
+
+            {/* Location Pill */}
+            <LocationShareButton
+              isConnected={isConnected}
+              onSend={onSend}
+              customTrigger={
+                <div className="flex items-center gap-1.5 px-4 py-2 border border-border/80 bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shadow-sm shrink-0">
+                  <MapPin className="h-3.5 w-3.5 text-yellow-500" />
+                  Location
+                </div>
+              }
+            />
+          </div>
         )}
 
         {!hasMessages && (
@@ -123,44 +244,20 @@ const ChatInput = ({
           </div>
         )}
 
-        <div className="mx-auto flex max-w-3xl gap-1.5 sm:gap-2 items-center">
-          {isMobile ? (
-            <button
-              onClick={() => setShowActions(!showActions)}
-              disabled={!isConnected}
-              className={cn(
-                "h-10 w-10 sm:h-11 sm:w-11 rounded-2xl flex items-center justify-center border border-border/40 bg-secondary/40 hover:bg-secondary/60 transition-all duration-300 shrink-0",
-                showActions && "bg-primary/10 border-primary/30"
-              )}
+        {/* Input box and circular Send Button */}
+        <div className="mx-auto flex max-w-3xl gap-2.5 items-center">
+          {onNext && (isConnected || status === "disconnected") && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={onNext}
+              className="h-11 w-11 rounded-full shrink-0 flex items-center justify-center bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 active:scale-95 transition-all lg:hidden shadow-sm"
+              title="Skip to next stranger"
             >
-              <motion.div
-                animate={{ rotate: showActions ? 135 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Plus className={cn("h-5 w-5 text-muted-foreground", showActions && "text-primary")} />
-              </motion.div>
-            </button>
-          ) : (
-            <div className="flex items-center gap-0.5">
-              <ImageUploadButton disabled={!isConnected} onUpload={onImageUpload} roomId={roomId} />
-              <EmojiPicker disabled={!isConnected} onSelect={(emoji) => handleChange(input + emoji)} />
-              {!hideGames && (
-                <ChatGames 
-                  onSendMessage={onSend} 
-                  isConnected={isConnected} 
-                  roomChannel={roomChannel} 
-                  sessionId={sessionId}
-                  activeGame={activeGame}
-                  setActiveGame={setActiveGame}
-                  onToggleAI={onToggleAI}
-                />
-              )}
-              <GifPicker isConnected={isConnected} onSendGif={(url) => onSend("", url)} />
-              <LocationShareButton isConnected={isConnected} onSend={onSend} />
-            </div>
+              <SkipForward className="h-4.5 w-4.5" />
+            </motion.button>
           )}
 
-          <div className={`flex-1 min-w-0 relative rounded-2xl transition-all duration-300 ${isFocused ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/5' : ''}`}>
+          <div className={`flex-1 min-w-0 relative rounded-full transition-all duration-300 ${isFocused ? 'ring-2 ring-primary/30 shadow-lg shadow-primary/5' : ''}`}>
             <input
               type="text"
               value={input}
@@ -168,23 +265,20 @@ const ChatInput = ({
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder={isConnected ? "Type a message..." : "Connect to start chatting"}
+              placeholder={isConnected ? "Got it, thanks 🚀" : "Connect to start chatting"}
               disabled={!isConnected}
-              className="w-full rounded-2xl border border-border/60 bg-secondary/40 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/30 focus:bg-secondary/60 disabled:opacity-40 transition-all duration-300"
+              className="w-full rounded-full border border-border/60 bg-secondary/30 px-5 py-3 text-base sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-border/80 focus:bg-card disabled:opacity-40 transition-all duration-300 shadow-sm"
             />
           </div>
 
-          <motion.div whileTap={{ scale: 0.9 }}>
-            <Button
-              variant="glow"
-              size="icon"
-              onClick={handleSend}
-              disabled={!isConnected || !input.trim()}
-              className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl shrink-0 shadow-lg shadow-primary/15"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </motion.div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSend}
+            disabled={!isConnected || !input.trim()}
+            className="h-11 w-11 rounded-full shrink-0 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none shadow-md"
+          >
+            <Send className="h-4.5 w-4.5" />
+          </motion.button>
         </div>
       </div>
     </div>
