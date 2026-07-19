@@ -21,6 +21,7 @@ import Header from "@/components/Header";
 import MobileNav from "@/components/MobileNav";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSEO } from "@/hooks/use-seo";
+import { cn } from "@/lib/utils";
 
 /* ─── DATA ─── */
 
