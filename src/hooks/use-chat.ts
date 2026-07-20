@@ -347,7 +347,7 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   const onMatched = useCallback((roomId: string, strangerId: string, strangerStableId: string, strName: string, sharedInterests: string[], strAvatar?: string, strMood?: string) => {
     strangerStableIdRef.current = strangerStableId;
-    setStrangerName(strName || "Stranger");
+    setStrangerName(strName && strName !== "You" ? strName : "Stranger");
     setStrangerAvatar(strAvatar || "😀");
     setStrangerMood(strMood || "");
     joinRoom(roomId, strangerId, sharedInterests);
