@@ -746,9 +746,9 @@ const AdminDashboard = () => {
 
                   </div>
                 ) : (
-                  <div className="h-[380px] w-full">
+                  <div className="h-[360px] sm:h-[380px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={derivedMetrics.chartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
+                      <AreaChart key={selectedMetric} data={derivedMetrics.chartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
                         <CartesianGrid vertical={false} stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
                         <XAxis 
                           dataKey="date" axisLine={false} tickLine={false} 
@@ -785,7 +785,7 @@ const AdminDashboard = () => {
                 <ResponsiveContainer width="100%" height={100}>
                   <PieChart>
                     <Pie data={derivedMetrics.gaugeData} cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius="65%" outerRadius="95%" dataKey="value" stroke="none">
-                      {derivedMetrics.gaugeData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                      {derivedMetrics.gaugeData.map((e, i) => <Cell key={`gauge-cell-${i}`} fill={e.color} />)}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
