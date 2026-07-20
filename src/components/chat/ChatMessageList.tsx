@@ -109,12 +109,31 @@ const isAudioMedia = (url?: string) => {
   return url.startsWith("data:audio/") || /\.(webm|m4a|ogg|mp3|wav)(\?.*)?$/i.test(url);
 };
 
+const isGifUrl = (url?: string) => {
+  if (!url) return false;
+  if (/\.gif(\?.*)?$/i.test(url)) return true;
+  if (url.includes("tenor.com") || url.includes("tenor.googleapis.com")) return true;
+  if (url.includes("giphy.com") || url.includes("gph.is")) return true;
+  return false;
+};
+
 const isImageMedia = (url?: string) => {
   if (!url) return false;
   if (url.startsWith("data:image/") || url.startsWith("blob:")) return true;
   if (/\.(jpe?g|png|gif|webp|svg|avif)(\?.*)?$/i.test(url)) return true;
+  if (url.includes("tenor.com") || url.includes("tenor.googleapis.com")) return true;
+  if (url.includes("giphy.com") || url.includes("gph.is")) return true;
   if (url.includes("supabase.co/storage/") && !/\.(pdf|zip|rar|doc|docx|mp4|webm|mp3)$/i.test(url)) return true;
   return false;
+};
+
+/** Returns true if the message text is only emoji characters (no letters/digits) */
+const isEmojiOnly = (text?: string) => {
+  if (!text || text.length === 0) return false;
+  // Strip variation selectors, ZWJ, and emoji modifiers, then check if anything non-emoji remains
+  const stripped = text.replace(/[\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, "");
+  const emojiPattern = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+$/u;
+  return emojiPattern.test(stripped) && stripped.trim().length <= 12;
 };
 
 const ChatMessageList = ({
@@ -344,7 +363,7 @@ const ChatMessageList = ({
                     exit={{ opacity: 0, scale: 0.85, y: 8 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     className={cn(
-                      "absolute bottom-full mb-2 z-35 flex flex-col items-center gap-1.5",
+                      "absolute bottom-full mb-2 z-[35] flex flex-col items-center gap-1.5",
                       msg.sender === "you" ? "right-0" : "left-12"
                     )}
                   >
@@ -429,39 +448,185 @@ const ChatMessageList = ({
                   </div>
 
                   {/* Stranger Message Bubble */}
+                  <div className="flex flex-col min-w-0 max-w-full">
+                    <div
+                      onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
+                      onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
+                      onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
+                      onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
+                      style={!isEmojiOnly(msg.text) || msg.imageUrl ? {
+                        backgroundColor: `hsl(var(--bubble-stranger))`,
+                        color: `hsl(var(--bubble-stranger-foreground))`
+                      } : undefined}
+                      className={cn(
+                        "relative break-words select-text transition-all duration-500 w-fit max-w-full",
+                        isEmojiOnly(msg.text) && !msg.imageUrl
+                          ? "text-4xl sm:text-5xl leading-tight py-1 px-1"
+                          : cn(
+                              "border border-border/80 shadow-sm min-w-[150px] hover:brightness-105",
+                              getFontSizeClasses(settings.messageFontSize),
+                              getBubbleShapeClasses(settings.messageBubbleShape, true)
+                            ),
+                        msg.replyTo && !msg.deleted && "min-w-[220px] sm:min-w-[260px]",
+                        msg.deleted && "opacity-60 italic",
+                        msg.pinned && !msg.deleted && "ring-1 ring-primary/30",
+                        activeMenuId === msg.id && "ring-2 ring-primary/40 shadow-xl scale-[1.02]"
+                      )}
+                    >
+                      {/* Header: Name and Time — hide for emoji-only */}
+                      {msg.sender !== "system" && (!isEmojiOnly(msg.text) || msg.imageUrl) && (
+                        <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-black/5 dark:border-white/5 pb-1">
+                          <span className="text-xs font-bold flex items-center gap-1.5 truncate opacity-90">
+                            {msg.senderNickname?.trim() || strangerName || "Stranger"}
+                            {msg.senderMood && (
+                              <span className="text-[8px] font-bold px-1 py-0.25 rounded bg-primary/10 text-primary border border-primary/20 normal-case tracking-normal shrink-0">
+                                {msg.senderMood}
+                              </span>
+                            )}
+                          </span>
+                          <div className="flex items-center gap-1 text-[10px] opacity-75 font-semibold whitespace-nowrap">
+                            {msg.pinned && !msg.deleted && (
+                              <Pin className="h-2.5 w-2.5 text-primary rotate-45 shrink-0" />
+                            )}
+                            <span>{format(msg.timestamp, "h:mm a")}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Replied block */}
+                      {msg.replyTo && !msg.deleted && (
+                        <button
+                          onClick={() => scrollToMessage(msg.replyTo!.id)}
+                          className="w-full text-left mb-2 rounded-xl px-3 py-2 border-l-2 border-primary/50 flex items-start gap-2 text-xs bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-inherit"
+                        >
+                          <ReplyIcon className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-50" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-bold opacity-75">
+                              {msg.replyTo.sender === "you" ? "You" : "Stranger"}
+                            </p>
+                            <p className="text-[11px] opacity-75 truncate">{msg.replyTo.text || "📷 Attachment"}</p>
+                          </div>
+                        </button>
+                      )}
+
+                      {/* Media content — GIFs get special rendering */}
+                      {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
+                        <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
+                      ) : !msg.deleted && isGifUrl(msg.imageUrl) ? (
+                        <img
+                          src={msg.imageUrl}
+                          alt="GIF"
+                          className="rounded-xl my-1 max-w-[240px] sm:max-w-[280px] w-auto h-auto max-h-[220px] object-contain bg-black/5 dark:bg-white/5"
+                          loading="lazy"
+                        />
+                      ) : !msg.deleted && isImageMedia(msg.imageUrl) ? (
+                        <ChatImage src={msg.imageUrl!} isMine={false} />
+                      ) : !msg.deleted && msg.imageUrl ? (
+                        <a 
+                          href={msg.imageUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex items-center gap-2 p-3 rounded-xl border border-border/85 my-1 text-xs font-bold hover:underline transition-all bg-secondary/60 text-foreground shadow-sm max-w-[240px]"
+                        >
+                          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <FileIcon className="h-4.5 w-4.5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-semibold text-[11px]">
+                              {msg.imageUrl.split("/").pop()?.split(".").shift() || "Attachment"}
+                            </p>
+                            <p className="text-[9px] opacity-50 uppercase font-black tracking-wider">
+                              .{msg.imageUrl.split(".").pop()?.split("?").shift() || "file"}
+                            </p>
+                          </div>
+                        </a>
+                      ) : null}
+
+                      {/* Message Text */}
+                      {msg.text && <FormattedText text={msg.text} />}
+                      {msg.text && !msg.deleted && <LinkPreview text={msg.text} />}
+
+                      {/* Auto-Translation Subtitle */}
+                      {autoTranslations && autoTranslations[msg.id] && !msg.deleted && (
+                        <div className="mt-2 pt-1.5 border-t border-black/10 dark:border-white/10 text-xs text-emerald-400 font-medium flex items-start gap-1">
+                          <Globe className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                          <span>{autoTranslations[msg.id]}</span>
+                        </div>
+                      )}
+
+                      {/* Emoji-only timestamp — compact inline */}
+                      {isEmojiOnly(msg.text) && !msg.imageUrl && !msg.deleted && (
+                        <p className="text-[9px] text-muted-foreground/60 font-medium mt-0.5">
+                          {format(msg.timestamp, "h:mm a")}
+                        </p>
+                      )}
+
+                      {/* Timer/Disappear Indicator */}
+                      {msg.disappearAt && !msg.deleted && (
+                        <div className="flex justify-start mt-1 opacity-45">
+                          <Timer className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Reaction badges — attached to bubble */}
+                    {msg.sender !== "system" && !msg.deleted && (
+                      <MessageReactions
+                        messageId={msg.id}
+                        reactions={msg.reactions}
+                        onReact={onReact}
+                        isMine={false}
+                      />
+                    )}
+                  </div>
+                </div>
+              ) : msg.sender === "you" ? (
+                /* User (You) bubble: aligned right, no avatar */
+                <div className="flex flex-col items-end w-fit max-w-[85%] sm:max-w-[75%]">
                   <div
                     onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
                     onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
                     onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
                     onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
-                    style={{
-                      backgroundColor: `hsl(var(--bubble-stranger))`,
-                      color: `hsl(var(--bubble-stranger-foreground))`
-                    }}
+                    style={!isEmojiOnly(msg.text) || msg.imageUrl ? {
+                      backgroundColor: `hsl(var(--bubble-you))`,
+                      color: `hsl(var(--bubble-you-foreground))`
+                    } : undefined}
                     className={cn(
-                      "relative break-words select-text transition-all duration-500 border border-border/80 shadow-sm min-w-[150px] w-fit max-w-full hover:brightness-105",
-                      getFontSizeClasses(settings.messageFontSize),
-                      getBubbleShapeClasses(settings.messageBubbleShape, true),
+                      "relative break-words select-text transition-all duration-500 w-fit max-w-full",
+                      isEmojiOnly(msg.text) && !msg.imageUrl
+                        ? "text-4xl sm:text-5xl leading-tight py-1 px-1"
+                        : cn(
+                            "border border-white/5 shadow-md min-w-[150px] hover:brightness-110",
+                            getFontSizeClasses(settings.messageFontSize),
+                            getBubbleShapeClasses(settings.messageBubbleShape, false)
+                          ),
                       msg.replyTo && !msg.deleted && "min-w-[220px] sm:min-w-[260px]",
                       msg.deleted && "opacity-60 italic",
                       msg.pinned && !msg.deleted && "ring-1 ring-primary/30",
                       activeMenuId === msg.id && "ring-2 ring-primary/40 shadow-xl scale-[1.02]"
                     )}
                   >
-                    {/* Header: Name and Time */}
-                    {msg.sender !== "system" && (
-                      <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-black/5 dark:border-white/5 pb-1">
+                    {/* Header: You and Time/Ticks — hide for emoji-only */}
+                    {msg.sender !== "system" && (!isEmojiOnly(msg.text) || msg.imageUrl) && (
+                      <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-white/10 pb-1">
                         <span className="text-xs font-bold flex items-center gap-1.5 truncate opacity-90">
-                          {msg.senderNickname?.trim() || strangerName || "Stranger"}
+                          {msg.senderNickname?.trim() || "You"}
                           {msg.senderMood && (
                             <span className="text-[8px] font-bold px-1 py-0.25 rounded bg-primary/10 text-primary border border-primary/20 normal-case tracking-normal shrink-0">
                               {msg.senderMood}
                             </span>
                           )}
                         </span>
-                        <div className="flex items-center gap-1 text-[10px] opacity-75 font-semibold whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-[10px] opacity-70 font-semibold whitespace-nowrap">
                           {msg.pinned && !msg.deleted && (
                             <Pin className="h-2.5 w-2.5 text-primary rotate-45 shrink-0" />
+                          )}
+                          {!msg.deleted && (
+                            <CheckCheck className={cn(
+                              "h-3.5 w-3.5 tick-appear",
+                              msg.read ? "text-blue-400 opacity-100" : "text-inherit/40"
+                            )} />
                           )}
                           <span>{format(msg.timestamp, "h:mm a")}</span>
                         </div>
@@ -484,17 +649,24 @@ const ChatMessageList = ({
                       </button>
                     )}
 
-                    {/* Media content */}
+                    {/* Media content — GIFs get special rendering */}
                     {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
                       <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
+                    ) : !msg.deleted && isGifUrl(msg.imageUrl) ? (
+                      <img
+                        src={msg.imageUrl}
+                        alt="GIF"
+                        className="rounded-xl my-1 max-w-[240px] sm:max-w-[280px] w-auto h-auto max-h-[220px] object-contain bg-white/5"
+                        loading="lazy"
+                      />
                     ) : !msg.deleted && isImageMedia(msg.imageUrl) ? (
-                      <ChatImage src={msg.imageUrl!} isMine={false} />
+                      <ChatImage src={msg.imageUrl!} isMine={true} />
                     ) : !msg.deleted && msg.imageUrl ? (
                       <a 
                         href={msg.imageUrl} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="flex items-center gap-2 p-3 rounded-xl border border-border/85 my-1 text-xs font-bold hover:underline transition-all bg-secondary/60 text-foreground shadow-sm max-w-[240px]"
+                        className="flex items-center gap-2 p-3 rounded-xl border border-white/10 my-1 text-xs font-bold hover:underline transition-all bg-white/5 text-white shadow-sm max-w-[240px]"
                       >
                         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                           <FileIcon className="h-4.5 w-4.5" />
@@ -514,120 +686,29 @@ const ChatMessageList = ({
                     {msg.text && <FormattedText text={msg.text} />}
                     {msg.text && !msg.deleted && <LinkPreview text={msg.text} />}
 
-                    {/* Auto-Translation Subtitle */}
-                    {autoTranslations && autoTranslations[msg.id] && !msg.deleted && (
-                      <div className="mt-2 pt-1.5 border-t border-black/10 dark:border-white/10 text-xs text-emerald-400 font-medium flex items-start gap-1">
-                        <Globe className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                        <span>{autoTranslations[msg.id]}</span>
-                      </div>
+                    {/* Emoji-only timestamp — compact inline */}
+                    {isEmojiOnly(msg.text) && !msg.imageUrl && !msg.deleted && (
+                      <p className="text-[9px] text-muted-foreground/60 font-medium mt-0.5 text-right">
+                        {format(msg.timestamp, "h:mm a")}
+                      </p>
                     )}
 
                     {/* Timer/Disappear Indicator */}
                     {msg.disappearAt && !msg.deleted && (
-                      <div className="flex justify-start mt-1 opacity-45">
-                        <Timer className="h-3 w-3 text-muted-foreground" />
+                      <div className="flex justify-end mt-1 opacity-45">
+                        <Timer className="h-3 w-3 text-zinc-400" />
                       </div>
                     )}
                   </div>
-                </div>
-              ) : msg.sender === "you" ? (
-                /* User (You) bubble: aligned right, no avatar */
-                <div
-                  onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
-                  onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
-                  onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
-                  onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
-                  style={{
-                    backgroundColor: `hsl(var(--bubble-you))`,
-                    color: `hsl(var(--bubble-you-foreground))`
-                  }}
-                  className={cn(
-                    "relative break-words select-text transition-all duration-500 border border-white/5 shadow-md min-w-[150px] w-fit max-w-[85%] sm:max-w-[75%] hover:brightness-110",
-                    getFontSizeClasses(settings.messageFontSize),
-                    getBubbleShapeClasses(settings.messageBubbleShape, false),
-                    msg.replyTo && !msg.deleted && "min-w-[220px] sm:min-w-[260px]",
-                    msg.deleted && "opacity-60 italic",
-                    msg.pinned && !msg.deleted && "ring-1 ring-primary/30",
-                    activeMenuId === msg.id && "ring-2 ring-primary/40 shadow-xl scale-[1.02]"
-                  )}
-                >
-                  {/* Header: You and Time/Ticks */}
-                  {msg.sender !== "system" && (
-                    <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-white/10 pb-1">
-                      <span className="text-xs font-bold flex items-center gap-1.5 truncate opacity-90">
-                        {msg.senderNickname?.trim() || "You"}
-                        {msg.senderMood && (
-                          <span className="text-[8px] font-bold px-1 py-0.25 rounded bg-primary/10 text-primary border border-primary/20 normal-case tracking-normal shrink-0">
-                            {msg.senderMood}
-                          </span>
-                        )}
-                      </span>
-                      <div className="flex items-center gap-1 text-[10px] opacity-70 font-semibold whitespace-nowrap">
-                        {msg.pinned && !msg.deleted && (
-                          <Pin className="h-2.5 w-2.5 text-primary rotate-45 shrink-0" />
-                        )}
-                        {!msg.deleted && (
-                          <CheckCheck className={cn(
-                            "h-3.5 w-3.5 tick-appear",
-                            msg.read ? "text-blue-400 opacity-100" : "text-inherit/40"
-                          )} />
-                        )}
-                        <span>{format(msg.timestamp, "h:mm a")}</span>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Replied block */}
-                  {msg.replyTo && !msg.deleted && (
-                    <button
-                      onClick={() => scrollToMessage(msg.replyTo!.id)}
-                      className="w-full text-left mb-2 rounded-xl px-3 py-2 border-l-2 border-primary/50 flex items-start gap-2 text-xs bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-inherit"
-                    >
-                      <ReplyIcon className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-50" />
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold opacity-75">
-                          {msg.replyTo.sender === "you" ? "You" : "Stranger"}
-                        </p>
-                        <p className="text-[11px] opacity-75 truncate">{msg.replyTo.text || "📷 Attachment"}</p>
-                      </div>
-                    </button>
-                  )}
-
-                  {/* Media content */}
-                  {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
-                    <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
-                  ) : !msg.deleted && isImageMedia(msg.imageUrl) ? (
-                    <ChatImage src={msg.imageUrl!} isMine={true} />
-                  ) : !msg.deleted && msg.imageUrl ? (
-                    <a 
-                      href={msg.imageUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="flex items-center gap-2 p-3 rounded-xl border border-white/10 my-1 text-xs font-bold hover:underline transition-all bg-white/5 text-white shadow-sm max-w-[240px]"
-                    >
-                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <FileIcon className="h-4.5 w-4.5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold text-[11px]">
-                          {msg.imageUrl.split("/").pop()?.split(".").shift() || "Attachment"}
-                        </p>
-                        <p className="text-[9px] opacity-50 uppercase font-black tracking-wider">
-                          .{msg.imageUrl.split(".").pop()?.split("?").shift() || "file"}
-                        </p>
-                      </div>
-                    </a>
-                  ) : null}
-
-                  {/* Message Text */}
-                  {msg.text && <FormattedText text={msg.text} />}
-                  {msg.text && !msg.deleted && <LinkPreview text={msg.text} />}
-
-                  {/* Timer/Disappear Indicator */}
-                  {msg.disappearAt && !msg.deleted && (
-                    <div className="flex justify-end mt-1 opacity-45">
-                      <Timer className="h-3 w-3 text-zinc-400" />
-                    </div>
+                  {/* Reaction badges — attached to bubble */}
+                  {msg.sender !== "system" && !msg.deleted && (
+                    <MessageReactions
+                      messageId={msg.id}
+                      reactions={msg.reactions}
+                      onReact={onReact}
+                      isMine={true}
+                    />
                   )}
                 </div>
               ) : (
@@ -692,15 +773,7 @@ const ChatMessageList = ({
               </motion.div>
             )}
 
-            {/* Reaction badges below bubble */}
-            {msg.sender !== "system" && !msg.deleted && (
-              <MessageReactions
-                messageId={msg.id}
-                reactions={msg.reactions}
-                onReact={onReact}
-                isMine={msg.sender === "you"}
-              />
-            )}
+            {/* Reactions are now rendered inside each bubble's wrapper — see stranger/you blocks above */}
           </motion.div>
         ))}
       </AnimatePresence>

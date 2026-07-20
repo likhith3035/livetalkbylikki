@@ -17,20 +17,31 @@ const MessageReactions = ({ messageId, reactions, onReact, isMine }: MessageReac
   if (!hasReactions) return null;
 
   return (
-    <div className={cn("flex gap-1 mt-1", isMine ? "justify-end" : "justify-start")}>
+    <div
+      className={cn(
+        "flex flex-wrap gap-1 -mt-1.5 relative z-[2] px-1",
+        isMine ? "justify-end pr-2" : "justify-start pl-12"
+      )}
+    >
       {Object.entries(reactions).map(([emoji, senders]) =>
         senders.length > 0 ? (
           <motion.button
             key={emoji}
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 500, damping: 25 }}
             onClick={() => onReact(messageId, emoji)}
-            className="flex items-center gap-0.5 rounded-full bg-secondary/80 border border-border px-1.5 py-0.5 text-xs hover:bg-secondary active:scale-95 transition-all"
-          >
-            <span>{emoji}</span>
-            {senders.length > 1 && (
-              <span className="text-[10px] text-muted-foreground">{senders.length}</span>
+            className={cn(
+              "flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-xs",
+              "hover:bg-secondary active:scale-95 transition-all shadow-sm",
+              "bg-background/90 backdrop-blur-sm border-border/60",
+              "min-w-[2rem] justify-center"
             )}
+          >
+            <span className="text-sm leading-none">{emoji}</span>
+            <span className="text-[10px] text-muted-foreground font-medium leading-none">
+              {senders.length}
+            </span>
           </motion.button>
         ) : null
       )}
