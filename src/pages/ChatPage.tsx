@@ -34,6 +34,7 @@ import RoomWaitingScreen from "@/components/chat/RoomWaitingScreen";
 import HumanVerifyModal from "@/components/chat/HumanVerifyModal";
 import SessionStatsBar from "@/components/chat/SessionStatsBar";
 import StrangerProfileCard from "@/components/chat/StrangerProfileCard";
+import StrangerProfileSheet from "@/components/chat/StrangerProfileSheet";
 import DisconnectGuardModal from "@/components/chat/DisconnectGuardModal";
 import EmojiExplosionOverlay from "@/components/chat/EmojiExplosionOverlay";
 import AIWingmanModal from "@/components/chat/AIWingmanModal";
