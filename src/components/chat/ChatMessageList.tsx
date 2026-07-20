@@ -11,11 +11,13 @@ import LinkPreview from "@/components/chat/LinkPreview";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Message } from "@/hooks/use-chat";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface ChatMessageListProps {
   messages: Message[];
   strangerTyping: boolean;
   strangerTypingText?: string;
+  strangerName?: string;
   onReact: (messageId: string, emoji: string) => void;
   onReply?: (message: Message) => void;
   onDelete?: (messageId: string) => void;
@@ -82,10 +84,31 @@ const translateText = async (text: string, targetLang: string): Promise<string> 
   }
 };
 
+const getFontSizeClasses = (size?: string) => {
+  switch (size) {
+    case "compact": return "text-[11px] sm:text-xs leading-tight py-1.5 px-3";
+    case "small": return "text-xs sm:text-sm leading-snug py-2 px-3.5";
+    case "large": return "text-base sm:text-lg leading-relaxed py-3.5 px-5";
+    case "medium":
+    default: return "text-sm sm:text-base leading-relaxed py-3 px-4";
+  }
+};
+
+const getBubbleShapeClasses = (shape?: string, isStranger?: boolean) => {
+  switch (shape) {
+    case "pill": return "rounded-3xl";
+    case "sharp": return "rounded-md";
+    case "compact": return "rounded-xl";
+    case "rounded":
+    default: return isStranger ? "rounded-[1.5rem] rounded-bl-sm" : "rounded-[1.5rem] rounded-br-sm";
+  }
+};
+
 const ChatMessageList = ({
   messages,
   strangerTyping,
   strangerTypingText,
+  strangerName,
   onReact,
   onReply,
   onDelete,
@@ -96,6 +119,7 @@ const ChatMessageList = ({
   isReplying,
   autoTranslations,
 }: ChatMessageListProps) => {
+  const { settings } = useSettings();
   const endRef = useRef<HTMLDivElement>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [showTranslateFor, setShowTranslateFor] = useState<string | null>(null);
@@ -402,8 +426,9 @@ const ChatMessageList = ({
                       color: `hsl(var(--bubble-stranger-foreground))`
                     }}
                     className={cn(
-                      "relative break-words select-text transition-all duration-500",
-                      "border border-border/80 rounded-[1.5rem] rounded-bl-sm shadow-sm min-w-[150px] w-fit max-w-full px-4 py-3 text-sm sm:text-base leading-relaxed hover:brightness-105",
+                      "relative break-words select-text transition-all duration-500 border border-border/80 shadow-sm min-w-[150px] w-fit max-w-full hover:brightness-105",
+                      getFontSizeClasses(settings.messageFontSize),
+                      getBubbleShapeClasses(settings.messageBubbleShape, true),
                       msg.replyTo && !msg.deleted && "min-w-[220px] sm:min-w-[260px]",
                       msg.deleted && "opacity-60 italic",
                       msg.pinned && !msg.deleted && "ring-1 ring-primary/30",
@@ -414,7 +439,7 @@ const ChatMessageList = ({
                     {msg.sender !== "system" && (
                       <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-black/5 dark:border-white/5 pb-1">
                         <span className="text-xs font-bold flex items-center gap-1.5 truncate opacity-90">
-                          {msg.senderNickname?.trim() || "Stranger"}
+                          {msg.senderNickname?.trim() || strangerName || "Stranger"}
                           {msg.senderMood && (
                             <span className="text-[8px] font-bold px-1 py-0.25 rounded bg-primary/10 text-primary border border-primary/20 normal-case tracking-normal shrink-0">
                               {msg.senderMood}
@@ -504,8 +529,9 @@ const ChatMessageList = ({
                     color: `hsl(var(--bubble-you-foreground))`
                   }}
                   className={cn(
-                    "relative break-words select-text transition-all duration-500",
-                    "border border-white/5 rounded-[1.5rem] rounded-br-sm shadow-md min-w-[150px] w-fit max-w-[85%] sm:max-w-[75%] px-4 py-3 text-sm sm:text-base leading-relaxed hover:brightness-110",
+                    "relative break-words select-text transition-all duration-500 border border-white/5 shadow-md min-w-[150px] w-fit max-w-[85%] sm:max-w-[75%] hover:brightness-110",
+                    getFontSizeClasses(settings.messageFontSize),
+                    getBubbleShapeClasses(settings.messageBubbleShape, false),
                     msg.replyTo && !msg.deleted && "min-w-[220px] sm:min-w-[260px]",
                     msg.deleted && "opacity-60 italic",
                     msg.pinned && !msg.deleted && "ring-1 ring-primary/30",

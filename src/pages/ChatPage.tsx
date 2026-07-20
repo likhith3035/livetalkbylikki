@@ -878,6 +878,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
               messages={messages}
               strangerTyping={strangerTyping}
               strangerTypingText={strangerTypingText}
+              strangerName={strangerName}
               onReact={handleReactWithParticle}
               onReply={(msg) => setReplyingTo(msg)}
               onDelete={deleteMessage}

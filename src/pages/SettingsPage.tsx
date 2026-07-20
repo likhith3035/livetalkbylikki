@@ -453,6 +453,68 @@ const SettingsPage = () => {
                 </div>
               </div>
 
+              {/* Message Text Size Customization */}
+              <div className="space-y-2 pt-2 border-t border-border/30">
+                <label className="text-xs font-semibold text-muted-foreground/80 px-1 flex items-center justify-between">
+                  <span>Message Text Size</span>
+                  <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{settings.messageFontSize || "medium"}</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: "compact", label: "Compact", sizeText: "11px" },
+                    { id: "small", label: "Small", sizeText: "12px" },
+                    { id: "medium", label: "Medium", sizeText: "14px (Default)" },
+                    { id: "large", label: "Large", sizeText: "16px" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => updateSetting("messageFontSize", item.id as any)}
+                      className={cn(
+                        "flex flex-col items-center gap-0.5 rounded-2xl border px-3 py-2.5 transition-all text-center",
+                        (settings.messageFontSize === item.id || (!settings.messageFontSize && item.id === "medium"))
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-border/50 bg-secondary/20 hover:border-primary/30"
+                      )}
+                    >
+                      <span className="text-xs font-bold text-foreground">{item.label}</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">{item.sizeText}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Message Bubble Corner Shape Customization */}
+              <div className="space-y-2 pt-2 border-t border-border/30">
+                <label className="text-xs font-semibold text-muted-foreground/80 px-1 flex items-center justify-between">
+                  <span>Message Bubble Shape</span>
+                  <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{settings.messageBubbleShape || "rounded"}</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: "rounded", label: "Rounded", radius: "rounded-[1.2rem]" },
+                    { id: "pill", label: "Pill (Curved)", radius: "rounded-3xl" },
+                    { id: "sharp", label: "Sharp Box", radius: "rounded-md" },
+                    { id: "compact", label: "Compact", radius: "rounded-xl" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => updateSetting("messageBubbleShape", item.id as any)}
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-1.5 rounded-2xl border px-3 py-2.5 transition-all text-center",
+                        (settings.messageBubbleShape === item.id || (!settings.messageBubbleShape && item.id === "rounded"))
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-border/50 bg-secondary/20 hover:border-primary/30"
+                      )}
+                    >
+                      <div className={cn("h-4 w-12 bg-primary/40 border border-primary/50", item.radius)} />
+                      <span className="text-xs font-bold text-foreground">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Chat Wallpaper Pattern Type Selector */}
               <div className="space-y-2.5">
                 <label className="text-xs font-semibold text-muted-foreground/80 px-1">Chat Background Wallpaper Pattern</label>

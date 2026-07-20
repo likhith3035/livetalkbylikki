@@ -3,6 +3,8 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 export type ChatTheme = "default" | "ocean" | "sunset" | "forest" | "rose" | "midnight" | "amber" | "cyan" | "crimson" | "lavender" | "emerald" | "slate";
 export type ChatWallpaper = "none" | "dots" | "grid" | "waves" | "gradient" | "bubbles" | "stars" | "zigzag" | "custom";
 export type GlassPreset = 'ios' | 'aurora' | 'emerald' | 'sunset' | 'obsidian' | 'cyber' | 'custom';
+export type MessageFontSize = "compact" | "small" | "medium" | "large";
+export type MessageBubbleShape = "rounded" | "pill" | "sharp" | "compact";
 
 export type SettingsState = {
   darkMode: boolean;
@@ -13,6 +15,10 @@ export type SettingsState = {
   protectionEnabled: boolean;
   notifyAlerts: boolean;
   autoStopOnScreenshot: boolean;
+
+  // Customization settings
+  messageFontSize: MessageFontSize;
+  messageBubbleShape: MessageBubbleShape;
   
   // Liquid Glass settings
   liquidGlassEnabled: boolean;
@@ -47,6 +53,10 @@ const DEFAULT_SETTINGS: SettingsState = {
   protectionEnabled: true,
   notifyAlerts: true,
   autoStopOnScreenshot: false,
+
+  // Customization defaults
+  messageFontSize: "medium",
+  messageBubbleShape: "rounded",
   
   // Liquid Glass defaults
   liquidGlassEnabled: false,
