@@ -14,23 +14,34 @@ import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import ScrollToTop from "@/components/ScrollToTop";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 
+function clearAppCachesAndReload() {
+  const lastReload = Number(window.sessionStorage.getItem("lazy_retry_last_ts") || "0");
+  const now = Date.now();
+  // Prevent infinite reload loop if server is down (minimum 8s threshold)
+  if (now - lastReload > 8000) {
+    window.sessionStorage.setItem("lazy_retry_last_ts", String(now));
+    if ("caches" in window) {
+      caches.keys().then((names) => {
+        names.forEach((name) => caches.delete(name));
+      }).finally(() => {
+        window.location.reload();
+      });
+    } else {
+      window.location.reload();
+    }
+  }
+}
+
 function lazyWithRetry<T extends React.ComponentType<any>>(
   componentImport: () => Promise<{ default: T }>
 ) {
   return lazy(async () => {
-    const pageHasBeenRefreshed = JSON.parse(
-      window.sessionStorage.getItem("lazy_retry_refreshed") || "false"
-    );
-
     try {
       const component = await componentImport();
-      window.sessionStorage.setItem("lazy_retry_refreshed", "false");
       return component;
     } catch (error) {
-      if (!pageHasBeenRefreshed) {
-        window.sessionStorage.setItem("lazy_retry_refreshed", "true");
-        window.location.reload();
-      }
+      console.warn("[App] Failed to load lazy module chunk. Clearing cache & reloading...", error);
+      clearAppCachesAndReload();
       throw error;
     }
   });
@@ -133,14 +144,16 @@ const App = () => {
 
   useEffect(() => {
     const handleChunkError = (e: ErrorEvent | PromiseRejectionEvent) => {
-      const message = "reason" in e ? e.reason?.message : e.message;
+      const message = "reason" in e ? (e.reason?.message || String(e.reason)) : (e.message || String(e));
       if (
         message &&
         (message.includes("Failed to fetch dynamically imported module") ||
-         message.includes("Expected a JavaScript-or-Wasm module script"))
+         message.includes("Expected a JavaScript-or-Wasm module script") ||
+         message.includes("MIME type") ||
+         message.includes("Loading chunk"))
       ) {
-        console.warn("[App] Dynamic import chunk failed (new deployment detected). Reloading page...");
-        window.location.reload();
+        console.warn("[App] Dynamic import chunk failed (new deployment detected). Clearing cache & reloading...", message);
+        clearAppCachesAndReload();
       }
     };
 
