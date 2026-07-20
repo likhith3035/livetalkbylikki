@@ -605,7 +605,7 @@ const ChatMessageList = ({
             </SwipeableMessage>
 
             {/* Translation Card */}
-            {translations[msg.id] && (
+            {translationsMap[msg.id] && (
               <motion.div
                 initial={{ opacity: 0, height: 0, y: -4 }}
                 animate={{ opacity: 1, height: "auto", y: 0 }}
@@ -624,7 +624,7 @@ const ChatMessageList = ({
                   {/* Card Header */}
                   <div className="flex items-center justify-between gap-4 text-[9px] font-bold tracking-wider uppercase opacity-60">
                     <span className="flex items-center gap-1 text-primary">
-                      <Globe className="h-3 w-3" /> Translated to {translations[msg.id].langName.split(" ")[0]}
+                      <Globe className="h-3 w-3" /> Translated to {translationsMap[msg.id].langName.split(" ")[0]}
                     </span>
                     <button
                       onClick={() => clearTranslation(msg.id)}
@@ -636,7 +636,7 @@ const ChatMessageList = ({
                   </div>
                   
                   {/* Card Content */}
-                  {translations[msg.id].loading ? (
+                  {translationsMap[msg.id].loading ? (
                     <div className="flex flex-col gap-1 py-1.5 w-32 animate-pulse">
                       <div className="h-3 bg-muted rounded w-full" />
                       <div className="h-3 bg-muted rounded w-3/4 mt-1" />
@@ -644,9 +644,9 @@ const ChatMessageList = ({
                   ) : (
                     <p className={cn(
                       "text-xs leading-relaxed font-medium break-words pr-1 select-text",
-                      translations[msg.id].error ? "text-destructive" : "text-foreground"
+                      translationsMap[msg.id].error ? "text-destructive" : "text-foreground"
                     )}>
-                      {translations[msg.id].text}
+                      {translationsMap[msg.id].text}
                     </p>
                   )}
                 </div>
