@@ -104,6 +104,19 @@ const getBubbleShapeClasses = (shape?: string, isStranger?: boolean) => {
   }
 };
 
+const isAudioMedia = (url?: string) => {
+  if (!url) return false;
+  return url.startsWith("data:audio/") || /\.(webm|m4a|ogg|mp3|wav)(\?.*)?$/i.test(url);
+};
+
+const isImageMedia = (url?: string) => {
+  if (!url) return false;
+  if (url.startsWith("data:image/") || url.startsWith("blob:")) return true;
+  if (/\.(jpe?g|png|gif|webp|svg|avif)(\?.*)?$/i.test(url)) return true;
+  if (url.includes("supabase.co/storage/") && !/\.(pdf|zip|rar|doc|docx|mp4|webm|mp3)$/i.test(url)) return true;
+  return false;
+};
+
 const ChatMessageList = ({
   messages,
   strangerTyping,
@@ -472,10 +485,10 @@ const ChatMessageList = ({
                     )}
 
                     {/* Media content */}
-                    {!msg.deleted && msg.imageUrl && /\.(webm|m4a|ogg|mp3|wav)$/i.test(msg.imageUrl) ? (
+                    {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
                       <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
-                    ) : !msg.deleted && msg.imageUrl && /\.(jpe?g|png|gif|webp|svg)$/i.test(msg.imageUrl) ? (
-                      <ChatImage src={msg.imageUrl} isMine={false} />
+                    ) : !msg.deleted && isImageMedia(msg.imageUrl) ? (
+                      <ChatImage src={msg.imageUrl!} isMine={false} />
                     ) : !msg.deleted && msg.imageUrl ? (
                       <a 
                         href={msg.imageUrl} 
@@ -581,10 +594,10 @@ const ChatMessageList = ({
                   )}
 
                   {/* Media content */}
-                  {!msg.deleted && msg.imageUrl && /\.(webm|m4a|ogg|mp3|wav)$/i.test(msg.imageUrl) ? (
+                  {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
                     <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
-                  ) : !msg.deleted && msg.imageUrl && /\.(jpe?g|png|gif|webp|svg)$/i.test(msg.imageUrl) ? (
-                    <ChatImage src={msg.imageUrl} isMine={true} />
+                  ) : !msg.deleted && isImageMedia(msg.imageUrl) ? (
+                    <ChatImage src={msg.imageUrl!} isMine={true} />
                   ) : !msg.deleted && msg.imageUrl ? (
                     <a 
                       href={msg.imageUrl} 
