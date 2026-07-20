@@ -272,7 +272,7 @@ const ChatInput = ({
               onBlur={() => setIsFocused(false)}
               placeholder={isConnected ? "Type a message..." : "Connect to start chatting"}
               disabled={!isConnected}
-              className="w-full rounded-full border border-border/60 bg-secondary/30 px-4 sm:px-5 py-2 sm:py-3 text-sm sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-border/80 focus:bg-card disabled:opacity-40 transition-all duration-300 shadow-sm"
+              className="w-full rounded-full border border-border/60 bg-secondary/30 px-4 sm:px-5 py-2 sm:py-3 text-[16px] sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-border/80 focus:bg-card disabled:opacity-40 transition-all duration-300 shadow-sm"
             />
           </div>
 
