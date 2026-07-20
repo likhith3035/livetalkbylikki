@@ -186,17 +186,8 @@ const ChatInput = ({
               </button>
             )}
 
-            {/* Emoji Pill */}
-            <EmojiPicker
-              disabled={!isConnected}
-              onSelect={(emoji) => handleChange(input + emoji)}
-              customTrigger={
-                <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0">
-                  <Smile className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-violet-500" />
-                  Emoji
-                </div>
-              }
-            />
+
+
 
             {/* Games Pill */}
             {!hideGames && (
