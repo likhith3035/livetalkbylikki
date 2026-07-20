@@ -7,6 +7,8 @@ interface UseMobileBackGuardProps {
 
 export function useMobileBackGuard({ enabled, onRequestGuard }: UseMobileBackGuardProps) {
   const isPushedRef = useRef(false);
+  const onRequestGuardRef = useRef(onRequestGuard);
+  onRequestGuardRef.current = onRequestGuard;
 
   useEffect(() => {
     if (!enabled) {
@@ -14,23 +16,27 @@ export function useMobileBackGuard({ enabled, onRequestGuard }: UseMobileBackGua
       return;
     }
 
-    // Push state to prevent browser history back from immediately exiting
+    // Push state ONCE to catch native back swipe / hardware back button
     if (!isPushedRef.current) {
-      window.history.pushState({ inChatGuard: true }, "", window.location.href);
-      isPushedRef.current = true;
+      try {
+        window.history.pushState({ inChatGuard: true }, "", window.location.href);
+        isPushedRef.current = true;
+      } catch {}
     }
 
     const handlePopState = (e: PopStateEvent) => {
-      if (enabled) {
-        // Prevent default navigation by re-pushing state and popping modal prompt
-        window.history.pushState({ inChatGuard: true }, "", window.location.href);
-        onRequestGuard();
+      if (enabled && isPushedRef.current) {
+        // Maintain history state so subsequent back attempts are also guarded
+        try {
+          window.history.pushState({ inChatGuard: true }, "", window.location.href);
+        } catch {}
+        onRequestGuardRef.current();
       }
     };
 
     window.addEventListener("popstate", handlePopState);
 
-    // Support native Capacitor Back Button if available
+    // Support native Capacitor Back Button if running inside mobile app container
     let capacitorListener: any = null;
     const windowWithCapacitor = window as any;
     if (windowWithCapacitor.Capacitor && windowWithCapacitor.Capacitor.isPluginAvailable("App")) {
@@ -39,7 +45,7 @@ export function useMobileBackGuard({ enabled, onRequestGuard }: UseMobileBackGua
         if (App && typeof App.addListener === "function") {
           capacitorListener = App.addListener("backButton", () => {
             if (enabled) {
-              onRequestGuard();
+              onRequestGuardRef.current();
             }
           });
         }
@@ -54,7 +60,7 @@ export function useMobileBackGuard({ enabled, onRequestGuard }: UseMobileBackGua
         capacitorListener.remove();
       }
     };
-  }, [enabled, onRequestGuard]);
+  }, [enabled]);
 }
 
 export default useMobileBackGuard;

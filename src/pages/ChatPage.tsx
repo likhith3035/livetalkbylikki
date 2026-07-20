@@ -152,7 +152,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const isSessionActive = status === "connected" || callStatus !== "idle";
 
   useMobileBackGuard({
-    enabled: isSessionActive && !showDisconnectGuard,
+    enabled: isSessionActive,
     onRequestGuard: useCallback(() => {
       setShowDisconnectGuard(true);
     }, []),
