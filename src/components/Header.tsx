@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { Moon, Sun, ChevronLeft, Video, Phone } from "lucide-react";
+import { Moon, Sun, ChevronLeft, Video, Phone, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -15,11 +15,13 @@ interface HeaderProps {
   onVideoCall?: () => void;
   onAudioCall?: () => void;
   onProfileTap?: () => void;
+  onTranslateToggle?: () => void;
+  targetLang?: string;
   toolsMenu?: React.ReactNode;
 }
 
 const Header = forwardRef<HTMLElement, HeaderProps>(({ 
-  onlineCount, strangerName, strangerAvatar, strangerMood, onBack, onVideoCall, onAudioCall, onProfileTap, toolsMenu
+  onlineCount, strangerName, strangerAvatar, strangerMood, onBack, onVideoCall, onAudioCall, onProfileTap, onTranslateToggle, targetLang, toolsMenu
 }, ref) => {
   const { settings, updateSetting } = useSettings();
   const navigate = useNavigate();
@@ -90,6 +92,21 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
               aria-label="Start video call"
             >
               <Video className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-primary" />
+            </button>
+          )}
+          {onTranslateToggle && (
+            <button
+              onClick={onTranslateToggle}
+              className={cn(
+                "h-8 w-8 sm:h-10 sm:w-10 rounded-full border flex items-center justify-center transition-all active:scale-95 shadow-sm shrink-0",
+                targetLang && targetLang !== "off"
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400"
+                  : "border-border/75 bg-card text-foreground hover:bg-secondary"
+              )}
+              aria-label="Toggle Auto Translate"
+              title="Auto-Translate Stranger Messages"
+            >
+              <Globe className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
             </button>
           )}
           {toolsMenu}

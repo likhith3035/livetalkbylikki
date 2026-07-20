@@ -39,6 +39,7 @@ import DisconnectGuardModal from "@/components/chat/DisconnectGuardModal";
 import EmojiExplosionOverlay from "@/components/chat/EmojiExplosionOverlay";
 import AIWingmanModal from "@/components/chat/AIWingmanModal";
 import useMobileBackGuard from "@/hooks/use-mobile-back-guard";
+import useChatTranslator, { SUPPORTED_LANGUAGES } from "@/hooks/use-chat-translator";
 import { useHumanVerify } from "@/hooks/use-human-verify";
 import { useSessionStats } from "@/hooks/use-session-stats";
 import {
@@ -133,6 +134,17 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [showDisconnectGuard, setShowDisconnectGuard] = useState(false);
   const [activeExplosionEmoji, setActiveExplosionEmoji] = useState<string | null>(null);
   const [showAIWingmanModal, setShowAIWingmanModal] = useState(false);
+  const [showLangPicker, setShowLangPicker] = useState(false);
+  const { targetLang, setTargetLang, translations, translateMessage } = useChatTranslator();
+
+  useEffect(() => {
+    if (targetLang !== "off" && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg && lastMsg.sender === "stranger" && lastMsg.text) {
+        translateMessage(lastMsg.id, lastMsg.text);
+      }
+    }
+  }, [messages, targetLang, translateMessage]);
 
   const handleReactWithParticle = useCallback((messageId: string, emoji: string) => {
     reactToMessage(messageId, emoji);
@@ -547,7 +559,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }
 
   return (
-    <div className={cn("flex flex-col bg-background relative z-0 h-svh lg:h-full overflow-hidden", status === "connected" && privacyModeActive && "select-none")}>
+    <div className={cn("flex flex-col bg-background relative z-0 h-dvh lg:h-full overflow-hidden", status === "connected" && privacyModeActive && "select-none")}>
       <LiquidBackground />
       <ChatWallpaper />
       <div className={cn("flex flex-col flex-1 min-h-0", privacyAlertActive && "blur-lg pointer-events-none transition-all duration-300")}>
@@ -561,6 +573,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             onVideoCall={() => startCall(false)}
             onAudioCall={() => startCall(true)}
             onProfileTap={() => setShowProfileSheet(true)}
+            onTranslateToggle={() => setShowLangPicker((v) => !v)}
+            targetLang={targetLang}
             toolsMenu={
               status === "connected" && (
                 <ChatToolsMenu
@@ -574,6 +588,37 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
               )
             }
           />
+          {/* Language Selector Dropdown */}
+          <AnimatePresence>
+            {showLangPicker && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                className="absolute top-14 right-4 z-50 bg-card/95 border border-border/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl flex flex-col gap-1 w-48 text-xs"
+              >
+                <p className="px-2 py-1 text-[10px] font-extrabold uppercase text-primary tracking-wider">
+                  Auto-Translate Messages
+                </p>
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setTargetLang(lang.code);
+                      setShowLangPicker(false);
+                    }}
+                    className={cn(
+                      "flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors text-left font-bold",
+                      targetLang === lang.code ? "bg-primary/20 text-primary border border-primary/30" : "hover:bg-secondary text-foreground"
+                    )}
+                  >
+                    <span>{lang.flag} {lang.name}</span>
+                    {targetLang === lang.code && <span className="text-[10px]">✓</span>}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         {/* Desktop-only compact info bar */}
         {status === "connected" && strangerName && (
@@ -843,6 +888,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
               disappearTimer={disappearTimer}
               highlightMessageId={searchHighlight}
               isReplying={!!replyingTo}
+              autoTranslations={translations}
             />
           </div>
           <ChatInput
@@ -860,6 +906,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             setActiveGame={setActiveGame}
             onToggleAI={() => setShowAIWingmanModal(true)}
             onNext={nextChat}
+            onReact={(emoji) => setActiveExplosionEmoji(emoji)}
           />
         </>
       )}

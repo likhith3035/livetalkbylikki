@@ -8,6 +8,8 @@ import ChatGames from "@/components/chat/ChatGames";
 import GifPicker from "@/components/chat/GifPicker";
 import LocationShareButton from "@/components/chat/LocationShareButton";
 import Icebreakers from "@/components/chat/Icebreakers";
+import ChatVoiceNoteRecorder from "@/components/chat/ChatVoiceNoteRecorder";
+import ChatQuickReactions from "@/components/chat/ChatQuickReactions";
 import type { ChatStatus, Message } from "@/hooks/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -32,12 +34,13 @@ interface ChatInputProps {
   onToggleAI?: () => void;
   onVideoCall?: () => void;
   onNext?: () => void;
+  onReact?: (emoji: string) => void;
 }
 
 const ChatInput = ({ 
   status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, 
   roomChannel, sessionId, roomId, hideGames, hasMessages,
-  activeGame, setActiveGame, onToggleAI, onVideoCall, onNext
+  activeGame, setActiveGame, onToggleAI, onVideoCall, onNext, onReact
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -235,6 +238,12 @@ const ChatInput = ({
                 </div>
               }
             />
+            {/* Voice Note Recorder Pill */}
+            <ChatVoiceNoteRecorder
+              disabled={!isConnected}
+              onSendVoiceNote={(audioUrl) => onSend("🎤 Voice Note", audioUrl)}
+            />
+
             {/* AI Wingman Pill */}
             {onToggleAI && (
               <button
@@ -247,6 +256,22 @@ const ChatInput = ({
                 AI Wingman
               </button>
             )}
+          </div>
+        )}
+
+        {/* Quick Reactions Dock */}
+        {isConnected && (
+          <div className="mx-auto max-w-3xl mb-1.5 sm:mb-2 flex justify-center">
+            <ChatQuickReactions
+              disabled={!isConnected}
+              onSelectReaction={(emoji) => {
+                if (onReact) {
+                  onReact(emoji);
+                } else {
+                  onSend(emoji);
+                }
+              }}
+            />
           </div>
         )}
 

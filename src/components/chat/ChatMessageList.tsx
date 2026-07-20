@@ -24,6 +24,7 @@ interface ChatMessageListProps {
   disappearTimer?: number | null;
   highlightMessageId?: string | null;
   isReplying?: boolean;
+  autoTranslations?: Record<string, string>;
 }
 
 const messageVariants = {
@@ -92,28 +93,29 @@ const ChatMessageList = ({
   onForward,
   disappearTimer,
   highlightMessageId,
-  isReplying
+  isReplying,
+  autoTranslations,
 }: ChatMessageListProps) => {
   const endRef = useRef<HTMLDivElement>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [showTranslateFor, setShowTranslateFor] = useState<string | null>(null);
-  const [translations, setTranslations] = useState<Record<string, { text: string; langName: string; loading?: boolean; error?: boolean }>>({});
+  const [translationsMap, setTranslationsMap] = useState<Record<string, { text: string; langName: string; loading?: boolean; error?: boolean }>>({});
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleTranslate = async (msgId: string, text: string, langCode: string, langName: string) => {
-    setTranslations((prev) => ({
+    setTranslationsMap((prev) => ({
       ...prev,
       [msgId]: { text: "", langName, loading: true }
     }));
 
     try {
       const translated = await translateText(text, langCode);
-      setTranslations((prev) => ({
+      setTranslationsMap((prev) => ({
         ...prev,
         [msgId]: { text: translated, langName, loading: false }
       }));
     } catch (e) {
-      setTranslations((prev) => ({
+      setTranslationsMap((prev) => ({
         ...prev,
         [msgId]: { text: "Translation failed. Check connection.", langName, error: true, loading: false }
       }));
@@ -121,7 +123,7 @@ const ChatMessageList = ({
   };
 
   const clearTranslation = (msgId: string) => {
-    setTranslations((prev) => {
+    setTranslationsMap((prev) => {
       const next = { ...prev };
       delete next[msgId];
       return next;
@@ -473,6 +475,14 @@ const ChatMessageList = ({
                     {/* Message Text */}
                     {msg.text && <FormattedText text={msg.text} />}
                     {msg.text && !msg.deleted && <LinkPreview text={msg.text} />}
+
+                    {/* Auto-Translation Subtitle */}
+                    {autoTranslations && autoTranslations[msg.id] && !msg.deleted && (
+                      <div className="mt-2 pt-1.5 border-t border-black/10 dark:border-white/10 text-xs text-emerald-400 font-medium flex items-start gap-1">
+                        <Globe className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>{autoTranslations[msg.id]}</span>
+                      </div>
+                    )}
 
                     {/* Timer/Disappear Indicator */}
                     {msg.disappearAt && !msg.deleted && (
