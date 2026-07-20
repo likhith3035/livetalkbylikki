@@ -1,14 +1,16 @@
 import { useState, useCallback, useRef } from "react";
 
-export type TargetLanguage = "off" | "en" | "es" | "fr" | "de" | "hi" | "ja" | "pt" | "ar" | "ko";
+export type TargetLanguage = "off" | "en" | "es" | "fr" | "de" | "hi" | "te" | "ta" | "ja" | "pt" | "ar" | "ko";
 
 export const SUPPORTED_LANGUAGES: { code: TargetLanguage; name: string; flag: string }[] = [
   { code: "off", name: "Original", flag: "🌐" },
+  { code: "te",  name: "Telugu (తెలుగు)", flag: "🇮🇳" },
+  { code: "ta",  name: "Tamil (தமிழ்)", flag: "🇮🇳" },
+  { code: "hi",  name: "Hindi (हिंदी)", flag: "🇮🇳" },
   { code: "en",  name: "English",  flag: "🇺🇸" },
   { code: "es",  name: "Spanish",  flag: "🇪🇸" },
   { code: "fr",  name: "French",   flag: "🇫🇷" },
   { code: "de",  name: "German",   flag: "🇩🇪" },
-  { code: "hi",  name: "Hindi",    flag: "🇮🇳" },
   { code: "ja",  name: "Japanese", flag: "🇯🇵" },
   { code: "pt",  name: "Portuguese", flag: "🇧🇷" },
   { code: "ar",  name: "Arabic",   flag: "🇸🇦" },

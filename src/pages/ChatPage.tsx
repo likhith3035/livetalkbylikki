@@ -37,7 +37,6 @@ import StrangerProfileCard from "@/components/chat/StrangerProfileCard";
 import StrangerProfileSheet from "@/components/chat/StrangerProfileSheet";
 import DisconnectGuardModal from "@/components/chat/DisconnectGuardModal";
 import EmojiExplosionOverlay from "@/components/chat/EmojiExplosionOverlay";
-import AIWingmanModal from "@/components/chat/AIWingmanModal";
 import useMobileBackGuard from "@/hooks/use-mobile-back-guard";
 import useChatTranslator, { SUPPORTED_LANGUAGES } from "@/hooks/use-chat-translator";
 import { useHumanVerify } from "@/hooks/use-human-verify";
@@ -133,7 +132,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [strangerHandRaised, setStrangerHandRaised] = useState(false);
   const [showDisconnectGuard, setShowDisconnectGuard] = useState(false);
   const [activeExplosionEmoji, setActiveExplosionEmoji] = useState<string | null>(null);
-  const [showAIWingmanModal, setShowAIWingmanModal] = useState(false);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const { targetLang, setTargetLang, translations, translateMessage } = useChatTranslator();
 
@@ -904,7 +902,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             hasMessages={messages.length > 0}
             activeGame={activeGame}
             setActiveGame={setActiveGame}
-            onToggleAI={() => setShowAIWingmanModal(true)}
             onNext={nextChat}
             onReact={(emoji) => setActiveExplosionEmoji(emoji)}
           />
@@ -1097,15 +1094,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       <EmojiExplosionOverlay
         emoji={activeExplosionEmoji}
         onComplete={() => setActiveExplosionEmoji(null)}
-      />
-
-      {/* AI Wingman Modal */}
-      <AIWingmanModal
-        isOpen={showAIWingmanModal}
-        onClose={() => setShowAIWingmanModal(false)}
-        onSendPrompt={(text) => sendMessage(text)}
-        matchedInterests={matchedInterests}
-        strangerName={strangerName}
       />
     </div>
   );

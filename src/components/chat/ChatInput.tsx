@@ -8,8 +8,6 @@ import ChatGames from "@/components/chat/ChatGames";
 import GifPicker from "@/components/chat/GifPicker";
 import LocationShareButton from "@/components/chat/LocationShareButton";
 import Icebreakers from "@/components/chat/Icebreakers";
-import ChatVoiceNoteRecorder from "@/components/chat/ChatVoiceNoteRecorder";
-import ChatQuickReactions from "@/components/chat/ChatQuickReactions";
 import type { ChatStatus, Message } from "@/hooks/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -237,40 +235,6 @@ const ChatInput = ({
                   Location
                 </div>
               }
-            />
-            {/* Voice Note Recorder Pill */}
-            <ChatVoiceNoteRecorder
-              disabled={!isConnected}
-              onSendVoiceNote={(audioUrl) => onSend("🎤 Voice Note", audioUrl)}
-            />
-
-            {/* AI Wingman Pill */}
-            {onToggleAI && (
-              <button
-                type="button"
-                onClick={onToggleAI}
-                disabled={!isConnected}
-                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-primary/40 bg-primary/10 rounded-full text-[10px] sm:text-[11px] font-bold text-primary hover:bg-primary/20 active:scale-95 transition-all shrink-0 shadow-sm disabled:opacity-40"
-              >
-                <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-400 animate-pulse" />
-                AI Wingman
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Quick Reactions Dock */}
-        {isConnected && (
-          <div className="mx-auto max-w-3xl mb-1.5 sm:mb-2 flex justify-center">
-            <ChatQuickReactions
-              disabled={!isConnected}
-              onSelectReaction={(emoji) => {
-                if (onReact) {
-                  onReact(emoji);
-                } else {
-                  onSend(emoji);
-                }
-              }}
             />
           </div>
         )}
