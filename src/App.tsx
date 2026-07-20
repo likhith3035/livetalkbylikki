@@ -12,6 +12,7 @@ import AppShell from "@/components/AppShell";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import ScrollToTop from "@/components/ScrollToTop";
+import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 
 function lazyWithRetry<T extends React.ComponentType<any>>(
   componentImport: () => Promise<{ default: T }>
@@ -112,6 +113,7 @@ const AppContent = () => {
           <AppShell>
             <NotificationPrompt />
             <FeedbackSharePopup />
+            <FloatingChatWidget />
             <Suspense fallback={
               <div className="flex-1 flex items-center justify-center bg-[#09090B] text-muted-foreground text-sm animate-pulse min-h-[50vh]">
                 Loading...

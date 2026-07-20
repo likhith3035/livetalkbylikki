@@ -35,6 +35,8 @@ import HumanVerifyModal from "@/components/chat/HumanVerifyModal";
 import SessionStatsBar from "@/components/chat/SessionStatsBar";
 import StrangerProfileCard from "@/components/chat/StrangerProfileCard";
 import StrangerProfileSheet from "@/components/chat/StrangerProfileSheet";
+import DisconnectGuardModal from "@/components/chat/DisconnectGuardModal";
+import useMobileBackGuard from "@/hooks/use-mobile-back-guard";
 import { useHumanVerify } from "@/hooks/use-human-verify";
 import { useSessionStats } from "@/hooks/use-session-stats";
 import {
@@ -126,6 +128,24 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   // Video call reaction state
   const [incomingReaction, setIncomingReaction] = useState<{ emoji: string; id: number } | null>(null);
   const [strangerHandRaised, setStrangerHandRaised] = useState(false);
+  const [showDisconnectGuard, setShowDisconnectGuard] = useState(false);
+
+  const isSessionActive = status === "connected" || callStatus !== "idle";
+
+  useMobileBackGuard({
+    enabled: isSessionActive && !showDisconnectGuard,
+    onRequestGuard: useCallback(() => {
+      setShowDisconnectGuard(true);
+    }, []),
+  });
+
+  const handleHeaderBack = useCallback(() => {
+    if (isSessionActive) {
+      setShowDisconnectGuard(true);
+    } else {
+      stopChat();
+    }
+  }, [isSessionActive, stopChat]);
 
   const effectiveRoomId = roomId ?? (privateRoomCode ? `private_${privateRoomCode}` : null);
 
@@ -528,7 +548,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             strangerName={status === "connected" ? strangerName : undefined} 
             strangerAvatar={status === "connected" ? strangerAvatar : undefined}
             strangerMood={status === "connected" ? strangerMood : undefined}
-            onBack={stopChat}
+            onBack={handleHeaderBack}
             onVideoCall={() => startCall(false)}
             onAudioCall={() => startCall(true)}
             onProfileTap={() => setShowProfileSheet(true)}
@@ -996,6 +1016,26 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           />
         )}
       </AnimatePresence>
+
+      {/* Disconnect Guard Modal */}
+      <DisconnectGuardModal
+        isOpen={showDisconnectGuard}
+        onStay={() => setShowDisconnectGuard(false)}
+        onMinimize={() => {
+          setShowDisconnectGuard(false);
+          navigate("/");
+        }}
+        onDisconnect={() => {
+          setShowDisconnectGuard(false);
+          stopChat();
+        }}
+        strangerName={strangerName}
+        strangerAvatar={strangerAvatar}
+        strangerMood={strangerMood}
+        matchedInterests={matchedInterests}
+        isCallActive={callStatus !== "idle"}
+        isAudioOnly={isAudioOnly}
+      />
     </div>
   );
 };
