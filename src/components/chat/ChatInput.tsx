@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { RoomChannel } from "@/lib/types";
-import { Send, X, Reply, File, Image, Music, Video, Gamepad2, Smile, MapPin, Loader2, SkipForward } from "lucide-react";
+import { Send, X, Reply, File, Image, Music, Video, Gamepad2, Smile, MapPin, Loader2, SkipForward, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import EmojiPicker from "@/components/chat/EmojiPicker";
@@ -235,6 +235,18 @@ const ChatInput = ({
                 </div>
               }
             />
+            {/* AI Wingman Pill */}
+            {onToggleAI && (
+              <button
+                type="button"
+                onClick={onToggleAI}
+                disabled={!isConnected}
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-primary/40 bg-primary/10 rounded-full text-[10px] sm:text-[11px] font-bold text-primary hover:bg-primary/20 active:scale-95 transition-all shrink-0 shadow-sm disabled:opacity-40"
+              >
+                <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-400 animate-pulse" />
+                AI Wingman
+              </button>
+            )}
           </div>
         )}
 

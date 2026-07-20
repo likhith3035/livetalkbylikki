@@ -34,8 +34,9 @@ import RoomWaitingScreen from "@/components/chat/RoomWaitingScreen";
 import HumanVerifyModal from "@/components/chat/HumanVerifyModal";
 import SessionStatsBar from "@/components/chat/SessionStatsBar";
 import StrangerProfileCard from "@/components/chat/StrangerProfileCard";
-import StrangerProfileSheet from "@/components/chat/StrangerProfileSheet";
 import DisconnectGuardModal from "@/components/chat/DisconnectGuardModal";
+import EmojiExplosionOverlay from "@/components/chat/EmojiExplosionOverlay";
+import AIWingmanModal from "@/components/chat/AIWingmanModal";
 import useMobileBackGuard from "@/hooks/use-mobile-back-guard";
 import { useHumanVerify } from "@/hooks/use-human-verify";
 import { useSessionStats } from "@/hooks/use-session-stats";
@@ -129,6 +130,13 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [incomingReaction, setIncomingReaction] = useState<{ emoji: string; id: number } | null>(null);
   const [strangerHandRaised, setStrangerHandRaised] = useState(false);
   const [showDisconnectGuard, setShowDisconnectGuard] = useState(false);
+  const [activeExplosionEmoji, setActiveExplosionEmoji] = useState<string | null>(null);
+  const [showAIWingmanModal, setShowAIWingmanModal] = useState(false);
+
+  const handleReactWithParticle = useCallback((messageId: string, emoji: string) => {
+    reactToMessage(messageId, emoji);
+    setActiveExplosionEmoji(emoji);
+  }, [reactToMessage]);
 
   const isSessionActive = status === "connected" || callStatus !== "idle";
 
@@ -826,7 +834,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
               messages={messages}
               strangerTyping={strangerTyping}
               strangerTypingText={strangerTypingText}
-              onReact={reactToMessage}
+              onReact={handleReactWithParticle}
               onReply={(msg) => setReplyingTo(msg)}
               onDelete={deleteMessage}
               onPin={pinMessage}
@@ -849,7 +857,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             hasMessages={messages.length > 0}
             activeGame={activeGame}
             setActiveGame={setActiveGame}
-            onToggleAI={() => setShowAIPanel((v) => !v)}
+            onToggleAI={() => setShowAIWingmanModal(true)}
             onNext={nextChat}
           />
         </>
@@ -1035,6 +1043,21 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         matchedInterests={matchedInterests}
         isCallActive={callStatus !== "idle"}
         isAudioOnly={isAudioOnly}
+      />
+
+      {/* Emoji Particle Explosion Overlay */}
+      <EmojiExplosionOverlay
+        emoji={activeExplosionEmoji}
+        onComplete={() => setActiveExplosionEmoji(null)}
+      />
+
+      {/* AI Wingman Modal */}
+      <AIWingmanModal
+        isOpen={showAIWingmanModal}
+        onClose={() => setShowAIWingmanModal(false)}
+        onSendPrompt={(text) => sendMessage(text)}
+        matchedInterests={matchedInterests}
+        strangerName={strangerName}
       />
     </div>
   );
