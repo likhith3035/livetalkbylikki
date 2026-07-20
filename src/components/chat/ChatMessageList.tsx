@@ -363,67 +363,83 @@ const ChatMessageList = ({
                     exit={{ opacity: 0, scale: 0.85, y: 8 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     className={cn(
-                      "absolute bottom-full mb-2 z-[35] flex flex-col items-center gap-1.5",
-                      msg.sender === "you" ? "right-0" : "left-12"
+                      // Mobile: fixed centered overlay; Desktop: positioned near bubble
+                      "fixed inset-x-3 bottom-auto top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center gap-2",
+                      "sm:fixed sm:inset-x-auto sm:top-auto sm:bottom-auto sm:translate-y-0",
+                      "sm:absolute sm:bottom-full sm:mb-2 sm:z-[35]",
+                      msg.sender === "you" ? "sm:right-0 sm:left-auto" : "sm:left-0 sm:right-auto"
                     )}
                   >
                     {/* Reactions Selector */}
-                    <div className="flex items-center gap-1 bg-background/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 rounded-full px-2.5 py-1.5 shadow-xl">
+                    <div className="flex items-center justify-center gap-2 sm:gap-1 bg-background/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 rounded-full px-4 sm:px-2.5 py-2.5 sm:py-1.5 shadow-xl w-fit mx-auto">
                       {["❤️", "👍", "🔥", "😂", "😮", "😢"].map((emoji) => (
                         <button
                           key={emoji}
                           onClick={() => { onReact(msg.id, emoji); closeMenu(); }}
-                          className="hover:scale-125 active:scale-95 transition-all text-base px-0.5"
+                          className="hover:scale-125 active:scale-95 transition-all text-2xl sm:text-base px-1 sm:px-0.5"
                         >
                           {emoji}
                         </button>
                       ))}
                     </div>
 
-                    {/* Actions Menu */}
+                    {/* Actions Menu — grid on mobile, inline on desktop */}
                     {msg.sender !== "system" && (
-                      <div className="flex items-center gap-1 bg-background/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 rounded-xl p-1 shadow-xl shrink-0">
+                      <div className="grid grid-cols-3 sm:flex sm:items-center gap-1 bg-background/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 rounded-2xl sm:rounded-xl p-1.5 sm:p-1 shadow-xl w-full sm:w-auto">
                         <button
                           onClick={() => { onReply?.(msg); closeMenu(); }}
-                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                         >
-                          <ReplyIcon className="h-3 w-3" /> Reply
+                          <ReplyIcon className="h-4 w-4 sm:h-3 sm:w-3" /> Reply
                         </button>
                         <button
                           onClick={() => { navigator.clipboard.writeText(msg.text || ""); closeMenu(); }}
-                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                         >
-                          <Copy className="h-3 w-3" /> Copy
+                          <Copy className="h-4 w-4 sm:h-3 sm:w-3" /> Copy
                         </button>
                         <button
                           onClick={() => { setShowTranslateFor(msg.id); }}
-                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                         >
-                          <Globe className="h-3 w-3" /> Translate
+                          <Globe className="h-4 w-4 sm:h-3 sm:w-3" /> Translate
                         </button>
                         <button
                           onClick={() => { onPin?.(msg.id); closeMenu(); }}
-                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                         >
-                          <Pin className="h-3 w-3" /> Pin
+                          <Pin className="h-4 w-4 sm:h-3 sm:w-3" /> Pin
                         </button>
                         <button
                           onClick={() => { onForward?.(msg); closeMenu(); }}
-                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
+                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
                         >
-                          <Forward className="h-3 w-3" /> Forward
+                          <Forward className="h-4 w-4 sm:h-3 sm:w-3" /> Forward
                         </button>
                         {msg.sender === "you" && (
                           <button
                             onClick={() => { onDelete?.(msg.id); closeMenu(); }}
-                            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
+                            className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
                           >
-                            <Trash2 className="h-3 w-3" /> Delete
+                            <Trash2 className="h-4 w-4 sm:h-3 sm:w-3" /> Delete
                           </button>
                         )}
                       </div>
                     )}
                   </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Backdrop overlay for mobile menu */}
+              <AnimatePresence>
+                {activeMenuId === msg.id && msg.sender !== "system" && !msg.deleted && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[55] bg-black/40 backdrop-blur-sm sm:hidden"
+                    onClick={closeMenu}
+                  />
                 )}
               </AnimatePresence>
 
