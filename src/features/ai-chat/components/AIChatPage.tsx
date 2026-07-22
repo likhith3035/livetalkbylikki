@@ -537,7 +537,7 @@ export const AIChatPage: React.FC = () => {
                     setCustomModelInput(e.target.value);
                     setSelectedModel(e.target.value);
                   }}
-                  placeholder="Enter model name (e.g. sarvam-2b)..."
+                  placeholder="Enter model name (e.g. sarvam-30b)..."
                   className="w-full h-8 mt-1 px-2.5 rounded-xl bg-card border border-border/70 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
                 />
               )}

@@ -38,8 +38,8 @@ export const AI_PROVIDERS: AIProviderInfo[] = [
     id: "sarvam",
     name: "Sarvam AI",
     isLocal: false,
-    defaultModel: "sarvam-2b",
-    availableModels: ["sarvam-2b"],
+    defaultModel: "sarvam-30b",
+    availableModels: ["sarvam-30b", "sarvam-105b"],
   },
   {
     id: "groq",
