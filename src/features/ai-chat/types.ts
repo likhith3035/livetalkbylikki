@@ -82,3 +82,41 @@ export interface Conversation {
 export type APIKeysMap = Partial<Record<AIProviderId, string>> & {
   customEndpoint?: string;
 };
+
+export interface CurrencyConfig {
+  code: string;
+  symbol: string;
+  name: string;
+  rateFromUSD: number;
+}
+
+export const CURRENCIES: CurrencyConfig[] = [
+  { code: "INR", symbol: "₹", name: "Indian Rupee (INR)", rateFromUSD: 85.0 },
+  { code: "USD", symbol: "$", name: "US Dollar (USD)", rateFromUSD: 1.0 },
+  { code: "EUR", symbol: "€", name: "Euro (EUR)", rateFromUSD: 0.92 },
+  { code: "GBP", symbol: "£", name: "British Pound (GBP)", rateFromUSD: 0.78 },
+  { code: "JPY", symbol: "¥", name: "Japanese Yen (JPY)", rateFromUSD: 155.0 },
+  { code: "CAD", symbol: "CA$", name: "Canadian Dollar (CAD)", rateFromUSD: 1.38 },
+  { code: "AUD", symbol: "AU$", name: "Australian Dollar (AUD)", rateFromUSD: 1.52 },
+  { code: "AED", symbol: "AED ", name: "UAE Dirham (AED)", rateFromUSD: 3.67 },
+  { code: "SAR", symbol: "SAR ", name: "Saudi Riyal (SAR)", rateFromUSD: 3.75 },
+  { code: "BRL", symbol: "R$", name: "Brazilian Real (BRL)", rateFromUSD: 5.50 },
+];
+
+export function formatCost(costInUSD: number | undefined, currencyCode: string = "INR"): string {
+  if (costInUSD === undefined || costInUSD <= 0) return "";
+  const curr = CURRENCIES.find((c) => c.code === currencyCode) || CURRENCIES[0];
+  const converted = costInUSD * curr.rateFromUSD;
+
+  if (curr.code === "INR") {
+    if (converted < 0.01) return `${curr.symbol}${converted.toFixed(4)}`;
+    return `${curr.symbol}${converted.toFixed(3)}`;
+  }
+  if (curr.code === "JPY") {
+    return `${curr.symbol}${converted.toFixed(2)}`;
+  }
+  if (converted < 0.001) {
+    return `${curr.symbol}${converted.toFixed(5)}`;
+  }
+  return `${curr.symbol}${converted.toFixed(4)}`;
+}

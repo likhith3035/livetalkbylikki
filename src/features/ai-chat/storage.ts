@@ -38,3 +38,21 @@ export function saveConversations(conversations: Conversation[]): void {
     /* ignore storage error */
   }
 }
+
+const CURRENCY_STORAGE_KEY = "livetalk_ai_currency";
+
+export function loadCurrency(): string {
+  try {
+    return localStorage.getItem(CURRENCY_STORAGE_KEY) || "INR";
+  } catch {
+    return "INR";
+  }
+}
+
+export function saveCurrency(currencyCode: string): void {
+  try {
+    localStorage.setItem(CURRENCY_STORAGE_KEY, currencyCode);
+  } catch {
+    /* ignore storage error */
+  }
+}

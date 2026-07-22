@@ -16,8 +16,8 @@ import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSEO } from "@/hooks/use-seo";
 import { AI_PROVIDERS, getProviderInfo, streamAIChat } from "../aiProviders";
 import { PERSONALITIES, DEFAULT_PERSONALITY } from "../personalities";
-import { loadAPIKeys, saveAPIKeys, loadConversations, saveConversations } from "../storage";
-import { AIProviderId, APIKeysMap, ChatMessage, Conversation, PersonalityConfig, TokenUsage } from "../types";
+import { loadAPIKeys, saveAPIKeys, loadConversations, saveConversations, loadCurrency, saveCurrency } from "../storage";
+import { AIProviderId, APIKeysMap, ChatMessage, Conversation, PersonalityConfig, TokenUsage, CURRENCIES } from "../types";
 import { PersonalityModal } from "./PersonalityModal";
 import { APIKeysModal } from "./APIKeysModal";
 import { LocalSetupGuideModal } from "./LocalSetupGuideModal";
@@ -115,6 +115,7 @@ export const AIChatPage: React.FC = () => {
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<APIKeysMap>(loadAPIKeys);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(loadCurrency);
 
   const [selectedProvider, setSelectedProvider] = useState<AIProviderId>("openai");
   const [selectedModel, setSelectedModel] = useState<string>("");
@@ -122,6 +123,13 @@ export const AIChatPage: React.FC = () => {
   const [customModelInput, setCustomModelInput] = useState("");
   const [temperature, setTemperature] = useState<number>(0.7);
   const [showTuning, setShowTuning] = useState(false);
+
+  const handleCurrencyChange = (code: string) => {
+    setSelectedCurrency(code);
+    saveCurrency(code);
+    const curr = CURRENCIES.find((c) => c.code === code);
+    toast({ title: "💱 Currency Changed", description: `Display currency set to ${curr?.name || code}.` });
+  };
 
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -770,6 +778,27 @@ export const AIChatPage: React.FC = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Currency Selector */}
+              <div className="pt-1.5 border-t border-border/30">
+                <div className="flex items-center justify-between pb-1">
+                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Cost Currency</span>
+                  <span className="text-[10px] font-bold text-amber-400">
+                    {CURRENCIES.find((c) => c.code === selectedCurrency)?.symbol} {selectedCurrency}
+                  </span>
+                </div>
+                <select
+                  value={selectedCurrency}
+                  onChange={(e) => handleCurrencyChange(e.target.value)}
+                  className="w-full h-8 rounded-xl bg-card border border-border/70 text-xs font-semibold text-foreground px-2.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.symbol} {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Search Conversations */}
@@ -1061,6 +1090,7 @@ export const AIChatPage: React.FC = () => {
                             usage={msg.usage}
                             providerName={providerInfo.name}
                             modelName={msg.modelName || selectedModel}
+                            currencyCode={selectedCurrency}
                           />
                         )}
                       </div>

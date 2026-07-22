@@ -1,18 +1,20 @@
 import React from "react";
-import { TokenUsage } from "../types";
-import { Cpu, Zap, DollarSign, Clock } from "lucide-react";
+import { TokenUsage, formatCost } from "../types";
+import { Cpu, Zap, Coins, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TokenBadgeProps {
   usage?: TokenUsage;
   providerName?: string;
   modelName?: string;
+  currencyCode?: string;
 }
 
-export const TokenBadge: React.FC<TokenBadgeProps> = ({ usage, providerName, modelName }) => {
+export const TokenBadge: React.FC<TokenBadgeProps> = ({ usage, providerName, modelName, currencyCode = "INR" }) => {
   if (!usage) return null;
 
   const seconds = (usage.responseTimeMs / 1000).toFixed(2);
+  const costText = formatCost(usage.estimatedCost, currencyCode);
 
   return (
     <div className="mt-2.5 pt-2 border-t border-border/40 flex flex-wrap items-center gap-2 text-[10px] font-semibold text-muted-foreground select-none">
@@ -28,12 +30,12 @@ export const TokenBadge: React.FC<TokenBadgeProps> = ({ usage, providerName, mod
       {usage.isLocal ? (
         <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
           <Zap className="h-3 w-3" />
-          <span>Running Locally</span>
+          <span>Running Locally (Free)</span>
         </span>
-      ) : usage.estimatedCost !== undefined ? (
+      ) : costText ? (
         <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-          <DollarSign className="h-3 w-3" />
-          <span>Est. Cost: ${usage.estimatedCost.toFixed(5)}</span>
+          <Coins className="h-3 w-3" />
+          <span>Est. Cost: {costText}</span>
         </span>
       ) : null}
 
