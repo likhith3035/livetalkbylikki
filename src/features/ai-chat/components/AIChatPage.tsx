@@ -133,6 +133,7 @@ export const AIChatPage: React.FC = () => {
   // Voice Input (Speech-to-Text) State
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const baseTextRef = useRef<string>("");
 
   // Text-to-Speech (TTS) State
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
@@ -229,6 +230,8 @@ export const AIChatPage: React.FC = () => {
     }
 
     try {
+      baseTextRef.current = inputText; // store text present before mic started
+
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -240,11 +243,13 @@ export const AIChatPage: React.FC = () => {
       };
 
       recognition.onresult = (event: any) => {
-        let transcript = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+        let sessionTranscript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          sessionTranscript += event.results[i][0].transcript;
         }
-        setInputText((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        const base = baseTextRef.current.trim();
+        const clean = sessionTranscript.trim();
+        setInputText(base ? `${base} ${clean}` : clean);
       };
 
       recognition.onerror = (err: any) => {
