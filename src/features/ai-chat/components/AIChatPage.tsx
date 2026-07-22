@@ -107,7 +107,9 @@ export const AIChatPage: React.FC = () => {
   const [apiKeys, setApiKeys] = useState<APIKeysMap>(loadAPIKeys);
 
   const [selectedProvider, setSelectedProvider] = useState<AIProviderId>("openai");
-  const [selectedModel, setSelectedModel] = useState<string>("gpt-4o-mini");
+  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [isCustomModel, setIsCustomModel] = useState(false);
+  const [customModelInput, setCustomModelInput] = useState("");
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -156,11 +158,12 @@ export const AIChatPage: React.FC = () => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeConv?.messages, isGenerating]);
 
-  // Update selected model when provider changes
+  // Update selected model when provider changes — defaults to Auto-detect ("")
   const handleProviderChange = (providerId: AIProviderId) => {
     setSelectedProvider(providerId);
-    const info = getProviderInfo(providerId);
-    setSelectedModel(info.defaultModel);
+    setSelectedModel("");
+    setIsCustomModel(false);
+    setCustomModelInput("");
   };
 
   // Create New Chat (Triggers Personality Selection Modal)
@@ -500,18 +503,44 @@ export const AIChatPage: React.FC = () => {
                 </button>
               )}
 
-              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block pt-1">Model</span>
+              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block pt-1">
+                Model (Optional)
+              </span>
               <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
+                value={isCustomModel ? "__custom__" : selectedModel}
+                onChange={(e) => {
+                  if (e.target.value === "__custom__") {
+                    setIsCustomModel(true);
+                  } else {
+                    setIsCustomModel(false);
+                    setSelectedModel(e.target.value);
+                  }
+                }}
                 className="w-full h-9 rounded-xl bg-card border border-border/70 text-xs font-semibold text-foreground px-2.5 focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                {providerInfo.availableModels.map((m) => (
-                  <option key={m || "__auto__"} value={m}>
-                    {m || "Auto-detect (loaded model)"}
-                  </option>
-                ))}
+                <option value="">✨ Auto-Detect (Recommended)</option>
+                {providerInfo.availableModels
+                  .filter((m) => m !== "")
+                  .map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                <option value="__custom__">✏️ Custom Model Name...</option>
               </select>
+
+              {isCustomModel && (
+                <input
+                  type="text"
+                  value={customModelInput}
+                  onChange={(e) => {
+                    setCustomModelInput(e.target.value);
+                    setSelectedModel(e.target.value);
+                  }}
+                  placeholder="Enter model name (e.g. sarvam-2b)..."
+                  className="w-full h-8 mt-1 px-2.5 rounded-xl bg-card border border-border/70 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
+                />
+              )}
             </div>
 
             {/* Search Conversations */}
@@ -650,7 +679,7 @@ export const AIChatPage: React.FC = () => {
                       {activeConv.title}
                     </h2>
                     <p className="text-[10px] text-primary font-semibold truncate">
-                      {activeConv.personality.name} • {providerInfo.name} ({selectedModel || "auto"})
+                      {activeConv.personality.name} • {providerInfo.name} ({selectedModel || "Auto-Detect"})
                     </p>
                   </div>
                 </div>
@@ -937,7 +966,7 @@ export const AIChatPage: React.FC = () => {
 
               <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
                 <span>
-                  Active: <strong className="text-foreground">{providerInfo.name}</strong> ({selectedModel || "auto"})
+                  Active: <strong className="text-foreground">{providerInfo.name}</strong> ({selectedModel || "Auto-Detect"})
                 </span>
                 <span className="flex items-center gap-2">
                   <span className={cn("transition-colors", inputText.length > 3000 ? "text-amber-400 font-bold" : "")}>
