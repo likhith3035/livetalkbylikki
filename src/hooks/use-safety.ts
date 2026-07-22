@@ -3,10 +3,8 @@ import { db } from "@/lib/firebase";
 import { ref, onValue, set, push, serverTimestamp, runTransaction } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
 
-const DEFAULT_BANNED_WORDS = [
-  "sex", "nude", "pussy", "dick", "boobs", "ass", 
-  "modda", "lanja", "puku", "kojja", "denga", "dengutha"
-];
+import { DEFAULT_BANNED_WORDS } from "@/lib/safetyConstants";
+
 
 export function useSafety() {
   const [bannedWords, setBannedWords] = useState<string[]>([]);

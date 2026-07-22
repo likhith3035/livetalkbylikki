@@ -1,75 +1,75 @@
 {
   "rules": {
     ".read": false,
-    ".write": false, 
-    
+    ".write": false,
+
     "settings": {
       "safety": {
         "profanity_list": {
           ".read": true,
-          ".write": true 
+          ".write": "auth != null"
         }
       }
     },
-    
+
     "admin": {
       "reports": {
-        ".read": true,
+        ".read": "auth != null",
         "$reportId": {
-          ".write": true 
+          ".write": true
         }
       },
       "blacklist": {
         ".read": true,
         "$uid": {
-          ".write": true
+          ".write": "auth != null"
         }
       },
       "appeals": {
-        ".read": true,
+        ".read": "auth != null",
         "$uid": {
-          ".write": true 
+          ".write": true
         }
       },
       "violations": {
-        ".read": true,
+        ".read": "auth != null",
         "$uid": {
           ".write": true
         }
       }
     },
-    
+
     "lobby": {
       ".read": true,
       "$sessionId": {
-        ".write": true
+        ".write": "auth != null || !newData.exists()"
       }
     },
-    
+
     "matches": {
       ".read": true,
       "$matchId": {
-        ".write": true,
+        ".write": "auth != null || !newData.exists()",
         ".validate": "!newData.exists() || newData.hasChildren(['user1', 'user2', 'roomId'])"
       }
     },
-    
+
     "rooms": {
       ".read": true,
       "$roomId": {
-        ".write": true
+        ".write": "auth != null || !newData.exists()"
       }
     },
-    
+
     "analytics": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
 
     "presence": {
       ".read": true,
       "$uid": {
-        ".write": true,
+        ".write": "auth != null || !newData.exists()",
         ".validate": "!newData.exists() || newData.hasChildren(['online_at'])"
       }
     }

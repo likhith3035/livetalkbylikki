@@ -1,15 +1,10 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { ref, onValue, set, onDisconnect, serverTimestamp } from "firebase/database";
+import { getSessionId } from "@/lib/identity";
+import { getAnonymousUser } from "@/lib/auth";
 
-const getSessionId = () => {
-  let id = localStorage.getItem("echo_session_id_v2");
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem("echo_session_id_v2", id);
-  }
-  return id;
-};
+
 
 export function useOnlineCount() {
   const [onlineCount, setOnlineCount] = useState(0);
@@ -18,8 +13,10 @@ export function useOnlineCount() {
     // Safety check: if Firebase is not properly initialized, don't crash
     if (!db) return;
 
+    getAnonymousUser().catch(() => {});
     const sessionId = getSessionId();
     const presenceRef = ref(db, `presence/${sessionId}`);
+
     const countRef = ref(db, "presence");
     const connectedRef = ref(db, ".info/connected");
 

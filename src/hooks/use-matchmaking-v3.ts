@@ -2,13 +2,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { ref, onValue, set, onDisconnect, serverTimestamp, runTransaction, off, remove, get } from "firebase/database";
 
-const getProfile = () => {
-  try {
-    const raw = localStorage.getItem("lchat.profile");
-    if (raw) return JSON.parse(raw) as { nickname: string; avatar: string; mood?: string };
-  } catch {}
-  return { nickname: "", avatar: "😀", mood: "" };
-};
+import { getProfile } from "@/lib/identity";
+
 
 interface MatchmakingOptions {
   sessionId: string;

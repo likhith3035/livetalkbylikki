@@ -17,13 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_BANNED_WORDS } from "@/lib/safetyConstants";
 
-const DEFAULT_BANNED_WORDS = [
-  "sex", "nude", "pussy", "dick", "boobs", "ass", 
-  "modda", "lanja", "puku", "kojja", "denga", "dengutha"
-];
-
-const ADMIN_SECRET_TOKEN = "5f064930eee39bdc7dd4c2b651b159cf83782a11b543";
 
 // --- Custom Recharts Tooltip ---
 const CustomTooltip = ({ active, payload, label, isDark }: any) => {
@@ -113,16 +108,17 @@ const AdminDashboard = () => {
   const [passcodeError, setPasscodeError] = useState(false);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("echo_admin_token");
-    if (token === ADMIN_SECRET_TOKEN) {
+    const isAuth = sessionStorage.getItem("echo_admin_authenticated") === "true";
+    if (isAuth) {
       setAuthorized(true);
     }
   }, []);
 
   const handleAdminLogin = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (passcode.trim() === "admin123" || passcode.trim() === ADMIN_SECRET_TOKEN) {
-      sessionStorage.setItem("echo_admin_token", ADMIN_SECRET_TOKEN);
+    const expectedPasscode = import.meta.env.VITE_ADMIN_PASSCODE || "admin123";
+    if (passcode.trim() === expectedPasscode) {
+      sessionStorage.setItem("echo_admin_authenticated", "true");
       setAuthorized(true);
       setPasscodeError(false);
       toast({ title: "Welcome Admin", description: "Dashboard session authenticated." });
