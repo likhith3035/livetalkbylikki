@@ -1,9 +1,9 @@
 import { Fragment, useMemo, useState } from "react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Play, Square, Terminal, Trash2 } from "lucide-react";
 
 /**
  * Renders text with formatting:
- * ```code``` → Stylized code block with copy button
+ * ```code``` → Stylized code block with Copy, Live Preview, and ▶️ Run Code buttons
  * **bold** → <strong>
  * *italic* → <em>
  * URLs → <a>
@@ -73,9 +73,105 @@ interface FormattedTextProps {
   text: string;
 }
 
+interface ExecutionLog {
+  type: "log" | "error" | "warn" | "info" | "result";
+  text: string;
+}
+
+interface ExecutionResult {
+  logs: ExecutionLog[];
+  durationMs: number;
+  isError: boolean;
+}
+
+function executeCodeSnippet(code: string, lang: string = ""): ExecutionResult {
+  const logs: ExecutionLog[] = [];
+  const start = performance.now();
+  let isError = false;
+  const l = lang.toLowerCase();
+
+  if (l === "json") {
+    try {
+      const parsed = JSON.parse(code);
+      logs.push({ type: "result", text: JSON.stringify(parsed, null, 2) });
+    } catch (err: any) {
+      isError = true;
+      logs.push({ type: "error", text: `Invalid JSON syntax: ${err.message}` });
+    }
+    return { logs, durationMs: Math.round(performance.now() - start), isError };
+  }
+
+  // Handle Python micro-evaluator
+  if (l === "python" || l === "py") {
+    try {
+      const jsCode = code
+        .replace(/def\s+([a-zA-Z0-9_]+)\((.*?)\):/g, "function $1($2) {")
+        .replace(/print\((.*?)\)/g, "console.log($1)")
+        .replace(/\bTrue\b/g, "true")
+        .replace(/\bFalse\b/g, "false")
+        .replace(/\bNone\b/g, "null")
+        .replace(/len\((.*?)\)/g, "$1.length");
+
+      const customConsole = {
+        log: (...args: any[]) => logs.push({ type: "log", text: args.map((a) => (typeof a === "object" ? JSON.stringify(a, null, 2) : String(a))).join(" ") }),
+        error: (...args: any[]) => { isError = true; logs.push({ type: "error", text: args.map(String).join(" ") }); },
+        warn: (...args: any[]) => logs.push({ type: "warn", text: args.map(String).join(" ") }),
+        info: (...args: any[]) => logs.push({ type: "info", text: args.map(String).join(" ") }),
+      };
+
+      const runner = new Function("console", jsCode);
+      runner(customConsole);
+
+      if (logs.length === 0) {
+        logs.push({ type: "info", text: "Python script executed cleanly." });
+      }
+    } catch (err: any) {
+      isError = true;
+      logs.push({ type: "error", text: `Python Error: ${err.message}` });
+    }
+    return { logs, durationMs: Math.round(performance.now() - start), isError };
+  }
+
+  // JavaScript / TypeScript Execution Sandbox
+  try {
+    const customConsole = {
+      log: (...args: any[]) => logs.push({ type: "log", text: args.map((a) => (typeof a === "object" ? JSON.stringify(a, null, 2) : String(a))).join(" ") }),
+      error: (...args: any[]) => { isError = true; logs.push({ type: "error", text: args.map(String).join(" ") }); },
+      warn: (...args: any[]) => logs.push({ type: "warn", text: args.map(String).join(" ") }),
+      info: (...args: any[]) => logs.push({ type: "info", text: args.map(String).join(" ") }),
+    };
+
+    // Strip basic TypeScript annotations
+    const executableJs = code.replace(/:\s*(string|number|boolean|any|void|object|unknown|never)\[\]?/g, "");
+
+    const runner = new Function("console", `
+      try {
+        ${executableJs}
+      } catch(e) {
+        console.error(e.message || String(e));
+      }
+    `);
+
+    const result = runner(customConsole);
+    if (result !== undefined) {
+      logs.push({ type: "result", text: `⇒ ${typeof result === "object" ? JSON.stringify(result, null, 2) : String(result)}` });
+    }
+
+    if (logs.length === 0) {
+      logs.push({ type: "info", text: "Code executed successfully with no console output." });
+    }
+  } catch (err: any) {
+    isError = true;
+    logs.push({ type: "error", text: `Runtime Error: ${err.message}` });
+  }
+
+  return { logs, durationMs: Math.round(performance.now() - start), isError };
+}
+
 const CodeBlock = ({ content, lang }: { content: string; lang?: string }) => {
   const [copied, setCopied] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [execution, setExecution] = useState<ExecutionResult | null>(null);
 
   const isPreviewable = useMemo(() => {
     const l = (lang || "").toLowerCase();
@@ -88,6 +184,16 @@ const CodeBlock = ({ content, lang }: { content: string; lang?: string }) => {
     navigator.clipboard.writeText(content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRunCode = () => {
+    if (isPreviewable) {
+      setShowPreview(!showPreview);
+      return;
+    }
+
+    const res = executeCodeSnippet(content, lang);
+    setExecution(res);
   };
 
   return (
@@ -117,15 +223,29 @@ const CodeBlock = ({ content, lang }: { content: string; lang?: string }) => {
           )}
         </div>
 
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1 hover:text-white transition-colors px-2 py-0.5 rounded bg-zinc-800/80 hover:bg-zinc-700 font-sans text-[10px]"
-        >
-          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-          <span>{copied ? "Copied" : "Copy"}</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          {/* Run Code Button */}
+          <button
+            onClick={handleRunCode}
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 font-sans text-[10px] font-bold transition-all active:scale-95 shadow-sm"
+            title="Execute this code snippet live"
+          >
+            <Play className="h-3 w-3 fill-current" />
+            <span>Run Code</span>
+          </button>
+
+          {/* Copy Button */}
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1 hover:text-white transition-colors px-2 py-0.5 rounded bg-zinc-800/80 hover:bg-zinc-700 font-sans text-[10px]"
+          >
+            {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+            <span>{copied ? "Copied" : "Copy"}</span>
+          </button>
+        </div>
       </div>
 
+      {/* Code vs Live HTML/SVG Preview */}
       {showPreview ? (
         <div className="p-3 bg-white rounded-b-xl min-h-[120px] flex items-center justify-center">
           <iframe
@@ -139,6 +259,49 @@ const CodeBlock = ({ content, lang }: { content: string; lang?: string }) => {
         <pre className="p-3 overflow-x-auto whitespace-pre leading-relaxed text-[11px] text-emerald-300/90">
           <code>{content}</code>
         </pre>
+      )}
+
+      {/* Terminal Console Output Panel */}
+      {execution && (
+        <div className="border-t border-zinc-800 bg-black p-3 space-y-2 text-[11px]">
+          <div className="flex items-center justify-between border-b border-zinc-900 pb-1 text-[10px]">
+            <div className="flex items-center gap-1.5 font-bold text-zinc-400">
+              <Terminal className="h-3.5 w-3.5 text-primary" />
+              <span>Console Output ({execution.durationMs}ms)</span>
+              <span className={`px-1.5 py-0.2 rounded text-[9px] ${execution.isError ? "bg-rose-500/20 text-rose-400" : "bg-emerald-500/20 text-emerald-400"}`}>
+                {execution.isError ? "Error" : "Success"}
+              </span>
+            </div>
+            <button
+              onClick={() => setExecution(null)}
+              className="text-zinc-500 hover:text-zinc-300 transition-colors p-0.5"
+              title="Close terminal output"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
+
+          <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+            {execution.logs.map((log, idx) => (
+              <div
+                key={idx}
+                className={`font-mono text-[11px] leading-relaxed whitespace-pre-wrap ${
+                  log.type === "error"
+                    ? "text-rose-400 font-semibold"
+                    : log.type === "warn"
+                    ? "text-amber-400"
+                    : log.type === "result"
+                    ? "text-cyan-300 font-bold"
+                    : log.type === "info"
+                    ? "text-zinc-400 italic"
+                    : "text-zinc-200"
+                }`}
+              >
+                {log.text}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -172,4 +335,3 @@ const FormattedText = ({ text }: FormattedTextProps) => {
 };
 
 export default FormattedText;
-
