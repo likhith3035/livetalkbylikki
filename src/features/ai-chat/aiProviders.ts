@@ -138,6 +138,11 @@ export async function streamAIChat({
   const provider = getProviderInfo(providerId);
   const startTime = Date.now();
 
+  // Smart model resolution: fallback to defaultModel if missing/auto, or omit if LM Studio (empty string)
+  const resolvedModel = (modelName && modelName !== "auto")
+    ? modelName
+    : provider.defaultModel;
+
   const formattedMessages = [
     { role: "system", content: systemPrompt },
     ...messages.map((m) => ({
@@ -161,7 +166,7 @@ export async function streamAIChat({
         "dangerously-allow-browser": "true",
       },
       body: JSON.stringify({
-        model: modelName,
+        model: resolvedModel || "claude-3-5-sonnet-20241022",
         max_tokens: 2048,
         system: systemPrompt,
         messages: messages.map((m) => ({
@@ -216,7 +221,8 @@ export async function streamAIChat({
   // 2. Google Gemini API
   if (providerId === "gemini") {
     if (!apiKey) throw new Error("Google Gemini API Key is required. Please set it in Key Settings.");
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=${apiKey}`;
+    const targetModel = resolvedModel || "gemini-1.5-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?key=${apiKey}`;
     const contents = [
       { role: "user", parts: [{ text: `[System Instruction: ${systemPrompt}]` }] },
       ...messages.map((m) => ({
@@ -295,9 +301,8 @@ export async function streamAIChat({
     headers["X-Title"] = "LiveTalk AI Chat";
   }
 
-  // For LM Studio, send the model name only if user explicitly picked one;
-  // an empty string tells LM Studio to use whichever model is currently loaded.
-  const modelToSend = modelName || undefined;
+  // For LM Studio / Auto-detect: if resolvedModel is empty, omit model property
+  const modelToSend = resolvedModel || undefined;
 
   let response: Response;
   try {
