@@ -123,6 +123,7 @@ export interface StreamChatParams {
   messages: ChatMessage[];
   onChunk: (delta: string) => void;
   signal?: AbortSignal;
+  temperature?: number;
 }
 
 export async function streamAIChat({
@@ -134,6 +135,7 @@ export async function streamAIChat({
   messages,
   onChunk,
   signal,
+  temperature,
 }: StreamChatParams): Promise<TokenUsage> {
   const provider = getProviderInfo(providerId);
   const startTime = Date.now();
@@ -174,6 +176,7 @@ export async function streamAIChat({
           content: m.content,
         })),
         stream: true,
+        ...(temperature !== undefined ? { temperature } : {}),
       }),
       signal,
     });
@@ -234,7 +237,10 @@ export async function streamAIChat({
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents }),
+      body: JSON.stringify({
+        contents,
+        ...(temperature !== undefined ? { generationConfig: { temperature } } : {}),
+      }),
       signal,
     });
 
@@ -313,6 +319,7 @@ export async function streamAIChat({
         model: modelToSend,
         messages: formattedMessages,
         stream: true,
+        ...(temperature !== undefined ? { temperature } : {}),
       }),
       signal,
     });

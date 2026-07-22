@@ -75,6 +75,8 @@ export interface Conversation {
   modelName: string;
   messages: ChatMessage[];
   customEndpoint?: string;
+  isPinned?: boolean;
+  temperature?: number;
 }
 
 export type APIKeysMap = Partial<Record<AIProviderId, string>> & {

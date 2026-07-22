@@ -75,6 +75,14 @@ interface FormattedTextProps {
 
 const CodeBlock = ({ content, lang }: { content: string; lang?: string }) => {
   const [copied, setCopied] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const isPreviewable = useMemo(() => {
+    const l = (lang || "").toLowerCase();
+    if (l === "html" || l === "svg" || l === "xml") return true;
+    const lower = content.toLowerCase();
+    return lower.includes("<svg") || lower.includes("<!doctype html") || lower.includes("<div") || lower.includes("<html");
+  }, [content, lang]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
@@ -85,18 +93,53 @@ const CodeBlock = ({ content, lang }: { content: string; lang?: string }) => {
   return (
     <div className="my-2 rounded-xl border border-zinc-700/60 bg-zinc-950 text-zinc-100 overflow-hidden font-mono text-xs shadow-md">
       <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 text-[10px] text-zinc-400">
-        <span className="font-bold uppercase tracking-wider">{lang || "code"}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-bold uppercase tracking-wider text-emerald-400">{lang || "code"}</span>
+          {isPreviewable && (
+            <div className="flex bg-zinc-950 p-0.5 rounded-lg border border-zinc-800">
+              <button
+                onClick={() => setShowPreview(false)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all ${
+                  !showPreview ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                Code
+              </button>
+              <button
+                onClick={() => setShowPreview(true)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all ${
+                  showPreview ? "bg-primary text-white shadow-sm" : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                👁️ Live Preview
+              </button>
+            </div>
+          )}
+        </div>
+
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 hover:text-white transition-colors px-1.5 py-0.5 rounded bg-zinc-800/80 hover:bg-zinc-700"
+          className="flex items-center gap-1 hover:text-white transition-colors px-2 py-0.5 rounded bg-zinc-800/80 hover:bg-zinc-700 font-sans text-[10px]"
         >
           {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
           <span>{copied ? "Copied" : "Copy"}</span>
         </button>
       </div>
-      <pre className="p-3 overflow-x-auto whitespace-pre leading-relaxed text-[11px] text-emerald-300/90">
-        <code>{content}</code>
-      </pre>
+
+      {showPreview ? (
+        <div className="p-3 bg-white rounded-b-xl min-h-[120px] flex items-center justify-center">
+          <iframe
+            srcDoc={content.includes("<html") ? content : `<!DOCTYPE html><html><head><style>body{font-family:sans-serif;margin:12px;padding:0;}</style></head><body>${content}</body></html>`}
+            title="Live Preview"
+            className="w-full min-h-[180px] border-0 rounded"
+            sandbox="allow-scripts"
+          />
+        </div>
+      ) : (
+        <pre className="p-3 overflow-x-auto whitespace-pre leading-relaxed text-[11px] text-emerald-300/90">
+          <code>{content}</code>
+        </pre>
+      )}
     </div>
   );
 };

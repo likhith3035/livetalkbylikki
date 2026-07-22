@@ -4,7 +4,7 @@ import {
   Sparkles, MessageSquare, Plus, Key, Cpu, Send, Square, Copy,
   Trash2, RefreshCw, Check, Bot, User as UserIcon, Zap, AlertCircle,
   Menu, X, Shield, ChevronDown, HelpCircle, Download, Search, Eraser,
-  Hash, Type
+  Hash, Type, Mic, MicOff, Volume2, VolumeX, Pin, Sliders, Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +48,16 @@ const SUGGESTION_CHIPS = [
   { label: "😂 Tell me a clever joke", prompt: "Tell me a clever, original joke that will make me laugh" },
   { label: "📝 Summarize a topic for me", prompt: "Summarize the key concepts of machine learning in 5 bullet points" },
   { label: "🌍 Plan a weekend trip", prompt: "Plan an ideal 2-day weekend trip for someone who loves nature and good food" },
+];
+
+// ── Magic Action Chips (Quick Tool Prefix Chips) ──
+const MAGIC_ACTION_CHIPS = [
+  { icon: "📝", label: "Summarize", prefix: "Please summarize the following text concisely with bullet points:\n\n" },
+  { icon: "🌐", label: "Translate", prefix: "Please translate the following text to clear, natural English:\n\n" },
+  { icon: "🐛", label: "Fix Bug", prefix: "Please analyze and fix bugs in this code snippet:\n\n" },
+  { icon: "✏️", label: "Polish", prefix: "Please polish the grammar and improve the tone of this text:\n\n" },
+  { icon: "👔", label: "Make Formal", prefix: "Please rewrite this to sound professional, executive, and formal:\n\n" },
+  { icon: "🎨", label: "Simplify (ELI5)", prefix: "Please explain this in very simple, beginner-friendly terms (ELI5):\n\n" },
 ];
 
 // ── Time formatter ──
@@ -110,12 +120,22 @@ export const AIChatPage: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [isCustomModel, setIsCustomModel] = useState(false);
   const [customModelInput, setCustomModelInput] = useState("");
+  const [temperature, setTemperature] = useState<number>(0.7);
+  const [showTuning, setShowTuning] = useState(false);
+
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
+
+  // Voice Input (Speech-to-Text) State
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Text-to-Speech (TTS) State
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
 
   // Modals
   const [showPersonalityModal, setShowPersonalityModal] = useState(false);
@@ -141,6 +161,15 @@ export const AIChatPage: React.FC = () => {
     );
   }, [conversations, searchQuery]);
 
+  // Separate pinned and normal conversations
+  const pinnedConversations = useMemo(() => {
+    return filteredConversations.filter((c) => c.isPinned);
+  }, [filteredConversations]);
+
+  const normalConversations = useMemo(() => {
+    return filteredConversations.filter((c) => !c.isPinned);
+  }, [filteredConversations]);
+
   // Persist conversations
   useEffect(() => {
     saveConversations(conversations);
@@ -158,12 +187,107 @@ export const AIChatPage: React.FC = () => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeConv?.messages, isGenerating]);
 
-  // Update selected model when provider changes — defaults to Auto-detect ("")
+  // Clean up speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  // Update selected model when provider changes
   const handleProviderChange = (providerId: AIProviderId) => {
     setSelectedProvider(providerId);
     setSelectedModel("");
     setIsCustomModel(false);
     setCustomModelInput("");
+  };
+
+  // Toggle Pin Conversation
+  const handleTogglePin = (convId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConversations((prev) =>
+      prev.map((c) => (c.id === convId ? { ...c, isPinned: !c.isPinned } : c))
+    );
+  };
+
+  // Voice Input Handler (Speech-to-Text)
+  const handleToggleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({
+        title: "Voice Not Supported",
+        description: "Speech Recognition is not supported by your browser. Try Google Chrome or Edge.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        toast({ title: "🎙️ Listening...", description: "Speak now! Your voice will turn into text." });
+      };
+
+      recognition.onresult = (event: any) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setInputText((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      };
+
+      recognition.onerror = (err: any) => {
+        console.error("Speech recognition error", err);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error(err);
+      setIsListening(false);
+    }
+  };
+
+  // Text-to-Speech (TTS) Read Aloud Handler
+  const handleToggleTTS = (msgId: string, text: string) => {
+    if (!window.speechSynthesis) {
+      toast({ title: "TTS Error", description: "Text-to-Speech is not supported in this browser." });
+      return;
+    }
+
+    if (speakingMsgId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel(); // stop any current audio
+    const cleanText = text.replace(/```[\s\S]*?```/g, "Code block omitted.").replace(/[*_#]/g, "");
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => setSpeakingMsgId(null);
+    utterance.onerror = () => setSpeakingMsgId(null);
+
+    setSpeakingMsgId(msgId);
+    window.speechSynthesis.speak(utterance);
   };
 
   // Create New Chat (Triggers Personality Selection Modal)
@@ -182,6 +306,7 @@ export const AIChatPage: React.FC = () => {
       providerId: selectedProvider,
       modelName: selectedModel,
       messages: [],
+      temperature,
     };
     setConversations((prev) => [newConv, ...prev]);
     setActiveConvId(newConv.id);
@@ -219,6 +344,7 @@ export const AIChatPage: React.FC = () => {
         providerId: selectedProvider,
         modelName: selectedModel,
         messages: [],
+        temperature,
       };
       setConversations((prev) => [conv!, ...prev]);
       setActiveConvId(conv.id);
@@ -256,7 +382,6 @@ export const AIChatPage: React.FC = () => {
       )
     );
 
-    const userQuery = textToSend.trim();
     setInputText("");
     setIsGenerating(true);
 
@@ -273,6 +398,7 @@ export const AIChatPage: React.FC = () => {
         customEndpoint,
         systemPrompt: conv.personality.systemPrompt,
         messages: [...conv.messages, userMessage],
+        temperature,
         signal: abortControllerRef.current.signal,
         onChunk: (delta) => {
           setConversations((prev) =>
@@ -369,6 +495,7 @@ export const AIChatPage: React.FC = () => {
         customEndpoint: apiKeys.customEndpoint,
         systemPrompt: activeConv.personality.systemPrompt,
         messages: previousMessages,
+        temperature,
         signal: abortControllerRef.current.signal,
         onChunk: (delta) => {
           setConversations((prev) =>
@@ -427,7 +554,63 @@ export const AIChatPage: React.FC = () => {
     handleSend(prompt);
   };
 
+  // Magic action chip click
+  const handleMagicChipClick = (prefix: string) => {
+    setInputText((prev) => (prev ? `${prefix}${prev}` : prefix));
+  };
+
   const providerInfo = getProviderInfo(selectedProvider);
+
+  // Helper render for conversation list item
+  const renderConvItem = (conv: Conversation) => {
+    const isActive = conv.id === activeConvId;
+    return (
+      <div
+        key={conv.id}
+        onClick={() => {
+          setActiveConvId(conv.id);
+          setShowSidebarMobile(false);
+        }}
+        className={cn(
+          "p-2.5 rounded-2xl cursor-pointer border flex items-center justify-between text-xs transition-all group relative",
+          isActive
+            ? "bg-primary/15 border-primary/40 text-primary font-bold shadow-sm"
+            : "bg-transparent border-transparent hover:bg-secondary/50 text-foreground"
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-base shrink-0">{conv.personality.icon}</span>
+          <div className="min-w-0">
+            <span className="truncate text-xs block font-semibold">{conv.title}</span>
+            <span className="text-[9px] text-muted-foreground">{formatRelativeTime(conv.updatedAt)}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {/* Pin Toggle */}
+          <button
+            onClick={(e) => handleTogglePin(conv.id, e)}
+            className={cn(
+              "p-1 hover:text-amber-400 transition-all",
+              conv.isPinned ? "text-amber-400 opacity-100" : "opacity-0 group-hover:opacity-100 text-muted-foreground"
+            )}
+            title={conv.isPinned ? "Unpin chat" : "Pin chat to top"}
+          >
+            <Pin className="h-3.5 w-3.5 fill-current" />
+          </button>
+
+          {/* Delete */}
+          <button
+            onClick={(e) => handleDeleteConversation(conv.id, e)}
+            className="opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500 transition-opacity"
+            title="Delete conversation"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col bg-background relative z-0 h-dvh overflow-hidden select-none">
@@ -468,7 +651,7 @@ export const AIChatPage: React.FC = () => {
               <span>New AI Conversation</span>
             </Button>
 
-            {/* Provider & Model Selectors */}
+            {/* Provider & Model Selectors + Temperature Tuning */}
             <div className="p-2.5 rounded-2xl bg-secondary/40 border border-border/40 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">AI Provider</span>
@@ -503,9 +686,19 @@ export const AIChatPage: React.FC = () => {
                 </button>
               )}
 
-              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block pt-1">
-                Model (Optional)
-              </span>
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">
+                  Model (Optional)
+                </span>
+                <button
+                  onClick={() => setShowTuning(!showTuning)}
+                  className="text-[10px] font-bold text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+                >
+                  <Sliders className="h-3 w-3" />
+                  <span>Tune ({temperature})</span>
+                </button>
+              </div>
+
               <select
                 value={isCustomModel ? "__custom__" : selectedModel}
                 onChange={(e) => {
@@ -541,6 +734,37 @@ export const AIChatPage: React.FC = () => {
                   className="w-full h-8 mt-1 px-2.5 rounded-xl bg-card border border-border/70 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
                 />
               )}
+
+              {/* Temperature Slider Panel */}
+              <AnimatePresence>
+                {showTuning && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden pt-2 border-t border-border/40 space-y-2"
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-bold">
+                      <span className="text-muted-foreground">Creativity / Temperature</span>
+                      <span className="text-primary">{temperature}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.0"
+                      max="1.0"
+                      step="0.05"
+                      value={temperature}
+                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                      className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                    <div className="flex justify-between text-[9px] font-semibold text-muted-foreground">
+                      <button onClick={() => setTemperature(0.2)} className="hover:text-foreground">🎯 Precise (0.2)</button>
+                      <button onClick={() => setTemperature(0.7)} className="hover:text-foreground">⚖️ Balanced (0.7)</button>
+                      <button onClick={() => setTemperature(1.0)} className="hover:text-foreground">🎨 Creative (1.0)</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Search Conversations */}
@@ -609,40 +833,27 @@ export const AIChatPage: React.FC = () => {
               )}
             </AnimatePresence>
 
-            {/* Saved Conversations List */}
-            <div className="space-y-1 max-h-[40vh] overflow-y-auto pr-1">
-              {filteredConversations.map((conv) => {
-                const isActive = conv.id === activeConvId;
-                return (
-                  <div
-                    key={conv.id}
-                    onClick={() => {
-                      setActiveConvId(conv.id);
-                      setShowSidebarMobile(false);
-                    }}
-                    className={cn(
-                      "p-2.5 rounded-2xl cursor-pointer border flex items-center justify-between text-xs transition-all group",
-                      isActive
-                        ? "bg-primary/15 border-primary/40 text-primary font-bold shadow-sm"
-                        : "bg-transparent border-transparent hover:bg-secondary/50 text-foreground"
-                    )}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-base shrink-0">{conv.personality.icon}</span>
-                      <div className="min-w-0">
-                        <span className="truncate text-xs block">{conv.title}</span>
-                        <span className="text-[9px] text-muted-foreground">{formatRelativeTime(conv.updatedAt)}</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => handleDeleteConversation(conv.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500 transition-opacity"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                );
-              })}
+            {/* Saved Conversations List (Pinned + Normal) */}
+            <div className="space-y-3 max-h-[38vh] overflow-y-auto pr-1">
+              {/* Pinned Section */}
+              {pinnedConversations.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1 px-1">
+                    <Pin className="h-3 w-3 fill-current" /> Pinned ({pinnedConversations.length})
+                  </span>
+                  {pinnedConversations.map(renderConvItem)}
+                </div>
+              )}
+
+              {/* Normal Section */}
+              <div className="space-y-1">
+                {pinnedConversations.length > 0 && normalConversations.length > 0 && (
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1 block pt-1">
+                    Recent
+                  </span>
+                )}
+                {normalConversations.map(renderConvItem)}
+              </div>
 
               {filteredConversations.length === 0 && searchQuery && (
                 <p className="text-[11px] text-muted-foreground text-center py-4 italic">
@@ -675,11 +886,14 @@ export const AIChatPage: React.FC = () => {
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-xl shrink-0">{activeConv.personality.icon}</span>
                   <div className="min-w-0">
-                    <h2 className="text-xs sm:text-sm font-bold text-foreground truncate">
-                      {activeConv.title}
-                    </h2>
+                    <div className="flex items-center gap-1.5">
+                      <h2 className="text-xs sm:text-sm font-bold text-foreground truncate">
+                        {activeConv.title}
+                      </h2>
+                      {activeConv.isPinned && <Pin className="h-3 w-3 text-amber-400 fill-current shrink-0" />}
+                    </div>
                     <p className="text-[10px] text-primary font-semibold truncate">
-                      {activeConv.personality.name} • {providerInfo.name} ({selectedModel || "Auto-Detect"})
+                      {activeConv.personality.name} • {providerInfo.name} ({selectedModel || "Auto-Detect"}) • Temp: {temperature}
                     </p>
                   </div>
                 </div>
@@ -776,10 +990,11 @@ export const AIChatPage: React.FC = () => {
               </div>
             ) : (
               /* ── Messages ── */
-              activeConv.messages.map((msg, idx) => {
+              activeConv.messages.map((msg) => {
                 const isUser = msg.sender === "user";
                 const isLastAi = !isUser && msg.isStreaming;
                 const isHovered = hoveredMsgId === msg.id;
+                const isSpeakingThis = speakingMsgId === msg.id;
 
                 return (
                   <motion.div
@@ -866,6 +1081,21 @@ export const AIChatPage: React.FC = () => {
                           )}
                         </AnimatePresence>
 
+                        {/* Text-to-Speech Button for AI messages */}
+                        {!isUser && msg.content && (
+                          <button
+                            onClick={() => handleToggleTTS(msg.id, msg.content)}
+                            className={cn(
+                              "transition-colors flex items-center gap-1 font-bold",
+                              isSpeakingThis ? "text-amber-400 animate-pulse" : "hover:text-foreground text-muted-foreground"
+                            )}
+                            title={isSpeakingThis ? "Stop speaking" : "Listen to response (TTS)"}
+                          >
+                            {isSpeakingThis ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                            <span>{isSpeakingThis ? "Stop" : "Listen"}</span>
+                          </button>
+                        )}
+
                         <button
                           onClick={() => handleCopyMessage(msg.content, msg.id)}
                           className="hover:text-foreground transition-colors flex items-center gap-1"
@@ -918,8 +1148,26 @@ export const AIChatPage: React.FC = () => {
           </div>
 
           {/* ─────────── BOTTOM INPUT BAR ─────────── */}
-          <div className="p-3 sm:p-4 border-t border-border/40 bg-card/60 backdrop-blur-xl shrink-0">
+          <div className="p-3 sm:p-4 border-t border-border/40 bg-card/60 backdrop-blur-xl shrink-0 space-y-2">
             <div className="max-w-3xl mx-auto space-y-2">
+              {/* Magic Action Tool Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                <span className="text-[10px] font-bold text-muted-foreground/80 flex items-center gap-1 shrink-0 mr-1">
+                  <Wand2 className="h-3 w-3 text-primary" /> Magic Tools:
+                </span>
+                {MAGIC_ACTION_CHIPS.map((chip) => (
+                  <button
+                    key={chip.label}
+                    onClick={() => handleMagicChipClick(chip.prefix)}
+                    className="px-2.5 py-1 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/50 text-[10px] font-semibold text-foreground shrink-0 transition-all flex items-center gap-1 hover:border-primary/40 active:scale-95"
+                  >
+                    <span>{chip.icon}</span>
+                    <span>{chip.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Textarea + Mic + Send controls */}
               <div className="relative flex items-center">
                 <Textarea
                   value={inputText}
@@ -931,10 +1179,28 @@ export const AIChatPage: React.FC = () => {
                     }
                   }}
                   placeholder={`Ask ${activeConv?.personality.name || "AI"} anything... (Press Enter)`}
-                  className="min-h-[50px] max-h-[140px] py-3 pl-4 pr-28 rounded-2xl bg-card border-border/80 text-xs text-foreground focus:ring-1 focus:ring-primary resize-none shadow-sm"
+                  className="min-h-[50px] max-h-[140px] py-3 pl-4 pr-32 rounded-2xl bg-card border-border/80 text-xs text-foreground focus:ring-1 focus:ring-primary resize-none shadow-sm"
                 />
 
                 <div className="absolute right-2 flex items-center gap-1.5">
+                  {/* Voice Input Microphone Button */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    type="button"
+                    onClick={handleToggleVoiceInput}
+                    className={cn(
+                      "h-9 w-9 p-0 rounded-xl border border-border/60 transition-all",
+                      isListening
+                        ? "bg-rose-500 text-white border-rose-500 animate-pulse shadow-md shadow-rose-500/30"
+                        : "hover:bg-secondary text-muted-foreground hover:text-foreground"
+                    )}
+                    title={isListening ? "Listening... Click to stop" : "Voice-to-Text Speech Input"}
+                  >
+                    {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+
+                  {/* Send / Stop Button */}
                   {isGenerating ? (
                     <Button
                       size="sm"
