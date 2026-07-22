@@ -9,13 +9,8 @@ interface GifPickerProps {
   customTrigger?: React.ReactNode;
 }
 
-// Tenor v2 API
-const TENOR_API = "https://tenor.googleapis.com/v2";
-const TENOR_KEY = import.meta.env.VITE_TENOR_API_KEY;
-
-// GIPHY public beta key (free, no signup needed, rate-limited)
 const GIPHY_API = "https://api.giphy.com/v1/gifs";
-const GIPHY_BETA_KEY = "dc6zaTOxFJmzC";
+const GIPHY_KEY = import.meta.env.VITE_GIPHY_API_KEY || "";
 
 interface GifItem {
   id: string;
@@ -23,70 +18,34 @@ interface GifItem {
   full: string;
 }
 
-/** Try Tenor first, fall back to GIPHY */
-async function fetchGifsFromTenor(endpoint: string): Promise<GifItem[]> {
-  const res = await fetch(endpoint);
-  if (!res.ok) throw new Error(`Tenor ${res.status}`);
-  const data = await res.json();
-  return (data.results || []).map((r: any) => ({
-    id: r.id,
-    preview: r.media_formats?.tinygif?.url || r.media_formats?.gif?.url || "",
-    full: r.media_formats?.gif?.url || r.media_formats?.tinygif?.url || "",
-  }));
-}
-
 async function fetchGifsFromGiphy(endpoint: string): Promise<GifItem[]> {
   const res = await fetch(endpoint);
-  if (!res.ok) throw new Error(`GIPHY ${res.status}`);
+  if (!res.ok) throw new Error(`GIPHY HTTP ${res.status}`);
   const data = await res.json();
   return (data.data || []).map((r: any) => ({
     id: r.id,
-    preview: r.images?.fixed_width_small?.url || r.images?.fixed_width?.url || "",
+    preview: r.images?.fixed_width_small?.url || r.images?.fixed_width?.url || r.images?.original?.url || "",
     full: r.images?.original?.url || r.images?.fixed_width?.url || "",
   }));
 }
 
-async function searchGifsMultiProvider(query: string): Promise<GifItem[]> {
-  // Try Tenor first
-  if (TENOR_KEY) {
-    try {
-      const url = `${TENOR_API}/search?key=${TENOR_KEY}&q=${encodeURIComponent(query)}&limit=20&media_filter=tinygif,gif`;
-      const results = await fetchGifsFromTenor(url);
-      if (results.length > 0) return results;
-    } catch (e) {
-      console.warn("Tenor search failed, trying GIPHY:", e);
-    }
-  }
-
-  // Fallback to GIPHY
+async function searchGifs(query: string): Promise<GifItem[]> {
   try {
-    const url = `${GIPHY_API}/search?api_key=${GIPHY_BETA_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=pg-13`;
+    const url = `${GIPHY_API}/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=pg-13`;
     return await fetchGifsFromGiphy(url);
   } catch (e) {
-    console.warn("GIPHY search also failed:", e);
-    throw new Error("GIF search is temporarily unavailable. Please try again later.");
+    console.warn("GIPHY search failed:", e);
+    throw new Error("GIF search is temporarily unavailable. Please try again.");
   }
 }
 
-async function fetchTrendingMultiProvider(): Promise<GifItem[]> {
-  // Try Tenor first
-  if (TENOR_KEY) {
-    try {
-      const url = `${TENOR_API}/featured?key=${TENOR_KEY}&limit=20&media_filter=tinygif,gif`;
-      const results = await fetchGifsFromTenor(url);
-      if (results.length > 0) return results;
-    } catch (e) {
-      console.warn("Tenor trending failed, trying GIPHY:", e);
-    }
-  }
-
-  // Fallback to GIPHY
+async function fetchTrendingGifs(): Promise<GifItem[]> {
   try {
-    const url = `${GIPHY_API}/trending?api_key=${GIPHY_BETA_KEY}&limit=20&rating=pg-13`;
+    const url = `${GIPHY_API}/trending?api_key=${GIPHY_KEY}&limit=24&rating=pg-13`;
     return await fetchGifsFromGiphy(url);
   } catch (e) {
-    console.warn("GIPHY trending also failed:", e);
-    throw new Error("GIF service is temporarily unavailable. Please try again later.");
+    console.warn("GIPHY trending failed:", e);
+    throw new Error("GIF service is temporarily unavailable. Please try again.");
   }
 }
 
@@ -116,12 +75,12 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
     };
   }, [open]);
 
-  const fetchTrending = useCallback(async () => {
+  const loadTrending = useCallback(async () => {
     if (trending.length > 0) return;
     try {
       setLoading(true);
       setError(null);
-      const items = await fetchTrendingMultiProvider();
+      const items = await fetchTrendingGifs();
       setTrending(items);
     } catch (err: any) {
       setError(err.message || "Failed to load GIFs.");
@@ -131,7 +90,7 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
     }
   }, [trending.length]);
 
-  const searchGifs = useCallback(async (q: string) => {
+  const executeSearch = useCallback(async (q: string) => {
     if (!q.trim()) {
       setResults([]);
       return;
@@ -139,7 +98,7 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
     try {
       setLoading(true);
       setError(null);
-      const items = await searchGifsMultiProvider(q);
+      const items = await searchGifs(q);
       setResults(items);
     } catch (err: any) {
       setError(err.message || "GIF search failed.");
@@ -154,14 +113,14 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
     setError(null);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      searchGifs(q);
+      executeSearch(q);
     }, 400);
   };
 
   const handleOpen = () => {
     setOpen(true);
     setError(null);
-    fetchTrending();
+    loadTrending();
   };
 
   const handleSelect = (gif: GifItem) => {
@@ -179,7 +138,7 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
     <div className="relative" ref={pickerRef}>
       {customTrigger ? (
         <div
-          onClick={() => open ? setOpen(false) : handleOpen()}
+          onClick={() => (open ? setOpen(false) : handleOpen())}
           className="cursor-pointer select-none"
         >
           {customTrigger}
@@ -188,7 +147,7 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => open ? setOpen(false) : handleOpen()}
+          onClick={() => (open ? setOpen(false) : handleOpen())}
           className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
           title="GIFs"
         >
@@ -226,7 +185,11 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
                   <p className="text-xs font-bold text-destructive mb-1">GIF Service Unavailable</p>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{error}</p>
                   <button
-                    onClick={() => { setError(null); setTrending([]); fetchTrending(); }}
+                    onClick={() => {
+                      setError(null);
+                      setTrending([]);
+                      loadTrending();
+                    }}
                     className="mt-2 text-[10px] font-bold text-primary hover:underline"
                   >
                     Try Again
@@ -264,7 +227,7 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
 
             {/* Attribution */}
             <div className="px-3 py-1.5 border-t border-border">
-              <p className="text-[9px] text-muted-foreground text-center">Powered by Tenor & GIPHY</p>
+              <p className="text-[9px] text-muted-foreground text-center">Powered by GIPHY</p>
             </div>
           </motion.div>
         )}

@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState, useCallback } from "react";
-import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X, File as FileIcon } from "lucide-react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X, File as FileIcon, Play, Pause, Mic, Download, BarChart3, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -12,6 +12,93 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Message } from "@/hooks/use-chat";
 import { useSettings } from "@/contexts/SettingsContext";
+
+const AudioMessageBubble = ({ src, isMine }: { src: string; isMine?: boolean }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [speed, setSpeed] = useState<number>(1);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+  };
+
+  const toggleSpeed = () => {
+    const nextSpeed = speed === 1 ? 1.5 : speed === 1.5 ? 2 : 1;
+    setSpeed(nextSpeed);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = nextSpeed;
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 p-2 rounded-2xl bg-black/10 dark:bg-white/10 my-1 max-w-[260px] sm:max-w-[300px]">
+      <audio
+        ref={audioRef}
+        src={src}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => { setIsPlaying(false); setProgress(0); }}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        onTimeUpdate={() => {
+          if (audioRef.current) {
+            setProgress((audioRef.current.currentTime / (audioRef.current.duration || 1)) * 100);
+          }
+        }}
+      />
+      <button
+        type="button"
+        onClick={togglePlay}
+        className={cn(
+          "h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-md",
+          isMine ? "bg-white text-primary" : "bg-primary text-primary-foreground"
+        )}
+      >
+        {isPlaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current ml-0.5" />}
+      </button>
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1">
+            <Mic className="h-3 w-3 text-rose-400 shrink-0 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">Voice Note</span>
+          </div>
+          {duration > 0 && (
+            <span className="text-[10px] font-mono opacity-70 shrink-0">
+              {Math.floor(duration)}s
+            </span>
+          )}
+        </div>
+        <div className="h-1.5 w-full bg-black/20 dark:bg-white/20 rounded-full overflow-hidden">
+          <div className="h-full bg-rose-500 transition-all duration-150" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={toggleSpeed}
+        className="text-[10px] font-bold px-1.5 py-1 rounded-lg bg-black/10 dark:bg-white/10 hover:bg-primary/20 transition-colors shrink-0"
+        title="Playback Speed"
+      >
+        {speed}x
+      </button>
+      <a
+        href={src}
+        download="voicenote.webm"
+        className="p-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        title="Download Audio"
+      >
+        <Download className="h-3.5 w-3.5" />
+      </a>
+    </div>
+  );
+};
+
+
 
 interface ChatMessageListProps {
   messages: Message[];
@@ -158,6 +245,10 @@ const ChatMessageList = ({
   const [translationsMap, setTranslationsMap] = useState<Record<string, { text: string; langName: string; loading?: boolean; error?: boolean }>>({});
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const toggleMenu = useCallback((msgId: string) => {
+    setActiveMenuId((prev) => (prev === msgId ? null : msgId));
+  }, []);
+
   const handleTranslate = async (msgId: string, text: string, langCode: string, langName: string) => {
     setTranslationsMap((prev) => ({
       ...prev,
@@ -226,9 +317,9 @@ const ChatMessageList = ({
 
   const handleTouchStart = useCallback((msgId: string) => {
     longPressTimer.current = setTimeout(() => {
-      setActiveMenuId((prev) => (prev === msgId ? null : msgId));
+      toggleMenu(msgId);
     }, 450);
-  }, []);
+  }, [toggleMenu]);
 
   const handleTouchEnd = useCallback(() => {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
@@ -350,85 +441,9 @@ const ChatMessageList = ({
             <SwipeableMessage
               isMine={msg.sender === "you"}
               disabled={msg.sender === "system" || msg.deleted}
-              onSwipeRight={msg.sender === "stranger" ? () => onReact(msg.id, "❤️") : undefined}
               onSwipeLeft={msg.sender !== "system" && !msg.deleted ? () => onReply?.(msg) : undefined}
             >
-              {/* Instagram-style popup menu above bubble */}
-              <AnimatePresence>
-                {activeMenuId === msg.id && msg.sender !== "system" && !msg.deleted && (
-                  <motion.div
-                    data-msg-menu
-                    initial={{ opacity: 0, scale: 0.85, y: 8 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.85, y: 8 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className={cn(
-                      // Mobile: fixed centered overlay; Desktop: positioned near bubble
-                      "fixed inset-x-3 bottom-auto top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center gap-2",
-                      "sm:fixed sm:inset-x-auto sm:top-auto sm:bottom-auto sm:translate-y-0",
-                      "sm:absolute sm:bottom-full sm:mb-2 sm:z-[35]",
-                      msg.sender === "you" ? "sm:right-0 sm:left-auto" : "sm:left-0 sm:right-auto"
-                    )}
-                  >
-                    {/* Reactions Selector */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-1 bg-background/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 rounded-full px-4 sm:px-2.5 py-2.5 sm:py-1.5 shadow-xl w-fit mx-auto">
-                      {["❤️", "👍", "🔥", "😂", "😮", "😢"].map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => { onReact(msg.id, emoji); closeMenu(); }}
-                          className="hover:scale-125 active:scale-95 transition-all text-2xl sm:text-base px-1 sm:px-0.5"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
 
-                    {/* Actions Menu — grid on mobile, inline on desktop */}
-                    {msg.sender !== "system" && (
-                      <div className="grid grid-cols-3 sm:flex sm:items-center gap-1 bg-background/95 dark:bg-zinc-900/95 backdrop-blur-md border border-border/80 rounded-2xl sm:rounded-xl p-1.5 sm:p-1 shadow-xl w-full sm:w-auto">
-                        <button
-                          onClick={() => { onReply?.(msg); closeMenu(); }}
-                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <ReplyIcon className="h-4 w-4 sm:h-3 sm:w-3" /> Reply
-                        </button>
-                        <button
-                          onClick={() => { navigator.clipboard.writeText(msg.text || ""); closeMenu(); }}
-                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <Copy className="h-4 w-4 sm:h-3 sm:w-3" /> Copy
-                        </button>
-                        <button
-                          onClick={() => { setShowTranslateFor(msg.id); }}
-                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <Globe className="h-4 w-4 sm:h-3 sm:w-3" /> Translate
-                        </button>
-                        <button
-                          onClick={() => { onPin?.(msg.id); closeMenu(); }}
-                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <Pin className="h-4 w-4 sm:h-3 sm:w-3" /> Pin
-                        </button>
-                        <button
-                          onClick={() => { onForward?.(msg); closeMenu(); }}
-                          className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-foreground hover:bg-secondary transition-colors"
-                        >
-                          <Forward className="h-4 w-4 sm:h-3 sm:w-3" /> Forward
-                        </button>
-                        {msg.sender === "you" && (
-                          <button
-                            onClick={() => { onDelete?.(msg.id); closeMenu(); }}
-                            className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-lg px-2 py-2.5 sm:px-2.5 sm:py-1.5 text-[11px] text-destructive hover:bg-destructive/10 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4 sm:h-3 sm:w-3" /> Delete
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Backdrop overlay for mobile menu */}
               <AnimatePresence>
@@ -469,13 +484,13 @@ const ChatMessageList = ({
                       onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
                       onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
                       onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
-                      onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
+                      onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); toggleMenu(msg.id); } }}
                       style={!isEmojiOnly(msg.text) || msg.imageUrl ? {
                         backgroundColor: `hsl(var(--bubble-stranger))`,
                         color: `hsl(var(--bubble-stranger-foreground))`
                       } : undefined}
                       className={cn(
-                        "relative break-words select-text transition-all duration-500 w-fit max-w-full",
+                        "relative break-words select-text transition-all duration-500 w-fit max-w-full overflow-hidden",
                         isEmojiOnly(msg.text) && !msg.imageUrl
                           ? "text-4xl sm:text-5xl leading-tight py-1 px-1"
                           : cn(
@@ -527,15 +542,8 @@ const ChatMessageList = ({
 
                       {/* Media content — GIFs get special rendering */}
                       {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
-                        <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
-                      ) : !msg.deleted && isGifUrl(msg.imageUrl) ? (
-                        <img
-                          src={msg.imageUrl}
-                          alt="GIF"
-                          className="rounded-xl my-1 max-w-[240px] sm:max-w-[280px] w-auto h-auto max-h-[220px] object-contain bg-black/5 dark:bg-white/5"
-                          loading="lazy"
-                        />
-                      ) : !msg.deleted && isImageMedia(msg.imageUrl) ? (
+                        <AudioMessageBubble src={msg.imageUrl!} isMine={false} />
+                      ) : !msg.deleted && (isImageMedia(msg.imageUrl) || isGifUrl(msg.imageUrl)) ? (
                         <ChatImage src={msg.imageUrl!} isMine={false} />
                       ) : !msg.deleted && msg.imageUrl ? (
                         <a 
@@ -603,13 +611,13 @@ const ChatMessageList = ({
                     onTouchStart={msg.sender !== "system" ? () => handleTouchStart(msg.id) : undefined}
                     onTouchEnd={msg.sender !== "system" ? handleTouchEnd : undefined}
                     onTouchCancel={msg.sender !== "system" ? handleTouchEnd : undefined}
-                    onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); setActiveMenuId(msg.id); } }}
+                    onContextMenu={(e) => { if (msg.sender !== "system") { e.preventDefault(); toggleMenu(msg.id); } }}
                     style={!isEmojiOnly(msg.text) || msg.imageUrl ? {
                       backgroundColor: `hsl(var(--bubble-you))`,
                       color: `hsl(var(--bubble-you-foreground))`
                     } : undefined}
                     className={cn(
-                      "relative break-words select-text transition-all duration-500 w-fit max-w-full",
+                      "relative break-words select-text transition-all duration-500 w-fit max-w-full overflow-hidden",
                       isEmojiOnly(msg.text) && !msg.imageUrl
                         ? "text-4xl sm:text-5xl leading-tight py-1 px-1"
                         : cn(
@@ -667,15 +675,8 @@ const ChatMessageList = ({
 
                     {/* Media content — GIFs get special rendering */}
                     {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
-                      <audio controls src={msg.imageUrl} className="max-w-[220px] my-1 h-10 rounded-lg" />
-                    ) : !msg.deleted && isGifUrl(msg.imageUrl) ? (
-                      <img
-                        src={msg.imageUrl}
-                        alt="GIF"
-                        className="rounded-xl my-1 max-w-[240px] sm:max-w-[280px] w-auto h-auto max-h-[220px] object-contain bg-white/5"
-                        loading="lazy"
-                      />
-                    ) : !msg.deleted && isImageMedia(msg.imageUrl) ? (
+                      <AudioMessageBubble src={msg.imageUrl!} isMine={true} />
+                    ) : !msg.deleted && (isImageMedia(msg.imageUrl) || isGifUrl(msg.imageUrl)) ? (
                       <ChatImage src={msg.imageUrl!} isMine={true} />
                     ) : !msg.deleted && msg.imageUrl ? (
                       <a 
@@ -803,6 +804,176 @@ const ChatMessageList = ({
           <TypingIndicator previewText={strangerTypingText} />
         </motion.div>
       )}
+      {/* Telegram / Instagram Style Full Viewport Overlay Context Menu (Zero Clipping Guaranteed!) */}
+      <AnimatePresence>
+        {activeMenuId && (() => {
+          const activeMsg = messages.find((m) => m.id === activeMenuId);
+          if (!activeMsg || activeMsg.sender === "system" || activeMsg.deleted) return null;
+
+          return (
+            <motion.div
+              data-msg-menu
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] bg-black/65 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none"
+              onClick={closeMenu}
+            >
+              <motion.div
+                initial={{ scale: 0.88, opacity: 0, y: 12 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.88, opacity: 0, y: 12 }}
+                transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                className="flex flex-col items-center gap-3 max-w-xs w-full pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Reactions Selector (Top Pill) */}
+                <div className="flex items-center justify-around gap-1.5 bg-background/95 dark:bg-zinc-900/95 border border-border/80 rounded-full px-4 py-2.5 shadow-2xl backdrop-blur-xl w-full">
+                  {["❤️", "👍", "🔥", "😂", "😮", "😢"].map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => { onReact(activeMsg.id, emoji); closeMenu(); }}
+                      className="hover:scale-135 active:scale-90 transition-transform text-2xl p-1"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Message Text Preview */}
+                <div className={cn(
+                  "px-4 py-3 rounded-2xl text-xs font-semibold max-w-full w-full shadow-xl border border-white/10 break-words line-clamp-3 text-center",
+                  activeMsg.sender === "you"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground"
+                )}>
+                  {activeMsg.text || (activeMsg.imageUrl ? "📷 Attachment" : "Message")}
+                </div>
+
+                {/* Actions Stack List */}
+                <div className="flex flex-col w-full bg-background/95 dark:bg-zinc-900/95 border border-border/80 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl">
+                  <button
+                    type="button"
+                    onClick={() => { onReply?.(activeMsg); closeMenu(); }}
+                    className="flex items-center justify-between gap-3 w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <span>Reply</span>
+                    <ReplyIcon className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(activeMsg.text || ""); closeMenu(); }}
+                    className="flex items-center justify-between gap-3 w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <span>Copy</span>
+                    <Copy className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowTranslateFor(activeMsg.id); closeMenu(); }}
+                    className="flex items-center justify-between gap-3 w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <span>Translate</span>
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { onPin?.(activeMsg.id); closeMenu(); }}
+                    className="flex items-center justify-between gap-3 w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <span>Pin</span>
+                    <Pin className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { onForward?.(activeMsg); closeMenu(); }}
+                    className={cn(
+                      "flex items-center justify-between gap-3 w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-secondary transition-colors",
+                      activeMsg.sender === "you" && "border-b border-border/40 pb-2.5 mb-1"
+                    )}
+                  >
+                    <span>Forward</span>
+                    <Forward className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  {activeMsg.sender === "you" && (
+                    <button
+                      type="button"
+                      onClick={() => { onDelete?.(activeMsg.id); closeMenu(); }}
+                      className="flex items-center justify-between gap-3 w-full rounded-xl px-3.5 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/15 transition-colors"
+                    >
+                      <span>Delete Message</span>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+
+      {/* Translation Language Picker Modal */}
+      <AnimatePresence>
+        {showTranslateFor && (() => {
+          const targetMsg = messages.find((m) => m.id === showTranslateFor);
+          if (!targetMsg) return null;
+
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[220] bg-black/65 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none"
+              onClick={() => setShowTranslateFor(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 15 }}
+                transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                className="bg-background border border-border/80 rounded-3xl p-5 max-w-xs w-full shadow-2xl space-y-4 pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                    <Globe className="h-4 w-4" />
+                    <span>Translate Message</span>
+                  </div>
+                  <button
+                    onClick={() => setShowTranslateFor(null)}
+                    className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary"
+                  >
+                    <X className="h-4 w-4 text-xs" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-muted-foreground line-clamp-2 italic border-l-2 border-primary/40 pl-2 py-0.5">
+                  "{targetMsg.text}"
+                </p>
+
+                <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
+                  {SUPPORTED_LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => {
+                        handleTranslate(targetMsg.id, targetMsg.text || "", lang.code, lang.name);
+                        setShowTranslateFor(null);
+                      }}
+                      className="w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-medium text-foreground hover:bg-primary/10 hover:text-primary transition-colors text-left"
+                    >
+                      <span>{lang.name}</span>
+                      <Globe className="h-3.5 w-3.5 opacity-50" />
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+
       <div ref={endRef} />
     </div>
   );

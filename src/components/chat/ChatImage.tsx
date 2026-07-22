@@ -89,7 +89,7 @@ const ChatImage = ({ src, isMine }: ChatImageProps) => {
       {/* Chat Thumbnail */}
       <div
         className={cn(
-          "relative cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 shadow-md my-1 group max-w-[260px] max-h-[300px] bg-black/10 dark:bg-white/5",
+          "relative cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 shadow-md my-1 group max-w-full w-full sm:max-w-[280px] max-h-[300px] bg-black/10 dark:bg-white/5",
           isMine ? "border-white/20" : "border-border/60"
         )}
         onClick={() => setFullscreen(true)}
