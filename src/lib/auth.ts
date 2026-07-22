@@ -26,8 +26,15 @@ export async function getAnonymousUser(): Promise<User> {
       const cred = await signInAnonymously(auth);
       currentUser = cred.user;
       return cred.user;
-    } catch (err) {
-      console.error("[Auth] Anonymous sign-in failed:", err);
+    } catch (err: any) {
+      if (err?.code === "auth/api-key-expired" || err?.message?.includes("api-key-expired")) {
+        console.error(
+          "[Firebase Auth Error] Firebase API Key is EXPIRED or Invalid in Google Cloud/Firebase Console.\n" +
+          "👉 Action required: Open Firebase Console -> Project Settings -> General -> Web API Key, renew/regenerate your API Key, and update VITE_FIREBASE_API_KEY in your .env file."
+        );
+      } else {
+        console.error("[Auth] Anonymous sign-in failed:", err);
+      }
       throw err;
     } finally {
       authPromise = null;

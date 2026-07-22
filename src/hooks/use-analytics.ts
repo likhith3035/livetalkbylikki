@@ -22,8 +22,12 @@ export function useAnalytics() {
           runTransaction(hourlyRef, (val) => (val || 0) + 1)
         ]);
         sessionStorage.setItem(sessionKey, "true");
-      } catch (error) {
-        console.error("[Analytics] Failed to track visit:", error);
+      } catch (error: any) {
+        if (error?.message?.includes("disconnect")) {
+          console.warn("[Analytics] Visit tracking deferred (offline/connecting).");
+        } else {
+          console.error("[Analytics] Failed to track visit:", error);
+        }
       }
     };
 
@@ -42,7 +46,9 @@ export const trackMatch = async () => {
       runTransaction(totalMatchesRef, (val) => (val || 0) + 1),
       runTransaction(dailyMatchesRef, (val) => (val || 0) + 1)
     ]);
-  } catch (e) {
-    console.error("[Analytics] Failed to track match:", e);
+  } catch (e: any) {
+    if (!e?.message?.includes("disconnect")) {
+      console.error("[Analytics] Failed to track match:", e);
+    }
   }
 };
