@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Key, X, Check, Shield, Trash2, Edit3, ExternalLink } from "lucide-react";
+import { Key, X, Check, Shield, Trash2, Edit3, ExternalLink, Gift, Sparkles, Copy, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AI_PROVIDERS } from "../aiProviders";
@@ -24,6 +24,8 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
   const [editingProvider, setEditingProvider] = useState<AIProviderId | "custom" | null>(null);
   const [tempKeyInput, setTempKeyInput] = useState("");
   const [customEndpointInput, setCustomEndpointInput] = useState(keys.customEndpoint || "");
+  const [showSarvamGuide, setShowSarvamGuide] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const handleEdit = (id: AIProviderId) => {
     setEditingProvider(id);
@@ -69,10 +71,10 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="relative z-10 w-full max-w-xl bg-card border border-border/80 rounded-3xl p-6 shadow-2xl overflow-hidden backdrop-blur-2xl flex flex-col max-h-[85vh]"
+            className="relative z-10 w-full max-w-xl bg-card border border-border/80 rounded-3xl p-6 shadow-2xl overflow-hidden backdrop-blur-2xl flex flex-col max-h-[88vh]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-border/50 mb-4 shrink-0">
+            <div className="flex items-center justify-between pb-4 border-b border-border/50 mb-3 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-sm">
                   <Key className="h-5 w-5" />
@@ -94,20 +96,117 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
               </button>
             </div>
 
+            {/* 🎁 Free ₹100 Sarvam AI Key Banner */}
+            <div className="mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-purple-500/15 border border-amber-500/30 text-xs shrink-0 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-black text-amber-400">
+                  <Gift className="h-4 w-4 animate-bounce" />
+                  <span>Get ₹100 Free API Key (Sarvam AI)</span>
+                </div>
+                <button
+                  onClick={() => setShowSarvamGuide(!showSarvamGuide)}
+                  className="text-[10px] font-extrabold text-amber-400 hover:underline flex items-center gap-1 bg-amber-500/20 px-2 py-0.5 rounded-lg"
+                >
+                  <HelpCircle className="h-3 w-3" />
+                  <span>{showSarvamGuide ? "Hide Guide" : "How to Get Free Key?"}</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-foreground/90 leading-relaxed">
+                Want free AI API credits? Sign up on <strong>Sarvam AI</strong> with any email (or temp mail) to receive <strong>₹100 worth of free API usage</strong>!
+              </p>
+
+              {/* Expandable Step-by-Step Guide */}
+              <AnimatePresence>
+                {showSarvamGuide && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden pt-2 border-t border-amber-500/20 space-y-2 text-[11px] text-muted-foreground"
+                  >
+                    <div className="space-y-1.5 font-medium">
+                      <p className="text-foreground font-bold">Follow these easy steps to get your key in 1 minute:</p>
+                      <ol className="list-decimal pl-4 space-y-1">
+                        <li>
+                          Open{" "}
+                          <a
+                            href="https://dashboard.sarvam.ai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-amber-400 underline font-bold"
+                          >
+                            Sarvam AI Dashboard (dashboard.sarvam.ai)
+                          </a>
+                        </li>
+                        <li>
+                          Sign up using your email (or copy a disposable email from{" "}
+                          <a
+                            href="https://temp-mail.org"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline font-bold"
+                          >
+                            temp-mail.org
+                          </a>
+                          ).
+                        </li>
+                        <li>Enter the verification code sent to your email — ₹100 free balance will be added immediately!</li>
+                        <li>Go to <strong>API Keys</strong> tab on Sarvam dashboard → Click <strong>Create New Secret Key</strong>.</li>
+                        <li>Copy the key, paste it into the <strong>Sarvam AI</strong> field below, and click <strong>Save</strong>!</li>
+                      </ol>
+                    </div>
+
+                    <div className="pt-1 flex gap-2">
+                      <a
+                        href="https://dashboard.sarvam.ai"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-amber-500 text-black font-extrabold text-[10px] flex items-center gap-1 hover:bg-amber-400 transition-all shadow-md"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>Open Sarvam AI Dashboard 🚀</span>
+                      </a>
+                      <a
+                        href="https://temp-mail.org"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-secondary border border-border text-foreground font-bold text-[10px] flex items-center gap-1 hover:bg-secondary/80 transition-all"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>Open Temp Mail (temp-mail.org)</span>
+                      </a>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Provider Keys List */}
             <div className="overflow-y-auto space-y-3 pr-1 flex-1">
               {AI_PROVIDERS.map((provider) => {
                 const currentKey = keys[provider.id];
                 const isEditing = editingProvider === provider.id;
+                const isSarvam = provider.id === "sarvam";
 
                 return (
                   <div
                     key={provider.id}
-                    className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 flex flex-col gap-2 transition-all hover:bg-secondary/40"
+                    className={cn(
+                      "p-3.5 rounded-2xl border flex flex-col gap-2 transition-all",
+                      isSarvam
+                        ? "bg-amber-500/5 border-amber-500/30"
+                        : "bg-secondary/30 border-border/50 hover:bg-secondary/40"
+                    )}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-xs text-foreground">{provider.name}</span>
+                        {isSarvam && (
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                            <Gift className="h-2.5 w-2.5" /> ₹100 Free Credit
+                          </span>
+                        )}
                         {provider.isLocal ? (
                           <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                             Local (No Key Needed)
@@ -125,6 +224,17 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
 
                       {!provider.isLocal && !isEditing && (
                         <div className="flex items-center gap-1.5">
+                          {isSarvam && !currentKey && (
+                            <a
+                              href="https://dashboard.sarvam.ai"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500/30 text-xs font-extrabold flex items-center gap-1 transition-all active:scale-95"
+                            >
+                              <Gift className="h-3.5 w-3.5" />
+                              <span>Get Free Key</span>
+                            </a>
+                          )}
                           <button
                             onClick={() => handleEdit(provider.id)}
                             className="p-1.5 rounded-xl bg-card border border-border/60 hover:bg-muted text-foreground text-xs font-semibold flex items-center gap-1 transition-all active:scale-95"
