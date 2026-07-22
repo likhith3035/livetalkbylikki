@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Home, MessageSquare, User, Settings, Info, X, Smartphone, Shield, ShieldAlert, Menu } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, X, Smartphone, Shield, ShieldAlert, Menu, Bot } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const navItems = [
   { icon: Home,          path: "/",         label: "Home",       accent: "#10b981" },
   { icon: MessageSquare, path: "/chat",      label: "Chat",       accent: "hsl(var(--primary))" },
+  { icon: Bot,           path: "/ai-chat",   label: "AI Chat",    accent: "#ec4899" },
   { icon: Shield,        path: "/safety",    label: "Safety",     accent: "#14b8a6" },
   { icon: User,          path: "/profile",   label: "Profile",    accent: "#8b5cf6" },
   { icon: Settings,      path: "/settings",  label: "Settings",   accent: "#64748b" },

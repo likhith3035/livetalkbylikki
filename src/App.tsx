@@ -57,6 +57,7 @@ const InfoPage = lazyWithRetry(() => import("./pages/InfoPage"));
 const PrivacyPage = lazyWithRetry(() => import("./pages/PrivacyPage"));
 const TermsPage = lazyWithRetry(() => import("./pages/TermsPage"));
 const GuidelinesPage = lazyWithRetry(() => import("./pages/GuidelinesPage"));
+const AIChatPage = lazyWithRetry(() => import("./features/ai-chat/components/AIChatPage"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 const HandoffPage = lazyWithRetry(() => import("./pages/HandoffPage"));
@@ -92,6 +93,7 @@ const AnimatedRoutes = () => {
         <Routes location={location}>
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/ai-chat" element={<AIChatPage />} />
           <Route path="/room/:code" element={<RoomPage />} />
           <Route path="/handoff" element={<HandoffPage />} />
           <Route path="/profile" element={<ProfilePage />} />

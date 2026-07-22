@@ -1,4 +1,4 @@
-import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Shield, ShieldAlert, Smartphone } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, Moon, Sun, Shield, ShieldAlert, Smartphone, Bot } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import OnlineBadge from "@/components/OnlineBadge";
@@ -9,6 +9,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 const navItems = [
   { icon: Home, path: "/", label: "Home" },
   { icon: MessageSquare, path: "/chat", label: "Chat" },
+  { icon: Bot, path: "/ai-chat", label: "AI Chat" },
   { icon: Shield, path: "/safety", label: "Safety" },
   { icon: User, path: "/profile", label: "Profile" },
   { icon: Settings, path: "/settings", label: "Settings" },
