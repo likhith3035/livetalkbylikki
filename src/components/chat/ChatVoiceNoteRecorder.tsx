@@ -8,11 +8,30 @@ import { cn } from "@/lib/utils";
 interface ChatVoiceNoteRecorderProps {
   onSendVoiceNote: (audioUrl: string, durationSec: number) => void;
   disabled?: boolean;
+  autoStart?: boolean;
 }
+
+const getSupportedMimeType = () => {
+  if (typeof MediaRecorder === "undefined") return "";
+  const types = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/aac",
+    "audio/ogg;codecs=opus",
+  ];
+  for (const type of types) {
+    if (MediaRecorder.isTypeSupported(type)) {
+      return type;
+    }
+  }
+  return "";
+};
 
 export const ChatVoiceNoteRecorder: React.FC<ChatVoiceNoteRecorderProps> = ({
   onSendVoiceNote,
   disabled = false,
+  autoStart = true,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
@@ -22,8 +41,17 @@ export const ChatVoiceNoteRecorder: React.FC<ChatVoiceNoteRecorderProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
+    if (autoStart && !disabled && !isRecording) {
+      startRecording();
+    }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.stop();
+        if (mediaRecorderRef.current.stream) {
+          mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+        }
+      }
     };
   }, []);
 
@@ -32,16 +60,19 @@ export const ChatVoiceNoteRecorder: React.FC<ChatVoiceNoteRecorderProps> = ({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      const mimeType = getSupportedMimeType();
+      const options = mimeType ? { mimeType } : undefined;
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(100);
       setIsRecording(true);
       setRecordTime(0);
 
@@ -49,6 +80,7 @@ export const ChatVoiceNoteRecorder: React.FC<ChatVoiceNoteRecorderProps> = ({
         setRecordTime((prev) => prev + 1);
       }, 1000);
     } catch (err) {
+      console.error("Voice recording error:", err);
       toast({
         title: "Microphone Access Denied",
         description: "Please allow microphone permissions to send voice notes.",
@@ -66,17 +98,19 @@ export const ChatVoiceNoteRecorder: React.FC<ChatVoiceNoteRecorderProps> = ({
     }
 
     const duration = recordTime;
+    const mimeType = mediaRecorderRef.current.mimeType || getSupportedMimeType() || "audio/webm";
 
     mediaRecorderRef.current.onstop = () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+      const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64Audio = reader.result as string;
-        onSendVoiceNote(base64Audio, duration);
+        if (base64Audio) {
+          onSendVoiceNote(base64Audio, duration);
+        }
       };
       reader.readAsDataURL(audioBlob);
 
-      // Stop stream tracks
       if (mediaRecorderRef.current?.stream) {
         mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
       }
@@ -114,15 +148,15 @@ export const ChatVoiceNoteRecorder: React.FC<ChatVoiceNoteRecorderProps> = ({
 
   if (isRecording) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 border border-rose-500/30 rounded-full animate-pulse">
+      <div className="flex items-center gap-3 px-4 py-2 bg-rose-500/15 border border-rose-500/40 rounded-full shadow-lg">
         {/* Pulsing Mic Indicator */}
-        <div className="flex items-center gap-1 text-rose-500 font-mono text-xs font-bold">
-          <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping" />
+        <div className="flex items-center gap-2 text-rose-500 font-mono text-xs font-bold">
+          <span className="h-3 w-3 rounded-full bg-rose-500 animate-ping shrink-0" />
           <span>{formatTime(recordTime)}</span>
         </div>
 
         {/* Animated Waveform Bars */}
-        <div className="flex items-center gap-0.5 h-4 px-1">
+        <div className="flex items-center gap-0.5 h-4 px-2">
           <span className="w-1 bg-rose-500 rounded-full animate-[bounce_0.6s_infinite_100ms] h-3" />
           <span className="w-1 bg-rose-500 rounded-full animate-[bounce_0.6s_infinite_300ms] h-4" />
           <span className="w-1 bg-rose-500 rounded-full animate-[bounce_0.6s_infinite_200ms] h-2" />
@@ -130,23 +164,25 @@ export const ChatVoiceNoteRecorder: React.FC<ChatVoiceNoteRecorderProps> = ({
         </div>
 
         {/* Actions */}
-        <button
-          type="button"
-          onClick={cancelRecording}
-          className="h-7 w-7 rounded-full bg-secondary text-muted-foreground hover:text-rose-500 flex items-center justify-center transition-colors"
-          title="Cancel Recording"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-1.5 ml-1">
+          <button
+            type="button"
+            onClick={cancelRecording}
+            className="h-8 w-8 rounded-full bg-secondary text-muted-foreground hover:text-rose-500 flex items-center justify-center transition-colors active:scale-95"
+            title="Cancel Recording"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
 
-        <button
-          type="button"
-          onClick={stopAndSend}
-          className="h-7 w-7 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md active:scale-95 transition-transform"
-          title="Send Voice Note"
-        >
-          <Send className="h-3.5 w-3.5" />
-        </button>
+          <button
+            type="button"
+            onClick={stopAndSend}
+            className="h-8 w-8 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md active:scale-95 transition-transform"
+            title="Send Voice Note"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     );
   }
@@ -157,14 +193,15 @@ export const ChatVoiceNoteRecorder: React.FC<ChatVoiceNoteRecorderProps> = ({
       onClick={startRecording}
       disabled={disabled}
       className={cn(
-        "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0 shadow-sm disabled:opacity-40"
+        "flex items-center gap-1.5 px-3 py-1.5 border border-border/60 bg-card rounded-full text-xs font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0 shadow-sm disabled:opacity-40"
       )}
       title="Record Voice Note"
     >
-      <Mic className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-400" />
-      <span>Voice Note</span>
+      <Mic className="h-4 w-4 text-rose-400" />
+      <span>Start Recording</span>
     </button>
   );
 };
 
 export default ChatVoiceNoteRecorder;
+

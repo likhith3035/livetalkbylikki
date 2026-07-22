@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { RoomChannel } from "@/lib/types";
-import { Send, X, Reply, File, Image, Music, Video, Gamepad2, Smile, MapPin, Loader2, SkipForward, Sparkles } from "lucide-react";
+import { Send, X, Reply, File, Image, Music, Video, Gamepad2, Smile, MapPin, Loader2, SkipForward, Sparkles, Mic, BarChart3, Heart, Palette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import EmojiPicker from "@/components/chat/EmojiPicker";
@@ -8,6 +8,7 @@ import ChatGames from "@/components/chat/ChatGames";
 import GifPicker from "@/components/chat/GifPicker";
 import LocationShareButton from "@/components/chat/LocationShareButton";
 import Icebreakers from "@/components/chat/Icebreakers";
+import { ChatVoiceNoteRecorder } from "@/components/chat/ChatVoiceNoteRecorder";
 import type { ChatStatus, Message } from "@/hooks/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,8 @@ interface ChatInputProps {
   onReact?: (emoji: string) => void;
 }
 
+const QUICK_EMOJIS = ["❤️", "😂", "🔥", "😮", "👍", "🎉", "💯", "👋"];
+
 const ChatInput = ({ 
   status, onSend, onImageUpload, onTyping, replyingTo, onCancelReply, 
   roomChannel, sessionId, roomId, hideGames, hasMessages,
@@ -43,6 +46,8 @@ const ChatInput = ({
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [showQuickEmojis, setShowQuickEmojis] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileTypeFilter, setFileTypeFilter] = useState<string>("*");
   const throttleRef = useRef<number>(0);
@@ -68,6 +73,18 @@ const ChatInput = ({
 
   const handleGenericFileUpload = async (file: File) => {
     if (!isConnected) return;
+
+    // Security Check: Block dangerous extensions
+    const forbiddenExts = ["exe", "bat", "cmd", "sh", "php", "js", "html", "htm", "vbs", "ps1"];
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    if (forbiddenExts.includes(ext)) {
+      toast({
+        variant: "destructive",
+        title: "File type blocked",
+        description: "Executable and script files are not allowed for security reasons."
+      });
+      return;
+    }
     
     // Limits: Max 5MB
     const MAX_SIZE = 5 * 1024 * 1024;
@@ -82,8 +99,7 @@ const ChatInput = ({
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "bin";
-      const fileName = `${crypto.randomUUID()}.${ext}`;
+      const fileName = `${crypto.randomUUID()}.${ext || "bin"}`;
       const path = roomId ? `${roomId}/${fileName}` : fileName;
 
       const { error } = await supabase.storage
@@ -100,15 +116,23 @@ const ChatInput = ({
       onImageUpload(data.publicUrl);
     } catch (err: any) {
       console.warn("Storage upload fallback engaged:", err);
-      // Fallback: convert file to compressed Data URI so image sharing ALWAYS succeeds!
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          onImageUpload(result);
-        }
-      };
-      reader.readAsDataURL(file);
+      // Fallback: only allow Data URI fallback for images under 1MB to prevent RTDB memory bloat
+      if (file.type.startsWith("image/") && file.size <= 1024 * 1024) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          if (result) {
+            onImageUpload(result);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Upload Failed",
+          description: "Could not upload file to storage. Please try again."
+        });
+      }
     } finally {
       setUploading(false);
     }
@@ -162,9 +186,85 @@ const ChatInput = ({
           )}
         </AnimatePresence>
 
+        {/* Voice Note Recorder Banner overlay */}
+        <AnimatePresence>
+          {showVoiceRecorder && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="mx-auto max-w-3xl mb-2 p-3 bg-card border border-primary/30 rounded-2xl shadow-xl flex items-center justify-between gap-3"
+            >
+              <ChatVoiceNoteRecorder
+                disabled={!isConnected}
+                onSendVoiceNote={(audioUrl) => {
+                  onSend("", audioUrl);
+                  setShowVoiceRecorder(false);
+                  toast({ title: "🎙️ Voice note sent!" });
+                }}
+              />
+              <button
+                onClick={() => setShowVoiceRecorder(false)}
+                className="h-8 w-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Quick Emoji Bar overlay */}
+        <AnimatePresence>
+          {showQuickEmojis && isConnected && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.95 }}
+              className="mx-auto max-w-3xl mb-2 p-2 bg-card/95 border border-border/60 backdrop-blur-md rounded-2xl shadow-lg flex items-center justify-around gap-1 overflow-x-auto"
+            >
+              {QUICK_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => {
+                    onSend(emoji);
+                    setShowQuickEmojis(false);
+                  }}
+                  className="text-2xl p-1.5 hover:scale-125 active:scale-95 transition-transform rounded-xl hover:bg-primary/10"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Scrolling Action Pills above input */}
         {isConnected && (
-          <div className="mx-auto max-w-3xl flex gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 sm:pb-2.5 mb-1 sm:mb-1.5 scrollbar-none select-none px-0.5">
+          <div className="mx-auto max-w-3xl flex gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 sm:pb-2.5 mb-1 sm:mb-1.5 scrollbar-none select-none px-0.5 items-center">
+            {/* Voice Note Pill */}
+            <button
+              onClick={() => setShowVoiceRecorder((v) => !v)}
+              className={cn(
+                "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border rounded-full text-[10px] sm:text-[11px] font-semibold active:scale-95 transition-all shrink-0",
+                showVoiceRecorder ? "bg-rose-500/20 border-rose-500/40 text-rose-500" : "bg-card border-border/60 text-foreground hover:bg-secondary/50"
+              )}
+            >
+              <Mic className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500" />
+              Voice
+            </button>
+
+            {/* Quick Emoji Pill */}
+            <button
+              onClick={() => setShowQuickEmojis((v) => !v)}
+              className={cn(
+                "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border rounded-full text-[10px] sm:text-[11px] font-semibold active:scale-95 transition-all shrink-0",
+                showQuickEmojis ? "bg-amber-500/20 border-amber-500/40 text-amber-500" : "bg-card border-border/60 text-foreground hover:bg-secondary/50"
+              )}
+            >
+              <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-500" />
+              Reactions
+            </button>
+
             {/* Images Pill */}
             <button
               onClick={() => triggerFileSelect("image/*")}
@@ -181,13 +281,33 @@ const ChatInput = ({
                 onClick={onVideoCall}
                 className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0"
               >
-                <Video className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500" />
+                <Video className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-500" />
                 Video
               </button>
             )}
 
+            {/* Draw / Canvas Pill */}
+            <button
+              onClick={() => setActiveGame(activeGame === "canvas" ? "none" : "canvas")}
+              className={cn(
+                "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border rounded-full text-[10px] sm:text-[11px] font-semibold active:scale-95 transition-all shrink-0",
+                activeGame === "canvas" ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-400" : "bg-card border-border/60 text-foreground hover:bg-secondary/50"
+              )}
+            >
+              <Palette className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-cyan-400" />
+              Draw
+            </button>
 
-
+            {/* AI Wingman Pill */}
+            {onToggleAI && (
+              <button
+                onClick={onToggleAI}
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-primary/40 bg-primary/10 rounded-full text-[10px] sm:text-[11px] font-bold text-primary hover:bg-primary/20 active:scale-95 transition-all shrink-0 shadow-sm"
+              >
+                <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary animate-pulse" />
+                AI Wingman
+              </button>
+            )}
 
             {/* Games Pill */}
             {!hideGames && (
@@ -233,6 +353,7 @@ const ChatInput = ({
             />
           </div>
         )}
+
 
         {!hasMessages && (
           <div className="mx-auto max-w-3xl mb-1.5 sm:mb-3">

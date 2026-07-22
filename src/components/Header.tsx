@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
+import ChatMoodMeter from "@/components/chat/ChatMoodMeter";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -11,6 +12,7 @@ interface HeaderProps {
   strangerName?: string;
   strangerAvatar?: string;
   strangerMood?: string;
+  messages?: { text: string; sender: string }[];
   onBack?: () => void;
   onVideoCall?: () => void;
   onAudioCall?: () => void;
@@ -21,7 +23,7 @@ interface HeaderProps {
 }
 
 const Header = forwardRef<HTMLElement, HeaderProps>(({ 
-  onlineCount, strangerName, strangerAvatar, strangerMood, onBack, onVideoCall, onAudioCall, onProfileTap, onTranslateToggle, targetLang, toolsMenu
+  onlineCount, strangerName, strangerAvatar, strangerMood, messages, onBack, onVideoCall, onAudioCall, onProfileTap, onTranslateToggle, targetLang, toolsMenu
 }, ref) => {
   const { settings, updateSetting } = useSettings();
   const navigate = useNavigate();
@@ -72,6 +74,11 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
               <span className="truncate max-w-[80px] sm:max-w-[90px]">{strangerMood || "Online"}</span>
             </p>
           </div>
+          {messages && messages.length >= 3 && (
+            <div className="hidden sm:block shrink-0 ml-1">
+              <ChatMoodMeter messages={messages} />
+            </div>
+          )}
         </button>
 
         {/* Right: Circular call buttons side-by-side */}

@@ -18,9 +18,10 @@ interface ChatPollsProps {
   roomChannel?: RealtimeChannel | null;
   sessionId?: string;
   onSendMessage: (text: string) => void;
+  customTrigger?: React.ReactNode;
 }
 
-const ChatPolls = ({ isConnected, roomChannel, sessionId, onSendMessage }: ChatPollsProps) => {
+const ChatPolls = ({ isConnected, roomChannel, sessionId, onSendMessage, customTrigger }: ChatPollsProps) => {
   const [showCreator, setShowCreator] = useState(false);
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
@@ -100,16 +101,22 @@ const ChatPolls = ({ isConnected, roomChannel, sessionId, onSendMessage }: ChatP
   if (!isConnected) return null;
 
   return (
-    <div className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setShowCreator(!showCreator)}
-        className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
-        title="Polls"
-      >
-        <BarChart3 className="h-4 w-4" />
-      </Button>
+    <div className="relative shrink-0">
+      {customTrigger ? (
+        <div onClick={() => setShowCreator(!showCreator)} className="cursor-pointer">
+          {customTrigger}
+        </div>
+      ) : (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowCreator(!showCreator)}
+          className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shrink-0"
+          title="Polls"
+        >
+          <BarChart3 className="h-4 w-4" />
+        </Button>
+      )}
 
       <AnimatePresence>
         {showCreator && (
@@ -117,7 +124,7 @@ const ChatPolls = ({ isConnected, roomChannel, sessionId, onSendMessage }: ChatP
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-14 left-0 z-50 w-72 rounded-2xl border border-border bg-card shadow-xl p-3"
+            className="fixed bottom-24 left-4 right-4 sm:left-auto sm:right-12 z-[60] sm:w-80 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl p-4 max-h-[70vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">

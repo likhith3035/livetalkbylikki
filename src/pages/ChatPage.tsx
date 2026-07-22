@@ -11,6 +11,7 @@ import InterestBar from "@/components/chat/InterestBar";
 import VideoCallOverlay from "@/components/chat/VideoCallOverlay";
 import MatchCelebration from "@/components/chat/MatchCelebration";
 import ChatWallpaper from "@/components/chat/ChatWallpaper";
+import ChatMoodMeter from "@/components/chat/ChatMoodMeter";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
@@ -146,7 +147,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   const handleReactWithParticle = useCallback((messageId: string, emoji: string) => {
     reactToMessage(messageId, emoji);
-    setActiveExplosionEmoji(emoji);
   }, [reactToMessage]);
 
   const isSessionActive = status === "connected" || callStatus !== "idle";
@@ -567,6 +567,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             strangerName={status === "connected" ? strangerName : undefined} 
             strangerAvatar={status === "connected" ? strangerAvatar : undefined}
             strangerMood={status === "connected" ? strangerMood : undefined}
+            messages={status === "connected" ? messages : undefined}
             onBack={handleHeaderBack}
             onVideoCall={() => startCall(false)}
             onAudioCall={() => startCall(true)}
@@ -621,23 +622,26 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         {/* Desktop-only compact info bar */}
         {status === "connected" && strangerName && (
           <div className="hidden lg:flex items-center justify-between px-6 py-3 z-20 relative bg-secondary/15 border-b border-border/10">
-            <button onClick={() => setShowProfileSheet(true)} className="flex items-center gap-3 hover:opacity-80 active:scale-[0.99] transition-all">
-              <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-              {strangerAvatar && (
-                strangerAvatar.startsWith("data:image/") ? (
-                  <img src={strangerAvatar} alt="avatar" className="h-5 w-5 rounded-full object-cover shrink-0 border border-primary/25" />
-                ) : (
-                  <span className="text-sm shrink-0">{strangerAvatar}</span>
-                )
-              )}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase text-primary/70 tracking-widest leading-none">Chatting with</span>
-                <span className="text-sm font-bold text-foreground leading-none">{strangerName}</span>
-                {strangerMood && (
-                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 leading-none shrink-0 normal-case tracking-normal">{strangerMood}</span>
+            <div className="flex items-center gap-4">
+              <button onClick={() => setShowProfileSheet(true)} className="flex items-center gap-3 hover:opacity-80 active:scale-[0.99] transition-all">
+                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+                {strangerAvatar && (
+                  strangerAvatar.startsWith("data:image/") ? (
+                    <img src={strangerAvatar} alt="avatar" className="h-5 w-5 rounded-full object-cover shrink-0 border border-primary/25" />
+                  ) : (
+                    <span className="text-sm shrink-0">{strangerAvatar}</span>
+                  )
                 )}
-              </div>
-            </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase text-primary/70 tracking-widest leading-none">Chatting with</span>
+                  <span className="text-sm font-bold text-foreground leading-none">{strangerName}</span>
+                  {strangerMood && (
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 leading-none shrink-0 normal-case tracking-normal">{strangerMood}</span>
+                  )}
+                </div>
+              </button>
+              {messages.length >= 3 && <ChatMoodMeter messages={messages} />}
+            </div>
 
             {/* Desktop Call buttons side-by-side */}
             <div className="flex items-center gap-2">
@@ -903,6 +907,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
             hasMessages={messages.length > 0}
             activeGame={activeGame}
             setActiveGame={setActiveGame}
+            onToggleAI={() => setShowAIPanel((v) => !v)}
             onNext={nextChat}
             onReact={(emoji) => setActiveExplosionEmoji(emoji)}
           />

@@ -10,13 +10,8 @@ import { useSafety } from "./use-safety";
 import { BaseChannel, RoomChannel } from "@/lib/types";
 import { createTempRoom, getRoomMeta, touchRoomExpiry } from "@/features/temp-rooms/roomService";
 
-const getProfile = () => {
-  try {
-    const raw = localStorage.getItem("lchat.profile");
-    if (raw) return JSON.parse(raw) as { nickname: string; avatar: string; mood?: string };
-  } catch { }
-  return { nickname: "", avatar: "😀", mood: "" };
-};
+import { getSessionId, getProfile, addBlockedId } from "@/lib/identity";
+import { getCurrentUserId, getAnonymousUser } from "@/lib/auth";
 
 export interface Message {
   id: string;
@@ -45,44 +40,10 @@ interface ChatCallbacks {
   toast?: (options: any) => void;
 }
 
-const getSessionId = () => {
-  // Use localStorage instead of sessionStorage — sessionStorage is cleared
-  // by some Android browsers when the tab goes to background, which breaks
-  // the connection identity on resume.
-  let id = localStorage.getItem("echo_session_id_v2");
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem("echo_session_id_v2", id);
-  }
-  return id;
-};
-
 const sessionId = getSessionId();
+const stableId = getCurrentUserId();
 
-const getStableId = () => {
-  let id = localStorage.getItem("echo_stable_id");
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem("echo_stable_id", id);
-  }
-  return id;
-};
 
-const stableId = getStableId();
-
-const getBlockedIds = (): string[] => {
-  try {
-    return JSON.parse(localStorage.getItem("echo.blocked") || "[]");
-  } catch { return []; }
-};
-
-const addBlockedId = (id: string) => {
-  const blocked = getBlockedIds();
-  if (!blocked.includes(id)) {
-    blocked.push(id);
-    localStorage.setItem("echo.blocked", JSON.stringify(blocked));
-  }
-};
 
 export function useChat(callbacks?: ChatCallbacks) {
   const toast = useCallback((options: any) => {
