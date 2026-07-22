@@ -308,11 +308,15 @@ export const AIChatPage: React.FC = () => {
     setShowPersonalityModal(true);
   };
 
-  const handlePersonalitySelected = (personality: PersonalityConfig) => {
+  const handlePersonalitySelected = (personality: PersonalityConfig, aiName?: string, aiAge?: number) => {
     const info = getProviderInfo(selectedProvider);
+    const displayTitle = aiName
+      ? `${aiName}${aiAge ? ` (${aiAge} y/o)` : ""} • ${personality.name}`
+      : `${personality.name} Chat`;
+
     const newConv: Conversation = {
       id: crypto.randomUUID(),
-      title: `${personality.name} Chat`,
+      title: displayTitle,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       personality,
@@ -320,6 +324,8 @@ export const AIChatPage: React.FC = () => {
       modelName: selectedModel,
       messages: [],
       temperature,
+      aiName,
+      aiAge,
     };
     setConversations((prev) => [newConv, ...prev]);
     setActiveConvId(newConv.id);
@@ -404,12 +410,19 @@ export const AIChatPage: React.FC = () => {
       const apiKey = apiKeys[selectedProvider];
       const customEndpoint = apiKeys.customEndpoint;
 
+      let systemPrompt = conv.personality.systemPrompt;
+      if (conv.aiName || conv.aiAge) {
+        const namePart = conv.aiName ? `Your name is ${conv.aiName}.` : "";
+        const agePart = conv.aiAge ? `You are ${conv.aiAge} years old.` : "";
+        systemPrompt = `${namePart} ${agePart} ${conv.personality.systemPrompt} Always stay in character as ${conv.aiName || conv.personality.name}.`;
+      }
+
       const usage = await streamAIChat({
         providerId: selectedProvider,
         modelName: selectedModel,
         apiKey,
         customEndpoint,
-        systemPrompt: conv.personality.systemPrompt,
+        systemPrompt,
         messages: [...conv.messages, userMessage],
         temperature,
         signal: abortControllerRef.current.signal,
@@ -501,12 +514,19 @@ export const AIChatPage: React.FC = () => {
 
     try {
       const apiKey = apiKeys[selectedProvider];
+      let systemPrompt = activeConv.personality.systemPrompt;
+      if (activeConv.aiName || activeConv.aiAge) {
+        const namePart = activeConv.aiName ? `Your name is ${activeConv.aiName}.` : "";
+        const agePart = activeConv.aiAge ? `You are ${activeConv.aiAge} years old.` : "";
+        systemPrompt = `${namePart} ${agePart} ${activeConv.personality.systemPrompt} Always stay in character as ${activeConv.aiName || activeConv.personality.name}.`;
+      }
+
       const usage = await streamAIChat({
         providerId: selectedProvider,
         modelName: selectedModel,
         apiKey,
         customEndpoint: apiKeys.customEndpoint,
-        systemPrompt: activeConv.personality.systemPrompt,
+        systemPrompt,
         messages: previousMessages,
         temperature,
         signal: abortControllerRef.current.signal,

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, X, Check, MessageSquare } from "lucide-react";
+import { Sparkles, X, Check, User, Calendar, Sliders } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 interface PersonalityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectPersonality: (personality: PersonalityConfig) => void;
+  onSelectPersonality: (personality: PersonalityConfig, aiName?: string, aiAge?: number) => void;
 }
 
 export const PersonalityModal: React.FC<PersonalityModalProps> = ({
@@ -23,16 +23,28 @@ export const PersonalityModal: React.FC<PersonalityModalProps> = ({
   const [customPrompt, setCustomPrompt] = useState("");
   const [customName, setCustomName] = useState("Custom Persona");
 
+  // AI Name & Age customization state
+  const [aiNameInput, setAiNameInput] = useState("");
+  const [aiAgeInput, setAiAgeInput] = useState<string>("");
+  const [showIdentityInputs, setShowIdentityInputs] = useState(false);
+
   const handleConfirm = () => {
     const target = PERSONALITIES.find((p) => p.id === selectedId) || PERSONALITIES[0];
+    const nameToUse = aiNameInput.trim() || (selectedId === "custom" ? customName.trim() : undefined);
+    const parsedAge = aiAgeInput ? parseInt(aiAgeInput, 10) : undefined;
+
     if (selectedId === "custom") {
-      onSelectPersonality({
-        ...target,
-        name: customName.trim() || "Custom Persona",
-        systemPrompt: customPrompt.trim() || "You are a helpful custom AI assistant.",
-      });
+      onSelectPersonality(
+        {
+          ...target,
+          name: customName.trim() || "Custom Persona",
+          systemPrompt: customPrompt.trim() || "You are a helpful custom AI assistant.",
+        },
+        nameToUse,
+        parsedAge
+      );
     } else {
-      onSelectPersonality(target);
+      onSelectPersonality(target, nameToUse, parsedAge);
     }
     onClose();
   };
@@ -57,7 +69,7 @@ export const PersonalityModal: React.FC<PersonalityModalProps> = ({
             className="relative z-10 w-full max-w-2xl bg-card border border-border/80 rounded-3xl p-6 shadow-2xl overflow-hidden backdrop-blur-2xl flex flex-col max-h-[88vh]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-border/50 mb-4 shrink-0">
+            <div className="flex items-center justify-between pb-4 border-b border-border/50 mb-3 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-primary via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-md shadow-primary/20">
                   <Sparkles className="h-5 w-5" />
@@ -67,7 +79,7 @@ export const PersonalityModal: React.FC<PersonalityModalProps> = ({
                     Choose AI Personality
                   </h2>
                   <p className="text-[11px] text-muted-foreground font-medium">
-                    Select a persona tone for your new conversation before starting.
+                    Select a persona and customize your AI's name & age for an immersive experience.
                   </p>
                 </div>
               </div>
@@ -80,7 +92,7 @@ export const PersonalityModal: React.FC<PersonalityModalProps> = ({
             </div>
 
             {/* Grid of Personalities */}
-            <div className="overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1 max-h-[55vh]">
+            <div className="overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1 max-h-[48vh]">
               {PERSONALITIES.map((p) => {
                 const isSelected = selectedId === p.id;
                 return (
@@ -113,26 +125,75 @@ export const PersonalityModal: React.FC<PersonalityModalProps> = ({
             {selectedId === "custom" && (
               <div className="mt-3 p-3 rounded-2xl bg-secondary/30 border border-border/60 space-y-2 shrink-0">
                 <Input
-                  placeholder="Custom Persona Name (e.g. Shakespearean Poet)"
+                  placeholder="Custom Persona Title (e.g. Shakespearean Poet)"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   className="h-8 text-xs bg-card"
                 />
                 <Textarea
-                  placeholder="Enter custom system instructions (e.g. Speak like a 19th-century pirate poet...)"
+                  placeholder="Enter custom system instructions..."
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  className="text-xs bg-card min-h-[60px] resize-none"
+                  className="text-xs bg-card min-h-[50px] resize-none"
                 />
               </div>
             )}
 
+            {/* AI Name & Age Customization Card */}
+            <div className="mt-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 via-purple-500/10 to-pink-500/10 border border-primary/20 shrink-0 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5 text-primary" />
+                  <span>Customize AI Name & Age</span>
+                  <span className="text-[9px] text-muted-foreground font-normal">(Optional)</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowIdentityInputs(!showIdentityInputs)}
+                  className="text-[10px] font-extrabold text-primary hover:underline"
+                >
+                  {showIdentityInputs ? "Hide Customization" : "+ Set Name & Age"}
+                </button>
+              </div>
+
+              {showIdentityInputs && (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground block mb-1">
+                      AI Companion Name
+                    </label>
+                    <Input
+                      placeholder="e.g. Aria, Sophia, Alex..."
+                      value={aiNameInput}
+                      onChange={(e) => setAiNameInput(e.target.value)}
+                      className="h-8 text-xs bg-card border-border/80"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground block mb-1">
+                      AI Age
+                    </label>
+                    <Input
+                      type="number"
+                      min="18"
+                      max="100"
+                      placeholder="e.g. 24, 28..."
+                      value={aiAgeInput}
+                      onChange={(e) => setAiAgeInput(e.target.value)}
+                      className="h-8 text-xs bg-card border-border/80"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Footer Actions */}
             <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between shrink-0">
               <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-                <span>Selected:</span>
+                <span>Personality:</span>
                 <span className="text-primary font-black">
                   {PERSONALITIES.find((p) => p.id === selectedId)?.name}
+                  {aiNameInput ? ` ("${aiNameInput}")` : ""}
                 </span>
               </span>
               <div className="flex items-center gap-2">
