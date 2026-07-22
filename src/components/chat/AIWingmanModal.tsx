@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Zap, Heart, Dices, X, RefreshCw, MessageSquare, Flame, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,15 @@ export const AIWingmanModal: React.FC<AIWingmanModalProps> = ({
       else setVibeTitle("⚡ Instant Connection!");
     }, 1200);
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   const handleSend = (text: string) => {
     onSendPrompt(text);

@@ -18,7 +18,9 @@ export function useHumanVerify() {
           return;
         }
       }
-    } catch { }
+    } catch {
+      /* ignore storage read error */
+    }
     setIsVerified(false);
   }, []);
 

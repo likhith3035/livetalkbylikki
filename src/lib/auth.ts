@@ -28,14 +28,26 @@ export async function getAnonymousUser(): Promise<User> {
       return cred.user;
     } catch (err: any) {
       if (err?.code === "auth/api-key-expired" || err?.message?.includes("api-key-expired")) {
-        console.error(
+        console.warn(
           "[Firebase Auth Error] Firebase API Key is EXPIRED or Invalid in Google Cloud/Firebase Console.\n" +
           "👉 Action required: Open Firebase Console -> Project Settings -> General -> Web API Key, renew/regenerate your API Key, and update VITE_FIREBASE_API_KEY in your .env file."
         );
+      } else if (err?.code === "auth/configuration-not-found" || err?.message?.includes("CONFIGURATION_NOT_FOUND")) {
+        console.warn(
+          "[Firebase Auth Warning] Anonymous Auth is not enabled in your Firebase Console.\n" +
+          "👉 How to fix:\n" +
+          "1. Open Firebase Console (https://console.firebase.google.com)\n" +
+          "2. Go to Authentication -> Sign-in method tab\n" +
+          "3. Select 'Anonymous' under Native Providers and click 'Enable' -> Save."
+        );
       } else {
-        console.error("[Auth] Anonymous sign-in failed:", err);
+        console.warn("[Auth] Anonymous sign-in failed, using local stable ID fallback:", err);
       }
-      throw err;
+      
+      // Fallback: Return a synthetic user object using local stable ID to prevent app crash
+      const fallbackUser = { uid: getCurrentUserId() } as User;
+      currentUser = fallbackUser;
+      return fallbackUser;
     } finally {
       authPromise = null;
     }

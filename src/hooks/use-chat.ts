@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "@/lib/firebase";
-import { ref, onChildAdded, push, off, onDisconnect, remove, get } from "firebase/database";
+import { ref, onChildAdded, push, off, onDisconnect, remove, get, set, onValue, serverTimestamp } from "firebase/database";
 import { useOnlineCount } from "./use-online-count";
 import { sounds, haptics } from "@/lib/sounds";
 import { sendNotification, type NotificationType } from "@/lib/notifications";
@@ -90,7 +90,11 @@ export function useChat(callbacks?: ChatCallbacks) {
 
   const stopSearchRef = useRef<() => void>(() => {});
 
+  const statusRef = useRef<ChatStatus>("idle");
+  const strangerDisconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
+  useEffect(() => { statusRef.current = status; }, [status]);
   useEffect(() => { 
     interestsRef.current = (interests || []).map(i => i.toLowerCase().trim()).filter(Boolean); 
     try {
@@ -100,6 +104,28 @@ export function useChat(callbacks?: ChatCallbacks) {
   useEffect(() => { disappearTimerRef.current = disappearTimer; }, [disappearTimer]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
   useEffect(() => { privateRoomCodeRef.current = privateRoomCode; }, [privateRoomCode]);
+
+  // Handle instant unload (tab close / refresh / navigate away)
+  useEffect(() => {
+    const handleUnload = () => {
+      if (statusRef.current === "connected" && roomChannelRef.current) {
+        try {
+          roomChannelRef.current.send({
+            type: "broadcast",
+            event: "leave",
+            payload: { senderId: sessionId }
+          });
+        } catch { /* ignore unload send error */ }
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+    };
+  }, [sessionId]);
 
   const playSoundIfEnabled = useCallback((sound: keyof typeof sounds) => {
     if (callbacksRef.current?.soundEnabled) sounds[sound]();
@@ -325,6 +351,54 @@ export function useChat(callbacks?: ChatCallbacks) {
   useEffect(() => {
     stopSearchRef.current = stopFirebaseSearch;
   }, [stopFirebaseSearch]);
+
+  // Active Room Presence Sync & Abrupt Disconnect Detection
+  useEffect(() => {
+    if (status !== "connected" || !roomId) return;
+
+    const myPresenceRef = ref(db, `rooms/${roomId}/presence/${sessionId}`);
+    const roomPresenceRef = ref(db, `rooms/${roomId}/presence`);
+
+    set(myPresenceRef, { online: true, ts: serverTimestamp() }).catch(() => {});
+    onDisconnect(myPresenceRef).remove().catch(() => {});
+
+    const unsubscribe = onValue(roomPresenceRef, (snapshot) => {
+      const presenceData = snapshot.val();
+      if (!presenceData) return;
+
+      const keys = Object.keys(presenceData);
+      const strangerPresent = keys.some(id => id !== sessionId && presenceData[id]?.online !== false);
+
+      if (keys.length > 0 && !strangerPresent) {
+        if (!strangerDisconnectTimerRef.current) {
+          strangerDisconnectTimerRef.current = setTimeout(() => {
+            if (statusRef.current === "connected") {
+              setStatus("disconnected");
+              addMessage("system", "Stranger has disconnected.");
+              playSoundIfEnabled("disconnected");
+              notifyIfEnabled("LiveTalk", "Stranger has disconnected.", "disconnected");
+              leaveRoom();
+            }
+            strangerDisconnectTimerRef.current = null;
+          }, 2000);
+        }
+      } else {
+        if (strangerDisconnectTimerRef.current) {
+          clearTimeout(strangerDisconnectTimerRef.current);
+          strangerDisconnectTimerRef.current = null;
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (strangerDisconnectTimerRef.current) {
+        clearTimeout(strangerDisconnectTimerRef.current);
+        strangerDisconnectTimerRef.current = null;
+      }
+      remove(myPresenceRef).catch(() => {});
+    };
+  }, [status, roomId, sessionId, addMessage, leaveRoom, playSoundIfEnabled, notifyIfEnabled]);
 
   const onSignalingEventRef = useRef<((event: string, payload: any) => void) | null>(null);
   useEffect(() => {

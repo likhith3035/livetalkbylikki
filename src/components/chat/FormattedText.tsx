@@ -105,7 +105,7 @@ const FormattedText = ({ text }: FormattedTextProps) => {
   const nodes = useMemo(() => parseFormatted(text), [text]);
 
   return (
-    <span className="break-words leading-relaxed whitespace-pre-wrap">
+    <span className="break-words [overflow-wrap:anywhere] leading-relaxed whitespace-pre-wrap">
       {nodes.map((node, i) => (
         <Fragment key={i}>
           {node.type === "codeBlock" && <CodeBlock content={node.content} lang={node.lang} />}

@@ -15,6 +15,7 @@ const ChatImage = ({ src, isMine }: ChatImageProps) => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -92,26 +93,35 @@ const ChatImage = ({ src, isMine }: ChatImageProps) => {
           "relative cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 shadow-md my-1 group max-w-full w-full sm:max-w-[280px] max-h-[300px] bg-black/10 dark:bg-white/5",
           isMine ? "border-white/20" : "border-border/60"
         )}
-        onClick={() => setFullscreen(true)}
+        onClick={() => !hasError && setFullscreen(true)}
       >
-        <img
-          src={src}
-          alt="Shared content"
-          className="w-full h-full max-h-[280px] object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
-          loading="lazy"
-        />
-        {/* Subtle magnifying indicator overlay */}
-        <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-          <div className="bg-black/60 p-2.5 rounded-full backdrop-blur-md border border-white/20 text-white shadow-lg">
-            <Maximize2 className="h-4.5 w-4.5" />
+        {hasError ? (
+          <div className="p-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded-2xl">
+            <X className="h-4 w-4 text-rose-500" />
+            <span>Image failed to load</span>
           </div>
-        </div>
+        ) : (
+          <>
+            <img
+              src={src}
+              alt="Shared content"
+              className="w-full h-full max-h-[280px] object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
+              loading="lazy"
+              onError={() => setHasError(true)}
+            />
+            <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+              <div className="bg-black/60 p-2.5 rounded-full backdrop-blur-md border border-white/20 text-white shadow-lg">
+                <Maximize2 className="h-4.5 w-4.5" />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Fullscreen Lightbox Portal */}
-      {fullscreen &&
-        createPortal(
-          <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
+          {fullscreen && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -181,6 +191,7 @@ const ChatImage = ({ src, isMine }: ChatImageProps) => {
                   exit={{ scale: 0.9, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                   onLoad={() => setLoading(false)}
+                  onError={() => { setLoading(false); setHasError(true); setFullscreen(false); }}
                   className="max-w-[92vw] max-h-[78vh] object-contain rounded-2xl shadow-2xl transition-transform duration-200 cursor-zoom-in"
                   onClick={(e) => e.stopPropagation()}
                 />
@@ -213,9 +224,10 @@ const ChatImage = ({ src, isMine }: ChatImageProps) => {
                 </motion.div>
               </div>
             </motion.div>
-          </AnimatePresence>,
-          document.body
-        )}
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 };

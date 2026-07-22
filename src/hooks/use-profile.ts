@@ -18,7 +18,9 @@ const getStoredProfile = (): UserProfile => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch {
+    /* ignore read error */
+  }
   return { nickname: "", avatar: "😀", mood: "" };
 };
 

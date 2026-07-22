@@ -17,7 +17,9 @@ export function getProfile(): UserProfile {
   try {
     const raw = localStorage.getItem("lchat.profile");
     if (raw) return JSON.parse(raw) as UserProfile;
-  } catch {}
+  } catch {
+    /* ignore read error */
+  }
   return { nickname: "", avatar: "😀", mood: "" };
 }
 

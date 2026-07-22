@@ -618,3 +618,31 @@ img {
   animation: phone-scanner 5s ease-in-out infinite alternate;
 }
 
+/* ─── Liquid Background Animations ─── */
+@keyframes lg-float-1 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  33%       { transform: translate3d(16vw,12vh,0) scale(1.1); }
+  66%       { transform: translate3d(-8vw,24vh,0) scale(0.9); }
+}
+@keyframes lg-float-2 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%       { transform: translate3d(-18vw,-8vh,0) scale(1.15); }
+}
+@keyframes lg-float-3 {
+  0%, 100% { transform: translate3d(0,0,0) scale(0.93); }
+  40%       { transform: translate3d(12vw,-18vh,0) scale(1.07); }
+}
+@keyframes lg-float-4 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1.1); }
+  60%       { transform: translate3d(-12vw,16vh,0) scale(0.93); }
+}
+
+.lg-orb-1 { animation: lg-float-1 ease-in-out infinite; }
+.lg-orb-2 { animation: lg-float-2 ease-in-out infinite; }
+.lg-orb-3 { animation: lg-float-3 ease-in-out infinite; }
+.lg-orb-4 { animation: lg-float-4 ease-in-out infinite; }
+
+@media (max-width: 768px) {
+  .lg-orb-1, .lg-orb-2, .lg-orb-3, .lg-orb-4 { display: none !important; }
+}
+
