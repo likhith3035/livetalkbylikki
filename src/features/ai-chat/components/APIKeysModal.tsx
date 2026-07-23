@@ -1,9 +1,27 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Key, X, Check, Shield, Trash2, Edit3, ExternalLink, Gift, Sparkles, Copy, HelpCircle } from "lucide-react";
+import {
+  Key,
+  X,
+  Check,
+  Shield,
+  Trash2,
+  Edit3,
+  ExternalLink,
+  Gift,
+  HelpCircle,
+  Eye,
+  EyeOff,
+  Zap,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Cpu,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AI_PROVIDERS } from "../aiProviders";
+import { AI_PROVIDERS, testAIProviderKey, TestKeyResult } from "../aiProviders";
 import { APIKeysMap, AIProviderId } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +43,18 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
   const [tempKeyInput, setTempKeyInput] = useState("");
   const [customEndpointInput, setCustomEndpointInput] = useState(keys.customEndpoint || "");
   const [showSarvamGuide, setShowSarvamGuide] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
+
+  // 👁️ Key Masking Toggle State per provider
+  const [showKeyMap, setShowKeyMap] = useState<Record<string, boolean>>({});
+
+  // 🔑 Test Connection Status per provider
+  const [testStatus, setTestStatus] = useState<
+    Record<string, { loading: boolean; result?: TestKeyResult }>
+  >({});
+
+  const toggleShowKey = (id: string) => {
+    setShowKeyMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleEdit = (id: AIProviderId) => {
     setEditingProvider(id);
@@ -38,6 +67,11 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
     setKeys(updated);
     onSaveKeys(updated);
     setEditingProvider(null);
+
+    // Re-test connection after save if key exists
+    if (tempKeyInput.trim()) {
+      runTestKey(id, tempKeyInput.trim());
+    }
   };
 
   const handleRemoveKey = (id: AIProviderId) => {
@@ -45,6 +79,11 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
     delete updated[id];
     setKeys(updated);
     onSaveKeys(updated);
+    setTestStatus((prev) => {
+      const copy = { ...prev };
+      delete copy[id];
+      return copy;
+    });
   };
 
   const handleSaveCustomEndpoint = () => {
@@ -52,6 +91,19 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
     setKeys(updated);
     onSaveKeys(updated);
     setEditingProvider(null);
+  };
+
+  const runTestKey = async (id: AIProviderId, keyToTest?: string) => {
+    const targetKey = keyToTest !== undefined ? keyToTest : keys[id];
+    setTestStatus((prev) => ({ ...prev, [id]: { loading: true } }));
+
+    const res = await testAIProviderKey({
+      providerId: id,
+      apiKey: targetKey,
+      customEndpoint: keys.customEndpoint,
+    });
+
+    setTestStatus((prev) => ({ ...prev, [id]: { loading: false, result: res } }));
   };
 
   return (
@@ -94,6 +146,32 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
               >
                 <X className="h-4 w-4" />
               </button>
+            </div>
+
+            {/* ⚡ Pre-configured Free & Local AI Highlight Banner */}
+            <div className="mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-cyan-500/15 border border-emerald-500/30 text-xs shrink-0 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-black text-emerald-400">
+                  <Cpu className="h-4 w-4 text-emerald-400" />
+                  <span>⚡ Zero-Key & Free AI Options</span>
+                </div>
+                <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  No Key Needed
+                </span>
+              </div>
+              <p className="text-[11px] text-foreground/90 leading-relaxed">
+                You can chat with AI right now without paying or creating API keys using:
+              </p>
+              <div className="flex flex-wrap gap-2 pt-0.5">
+                <div className="px-2.5 py-1 rounded-xl bg-background/80 border border-emerald-500/20 text-[10px] font-bold text-foreground flex items-center gap-1.5">
+                  <Sparkles className="h-3 w-3 text-emerald-400" />
+                  <span>Ollama & LM Studio (100% Free Local AI)</span>
+                </div>
+                <div className="px-2.5 py-1 rounded-xl bg-background/80 border border-amber-500/20 text-[10px] font-bold text-foreground flex items-center gap-1.5">
+                  <Gift className="h-3 w-3 text-amber-400" />
+                  <span>Sarvam AI (₹100 Free Credit)</span>
+                </div>
+              </div>
             </div>
 
             {/* 🎁 Free ₹100 Sarvam AI Key Banner */}
@@ -188,6 +266,8 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
                 const currentKey = keys[provider.id];
                 const isEditing = editingProvider === provider.id;
                 const isSarvam = provider.id === "sarvam";
+                const isShowingKey = !!showKeyMap[provider.id];
+                const statusInfo = testStatus[provider.id];
 
                 return (
                   <div
@@ -199,7 +279,7 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
                         : "bg-secondary/30 border-border/50 hover:bg-secondary/40"
                     )}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-xs text-foreground">{provider.name}</span>
                         {isSarvam && (
@@ -208,8 +288,8 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
                           </span>
                         )}
                         {provider.isLocal ? (
-                          <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                            Local (No Key Needed)
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center gap-1">
+                            <Cpu className="h-2.5 w-2.5" /> Local (No Key Needed)
                           </span>
                         ) : currentKey ? (
                           <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
@@ -222,19 +302,38 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
                         )}
                       </div>
 
-                      {!provider.isLocal && !isEditing && (
-                        <div className="flex items-center gap-1.5">
-                          {isSarvam && !currentKey && (
-                            <a
-                              href="https://dashboard.sarvam.ai"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500/30 text-xs font-extrabold flex items-center gap-1 transition-all active:scale-95"
-                            >
-                              <Gift className="h-3.5 w-3.5" />
-                              <span>Get Free Key</span>
-                            </a>
-                          )}
+                      {/* Action buttons: Edit, Test, Remove */}
+                      <div className="flex items-center gap-1.5">
+                        {/* 🔑 Test Key Connection Button */}
+                        {(currentKey || provider.isLocal) && !isEditing && (
+                          <button
+                            onClick={() => runTestKey(provider.id)}
+                            disabled={statusInfo?.loading}
+                            className="p-1.5 px-2 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary text-[11px] font-extrabold flex items-center gap-1 transition-all active:scale-95 disabled:opacity-50"
+                            title="Test API Key Connection"
+                          >
+                            {statusInfo?.loading ? (
+                              <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                            ) : (
+                              <Zap className="h-3 w-3 text-primary" />
+                            )}
+                            <span>{statusInfo?.loading ? "Testing..." : "Test Key"}</span>
+                          </button>
+                        )}
+
+                        {isSarvam && !currentKey && !isEditing && (
+                          <a
+                            href="https://dashboard.sarvam.ai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500/30 text-xs font-extrabold flex items-center gap-1 transition-all active:scale-95"
+                          >
+                            <Gift className="h-3.5 w-3.5" />
+                            <span>Get Free Key</span>
+                          </a>
+                        )}
+
+                        {!provider.isLocal && !isEditing && (
                           <button
                             onClick={() => handleEdit(provider.id)}
                             className="p-1.5 rounded-xl bg-card border border-border/60 hover:bg-muted text-foreground text-xs font-semibold flex items-center gap-1 transition-all active:scale-95"
@@ -242,44 +341,90 @@ export const APIKeysModal: React.FC<APIKeysModalProps> = ({
                             <Edit3 className="h-3.5 w-3.5" />
                             <span>{currentKey ? "Edit" : "Add Key"}</span>
                           </button>
-                          {currentKey && (
-                            <button
-                              onClick={() => handleRemoveKey(provider.id)}
-                              className="p-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold transition-all active:scale-95"
-                              title="Remove Key"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      )}
+                        )}
+
+                        {currentKey && !isEditing && (
+                          <button
+                            onClick={() => handleRemoveKey(provider.id)}
+                            className="p-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold transition-all active:scale-95"
+                            title="Remove Key"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Inline Editor */}
+                    {/* Inline Test Result Feedback Badge */}
+                    {statusInfo?.result && !isEditing && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={cn(
+                          "px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center justify-between gap-2 border",
+                          statusInfo.result.success
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                            : "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                        )}
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          {statusInfo.result.success ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                          ) : (
+                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-400" />
+                          )}
+                          <span className="truncate">{statusInfo.result.message}</span>
+                        </div>
+                        {statusInfo.result.latencyMs !== undefined && (
+                          <span className="text-[9px] font-mono opacity-80 shrink-0">
+                            {statusInfo.result.latencyMs}ms
+                          </span>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {/* Inline Key Editor with 👁️ Password Visibility Toggle & Test Button */}
                     {!provider.isLocal && isEditing && (
-                      <div className="flex items-center gap-2 pt-1">
-                        <Input
-                          type="password"
-                          placeholder={`Enter ${provider.name} API Key...`}
-                          value={tempKeyInput}
-                          onChange={(e) => setTempKeyInput(e.target.value)}
-                          className="h-9 text-xs rounded-xl bg-card border-border/80"
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => handleSaveKey(provider.id)}
-                          className="h-9 px-3 rounded-xl text-xs font-bold shrink-0"
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setEditingProvider(null)}
-                          className="h-9 px-2 rounded-xl text-xs shrink-0"
-                        >
-                          Cancel
-                        </Button>
+                      <div className="flex flex-col gap-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              type={isShowingKey ? "text" : "password"}
+                              placeholder={`Enter ${provider.name} API Key...`}
+                              value={tempKeyInput}
+                              onChange={(e) => setTempKeyInput(e.target.value)}
+                              className="h-9 text-xs rounded-xl bg-card border-border/80 pr-9 font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => toggleShowKey(provider.id)}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                              title={isShowingKey ? "Hide key" : "Show key"}
+                            >
+                              {isShowingKey ? (
+                                <EyeOff className="h-3.5 w-3.5" />
+                              ) : (
+                                <Eye className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            onClick={() => handleSaveKey(provider.id)}
+                            className="h-9 px-3 rounded-xl text-xs font-bold shrink-0"
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingProvider(null)}
+                            className="h-9 px-2 rounded-xl text-xs shrink-0"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>

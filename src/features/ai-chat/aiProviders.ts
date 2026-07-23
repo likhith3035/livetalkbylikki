@@ -377,3 +377,121 @@ export async function streamAIChat({
     isLocal: provider.isLocal,
   };
 }
+
+export interface TestKeyParams {
+  providerId: AIProviderId;
+  apiKey?: string;
+  customEndpoint?: string;
+}
+
+export interface TestKeyResult {
+  success: boolean;
+  message: string;
+  latencyMs?: number;
+}
+
+export async function testAIProviderKey({
+  providerId,
+  apiKey,
+  customEndpoint,
+}: TestKeyParams): Promise<TestKeyResult> {
+  const provider = getProviderInfo(providerId);
+  const startTime = Date.now();
+
+  if (!provider.isLocal && !apiKey && providerId !== "custom") {
+    return { success: false, message: "API key is missing" };
+  }
+
+  try {
+    // 1. Anthropic Claude
+    if (providerId === "claude") {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey || "",
+          "anthropic-version": "2023-06-01",
+          "dangerously-allow-browser": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-3-haiku-20240307",
+          max_tokens: 1,
+          messages: [{ role: "user", content: "Hi" }],
+        }),
+      });
+
+      const latencyMs = Date.now() - startTime;
+      if (response.ok) {
+        return { success: true, message: `Connected (${latencyMs}ms)`, latencyMs };
+      }
+      const errJson = await response.json().catch(() => ({}));
+      return { success: false, message: errJson.error?.message || `HTTP ${response.status}` };
+    }
+
+    // 2. Google Gemini
+    if (providerId === "gemini") {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: "Hi" }] }],
+          generationConfig: { maxOutputTokens: 1 },
+        }),
+      });
+
+      const latencyMs = Date.now() - startTime;
+      if (response.ok) {
+        return { success: true, message: `Connected (${latencyMs}ms)`, latencyMs };
+      }
+      const errJson = await response.json().catch(() => ({}));
+      return { success: false, message: errJson.error?.message || `HTTP ${response.status}` };
+    }
+
+    // 3. OpenAI & OpenAI-compatible providers
+    let endpoint = customEndpoint || provider.defaultEndpoint || "https://api.openai.com/v1/chat/completions";
+    if (providerId === "openrouter") endpoint = "https://openrouter.ai/api/v1/chat/completions";
+    if (providerId === "sarvam") endpoint = "https://api.sarvam.ai/v1/chat/completions";
+    if (providerId === "groq") endpoint = "https://api.groq.com/openai/v1/chat/completions";
+    if (providerId === "together") endpoint = "https://api.together.xyz/v1/chat/completions";
+
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+    if (providerId === "openrouter") {
+      headers["HTTP-Referer"] = window.location.origin;
+      headers["X-Title"] = "LiveTalk AI Chat";
+    }
+
+    const testModel = provider.defaultModel || undefined;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: testModel,
+        messages: [{ role: "user", content: "Hi" }],
+        max_tokens: 1,
+        stream: false,
+      }),
+    });
+
+    const latencyMs = Date.now() - startTime;
+    if (response.ok) {
+      return { success: true, message: `Connected (${latencyMs}ms)`, latencyMs };
+    }
+
+    const errJson = await response.json().catch(() => ({}));
+    return { success: false, message: errJson.error?.message || `HTTP ${response.status}` };
+  } catch (err: any) {
+    const latencyMs = Date.now() - startTime;
+    if (provider.isLocal) {
+      return {
+        success: false,
+        message: `Offline (${provider.name} not running at ${provider.defaultEndpoint})`,
+        latencyMs,
+      };
+    }
+    return { success: false, message: err.message || "Network request failed", latencyMs };
+  }
+}
+
