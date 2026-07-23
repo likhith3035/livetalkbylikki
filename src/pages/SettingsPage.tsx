@@ -18,6 +18,7 @@ import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { useOfflineAi } from "@/features/ai-chat/hooks/use-offline-ai";
 import { useOtaUpdate } from "@/hooks/use-ota-update";
 import { BiometricLockModal } from "@/components/security/BiometricLockModal";
+import { VideoFilterStudio } from "@/components/video/VideoFilterStudio";
 
 const fadeUp = {
   initial: { opacity: 0, y: 15 },
@@ -546,6 +547,14 @@ const SettingsPage = () => {
                 />
               </SettingRow>
             </div>
+          </motion.section>
+
+          {/* ─── Video & Camera Filter Studio ─── */}
+          <motion.section {...fadeUp} transition={{ delay: 0.14 }} className="space-y-3">
+            <h2 className="text-[11px] font-extrabold text-primary/75 dark:text-primary/65 uppercase tracking-[0.22em] px-2.5 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" /> Video & Camera Filters
+            </h2>
+            <VideoFilterStudio />
           </motion.section>
 
           {/* Visual Style: Message Bubbles and Wallpaper Customization */}
