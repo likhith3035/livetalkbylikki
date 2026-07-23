@@ -54,8 +54,9 @@ export function useAppUpdate() {
         return false;
       }
 
-      // Cache-busting fetch request to /version.json
-      const response = await fetch(`/version.json?t=${Date.now()}`, {
+      // Fetch remote version server over HTTPS (works inside native Capacitor Android webview)
+      const versionUrl = "https://livetalkbylikki.netlify.app/version.json";
+      const response = await fetch(`${versionUrl}?t=${Date.now()}`, {
         headers: { "Cache-Control": "no-cache" },
       });
 
