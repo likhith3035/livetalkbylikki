@@ -43,7 +43,14 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
 
   const handleUpdateNow = () => {
     if (downloadUrl) {
-      window.open(downloadUrl, "_blank");
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `LiveTalk-v${latestVersion}.apk`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
