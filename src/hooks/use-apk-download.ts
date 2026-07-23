@@ -9,13 +9,16 @@ export interface ApkInfo {
   isNew?: boolean;
 }
 
-// APK is served from public/
+export const GITHUB_RELEASE_APK_URL =
+  "https://github.com/likhith3035/livetalkbylikki/releases/download/v1.5.0/livetalk.apk";
+
+// APK is hosted on GitHub Releases
 export const APK_INFO: ApkInfo = {
   version: "1.5.0",
   size: "6.1 MB",
   sizeBytes: 6158364,
   lastUpdated: "July 24, 2026",
-  url: "/livetalk.apk",
+  url: GITHUB_RELEASE_APK_URL,
   isNew: true,
 };
 
@@ -34,17 +37,13 @@ export function useApkDownload() {
     const xhr = new XMLHttpRequest();
     xhrRef.current = xhr;
 
-    // Resolve relative URL to absolute for XHR
-    const absoluteUrl = new URL(APK_INFO.url, window.location.origin).href;
-
-    xhr.open("GET", absoluteUrl, true);
+    xhr.open("GET", APK_INFO.url, true);
     xhr.responseType = "blob";
 
     xhr.onprogress = (e) => {
       if (e.lengthComputable) {
         setProgress(Math.min(Math.round((e.loaded / e.total) * 100), 99));
       } else {
-        // Estimate based on known size
         setProgress(Math.min(Math.round((e.loaded / APK_INFO.sizeBytes) * 100), 99));
       }
     };
@@ -76,13 +75,8 @@ export function useApkDownload() {
     xhr.send();
 
     function handleError() {
-      console.error("[APK] XHR failed, falling back to direct link");
-      const a = document.createElement("a");
-      a.href = absoluteUrl;
-      a.download = `LiveTalk-v${APK_INFO.version}.apk`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      console.log("[APK] XHR fallback to direct link:", APK_INFO.url);
+      window.open(APK_INFO.url, "_blank");
       setDownloadState("done");
       setShowGuide(true);
     }
