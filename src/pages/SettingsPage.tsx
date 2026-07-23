@@ -16,6 +16,7 @@ import { AppUpdateModal } from "@/components/AppUpdateModal";
 import { useBiometrics } from "@/hooks/use-biometrics";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { useOfflineAi } from "@/features/ai-chat/hooks/use-offline-ai";
+import { useOtaUpdate } from "@/hooks/use-ota-update";
 import { BiometricLockModal } from "@/components/security/BiometricLockModal";
 
 const fadeUp = {
@@ -263,6 +264,7 @@ const SettingsPage = () => {
   const biometrics = useBiometrics();
   const pushNotifications = usePushNotifications();
   const offlineAi = useOfflineAi();
+  const otaUpdate = useOtaUpdate();
 
   const handleManualCheck = async () => {
     appUpdateState.resetDismiss();
@@ -440,7 +442,111 @@ const SettingsPage = () => {
             </div>
           </motion.section>
 
+          {/* ─── Advanced Features: Biometric Lock, Push, OTA, Offline AI ─── */}
+          <motion.section {...fadeUp} transition={{ delay: 0.12 }} className="space-y-3">
+            <h2 className="text-[11px] font-extrabold text-primary/75 dark:text-primary/65 uppercase tracking-[0.22em] px-2.5 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" /> Advanced Features
+            </h2>
+            <div className="space-y-2.5">
+              {/* 🔒 Biometric Security Lock */}
+              <SettingRow
+                icon={<Fingerprint className="h-4.5 w-4.5 text-violet-500" />}
+                title="Biometric App Lock"
+                desc={biometrics.isAvailable ? `Unlock with ${biometrics.biometricType}` : "Not available on this device"}
+              >
+                <Switch
+                  checked={biometrics.isEnabled}
+                  disabled={!biometrics.isAvailable}
+                  onCheckedChange={async (checked) => {
+                    if (checked) {
+                      const ok = await biometrics.enableBiometrics();
+                      if (ok) {
+                        toast({ title: "🔒 Biometric Lock Enabled", description: "App will require authentication on open." });
+                      }
+                    } else {
+                      biometrics.disableBiometrics();
+                      toast({ title: "🔓 Biometric Lock Disabled", description: "App lock has been removed." });
+                    }
+                  }}
+                />
+              </SettingRow>
 
+              {/* 🔔 Native Push Notifications */}
+              <SettingRow
+                icon={<Bell className="h-4.5 w-4.5 text-amber-500" />}
+                title="Push Notifications"
+                desc={pushNotifications.isEnabled ? "Notifications are active" : "Get alerts when strangers join"}
+              >
+                <Switch
+                  checked={pushNotifications.isEnabled}
+                  disabled={!pushNotifications.isSupported}
+                  onCheckedChange={async (checked) => {
+                    if (checked) {
+                      const granted = await pushNotifications.requestPermission();
+                      if (granted) {
+                        toast({ title: "🔔 Push Notifications On", description: "You'll receive alerts for new connections." });
+                      } else {
+                        toast({ title: "Permission Denied", description: "Allow notifications in your browser/device settings.", variant: "destructive" });
+                      }
+                    } else {
+                      pushNotifications.toggleNotifications(false);
+                      toast({ title: "🔕 Push Notifications Off", description: "You won't receive push alerts." });
+                    }
+                  }}
+                />
+              </SettingRow>
+
+              {/* ⚡ OTA Live Updates */}
+              <SettingRow
+                icon={<Rocket className="h-4.5 w-4.5 text-cyan-500" />}
+                title="Instant OTA Updates"
+                desc={
+                  otaUpdate.isSyncing
+                    ? "Checking for updates…"
+                    : otaUpdate.lastSyncedVersion
+                    ? `Synced: v${otaUpdate.lastSyncedVersion}`
+                    : "Auto-sync web bundle over the air"
+                }
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    otaUpdate.syncBundle();
+                    toast({ title: "⚡ Sync Started", description: "Checking for OTA bundle updates…" });
+                  }}
+                  disabled={otaUpdate.isSyncing}
+                  className="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20 transition-all disabled:opacity-50"
+                >
+                  {otaUpdate.isSyncing ? "Syncing…" : "Sync Now"}
+                </button>
+              </SettingRow>
+
+              {/* 📴 Offline Local AI Engine */}
+              <SettingRow
+                icon={<WifiOff className="h-4.5 w-4.5 text-emerald-500" />}
+                title="Offline AI Engine"
+                desc={offlineAi.isOfflineMode
+                  ? offlineAi.isModelLoaded
+                    ? "Local model ready — no internet needed"
+                    : `Loading model… ${offlineAi.loadingProgress}%`
+                  : "Run AI companion 100% on-device"
+                }
+              >
+                <Switch
+                  checked={offlineAi.isOfflineMode}
+                  onCheckedChange={(checked) => {
+                    offlineAi.toggleOfflineMode(checked);
+                    if (checked) {
+                      offlineAi.loadOfflineModel();
+                      toast({ title: "📴 Offline AI Enabled", description: "Loading local model for on-device inference." });
+                    } else {
+                      toast({ title: "🌐 Online AI Active", description: "Switched back to cloud AI providers." });
+                    }
+                  }}
+                />
+              </SettingRow>
+            </div>
+          </motion.section>
 
           {/* Visual Style: Message Bubbles and Wallpaper Customization */}
           <motion.section {...fadeUp} transition={{ delay: 0.16 }} className="space-y-4">
