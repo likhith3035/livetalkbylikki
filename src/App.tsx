@@ -116,11 +116,21 @@ const AnimatedRoutes = () => {
 
 
 
+import { useBiometrics } from "@/hooks/use-biometrics";
+import { BiometricLockModal } from "@/components/security/BiometricLockModal";
+
 const AppContent = () => {
+  const biometrics = useBiometrics();
+
   return (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <BiometricLockModal
+        isOpen={biometrics.isLocked}
+        biometricType={biometrics.biometricType}
+        onAuthenticate={biometrics.authenticate}
+      />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ScrollToTop />
         <ChatProvider>

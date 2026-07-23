@@ -1,4 +1,4 @@
-import { Moon, Sun, Volume2, Bell, Info, Palette, Image as ImageIcon, Keyboard, ShieldCheck, EyeOff, Ban, Sliders, Layers, Sparkles, Upload, RotateCcw, Crop, Rocket } from "lucide-react";
+import { Moon, Sun, Volume2, Bell, Info, Palette, Image as ImageIcon, Keyboard, ShieldCheck, EyeOff, Ban, Sliders, Layers, Sparkles, Upload, RotateCcw, Crop, Rocket, Fingerprint, WifiOff, Lock } from "lucide-react";
 import Header from "@/components/Header";
 import MobileNav from "@/components/MobileNav";
 import { Switch } from "@/components/ui/switch";
@@ -13,6 +13,10 @@ import React, { useRef, useState, useEffect } from "react";
 import WallpaperCropper from "@/components/chat/WallpaperCropper";
 import { useAppUpdate } from "@/hooks/use-app-update";
 import { AppUpdateModal } from "@/components/AppUpdateModal";
+import { useBiometrics } from "@/hooks/use-biometrics";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { useOfflineAi } from "@/features/ai-chat/hooks/use-offline-ai";
+import { BiometricLockModal } from "@/components/security/BiometricLockModal";
 
 const fadeUp = {
   initial: { opacity: 0, y: 15 },
@@ -254,6 +258,11 @@ const SettingsPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const appUpdateState = useAppUpdate();
   const [manualModalOpen, setManualModalOpen] = useState(false);
+
+  // Advanced Security & Engine Hooks
+  const biometrics = useBiometrics();
+  const pushNotifications = usePushNotifications();
+  const offlineAi = useOfflineAi();
 
   const handleManualCheck = async () => {
     appUpdateState.resetDismiss();
@@ -871,6 +880,65 @@ const SettingsPage = () => {
                     Select a preset theme above or upload a device image to unlock fine-tuning adjustment filters.
                   </div>
                 )}
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Advanced Security & AI Engine */}
+          <motion.section {...fadeUp} transition={{ delay: 0.20 }} className="space-y-3">
+            <h2 className="text-[11px] font-extrabold text-primary/75 dark:text-primary/65 uppercase tracking-[0.22em] px-2.5 flex items-center gap-2">
+              <Fingerprint className="h-3.5 w-3.5 text-primary" /> Security & AI Engine
+            </h2>
+            <div className="rounded-[2rem] border overflow-hidden divide-y transition-all duration-300 bg-card border-border/40 divide-border/15">
+              <div className="p-4 flex items-center justify-between">
+                <div className="space-y-0.5 pr-4">
+                  <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-primary" /> Biometric Lock ({biometrics.biometricType})
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Require Fingerprint / Face ID to access LiveTalk chats & settings.
+                  </p>
+                </div>
+                <Switch
+                  checked={biometrics.isEnabled}
+                  onCheckedChange={(checked) => {
+                    if (checked) biometrics.enableBiometrics();
+                    else biometrics.disableBiometrics();
+                  }}
+                />
+              </div>
+
+              <div className="p-4 flex items-center justify-between">
+                <div className="space-y-0.5 pr-4">
+                  <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-primary" /> Native Push Notifications
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Get phone notifications when strangers connect or AI companion messages you.
+                  </p>
+                </div>
+                <Switch
+                  checked={pushNotifications.isEnabled}
+                  onCheckedChange={(checked) => {
+                    if (checked) pushNotifications.requestPermission();
+                    else pushNotifications.toggleNotifications(false);
+                  }}
+                />
+              </div>
+
+              <div className="p-4 flex items-center justify-between">
+                <div className="space-y-0.5 pr-4">
+                  <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <WifiOff className="h-4 w-4 text-primary" /> 100% Offline AI Companion
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Run AI Chat Companion locally on your phone GPU without server connection.
+                  </p>
+                </div>
+                <Switch
+                  checked={offlineAi.isOfflineMode}
+                  onCheckedChange={(checked) => offlineAi.toggleOfflineMode(checked)}
+                />
               </div>
             </div>
           </motion.section>
