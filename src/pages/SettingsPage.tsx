@@ -950,8 +950,11 @@ const SettingsPage = () => {
       {/* Manual Trigger Update Modal */}
       <AppUpdateModal
         updateState={appUpdateState}
-        isOpenOverride={manualModalOpen || appUpdateState.isUpdateAvailable}
-        onCloseOverride={() => setManualModalOpen(false)}
+        isOpenOverride={manualModalOpen}
+        onCloseOverride={() => {
+          setManualModalOpen(false);
+          appUpdateState.dismissUpdate();
+        }}
       />
 
       {/* Custom Cropper overlay modal */}

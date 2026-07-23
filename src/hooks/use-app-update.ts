@@ -10,10 +10,11 @@ export interface AppVersionInfo {
   releaseNotes: string[];
 }
 
-export const CURRENT_APP_VERSION = "1.0.0";
+export const CURRENT_APP_VERSION = "1.5.0";
+const DISMISSED_VERSION_KEY = "livetalk_dismissed_update_version";
 
 /**
- * Compares two semantic version strings (e.g. "1.0.0" vs "1.5.0").
+ * Compares two semantic version strings (e.g. "1.5.0" vs "1.6.0").
  * Returns:
  *  -1 if v1 < v2 (newer version exists)
  *   0 if v1 === v2
@@ -63,7 +64,7 @@ export function useAppUpdate() {
 
       // Check if installed version is less than latestVersion
       const isOutdated = compareSemver(CURRENT_APP_VERSION, data.latestVersion) < 0;
-      
+
       // Check if forced update is triggered via forceUpdate flag OR minimumVersion threshold
       const isBelowMinimum = data.minimumVersion
         ? compareSemver(CURRENT_APP_VERSION, data.minimumVersion) < 0
@@ -78,8 +79,14 @@ export function useAppUpdate() {
 
       setUpdateInfo(finalInfo);
 
+      // Check if user previously dismissed this version (unless update is forced)
+      const lastDismissed = localStorage.getItem(DISMISSED_VERSION_KEY);
+      const isDismissed = !shouldForce && lastDismissed === data.latestVersion;
+
       if (isOutdated) {
-        setIsUpdateAvailable(true);
+        if (!isDismissed || !silent) {
+          setIsUpdateAvailable(true);
+        }
         setIsChecking(false);
         return true;
       } else {
@@ -101,10 +108,23 @@ export function useAppUpdate() {
 
   const dismissUpdate = useCallback(() => {
     setHasDismissed(true);
-  }, []);
+    setIsUpdateAvailable(false);
+    if (updateInfo?.latestVersion) {
+      try {
+        localStorage.setItem(DISMISSED_VERSION_KEY, updateInfo.latestVersion);
+      } catch (e) {
+        console.warn("[AppUpdate] Failed to write dismissed version to localStorage", e);
+      }
+    }
+  }, [updateInfo]);
 
   const resetDismiss = useCallback(() => {
     setHasDismissed(false);
+    try {
+      localStorage.removeItem(DISMISSED_VERSION_KEY);
+    } catch (e) {
+      console.warn("[AppUpdate] Failed to clear dismissed version from localStorage", e);
+    }
   }, []);
 
   return {
