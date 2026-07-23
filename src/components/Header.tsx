@@ -5,7 +5,6 @@ import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
 import ChatMoodMeter from "@/components/chat/ChatMoodMeter";
-import { GamificationWidget } from "@/components/GamificationWidget";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -61,34 +60,37 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
                 className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover shrink-0 border border-primary/20 shadow-sm"
               />
             ) : (
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[11px] sm:text-xs font-bold shrink-0">
-                {strangerAvatar}
-              </div>
+              <span className="text-base sm:text-lg leading-none shrink-0">{strangerAvatar}</span>
             )
           )}
           <div className="flex flex-col min-w-0">
-            <h1 className="text-xs sm:text-sm font-bold text-foreground truncate leading-snug">
-              {strangerName || "Stranger"}
-            </h1>
-            <p className="text-[8px] sm:text-[9px] text-emerald-500 font-bold flex items-center gap-1 leading-none mt-0.5">
-              <span className="h-1 w-1 rounded-full bg-emerald-500 inline-block animate-pulse shrink-0" />
-              <span className="truncate max-w-[80px] sm:max-w-[90px]">{strangerMood || "Online"}</span>
-            </p>
-          </div>
-          {messages && messages.length >= 3 && (
-            <div className="hidden sm:block shrink-0 ml-1">
-              <ChatMoodMeter messages={messages} />
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs sm:text-sm font-bold text-foreground truncate">
+                {strangerName}
+              </span>
             </div>
-          )}
+            <div className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-[10px] text-muted-foreground font-semibold truncate">Connected</span>
+              {strangerMood && (
+                <span className="text-[10px] text-primary/80 font-medium truncate">
+                  • {strangerMood}
+                </span>
+              )}
+            </div>
+          </div>
         </button>
 
-        {/* Right: Circular call buttons side-by-side */}
+        {/* Right Action Buttons */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          {messages && messages.length > 3 && (
+            <ChatMoodMeter messages={messages} />
+          )}
           {onAudioCall && (
             <button
               onClick={onAudioCall}
               className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
-              aria-label="Start audio call"
+              aria-label="Audio call"
             >
               <Phone className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-primary" />
             </button>
@@ -97,7 +99,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
             <button
               onClick={onVideoCall}
               className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
-              aria-label="Start video call"
+              aria-label="Video call"
             >
               <Video className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-primary" />
             </button>
@@ -138,9 +140,31 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         </div>
       </div>
 
-      {/* Right: Theme + Gamification + Online */}
+      {/* Right: Theme + Online */}
       <div className="flex items-center gap-2 sm:gap-2.5">
-        <GamificationWidget />
+        {/* Theme toggle */}
+        <button
+          onClick={() => updateSetting("darkMode", !settings.darkMode)}
+          className={cn(
+            "relative flex h-7 w-12 sm:h-8 sm:w-14 items-center rounded-full p-1 transition-colors duration-300 shrink-0",
+            settings.darkMode
+              ? "bg-primary/20 border border-primary/30"
+              : "bg-secondary border border-border"
+          )}
+          aria-label="Toggle theme"
+        >
+          <div
+            className={cn(
+              "flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-card shadow-md transition-transform duration-300",
+              settings.darkMode ? "translate-x-5 sm:translate-x-6" : "translate-x-0"
+            )}
+          >
+            {settings.darkMode
+              ? <Moon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+              : <Sun className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-warning" />}
+          </div>
+        </button>
+
         <OnlineBadge count={onlineCount} />
       </div>
     </header>
