@@ -118,9 +118,15 @@ const AnimatedRoutes = () => {
 
 import { useBiometrics } from "@/hooks/use-biometrics";
 import { BiometricLockModal } from "@/components/security/BiometricLockModal";
+import { requestNotificationPermission } from "@/lib/notifications";
 
 const AppContent = () => {
   const biometrics = useBiometrics();
+
+  // Request native notification permission on app startup
+  useEffect(() => {
+    requestNotificationPermission().catch(() => {});
+  }, []);
 
   return (
     <TooltipProvider>
