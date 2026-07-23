@@ -1,4 +1,4 @@
-import { Settings, Copy, Download } from "lucide-react";
+import { Settings, Copy, Download, Sparkles, Dices, HelpCircle } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -12,6 +12,7 @@ import { useChatContext } from "@/contexts/ChatContext";
 import { cn } from "@/lib/utils";
 import { exportChatAsText, copyToClipboard, downloadAsFile } from "@/lib/chat-export";
 import { useToast } from "@/hooks/use-toast";
+import { ALL_ICEBREAKERS } from "@/components/chat/Icebreakers";
 
 interface ChatToolsMenuProps {
   messages: Message[];
@@ -21,6 +22,7 @@ interface ChatToolsMenuProps {
   onBlock: () => void;
   onThemeChange?: (theme: ChatTheme) => void;
   triggerClassName?: string;
+  onSendIcebreaker?: (text: string) => void;
 }
 
 export const ChatToolsMenu = ({
@@ -31,12 +33,15 @@ export const ChatToolsMenu = ({
   onBlock,
   onThemeChange,
   triggerClassName,
+  onSendIcebreaker,
 }: ChatToolsMenuProps) => {
   const { toast } = useToast();
   const { settings, updateSetting } = useSettings();
   const {
     localPrivacyModeActive,
     togglePrivacyMode,
+    sendMessage,
+    status,
   } = useChatContext();
 
   const handleCopyChat = async () => {
@@ -56,6 +61,19 @@ export const ChatToolsMenu = ({
     toast({
       title: "💾 Downloaded!",
       description: "Chat saved as text file",
+    });
+  };
+
+  const handleTriggerRandomIcebreaker = () => {
+    const random = ALL_ICEBREAKERS[Math.floor(Math.random() * ALL_ICEBREAKERS.length)];
+    if (onSendIcebreaker) {
+      onSendIcebreaker(random.text);
+    } else if (status === "connected") {
+      sendMessage(random.text);
+    }
+    toast({
+      title: "🧊 Icebreaker Sent!",
+      description: `Sent: "${random.text}"`,
     });
   };
 
@@ -84,6 +102,21 @@ export const ChatToolsMenu = ({
         <div className="flex items-center gap-1.5 pb-2 border-b border-border/40">
           <Settings className="h-4 w-4 text-primary" />
           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Chat Tools</h4>
+        </div>
+
+        {/* Section 0: Instant AI Icebreaker */}
+        <div className="space-y-1.5 pb-3 border-b border-border/40">
+          <span className="text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">Icebreaker Generator</span>
+          <button
+            onClick={handleTriggerRandomIcebreaker}
+            className="w-full p-2 rounded-xl bg-gradient-to-r from-purple-500/15 via-pink-500/15 to-amber-500/15 border border-purple-500/30 hover:border-purple-500/50 text-foreground text-xs font-extrabold flex items-center justify-between gap-2 transition-all active:scale-95 shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-pink-400 animate-pulse" />
+              <span>Send Instant Icebreaker 🧊</span>
+            </div>
+            <Dices className="h-3.5 w-3.5 text-purple-400" />
+          </button>
         </div>
 
         {/* Section 1: Search Messages */}

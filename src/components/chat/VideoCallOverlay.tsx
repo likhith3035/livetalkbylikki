@@ -95,7 +95,7 @@ const VideoCallOverlay = ({
   const qualityIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { settings } = useSettings();
-  const { privacyModeActive, privacyAlertActive, userName, strangerName, sessionId } = useChatContext();
+  const { privacyModeActive, privacyAlertActive, userName, strangerName, sessionId, isReconnecting } = useChatContext();
   const [tabFocused, setTabFocused] = useState(true);
 
   // Monitor focus/blur for screen-recording tab protection
@@ -639,8 +639,15 @@ const VideoCallOverlay = ({
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 rounded-full bg-card/80 backdrop-blur-sm border border-border px-3 py-1.5 z-10"
               >
-                <span className="h-2 w-2 rounded-full bg-online animate-pulse" />
-                <span className="text-xs font-medium text-foreground">Live</span>
+                <span className={cn("h-2 w-2 rounded-full animate-pulse", isReconnecting ? "bg-amber-400" : "bg-online")} />
+                <span className="text-xs font-medium text-foreground">
+                  {isReconnecting ? "Reconnecting..." : "Live"}
+                </span>
+                {isReconnecting && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-extrabold animate-pulse">
+                    <Zap className="h-3 w-3" /> P2P ICE Restart
+                  </span>
+                )}
                 <span className="text-[10px] text-muted-foreground tabular-nums flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {formatDuration(callDuration)}

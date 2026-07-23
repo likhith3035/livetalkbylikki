@@ -84,6 +84,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
   const [remoteCameraOff, setRemoteCameraOff] = useState(false);
   const [remoteBlurred, setRemoteBlurred] = useState(false);
   const [surpriseEffect, setSurpriseEffect] = useState<{ type: string; id: number } | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -131,6 +132,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     setIsScreenSharing(false);
     setRemoteIsScreenSharing(false);
     setIsBlurred(false);
+    setIsReconnecting(false);
     setIsAudioOnlySynced(false);
     setFacingMode("user");
     setRemoteMuted(false);
@@ -189,13 +191,35 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       console.log("WebRTC: ICE Connection State:", pc.iceConnectionState);
       if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
         setCallStatusSynced("active");
+        setIsReconnecting(false);
+      }
+      if (pc.iceConnectionState === "disconnected") {
+        console.warn("WebRTC: ICE disconnected — attempting automatic recovery");
+        setIsReconnecting(true);
+        setTimeout(() => {
+          if (
+            pcRef.current === pc &&
+            pc.iceConnectionState !== "connected" &&
+            pc.iceConnectionState !== "completed"
+          ) {
+            try {
+              pc.restartIce();
+              handleRenegotiateOffer(pc, sendSignalingEventRef.current, sessionId);
+              console.log("WebRTC: Automatic ICE restart & renegotiation triggered");
+            } catch (err) {
+              console.warn("WebRTC: ICE restart trigger error:", err);
+            }
+          }
+        }, 2000);
       }
       if (pc.iceConnectionState === "failed") {
         console.warn("WebRTC: ICE failed — attempting ICE restart before giving up");
+        setIsReconnecting(true);
         // Try ICE restart once — this re-gathers candidates using TURN if STUN failed
         if (pc.signalingState === "stable" || pc.signalingState === "have-local-offer") {
           try {
             pc.restartIce();
+            handleRenegotiateOffer(pc, sendSignalingEventRef.current, sessionId);
             console.log("WebRTC: ICE restart triggered");
             // Give it 8 seconds to recover
             setTimeout(() => {
@@ -206,6 +230,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
                 sendSignalingEventRef.current("webrtc:end", { senderId: sessionId });
                 cleanup();
                 setCallStatusSynced("idle");
+                setIsReconnecting(false);
                 onCallEnded?.();
               }
             }, 8000);
@@ -217,10 +242,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         sendSignalingEventRef.current("webrtc:end", { senderId: sessionId });
         cleanup();
         setCallStatusSynced("idle");
+        setIsReconnecting(false);
         onCallEnded?.();
-      }
-      if (pc.iceConnectionState === "disconnected") {
-        console.warn("WebRTC: ICE disconnected — may recover automatically");
       }
     };
 
@@ -632,6 +655,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     isScreenSharing,
     remoteIsScreenSharing,
     isBlurred,
+    isReconnecting,
     facingMode,
     remoteMuted,
     remoteCameraOff,

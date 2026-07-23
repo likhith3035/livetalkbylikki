@@ -269,7 +269,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const {
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
-    isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
+    isScreenSharing, remoteIsScreenSharing, isBlurred, isReconnecting, facingMode,
     remoteMuted, remoteCameraOff, remoteBlurred,
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
@@ -383,7 +383,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     deleteMessage, pinMessage, setDisappearTimer,
     privateRoomCode, sendSignalingEvent,
     callStatus, isAudioOnly, localStream, remoteStream, isMuted, isCameraOff,
-    isScreenSharing, remoteIsScreenSharing, isBlurred, facingMode,
+    isScreenSharing, remoteIsScreenSharing, isBlurred, isReconnecting, facingMode,
     remoteMuted, remoteCameraOff, remoteBlurred,
     startCall, acceptCall, declineCall, endCall,
     toggleMute, toggleCamera, flipCamera, toggleScreenShare, toggleBlur,
