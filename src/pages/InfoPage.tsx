@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 /* ─── DATA ─── */
 
 const WHAT_IS = [
+  { icon: Bot, title: "AI Chat & AI Wingman 🤖", desc: "Prefer talking to AI or need conversation practice? Switch to the dedicated AI Chat tab to converse with AI Companions (Luna, Nova, Titan, Zen, Cyber) powered by Sarvam AI, Gemini, Claude, OpenAI, and 100% Free Local LLMs (Ollama & LM Studio)." },
   { icon: MessageSquare, title: "Chat with strangers", desc: "Talk to random people from around the world. No account, no signup — just open and chat. LiveTalk connects you with real humans instantly for genuine conversations." },
   { icon: EyeOff, title: "100% Anonymous", desc: "We never ask for your name, email, phone number, or anything. Nobody knows who you are. Your identity is completely hidden — even from us. Chat freely without any trace." },
   { icon: Trash2, title: "Chats disappear forever", desc: "The moment you leave a chat, all messages are gone permanently. We don't save anything on any server. No logs, no backups, no archives — your conversations exist only in the moment." },
@@ -163,6 +164,54 @@ const FEATURES_DETAILED = [
     tech: "Full-text search through the messages array with case-insensitive matching. Matching messages are highlighted with a ring animation and auto-scrolled into view.",
     details: "Search works on both your messages and the stranger's messages. The highlight animation lasts 2 seconds before fading, making it easy to spot the found message.",
   },
+  {
+    icon: Bot, title: "AI Chat & AI Personalities 🤖", category: "AI Features",
+    desc: "Switch to the dedicated AI Chat tab to converse with AI Companions (Luna, Nova, Titan, Zen, Cyber). Connect your own API keys or choose zero-cost free models like Sarvam AI (with ₹100 free credit) or 100% Free Local AI (Ollama & LM Studio)!",
+    tech: "Powered by 10+ AI providers (Sarvam, Gemini, Claude, OpenAI, Groq, OpenRouter, Together, Local LLMs). Features live connection testing, key masking, and real-time token/cost estimation.",
+    details: "Your API keys remain stored locally in your browser memory and are never saved on external servers. Local LLM support allows running models 100% offline with zero key requirements.",
+  },
+  {
+    icon: Sparkles, title: "Instant AI Icebreakers 🧊", category: "AI Features",
+    desc: "Never suffer from awkward silences! Use the Icebreaker shuffle button or send a random topic from Chat Tools to instantly spark fun, creative, and deep conversation starters.",
+    tech: "Categorized library of 30+ icebreaker prompts combined with automatic 10-second silent room detection that highlights conversation starters.",
+    details: "Supports 1-click random topic generation and instant delivery directly into your active chat.",
+  },
+  {
+    icon: Wifi, title: "WebRTC Auto-Reconnect & TURN Fallback 🔄", category: "Communication",
+    desc: "If your network switches between Wi-Fi and mobile data or drops momentarily during a video call, LiveTalk automatically renegotiates P2P TURN connections without dropping your call.",
+    tech: "Monitors WebRTC RTCPeerConnection ICE states, automatically invoking pc.restartIce() and broadcasting renegotiation offers over Firebase signaling.",
+    details: "Displays an inline '⚡ Reconnecting P2P Stream...' status badge so users stay informed during network transitions.",
+  },
+  {
+    icon: Globe, title: "Real-Time Chat Translator 🌍", category: "Communication",
+    desc: "Chat with strangers worldwide regardless of language barriers! Turn on auto-translation to instantly translate foreign incoming messages into your target language.",
+    tech: "Client-side translation memory engine supporting 10+ major languages with automatic language detection.",
+    details: "Translates stranger messages inline while keeping original text accessible with one tap.",
+  },
+  {
+    icon: Shield, title: "Local Privacy Mode & Capture Guard 🛡️", category: "Privacy",
+    desc: "Toggle Privacy Mode to encrypt on-screen chat bubbles and obscure message text during tab switching or recording attempts. Sends real-time warning alerts to your chat partner if capture attempts occur.",
+    tech: "Uses window blur/focus event listeners and custom useProtectionDetection hook to shield UI elements from unauthorized recording.",
+    details: "Protects sensitive conversations and ensures zero-log data safety for both participants.",
+  },
+  {
+    icon: Star, title: "Session Stats & Daily Streak Tracker 📊", category: "Social",
+    desc: "Track your social engagement! Monitor your total conversations today, active chat duration, current daily streak, and longest streak directly in the header.",
+    tech: "Local storage session telemetry engine with daily reset timers and active duration tracking.",
+    details: "Gamifies your daily chat sessions with visual streak badges and performance metrics.",
+  },
+  {
+    icon: Smartphone, title: "Cross-Device Handoff & Camera QR Scanner 📲", category: "Matching",
+    desc: "Handoff your ongoing chat from desktop to mobile phone seamlessly! Also scan QR codes with your device camera to join private rooms instantly.",
+    tech: "DeviceHandoffPanel powered by session handoff signaling tokens and an integrated HTML5 camera QR code scanner.",
+    details: "Allows switching devices on the fly without disconnecting from your stranger chat.",
+  },
+  {
+    icon: Cpu, title: "Android Native APK & Full PWA 📱", category: "Platform",
+    desc: "Download the native LiveTalk Android APK or install LiveTalk directly as a Progressive Web App (PWA) on iOS, Android, and Desktop with offline capability.",
+    tech: "Built with Capacitor native Android bridge and Vite PWA Workbox service workers.",
+    details: "Provides home screen app icons, fast launch speeds, and push notification readiness.",
+  },
 ];
 
 const TECH_STACK = [
@@ -205,6 +254,10 @@ const KEYBOARD_SHORTCUTS = [
 
 const FAQ = [
   { q: "Is LiveTalk really free?", a: "Yes! 100% free, forever. No hidden fees, no premium plans, no subscriptions, no in-app purchases. Every feature is available to everyone." },
+  { q: "What is the AI Chat tab?", a: "The AI Chat tab lets you converse with customizable AI Companions (Luna, Nova, Titan, Zen, Cyber). You can connect your own API keys (Sarvam AI, Gemini, Claude, OpenAI, Groq, OpenRouter, Together) or run 100% Free Local AI models (Ollama & LM Studio) with zero key requirements!" },
+  { q: "How do I get free AI credits?", a: "You can sign up on Sarvam AI to receive ₹100 worth of free API credits using any email or temp mail. Alternatively, you can use Local LLMs (Ollama / LM Studio) for completely free offline AI chat." },
+  { q: "How does real-time translation work?", a: "LiveTalk includes a real-time chat translator hook. When a stranger sends a message in a foreign language, LiveTalk automatically detects the language and translates it into your preferred target language." },
+  { q: "What is Local Privacy Mode?", a: "Local Privacy Mode encrypts on-screen chat text and obscures message bubbles during window switches or screen capture attempts, automatically sending warning alerts to your chat partner to protect your privacy." },
   { q: "Do I need to create an account?", a: "Nope! No email, no password, no phone number, no social login. Just open LiveTalk and start chatting. It literally takes 3 seconds." },
   { q: "Can people see who I am?", a: "Absolutely not. You are completely anonymous. We don't collect any personal information, and there's no way for the stranger to find out your identity." },
   { q: "Are my messages saved anywhere?", a: "Never. Messages exist only in your browser while you're in the chat. When either person leaves, everything is permanently and irreversibly deleted. No server logs, no backups." },
@@ -244,6 +297,14 @@ const CHALLENGES = [
 const COMPARISON = [
   { feature: "Anonymous Chat 💬", LiveTalk: true, others: true },
   { feature: "No Registration 🔓", LiveTalk: true, others: false },
+  { feature: "AI Chat Companion 🤖", LiveTalk: true, others: false },
+  { feature: "Free Local LLM & Sarvam AI ⚡", LiveTalk: true, others: false },
+  { feature: "Real-Time Message Translation 🌍", LiveTalk: true, others: false },
+  { feature: "Instant AI Icebreakers 🧊", LiveTalk: true, others: false },
+  { feature: "WebRTC Auto-Reconnect 🔄", LiveTalk: true, others: false },
+  { feature: "Screen Capture Protection 🛡️", LiveTalk: true, others: false },
+  { feature: "Session Streak Tracking 📊", LiveTalk: true, others: false },
+  { feature: "Cross-Device QR Handoff 📲", LiveTalk: true, others: false },
   { feature: "Video Calls 📹", LiveTalk: true, others: true },
   { feature: "Voice Calls 📞", LiveTalk: true, others: true },
   { feature: "Text Formatting ✍️", LiveTalk: true, others: false },
@@ -255,7 +316,7 @@ const COMPARISON = [
   { feature: "Private Rooms 🔒", LiveTalk: true, others: false },
   { feature: "Chat Themes 🎨", LiveTalk: true, others: false },
   { feature: "No Ads 🚫", LiveTalk: true, others: false },
-  { feature: "PWA Support 📲", LiveTalk: true, others: false },
+  { feature: "PWA & Native APK 📱", LiveTalk: true, others: false },
   { feature: "Dark Mode 🌙", LiveTalk: true, others: false },
 ];
 
