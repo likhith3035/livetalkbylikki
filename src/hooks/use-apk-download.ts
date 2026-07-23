@@ -12,8 +12,8 @@ export interface ApkInfo {
 // APK is served from public/
 export const APK_INFO: ApkInfo = {
   version: "1.5.0",
-  size: "32.5 MB",
-  sizeBytes: 34170115,
+  size: "68.0 MB",
+  sizeBytes: 68027184,
   lastUpdated: "July 24, 2026",
   url: "/livetalk.apk",
   isNew: true,
