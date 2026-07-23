@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Capacitor } from "@capacitor/core";
 
 export interface AppVersionInfo {
   latestVersion: string;
@@ -43,6 +44,16 @@ export function useAppUpdate() {
   const checkForUpdates = useCallback(async (silent = true) => {
     setIsChecking(true);
     try {
+      const isNative = Capacitor.isNativePlatform();
+
+      // On website (non-native browser visits), NEVER auto-show the update popup!
+      // Website code is always live and latest.
+      if (silent && !isNative) {
+        setIsUpdateAvailable(false);
+        setIsChecking(false);
+        return false;
+      }
+
       // Cache-busting fetch request to /version.json
       const response = await fetch(`/version.json?t=${Date.now()}`, {
         headers: { "Cache-Control": "no-cache" },
