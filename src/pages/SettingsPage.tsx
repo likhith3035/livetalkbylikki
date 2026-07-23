@@ -1,4 +1,4 @@
-import { Moon, Sun, Volume2, Bell, Info, Palette, Image as ImageIcon, Keyboard, ShieldCheck, EyeOff, Ban, Sliders, Layers, Sparkles, Upload, RotateCcw, Crop } from "lucide-react";
+import { Moon, Sun, Volume2, Bell, Info, Palette, Image as ImageIcon, Keyboard, ShieldCheck, EyeOff, Ban, Sliders, Layers, Sparkles, Upload, RotateCcw, Crop, Rocket } from "lucide-react";
 import Header from "@/components/Header";
 import MobileNav from "@/components/MobileNav";
 import { Switch } from "@/components/ui/switch";
@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import React, { useRef, useState, useEffect } from "react";
 import WallpaperCropper from "@/components/chat/WallpaperCropper";
+import { useAppUpdate } from "@/hooks/use-app-update";
+import { AppUpdateModal } from "@/components/AppUpdateModal";
 
 const fadeUp = {
   initial: { opacity: 0, y: 15 },
@@ -250,6 +252,21 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { settings, updateSetting } = useSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const appUpdateState = useAppUpdate();
+  const [manualModalOpen, setManualModalOpen] = useState(false);
+
+  const handleManualCheck = async () => {
+    appUpdateState.resetDismiss();
+    const hasUpdate = await appUpdateState.checkForUpdates(false);
+    if (!hasUpdate) {
+      toast({
+        title: "✨ You're on the latest version!",
+        description: `LiveTalk v${appUpdateState.currentVersion} is up to date.`,
+      });
+    } else {
+      setManualModalOpen(true);
+    }
+  };
 
   // Scroll listener to show compact floating preview on mobile
   const [scrolledPastPreview, setScrolledPastPreview] = useState(false);
@@ -892,7 +909,27 @@ const SettingsPage = () => {
 
             <button
               type="button"
-              onClick={() => toast({ title: "LiveTalk v2.0", description: "The #1 premium anonymous chat experience." })}
+              onClick={handleManualCheck}
+              disabled={appUpdateState.isChecking}
+              className="flex w-full items-center justify-between rounded-3xl border border-primary/30 bg-primary/5 hover:bg-primary/10 px-5 py-5 text-left transition-all group cursor-pointer"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-2xl bg-primary/15 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <Rocket className={cn("h-5 w-5", appUpdateState.isChecking && "animate-bounce")} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Check for Updates</p>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {appUpdateState.isChecking ? "Checking server..." : `Installed v${appUpdateState.currentVersion}`}
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => toast({ title: "LiveTalk v1.0.0", description: "The #1 premium anonymous chat experience by Likhith Kami (Likki)." })}
               className="flex w-full items-center justify-between rounded-3xl border border-border/40 bg-secondary/20 hover:bg-secondary/40 px-5 py-5 text-left transition-all group"
             >
               <div className="flex items-center gap-4">
@@ -901,7 +938,7 @@ const SettingsPage = () => {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-foreground">Version Information</p>
-                  <p className="text-xs text-muted-foreground font-medium text-gradient">Build 2.0.42 — Powered by Likki</p>
+                  <p className="text-xs text-muted-foreground font-medium text-gradient">v{appUpdateState.currentVersion} — Powered by Likki</p>
                 </div>
               </div>
             </button>
@@ -909,6 +946,13 @@ const SettingsPage = () => {
         </div>
       </div>
     </main>
+
+      {/* Manual Trigger Update Modal */}
+      <AppUpdateModal
+        updateState={appUpdateState}
+        isOpenOverride={manualModalOpen || appUpdateState.isUpdateAvailable}
+        onCloseOverride={() => setManualModalOpen(false)}
+      />
 
       {/* Custom Cropper overlay modal */}
       <AnimatePresence>
