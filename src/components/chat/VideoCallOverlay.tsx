@@ -12,6 +12,7 @@ import type { VideoCallStatus } from "@/hooks/use-video-call";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
+import { CameraFilterSelector, VIDEO_FILTERS, type VideoFilter } from "@/components/video/CameraFilterSelector";
 
 interface InCallMessage {
   id: string;
@@ -92,6 +93,7 @@ const VideoCallOverlay = ({
   const [callQuality, setCallQuality] = useState<"good" | "fair" | "poor" | "unknown">("unknown");
   const [showSnapshot, setShowSnapshot] = useState(false);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<VideoFilter>(VIDEO_FILTERS[0]);
   const qualityIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { settings } = useSettings();
@@ -526,6 +528,7 @@ const VideoCallOverlay = ({
                         facingMode === "user" && !isScreenSharing ? "scaleX(-1)" : "",
                         isBlurred ? "scale(1.15)" : "",
                       ].filter(Boolean).join(" ") || "none",
+                      filter: activeFilter.cssFilter !== "none" ? activeFilter.cssFilter : undefined,
                     }}
                   />
                 ) : (
