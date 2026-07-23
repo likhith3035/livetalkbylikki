@@ -1,6 +1,29 @@
 import { useCallback, useRef } from "react";
 
 /**
+ * Sends a native system notification to the mobile OS status bar / desktop tray.
+ */
+export function sendSystemNotification(title: string, options?: NotificationOptions) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "granted") {
+    try {
+      const notif = new Notification(title, {
+        icon: "/logo.png",
+        badge: "/logo.png",
+        vibrate: [200, 100, 200],
+        ...options,
+      });
+      notif.onclick = () => {
+        window.focus();
+        notif.close();
+      };
+    } catch (e) {
+      console.warn("[Notification] System notification dispatch error:", e);
+    }
+  }
+}
+
+/**
  * Uses the Web Audio API to produce subtle notification pings.
  * No external sound files needed — all generated programmatically.
  */
@@ -66,5 +89,5 @@ export const useSoundNotifications = () => {
     }
   }, []);
 
-  return { playConnect, playDisconnect };
+  return { playConnect, playDisconnect, sendSystemNotification };
 };

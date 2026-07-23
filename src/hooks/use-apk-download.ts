@@ -9,13 +9,13 @@ export interface ApkInfo {
   isNew?: boolean;
 }
 
-// APK is served from your own Netlify domain — no CORS issues
+// APK is served from public/
 export const APK_INFO: ApkInfo = {
-  version: "1.0.0",
+  version: "1.5.0",
   size: "32.5 MB",
   sizeBytes: 34170115,
-  lastUpdated: "July 12, 2026",
-  url: "/livetalk.apk",   // served from public/
+  lastUpdated: "July 24, 2026",
+  url: "/livetalk.apk",
   isNew: true,
 };
 
@@ -77,7 +77,6 @@ export function useApkDownload() {
 
     function handleError() {
       console.error("[APK] XHR failed, falling back to direct link");
-      // Hard fallback — just navigate to the file, browser handles it
       const a = document.createElement("a");
       a.href = absoluteUrl;
       a.download = `LiveTalk-v${APK_INFO.version}.apk`;
@@ -101,11 +100,12 @@ export function useApkDownload() {
   }, [resetDownload]);
 
   return {
+    apkInfo: APK_INFO,
     downloadState,
     progress,
     showGuide,
     download,
+    resetDownload,
     closeGuide,
-    apkInfo: APK_INFO,
   };
 }
