@@ -5,6 +5,7 @@ import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
 import ChatMoodMeter from "@/components/chat/ChatMoodMeter";
+import { GamificationWidget } from "@/components/GamificationWidget";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -137,31 +138,9 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         </div>
       </div>
 
-      {/* Right: Theme + Online */}
+      {/* Right: Theme + Gamification + Online */}
       <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Theme toggle */}
-        <button
-          onClick={() => updateSetting("darkMode", !settings.darkMode)}
-          className={cn(
-            "relative flex h-7 w-12 sm:h-8 sm:w-14 items-center rounded-full p-1 transition-colors duration-300 shrink-0",
-            settings.darkMode
-              ? "bg-primary/20 border border-primary/30"
-              : "bg-secondary border border-border"
-          )}
-          aria-label="Toggle theme"
-        >
-          <div
-            className={cn(
-              "flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-card shadow-md transition-transform duration-300",
-              settings.darkMode ? "translate-x-5 sm:translate-x-6" : "translate-x-0"
-            )}
-          >
-            {settings.darkMode
-              ? <Moon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
-              : <Sun className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-warning" />}
-          </div>
-        </button>
-
+        <GamificationWidget />
         <OnlineBadge count={onlineCount} />
       </div>
     </header>
