@@ -73,6 +73,9 @@ interface ChatContextValue {
   remoteBlurred: boolean;
   supportsScreenShare: boolean;
   surpriseEffect: { type: string; id: number } | null;
+  stats: ReturnType<typeof useVideoCall>["stats"];
+  isPiPActive: boolean;
+  supportsPiP: boolean;
 
   // Video call actions
   startCall: (audioOnly: boolean) => void;
@@ -86,6 +89,7 @@ interface ChatContextValue {
   toggleBlur: () => void;
   upgradeToVideo: () => void;
   sendSurprise: (type: string) => void;
+  togglePictureInPicture: (videoElement?: HTMLVideoElement | null) => void;
 
   // In-call chat
   inCallMessages: InCallMessage[];
@@ -278,6 +282,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     surpriseEffect,
     handleSignalingEvent, cleanup,
     supportsScreenShare,
+    stats,
+    isPiPActive,
+    togglePictureInPicture,
+    supportsPiP,
   } = useVideoCall({ 
     sessionId, 
     sendSignalingEvent, 
@@ -390,6 +398,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     upgradeToVideo,
     sendSurprise,
     surpriseEffect,
+    stats,
+    isPiPActive,
+    togglePictureInPicture,
+    supportsPiP,
     inCallMessages, sendInCallMessage,
     supportsScreenShare,
     reportStranger, stableId,

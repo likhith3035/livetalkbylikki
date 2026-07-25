@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Shield } from "lucide-react";
+import { Shield, Lock } from "lucide-react";
 
 interface PrivacyWatermarkProps {
-  userName: string;
-  strangerName: string;
-  sessionId: string;
+  userName?: string;
+  strangerName?: string;
+  sessionId?: string;
 }
 
-export default function PrivacyWatermark({ userName, strangerName, sessionId }: PrivacyWatermarkProps) {
+export default function PrivacyWatermark({ userName = "You", strangerName = "Stranger", sessionId = "" }: PrivacyWatermarkProps) {
   const [time, setTime] = useState("");
 
   useEffect(() => {
@@ -21,48 +21,48 @@ export default function PrivacyWatermark({ userName, strangerName, sessionId }: 
     return () => clearInterval(interval);
   }, []);
 
-  // Generate randomized positions, rotations, and opacities for the watermark grid elements
-  // We'll create a grid of 6 repeating watermarks that move independently
   const watermarks = [
-    { id: 1, baseTop: "15%", baseLeft: "15%" },
-    { id: 2, baseTop: "20%", baseLeft: "65%" },
-    { id: 3, baseTop: "45%", baseLeft: "40%" },
-    { id: 4, baseTop: "70%", baseLeft: "15%" },
-    { id: 5, baseTop: "75%", baseLeft: "70%" },
-    { id: 6, baseTop: "35%", baseLeft: "20%" },
+    { id: 1, baseTop: "12%", baseLeft: "12%" },
+    { id: 2, baseTop: "18%", baseLeft: "68%" },
+    { id: 3, baseTop: "48%", baseLeft: "42%" },
+    { id: 4, baseTop: "72%", baseLeft: "15%" },
+    { id: 5, baseTop: "78%", baseLeft: "72%" },
+    { id: 6, baseTop: "32%", baseLeft: "22%" },
   ];
+
+  const shortSession = sessionId ? sessionId.substring(0, 10) : "LT-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-40 select-none">
       {watermarks.map((wm) => (
         <motion.div
           key={wm.id}
-          className="absolute flex flex-col items-center justify-center p-4 rounded-xl border border-white/5 bg-black/10 backdrop-blur-[2px] shadow-sm select-none"
+          className="absolute flex flex-col items-center justify-center p-3 rounded-xl border border-white/10 bg-black/20 backdrop-blur-[2px] shadow-sm select-none"
           style={{ top: wm.baseTop, left: wm.baseLeft }}
           animate={{
-            x: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
-            y: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
-            rotate: [wm.id % 2 === 0 ? -12 : 12, wm.id % 2 === 0 ? -6 : 6, wm.id % 2 === 0 ? -15 : 15, wm.id % 2 === 0 ? -12 : 12],
-            opacity: [0.15, 0.25, 0.1, 0.2, 0.15],
-            scale: [0.95, 1.05, 0.9, 1, 0.95]
+            x: [0, (wm.id % 2 === 0 ? 25 : -25), 0],
+            y: [0, (wm.id % 3 === 0 ? -20 : 20), 0],
+            rotate: [wm.id % 2 === 0 ? -12 : 12, wm.id % 2 === 0 ? -6 : 6, wm.id % 2 === 0 ? -14 : 14],
+            opacity: [0.18, 0.32, 0.15, 0.28, 0.18],
+            scale: [0.95, 1.05, 0.95],
           }}
           transition={{
-            duration: 12 + wm.id * 2,
+            duration: 10 + wm.id * 2,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         >
-          <div className="flex items-center gap-1.5 text-foreground/45">
+          <div className="flex items-center gap-1.5 text-white/60">
             <Shield className="h-3 w-3 text-primary animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.15em] italic font-display">
-              LiveTalk Secure
+            <span className="text-[10px] font-black uppercase tracking-[0.18em] italic font-display">
+              LiveTalk Anti-Record Shield
             </span>
+            <Lock className="h-2.5 w-2.5 text-amber-400/80" />
           </div>
-          <div className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-wider text-center mt-1 space-y-0.5">
-            <div>User: {userName || "You"}</div>
-            <div>Peer: {strangerName || "Stranger"}</div>
-            <div className="tabular-nums">{time}</div>
-            <div className="font-mono opacity-50 text-[7px]">{sessionId.substring(0, 8)}...</div>
+          <div className="text-[8px] font-bold text-white/50 uppercase tracking-wider text-center mt-1 space-y-0.5 font-mono">
+            <div>USER: {userName} • PEER: {strangerName}</div>
+            <div className="tabular-nums text-primary/80">{time}</div>
+            <div className="opacity-60 text-[7px] tracking-widest">ID: {shortSession}</div>
           </div>
         </motion.div>
       ))}

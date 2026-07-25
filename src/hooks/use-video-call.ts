@@ -4,6 +4,15 @@ import { RENEGOTIATE_EVENT, handleRenegotiateOffer } from "@/features/cross-devi
 
 export type VideoCallStatus = "idle" | "requesting" | "incoming" | "connecting" | "active";
 
+export interface WebRTCStats {
+  rtt: number | null;
+  resolution: string;
+  fps: number;
+  packetLoss: number;
+  qualityGrade: "good" | "fair" | "poor";
+  isDegraded: boolean;
+}
+
 const getIceServers = (): RTCConfiguration => {
   // Free public TURN servers — these relay traffic when direct P2P fails (symmetric NAT, mobile networks)
   // Using Open Relay (metered.ca) free tier + Cloudflare TURN public credentials
@@ -85,6 +94,15 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
   const [remoteBlurred, setRemoteBlurred] = useState(false);
   const [surpriseEffect, setSurpriseEffect] = useState<{ type: string; id: number } | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [stats, setStats] = useState<WebRTCStats>({
+    rtt: null,
+    resolution: "HD",
+    fps: 30,
+    packetLoss: 0,
+    qualityGrade: "good",
+    isDegraded: false,
+  });
+  const [isPiPActive, setIsPiPActive] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -636,6 +654,89 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
      onCallEnded, onCallUpgraded, setCallStatusSynced, setIsAudioOnlySynced]
   );
 
+  // Picture-in-Picture helper
+  const togglePictureInPicture = useCallback(async (videoElement?: HTMLVideoElement | null) => {
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsPiPActive(false);
+      } else if (videoElement && document.pictureInPictureEnabled) {
+        await videoElement.requestPictureInPicture();
+        setIsPiPActive(true);
+        videoElement.addEventListener("leavepictureinpicture", () => {
+          setIsPiPActive(false);
+        }, { once: true });
+      }
+    } catch (e) {
+      console.warn("WebRTC: PiP toggle error", e);
+    }
+  }, []);
+
+  // WebRTC Stats Polling Loop
+  useEffect(() => {
+    if (callStatus !== "active" || !pcRef.current) return;
+
+    let prevPacketsLost = 0;
+    let prevPacketsReceived = 0;
+
+    const interval = setInterval(async () => {
+      const pc = pcRef.current;
+      if (!pc) return;
+
+      try {
+        const statsReport = await pc.getStats();
+        let currentRtt: number | null = null;
+        let currentFps = 30;
+        let currentRes = "720p";
+        let lossPercentage = 0;
+
+        statsReport.forEach((report) => {
+          if (report.type === "candidate-pair" && (report.state === "succeeded" || report.nominated)) {
+            if (typeof report.currentRoundTripTime === "number") {
+              currentRtt = Math.round(report.currentRoundTripTime * 1000);
+            }
+          }
+          if (report.type === "inbound-rtp" && report.kind === "video") {
+            if (typeof report.framesPerSecond === "number") {
+              currentFps = Math.round(report.framesPerSecond);
+            }
+            if (report.frameWidth && report.frameHeight) {
+              const h = report.frameHeight;
+              currentRes = h >= 1080 ? "1080p" : h >= 720 ? "720p" : h >= 480 ? "480p" : "360p";
+            }
+            const lost = report.packetsLost || 0;
+            const recv = report.packetsReceived || 0;
+            const deltaLost = lost - prevPacketsLost;
+            const deltaRecv = recv - prevPacketsReceived;
+            prevPacketsLost = lost;
+            prevPacketsReceived = recv;
+
+            const total = deltaLost + deltaRecv;
+            if (total > 0) {
+              lossPercentage = Math.min(100, Math.max(0, Math.round((deltaLost / total) * 100)));
+            }
+          }
+        });
+
+        const rttVal = currentRtt ?? 45;
+        const grade: "good" | "fair" | "poor" = (lossPercentage > 15 || rttVal > 300) ? "poor" : (lossPercentage > 5 || rttVal > 150) ? "fair" : "good";
+
+        setStats({
+          rtt: currentRtt,
+          resolution: currentRes,
+          fps: currentFps,
+          packetLoss: lossPercentage,
+          qualityGrade: grade,
+          isDegraded: grade === "poor",
+        });
+      } catch (err) {
+        // Silently handle stat errors
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [callStatus]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -660,6 +761,10 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     remoteMuted,
     remoteCameraOff,
     remoteBlurred,
+    stats,
+    isPiPActive,
+    togglePictureInPicture,
+    supportsPiP: typeof document !== "undefined" && !!document.pictureInPictureEnabled,
     startCall,
     acceptCall,
     declineCall,

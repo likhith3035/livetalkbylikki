@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import type { VideoCallStatus } from "@/hooks/use-video-call";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useSettings } from "@/contexts/SettingsContext";
-import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
 import { CameraFilterSelector, VIDEO_FILTERS, type VideoFilter } from "@/components/video/CameraFilterSelector";
 
 interface InCallMessage {
@@ -58,6 +57,18 @@ interface VideoCallOverlayProps {
   onRaiseHand?: () => void;
   /** True when stranger has raised their hand */
   strangerHandRaised?: boolean;
+  /** WebRTC statistics */
+  stats?: {
+    rtt: number | null;
+    resolution: string;
+    fps: number;
+    packetLoss: number;
+    qualityGrade: "good" | "fair" | "poor";
+    isDegraded: boolean;
+  };
+  isPiPActive?: boolean;
+  onTogglePiP?: () => void;
+  supportsPiP?: boolean;
 }
 
 const formatDuration = (seconds: number) => {
@@ -82,6 +93,10 @@ const VideoCallOverlay = ({
   incomingReaction,
   onRaiseHand,
   strangerHandRaised = false,
+  stats,
+  isPiPActive = false,
+  onTogglePiP,
+  supportsPiP = true,
 }: VideoCallOverlayProps) => {
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -485,10 +500,7 @@ const VideoCallOverlay = ({
             </div>
           )}
 
-          {/* Watermark in Video Call */}
-          {privacyModeActive && (
-            <PrivacyWatermark userName={userName} strangerName={strangerName} sessionId={sessionId} />
-          )}
+
 
           {/* Screen blurred mask */}
           {!tabFocused && privacyModeActive && (
@@ -504,7 +516,13 @@ const VideoCallOverlay = ({
             <motion.div
               drag
               dragMomentum={false}
-              dragElastic={0.1}
+              dragElastic={0.08}
+              dragConstraints={{
+                top: 0,
+                left: typeof window !== "undefined" ? -window.innerWidth + 140 : -250,
+                right: 0,
+                bottom: typeof window !== "undefined" ? window.innerHeight - 200 : 400,
+              }}
               className="absolute top-3 right-3 sm:top-4 sm:right-4 w-20 h-28 xs:w-24 xs:h-32 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none ring-1 ring-white/10"
               onClick={(e) => { e.stopPropagation(); setIsLocalMain(!isLocalMain); }}
               whileDrag={{ scale: 1.05 }}
@@ -655,22 +673,36 @@ const VideoCallOverlay = ({
                   <Clock className="h-3 w-3" />
                   {formatDuration(callDuration)}
                 </span>
-                {/* Quality dots */}
-                <div className="flex items-end gap-[2px] ml-1">
-                  {[1, 2, 3].map((bar) => (
-                    <div
-                      key={bar}
-                      className={cn(
-                        "w-[3px] rounded-full transition-colors",
-                        bar === 1 ? "h-1.5" : bar === 2 ? "h-2.5" : "h-3.5",
-                        callQuality === "good" ? "bg-green-400" :
-                        callQuality === "fair" ? (bar <= 2 ? "bg-amber-400" : "bg-muted-foreground/30") :
-                        callQuality === "poor" ? (bar <= 1 ? "bg-destructive" : "bg-muted-foreground/30") :
-                        "bg-muted-foreground/30"
-                      )}
-                    />
-                  ))}
-                </div>
+                {/* Quality dots & WebRTC stats */}
+                {stats ? (
+                  <div className="flex items-center gap-1.5 ml-1 border-l border-border/40 pl-2 text-[10px] font-mono">
+                    <span className={cn("font-bold flex items-center gap-0.5", stats.qualityGrade === "good" ? "text-emerald-400" : stats.qualityGrade === "fair" ? "text-amber-400" : "text-rose-400")}>
+                      <Signal className="h-3 w-3" />
+                      {stats.rtt !== null ? `${stats.rtt}ms` : "P2P"}
+                    </span>
+                    <span className="text-[9px] bg-secondary/80 text-foreground px-1 rounded font-sans uppercase font-bold">{stats.resolution}</span>
+                    <span className="text-[9px] text-muted-foreground opacity-80">{stats.fps}fps</span>
+                    {stats.packetLoss > 0 && (
+                      <span className="text-[9px] text-rose-400 font-bold">{stats.packetLoss}% loss</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-end gap-[2px] ml-1">
+                    {[1, 2, 3].map((bar) => (
+                      <div
+                        key={bar}
+                        className={cn(
+                          "w-[3px] rounded-full transition-colors",
+                          bar === 1 ? "h-1.5" : bar === 2 ? "h-2.5" : "h-3.5",
+                          callQuality === "good" ? "bg-green-400" :
+                          callQuality === "fair" ? (bar <= 2 ? "bg-amber-400" : "bg-muted-foreground/30") :
+                          callQuality === "poor" ? (bar <= 1 ? "bg-destructive" : "bg-muted-foreground/30") :
+                          "bg-muted-foreground/30"
+                        )}
+                      />
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -920,10 +952,13 @@ const VideoCallOverlay = ({
                     small
                   />
                 )}
-                {!isAudioOnly && (
+                {!isAudioOnly && supportsPiP && (
                   <ControlButton
-                    onClick={togglePiP}
-                    active={isPiP}
+                    onClick={() => {
+                      if (onTogglePiP) onTogglePiP();
+                      else togglePiP();
+                    }}
+                    active={isPiPActive || isPiP}
                     icon={<PictureInPicture2 className="h-4 w-4" />}
                     label="PiP"
                     small
