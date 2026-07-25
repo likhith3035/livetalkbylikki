@@ -20,6 +20,9 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Register native Capacitor plugins BEFORE super.onCreate
+        registerPlugin(ScreenCapturePlugin.class);
+
         super.onCreate(savedInstanceState);
 
         // Request camera + mic permissions at the native level on first launch

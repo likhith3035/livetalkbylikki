@@ -411,10 +411,27 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     }
   }, [facingMode]);
 
+  const screenCaptureListenerRef = useRef<{ remove: () => void } | null>(null);
+  const screenCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
   const toggleScreenShare = useCallback(async () => {
     if (!pcRef.current) return;
 
     if (isScreenSharing) {
+      // === STOP SCREEN SHARING ===
+      // Clean up native screen capture listener if active
+      if (screenCaptureListenerRef.current) {
+        try {
+          screenCaptureListenerRef.current.remove();
+          const ScreenCapture = (await import("@/plugins/screen-capture")).default;
+          await ScreenCapture.stopCapture();
+        } catch { /* already stopped */ }
+        screenCaptureListenerRef.current = null;
+      }
+      if (screenCanvasRef.current) {
+        screenCanvasRef.current.remove();
+        screenCanvasRef.current = null;
+      }
       if (screenStreamRef.current) {
         screenStreamRef.current.getTracks().forEach((t) => t.stop());
         screenStreamRef.current = null;
@@ -432,25 +449,62 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       setIsScreenSharing(false);
       sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: false });
     } else {
+      // === START SCREEN SHARING ===
+      const isNativeAndroid =
+        typeof window !== "undefined" &&
+        (window as any).Capacitor?.isNativePlatform?.() &&
+        (window as any).Capacitor?.getPlatform?.() === "android";
+
       try {
         let screenStream: MediaStream;
-        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-          try {
-            screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-          } catch (e: any) {
-            // Fallback to Rear Camera Document Share on mobile if display capture fails
-            toast({
-              title: "Switching to Document Share",
-              description: "Using rear camera for live document/screen share on mobile.",
-            });
-            screenStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
-          }
+
+        if (isNativeAndroid) {
+          // ──── NATIVE ANDROID: Use MediaProjection plugin ────
+          const ScreenCapture = (await import("@/plugins/screen-capture")).default;
+
+          toast({ title: "Starting Screen Capture...", description: "Approve the Android permission prompt." });
+
+          const result = await ScreenCapture.startCapture();
+
+          // Create an offscreen canvas to receive native frames
+          const canvas = document.createElement("canvas");
+          canvas.width = result.width || 720;
+          canvas.height = result.height || 1280;
+          canvas.style.display = "none";
+          document.body.appendChild(canvas);
+          screenCanvasRef.current = canvas;
+          const ctx = canvas.getContext("2d")!;
+
+          // Listen for native frames and draw them to canvas
+          const listener = await ScreenCapture.addListener("frame", (data) => {
+            const img = new Image();
+            img.onload = () => {
+              if (canvas.width !== data.width || canvas.height !== data.height) {
+                canvas.width = data.width;
+                canvas.height = data.height;
+              }
+              ctx.drawImage(img, 0, 0);
+            };
+            img.src = `data:image/jpeg;base64,${data.frame}`;
+          });
+          screenCaptureListenerRef.current = listener;
+
+          // captureStream() creates a live MediaStream from the canvas
+          screenStream = (canvas as any).captureStream(8) as MediaStream;
+
+          toast({ title: "Screen Sharing Active", description: "Your screen is now being shared in the call." });
+        } else if (navigator.mediaDevices?.getDisplayMedia) {
+          // ──── DESKTOP: Use standard getDisplayMedia ────
+          screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         } else {
+          // ──── FALLBACK: Rear camera document share ────
           toast({
             title: "Switching to Document Share",
             description: "Using rear camera for live document/screen share on mobile.",
           });
-          screenStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+          screenStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } },
+          });
         }
 
         screenStreamRef.current = screenStream;
@@ -469,10 +523,23 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         setIsScreenSharing(true);
         sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: true });
       } catch (err: any) {
+        // Clean up if native capture started but something else failed
+        if (screenCaptureListenerRef.current) {
+          try {
+            screenCaptureListenerRef.current.remove();
+            const ScreenCapture = (await import("@/plugins/screen-capture")).default;
+            await ScreenCapture.stopCapture();
+          } catch { /* ignore */ }
+          screenCaptureListenerRef.current = null;
+        }
+        if (screenCanvasRef.current) {
+          screenCanvasRef.current.remove();
+          screenCanvasRef.current = null;
+        }
         if (err.name !== "NotAllowedError" && err.name !== "AbortError") {
           toast({
-            title: "Screen Share Unavailable",
-            description: "Could not access screen or camera stream for sharing.",
+            title: "Screen Share Failed",
+            description: err.message || "Could not start screen sharing.",
             variant: "destructive",
           });
         }
