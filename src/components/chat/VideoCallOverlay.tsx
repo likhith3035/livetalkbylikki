@@ -764,7 +764,7 @@ const VideoCallOverlay = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 max-w-[90%] sm:max-w-md px-4 py-2 rounded-2xl bg-card/90 border border-primary/40 shadow-2xl backdrop-blur-xl text-center select-none"
+                className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 max-w-[90%] sm:max-w-md px-4 py-2 rounded-2xl bg-card/90 border border-primary/40 shadow-2xl backdrop-blur-xl text-center select-none pointer-events-none"
               >
                 <p className="text-xs sm:text-sm font-semibold text-foreground tracking-wide leading-relaxed">
                   {subtitles.subtitle}
