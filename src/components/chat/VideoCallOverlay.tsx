@@ -110,6 +110,7 @@ const VideoCallOverlay = ({
   const [showSnapshot, setShowSnapshot] = useState(false);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
+  const [chatSubtitle, setChatSubtitle] = useState<string>("");
   const [activeFilter, setActiveFilter] = useState<VideoFilter>(VIDEO_FILTERS[0]);
   const qualityIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -205,7 +206,10 @@ const VideoCallOverlay = ({
       controlsTimerRef.current = setTimeout(() => setShowControls(false), 4000);
     };
     resetTimer();
-  const [chatSubtitle, setChatSubtitle] = useState<string>("");
+    return () => {
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+    };
+  }, [callStatus]);
 
   // Live Subtitles for In-Call Chat Messages (100% Fallback)
   useEffect(() => {
@@ -236,7 +240,6 @@ const VideoCallOverlay = ({
     const t = setTimeout(() => setChatSubtitle(""), 6000);
     return () => clearTimeout(t);
   }, [inCallMessages, subtitles.isActive, subtitles.fromLang, subtitles.toLang, strangerName]);
-  }, [callStatus]);
 
   // Scroll chat to bottom
   useEffect(() => {
