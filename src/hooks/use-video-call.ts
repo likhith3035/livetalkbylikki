@@ -161,7 +161,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     pendingCandidatesRef.current = [];
   }, [setIsAudioOnlySynced]);
 
-  // Native Android Foreground Service for persistent background call (WhatsApp-style)
+  // Native Android Custom Call Notification & Action Listener (Mute, Camera, End Call)
   useEffect(() => {
     const isNativeAndroid =
       typeof window !== "undefined" &&
@@ -170,16 +170,32 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
 
     if (!isNativeAndroid) return;
 
+    let actionListener: { remove: () => void } | null = null;
+
     if (callStatus === "active") {
-      import("@/plugins/call-service").then(({ default: CallService }) => {
-        CallService.startCallService().catch(() => {});
+      import("@/plugins/call-service").then(async ({ default: CallService }) => {
+        CallService.startCallService({ strangerName: "Stranger" }).catch(() => {});
+
+        actionListener = await CallService.addListener("callAction", (data) => {
+          if (data.action === "toggleMute") {
+            toggleMute();
+          } else if (data.action === "toggleCamera") {
+            toggleCamera();
+          } else if (data.action === "endCall") {
+            endCall();
+          }
+        });
       });
     } else {
       import("@/plugins/call-service").then(({ default: CallService }) => {
         CallService.stopCallService().catch(() => {});
       });
     }
-  }, [callStatus]);
+
+    return () => {
+      if (actionListener) actionListener.remove();
+    };
+  }, [callStatus, toggleMute, toggleCamera, endCall]);
 
   // Drain buffered ICE candidates — safe to call multiple times
   const drainPendingCandidates = useCallback(async (pc: RTCPeerConnection) => {

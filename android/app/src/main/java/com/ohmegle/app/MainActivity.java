@@ -99,4 +99,18 @@ public class MainActivity extends BridgeActivity {
             configureWebView();
         }
     }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                android.app.PictureInPictureParams.Builder builder = new android.app.PictureInPictureParams.Builder();
+                builder.setAspectRatio(new android.util.Rational(9, 16));
+                enterPictureInPictureMode(builder.build());
+            } catch (Exception e) {
+                // Device does not support PiP or user disabled it
+            }
+        }
+    }
 }

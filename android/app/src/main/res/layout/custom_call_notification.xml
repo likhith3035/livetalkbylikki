@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/notification_bg_rounded">
+
+    <!-- Header Row: Avatar, Name, Timer -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+
+        <ImageView
+            android:id="@+id/notification_avatar"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@mipmap/ic_launcher"
+            android:background="@drawable/avatar_bg_circle"
+            android:padding="2dp"
+            android:scaleType="fitCenter" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:id="@+id/notification_caller_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stranger"
+                android:textColor="#1F2937"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notification_call_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00 • LiveTalk Call"
+                android:textColor="#6B7280"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/notification_brand_logo"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@mipmap/ic_launcher"
+            android:alpha="0.8" />
+    </LinearLayout>
+
+    <!-- Action Buttons Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- Mute Button -->
+        <ImageButton
+            android:id="@+id/btn_notification_mute"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/btn_notification_action_bg"
+            android:src="@android:drawable/ic_lock_silent_mode_off"
+            android:contentDescription="Mute Audio" />
+
+        <!-- Camera Button -->
+        <ImageButton
+            android:id="@+id/btn_notification_camera"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/btn_notification_action_bg"
+            android:src="@android:drawable/ic_menu_camera"
+            android:contentDescription="Toggle Camera" />
+
+        <!-- Return to App Button -->
+        <ImageButton
+            android:id="@+id/btn_notification_open"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/btn_notification_action_bg"
+            android:src="@android:drawable/ic_menu_view"
+            android:contentDescription="Return to Call" />
+
+        <!-- End Call Button (Red Circle) -->
+        <ImageButton
+            android:id="@+id/btn_notification_end_call"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@drawable/btn_notification_end_call_bg"
+            android:src="@android:drawable/ic_menu_call"
+            android:contentDescription="End Call" />
+
+    </LinearLayout>
+
+</LinearLayout>

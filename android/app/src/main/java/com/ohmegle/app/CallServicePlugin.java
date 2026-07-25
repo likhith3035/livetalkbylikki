@@ -12,10 +12,31 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "CallService")
 public class CallServicePlugin extends Plugin {
 
+    private static CallServicePlugin instance;
+
+    public static CallServicePlugin getInstance() {
+        return instance;
+    }
+
+    @Override
+    public void load() {
+        super.load();
+        instance = this;
+    }
+
+    public void notifyCallAction(String action) {
+        JSObject ret = new JSObject();
+        ret.put("action", action);
+        notifyListeners("callAction", ret);
+    }
+
     @PluginMethod
     public void startCallService(PluginCall call) {
         try {
+            String strangerName = call.getString("strangerName", "Stranger");
             Intent serviceIntent = new Intent(getContext(), CallForegroundService.class);
+            serviceIntent.putExtra("strangerName", strangerName);
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 getContext().startForegroundService(serviceIntent);
             } else {
