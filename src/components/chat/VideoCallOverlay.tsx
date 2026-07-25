@@ -205,9 +205,37 @@ const VideoCallOverlay = ({
       controlsTimerRef.current = setTimeout(() => setShowControls(false), 4000);
     };
     resetTimer();
-    return () => {
-      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
-    };
+  const [chatSubtitle, setChatSubtitle] = useState<string>("");
+
+  // Live Subtitles for In-Call Chat Messages (100% Fallback)
+  useEffect(() => {
+    if (!subtitles.isActive || !inCallMessages || inCallMessages.length === 0) return;
+    const lastMsg = inCallMessages[inCallMessages.length - 1];
+    if (!lastMsg || !lastMsg.text.trim()) return;
+
+    const fromCode = subtitles.fromLang.split("-")[0];
+    const toCode = subtitles.toLang.split("-")[0];
+
+    if (fromCode !== toCode) {
+      fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromCode}&tl=${toCode}&dt=t&q=${encodeURIComponent(lastMsg.text)}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && data[0] && data[0][0] && data[0][0][0]) {
+            setChatSubtitle(`${lastMsg.sender === "you" ? "You" : (strangerName || "Stranger")}: "${lastMsg.text}" ➔ "${data[0][0][0]}"`);
+          } else {
+            setChatSubtitle(`${lastMsg.sender === "you" ? "You" : (strangerName || "Stranger")}: "${lastMsg.text}"`);
+          }
+        })
+        .catch(() => {
+          setChatSubtitle(`${lastMsg.sender === "you" ? "You" : (strangerName || "Stranger")}: "${lastMsg.text}"`);
+        });
+    } else {
+      setChatSubtitle(`${lastMsg.sender === "you" ? "You" : (strangerName || "Stranger")}: "${lastMsg.text}"`);
+    }
+
+    const t = setTimeout(() => setChatSubtitle(""), 6000);
+    return () => clearTimeout(t);
+  }, [inCallMessages, subtitles.isActive, subtitles.fromLang, subtitles.toLang, strangerName]);
   }, [callStatus]);
 
   // Scroll chat to bottom
@@ -768,10 +796,10 @@ const VideoCallOverlay = ({
                 className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 max-w-[90%] sm:max-w-md px-4 py-2.5 rounded-2xl bg-card/95 border border-primary/40 shadow-2xl backdrop-blur-xl text-center select-none pointer-events-none"
               >
                 <p className="text-xs sm:text-sm font-semibold text-foreground tracking-wide leading-relaxed">
-                  {subtitles.subtitle || (
+                  {subtitles.subtitle || chatSubtitle || (
                     <span className="text-muted-foreground/80 font-normal italic flex items-center justify-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      Listening in {subtitles.fromLang.split("-")[0].toUpperCase()}... (Speak into mic)
+                      Listening in {subtitles.fromLang.split("-")[0].toUpperCase()}... (Speak or type in chat)
                     </span>
                   )}
                 </p>
