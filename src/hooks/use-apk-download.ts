@@ -9,15 +9,14 @@ export interface ApkInfo {
   isNew?: boolean;
 }
 
-export const GITHUB_RELEASE_APK_URL =
-  "https://livetalkbylikki.netlify.app/livetalk.apk";
+export const GITHUB_RELEASE_APK_URL = "/livetalk.apk";
 
-// APK is hosted directly on Netlify
+// APK is hosted directly on web app at /livetalk.apk
 export const APK_INFO: ApkInfo = {
-  version: "1.5.0",
-  size: "7.2 MB",
-  sizeBytes: 7243451,
-  lastUpdated: "July 24, 2026",
+  version: "1.6.0",
+  size: "8.5 MB",
+  sizeBytes: 8978432,
+  lastUpdated: "July 25, 2026",
   url: GITHUB_RELEASE_APK_URL,
   isNew: true,
 };
