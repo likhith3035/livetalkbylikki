@@ -3,7 +3,7 @@ import {
   Video, VideoOff, Mic, MicOff, PhoneOff, Phone, X,
   Monitor, MonitorOff, SwitchCamera, Sparkles, MessageSquare, Send,
   PictureInPicture2, Clock, Shield, Hand, Camera, Signal, Smile,
-  Zap
+  Zap, Languages, Globe, Settings
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import type { VideoCallStatus } from "@/hooks/use-video-call";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { CameraFilterSelector, VIDEO_FILTERS, type VideoFilter } from "@/components/video/CameraFilterSelector";
-import { useSpeechSubtitles } from "@/hooks/use-speech-subtitles";
+import { useSpeechSubtitles, SPOKEN_LANGUAGES, TARGET_LANGUAGES } from "@/hooks/use-speech-subtitles";
 
 interface InCallMessage {
   id: string;
@@ -109,6 +109,7 @@ const VideoCallOverlay = ({
   const [callQuality, setCallQuality] = useState<"good" | "fair" | "poor" | "unknown">("unknown");
   const [showSnapshot, setShowSnapshot] = useState(false);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
+  const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [activeFilter, setActiveFilter] = useState<VideoFilter>(VIDEO_FILTERS[0]);
   const qualityIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -843,13 +844,22 @@ const VideoCallOverlay = ({
                         small
                       />
                     )}
-                      <ControlButton
-                        onClick={subtitles.toggleSubtitles}
-                        active={subtitles.isActive}
-                        icon={<MessageSquare className={cn("h-4 w-4", subtitles.isActive && "text-emerald-400 animate-pulse")} />}
-                        label="CC Subtitles"
-                        small
-                      />
+                      <div className="relative flex items-center gap-1">
+                        <ControlButton
+                          onClick={subtitles.toggleSubtitles}
+                          active={subtitles.isActive}
+                          icon={<MessageSquare className={cn("h-4 w-4", subtitles.isActive && "text-emerald-400 animate-pulse")} />}
+                          label="CC Subtitles"
+                          small
+                        />
+                        <button
+                          onClick={() => setShowSubtitleModal(true)}
+                          className="p-1.5 rounded-full bg-secondary/80 hover:bg-secondary text-foreground text-xs transition-colors border border-border/50"
+                          title="Subtitle Languages (From ➔ To)"
+                        >
+                          <Languages className="h-3.5 w-3.5 text-primary" />
+                        </button>
+                      </div>
                       <ControlButton
                         onClick={() => setIsBlurred(!isBlurred)}
                         active={isBlurred}
@@ -1017,6 +1027,96 @@ const VideoCallOverlay = ({
               </div>
             </motion.div>
           )}
+        {/* Subtitle Settings Modal */}
+        <AnimatePresence>
+          {showSubtitleModal && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
+              onClick={() => setShowSubtitleModal(false)}
+            >
+              <div
+                className="w-full max-w-sm bg-card border border-border/80 shadow-2xl rounded-3xl p-6 space-y-5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                      <Languages className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-foreground text-sm">Subtitle Languages</h3>
+                      <p className="text-[11px] text-muted-foreground">Select speech & translation pairs</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowSubtitleModal(false)}
+                    className="p-1.5 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                      🎙️ Spoken Language (From)
+                    </label>
+                    <select
+                      value={subtitles.fromLang}
+                      onChange={(e) => subtitles.setFromLang(e.target.value)}
+                      className="w-full bg-secondary/80 border border-border/60 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 font-medium"
+                    >
+                      {SPOKEN_LANGUAGES.map((lang) => (
+                        <option key={lang.code} value={lang.code} className="bg-card text-foreground">
+                          {lang.flag} {lang.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                      🔤 Translate Subtitles To
+                    </label>
+                    <select
+                      value={subtitles.toLang}
+                      onChange={(e) => subtitles.setToLang(e.target.value)}
+                      className="w-full bg-secondary/80 border border-border/60 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 font-medium"
+                    >
+                      {TARGET_LANGUAGES.map((lang) => (
+                        <option key={lang.code} value={lang.code} className="bg-card text-foreground">
+                          {lang.flag} {lang.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-border/40">
+                  <Button
+                    onClick={() => {
+                      subtitles.toggleSubtitles();
+                      if (!subtitles.isActive) {
+                        setShowSubtitleModal(false);
+                      }
+                    }}
+                    variant={subtitles.isActive ? "destructive" : "default"}
+                    className="rounded-xl w-full text-xs font-bold py-2.5 flex items-center justify-center gap-2"
+                  >
+                    {subtitles.isActive ? (
+                      <>Stop Subtitles</>
+                    ) : (
+                      <>▶️ Start Subtitles ({subtitles.fromLang.split("-")[0].toUpperCase()} ➔ {subtitles.toLang.toUpperCase()})</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         </AnimatePresence>
       </div>
     );

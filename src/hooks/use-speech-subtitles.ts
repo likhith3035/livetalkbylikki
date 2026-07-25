@@ -1,71 +1,93 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-export interface SubtitleLanguage {
+export interface LanguageOption {
   code: string;
   name: string;
   flag: string;
 }
 
-export const SUBTITLE_LANGUAGES: SubtitleLanguage[] = [
+export const SPOKEN_LANGUAGES: LanguageOption[] = [
+  { code: "en-US", name: "English (US/UK)", flag: "🇺🇸" },
   { code: "te-IN", name: "Telugu (తెలుగు)", flag: "🇮🇳" },
-  { code: "en-US", name: "English (US)", flag: "🇺🇸" },
   { code: "hi-IN", name: "Hindi (हिंदी)", flag: "🇮🇳" },
   { code: "ta-IN", name: "Tamil (தமிழ்)", flag: "🇮🇳" },
   { code: "es-ES", name: "Spanish (Español)", flag: "🇲🇽" },
   { code: "fr-FR", name: "French (Français)", flag: "🇫🇷" },
   { code: "de-DE", name: "German (Deutsch)", flag: "🇩🇪" },
   { code: "ja-JP", name: "Japanese (日本語)", flag: "🇯🇵" },
-  { code: "pt-BR", name: "Portuguese (Português)", flag: "🇵🇹" },
-  { code: "it-IT", name: "Italian (Italiano)", flag: "🇮🇹" },
   { code: "zh-CN", name: "Chinese (Mandarin)", flag: "🇨🇳" },
   { code: "ko-KR", name: "Korean (한국어)", flag: "🇰🇷" },
   { code: "ar-SA", name: "Arabic (العربية)", flag: "🇸🇦" },
+  { code: "pt-BR", name: "Portuguese (Português)", flag: "🇵🇹" },
+  { code: "it-IT", name: "Italian (Italiano)", flag: "🇮🇹" },
   { code: "ru-RU", name: "Russian (Русский)", flag: "🇷🇺" },
   { code: "tr-TR", name: "Turkish (Türkçe)", flag: "🇹🇷" },
 ];
 
-async function translateToEnglish(text: string, fromLangCode: string): Promise<string> {
+export const TARGET_LANGUAGES: LanguageOption[] = [
+  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "te", name: "Telugu (తెలుగు)", flag: "🇮🇳" },
+  { code: "hi", name: "Hindi (हिंदी)", flag: "🇮🇳" },
+  { code: "ta", name: "Tamil (தமிழ்)", flag: "🇮🇳" },
+  { code: "es", name: "Spanish", flag: "🇲🇽" },
+  { code: "fr", name: "French", flag: "🇫🇷" },
+  { code: "de", name: "German", flag: "🇩🇪" },
+  { code: "ja", name: "Japanese", flag: "🇯🇵" },
+  { code: "zh", name: "Chinese", flag: "🇨🇳" },
+  { code: "ko", name: "Korean", flag: "🇰🇷" },
+  { code: "ar", name: "Arabic", flag: "🇸🇦" },
+];
+
+async function translateText(text: string, fromCode: string, toCode: string): Promise<string> {
   if (!text.trim()) return text;
-  const srcPair = fromLangCode.split("-")[0];
-  if (srcPair === "en") return text;
+  const src = fromCode.split("-")[0];
+  const tgt = toCode.split("-")[0];
+
+  if (src === tgt) return text;
 
   try {
-    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcPair}|en`);
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${tgt}`);
     const data = await res.json();
     if (data && data.responseData && data.responseData.translatedText) {
-      return `${text} ➔ English: "${data.responseData.translatedText}"`;
+      return `${text} ➔ ${data.responseData.translatedText}`;
     }
   } catch (e) {
-    // Return original transcript on network error
+    console.warn("[Subtitles] Translation fetch failed:", e);
   }
   return text;
 }
 
 interface UseSpeechSubtitlesOptions {
-  defaultLang?: string;
+  defaultFromLang?: string;
+  defaultToLang?: string;
   enabled?: boolean;
 }
 
-export function useSpeechSubtitles({ defaultLang = "te-IN", enabled = false }: UseSpeechSubtitlesOptions = {}) {
+export function useSpeechSubtitles({
+  defaultFromLang = "en-US",
+  defaultToLang = "en",
+  enabled = false,
+}: UseSpeechSubtitlesOptions = {}) {
   const [subtitle, setSubtitle] = useState<string>("");
   const [isActive, setIsActive] = useState<boolean>(false);
   const [isSupported, setIsSupported] = useState<boolean>(true);
-  const [selectedLang, setSelectedLang] = useState<string>(defaultLang);
-  const [autoTranslateToEnglish, setAutoTranslateToEnglish] = useState<boolean>(true);
+  const [fromLang, setFromLang] = useState<string>(defaultFromLang);
+  const [toLang, setToLang] = useState<string>(defaultToLang);
   const { toast } = useToast();
 
   const recognitionRef = useRef<any>(null);
   const hideTimeoutRef = useRef<any>(null);
 
-  const startSubtitles = useCallback((langCode?: string) => {
-    const targetLangCode = langCode || selectedLang;
+  const startSubtitles = useCallback((overrideFrom?: string) => {
+    const activeFrom = overrideFrom || fromLang;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
     if (!SpeechRecognition) {
       setIsSupported(false);
       toast({
         title: "Subtitles Not Supported",
-        description: "Web Speech API is not supported in this browser. Try Chrome, Edge, or Safari.",
+        description: "Web Speech API is not supported in this browser. Please try Chrome, Edge, or Safari.",
         variant: "destructive",
       });
       return;
@@ -73,17 +95,18 @@ export function useSpeechSubtitles({ defaultLang = "te-IN", enabled = false }: U
 
     try {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try { recognitionRef.current.stop(); } catch (e) {}
       }
 
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = targetLangCode;
+      recognition.lang = activeFrom;
 
       recognition.onstart = () => {
         setIsActive(true);
-        setSubtitle(`🎙️ Subtitles active (${targetLangCode}) - Speak in Telugu or your native language...`);
+        const fromObj = SPOKEN_LANGUAGES.find((l) => l.code === activeFrom);
+        setSubtitle(`🎙️ Subtitles active (${fromObj ? fromObj.name : activeFrom}) - Speak into mic...`);
       };
 
       recognition.onresult = async (event: any) => {
@@ -95,13 +118,14 @@ export function useSpeechSubtitles({ defaultLang = "te-IN", enabled = false }: U
         if (currentTranscript.trim()) {
           setSubtitle(currentTranscript);
 
-          // Auto-translate to English if enabled and source language is non-English
-          if (autoTranslateToEnglish && !targetLangCode.startsWith("en")) {
-            const translated = await translateToEnglish(currentTranscript, targetLangCode);
+          const srcCode = activeFrom.split("-")[0];
+          const tgtCode = toLang.split("-")[0];
+
+          if (srcCode !== tgtCode) {
+            const translated = await translateText(currentTranscript, activeFrom, toLang);
             setSubtitle(translated);
           }
 
-          // Clear hide timer
           if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
           hideTimeoutRef.current = setTimeout(() => {
             setSubtitle("");
@@ -110,18 +134,21 @@ export function useSpeechSubtitles({ defaultLang = "te-IN", enabled = false }: U
       };
 
       recognition.onerror = (err: any) => {
-        if (err.error !== "no-speech") {
+        if (err.error === "not-allowed") {
+          toast({
+            title: "Microphone Access Required",
+            description: "Please allow microphone access in your browser settings to enable live subtitles.",
+            variant: "destructive",
+          });
+          setIsActive(false);
+        } else if (err.error !== "no-speech") {
           console.warn("[Subtitles] Speech recognition error:", err.error);
         }
       };
 
       recognition.onend = () => {
         if (enabled && recognitionRef.current) {
-          try {
-            recognition.start();
-          } catch (e) {
-            // Ignored
-          }
+          try { recognition.start(); } catch (e) {}
         } else {
           setIsActive(false);
         }
@@ -133,15 +160,11 @@ export function useSpeechSubtitles({ defaultLang = "te-IN", enabled = false }: U
       console.warn("[Subtitles] Failed to initialize speech recognition:", e);
       setIsActive(false);
     }
-  }, [selectedLang, autoTranslateToEnglish, enabled, toast]);
+  }, [fromLang, toLang, enabled, toast]);
 
   const stopSubtitles = useCallback(() => {
     if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        // Ignored
-      }
+      try { recognitionRef.current.stop(); } catch (e) {}
       recognitionRef.current = null;
     }
     if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
@@ -157,12 +180,16 @@ export function useSpeechSubtitles({ defaultLang = "te-IN", enabled = false }: U
     }
   }, [isActive, startSubtitles, stopSubtitles]);
 
-  const changeLanguage = useCallback((langCode: string) => {
-    setSelectedLang(langCode);
+  const updateFromLanguage = useCallback((code: string) => {
+    setFromLang(code);
     if (isActive) {
-      startSubtitles(langCode);
+      startSubtitles(code);
     }
   }, [isActive, startSubtitles]);
+
+  const updateToLanguage = useCallback((code: string) => {
+    setToLang(code);
+  }, []);
 
   useEffect(() => {
     if (enabled) {
@@ -179,13 +206,14 @@ export function useSpeechSubtitles({ defaultLang = "te-IN", enabled = false }: U
     subtitle,
     isActive,
     isSupported,
-    selectedLang,
-    autoTranslateToEnglish,
-    setAutoTranslateToEnglish,
-    changeLanguage,
+    fromLang,
+    toLang,
+    setFromLang: updateFromLanguage,
+    setToLang: updateToLanguage,
     startSubtitles,
     stopSubtitles,
     toggleSubtitles,
-    SUBTITLE_LANGUAGES,
+    SPOKEN_LANGUAGES,
+    TARGET_LANGUAGES,
   };
 }
