@@ -4,8 +4,9 @@ import {
   Sparkles, MessageSquare, Plus, Key, Cpu, Send, Square, Copy,
   Trash2, RefreshCw, Check, Bot, User as UserIcon, Zap, AlertCircle,
   Menu, X, Shield, ChevronDown, HelpCircle, Download, Search, Eraser,
-  Hash, Type, Mic, MicOff, Volume2, VolumeX, Pin, Sliders, Wand2
+  Hash, Type, Mic, MicOff, Volume2, VolumeX, Pin, Sliders, Wand2, ChevronLeft, ArrowLeft, Home
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -104,6 +105,7 @@ function exportConversationAsMarkdown(conv: Conversation) {
 }
 
 export const AIChatPage: React.FC = () => {
+  const navigate = useNavigate();
   useSEO({
     title: "AI Chat - Multi-Provider Assistant",
     description: "Chat with OpenAI, Gemini, Claude, Ollama, LM Studio and more with custom AI personalities and local key privacy.",
@@ -677,6 +679,15 @@ export const AIChatPage: React.FC = () => {
           {/* Top: New Chat + Controls */}
           <div className="space-y-3">
             <Button
+              variant="outline"
+              onClick={() => navigate("/chat")}
+              className="w-full h-9 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Random Chat</span>
+            </Button>
+
+            <Button
               onClick={handleStartNewChat}
               className="w-full h-11 rounded-2xl bg-gradient-to-r from-primary to-purple-600 font-extrabold text-white text-xs shadow-md shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
             >
@@ -935,6 +946,27 @@ export const AIChatPage: React.FC = () => {
               >
                 <Menu className="h-4 w-4" />
               </button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="h-8 w-8 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 flex items-center justify-center shrink-0 p-0"
+                title="Go to Home Landing Page"
+              >
+                <Home className="h-3.5 w-3.5" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/chat")}
+                className="h-8 px-2 sm:px-3 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 gap-1 shrink-0"
+                title="Return to Live Chat"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span className="hidden xs:inline">Back to Chat</span>
+              </Button>
 
               {activeConv ? (
                 <div className="flex items-center gap-2 min-w-0">

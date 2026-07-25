@@ -439,18 +439,18 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
       });
       onSendMessage(`🎮 Tic-Tac-Toe: ${wResult.winner === mySymbol ? "I" : "You"} won! 🎉`);
       if (wResult.winner === mySymbol) {
-        haptics.vibrate([100, 50, 100]);
+        haptics.gameVictory();
         gameAudio.win();
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 2000);
       } else {
-        haptics.vibrate(80);
+        haptics.gameDefeat();
         gameAudio.lose();
       }
     } else if (!wResult.winner && newBoard.every(c => c !== null)) {
       setTttScores((prev) => ({ ...prev, draws: prev.draws + 1 }));
       onSendMessage("🎮 Tic-Tac-Toe: It's a draw! 🤝");
-      haptics.vibrate(60);
+      haptics.impactMedium();
       gameAudio.draw();
     }
   };

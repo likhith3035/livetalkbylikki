@@ -1,10 +1,9 @@
 import { forwardRef } from "react";
-import { Moon, Sun, ChevronLeft, Video, Phone, Globe } from "lucide-react";
+import { Moon, Sun, ChevronLeft, Video, Phone, Globe, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
-import ChatMoodMeter from "@/components/chat/ChatMoodMeter";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -37,14 +36,25 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         className="flex items-center justify-between px-2.5 sm:px-4 py-1.5 sm:py-3 bg-background border-b border-border/30 sticky top-0 z-40 lg:hidden"
         style={{ willChange: "transform" }}
       >
-        {/* Left: Circular back button */}
-        <button
-          onClick={onBack ? onBack : () => navigate("/")}
-          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
-          aria-label="Exit chat"
-        >
-          <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-        </button>
+        {/* Left: Circular back & home buttons */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={onBack ? onBack : () => navigate("/")}
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
+            aria-label="Exit chat"
+            title="Back"
+          >
+            <ChevronLeft className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+          </button>
+          <button
+            onClick={() => navigate("/")}
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-primary/30 bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-95 shadow-sm shrink-0"
+            aria-label="Go to Home"
+            title="Go to Home"
+          >
+            <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </button>
+        </div>
 
         {/* Center: Stranger Avatar, Name and Status — tappable */}
         <button
@@ -83,9 +93,6 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
 
         {/* Right Action Buttons */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          {messages && messages.length > 3 && (
-            <ChatMoodMeter messages={messages} />
-          )}
           {onAudioCall && (
             <button
               onClick={onAudioCall}

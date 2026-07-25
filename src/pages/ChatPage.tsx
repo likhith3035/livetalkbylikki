@@ -11,7 +11,6 @@ import InterestBar from "@/components/chat/InterestBar";
 import VideoCallOverlay from "@/components/chat/VideoCallOverlay";
 import MatchCelebration from "@/components/chat/MatchCelebration";
 import ChatWallpaper from "@/components/chat/ChatWallpaper";
-import ChatMoodMeter from "@/components/chat/ChatMoodMeter";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
@@ -28,8 +27,8 @@ import { FindingAnimation } from "@/components/chat/FindingAnimation";
 import LiquidBackground from "@/components/LiquidBackground";
 import SharedCanvas from "@/components/chat/SharedCanvas";
 import { useSoundNotifications } from "@/hooks/use-sound-notifications";
+import { haptics } from "@/lib/haptics";
 import { useProtectionDetection } from "@/hooks/use-protection-detection";
-import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import RoomWaitingScreen from "@/components/chat/RoomWaitingScreen";
 import HumanVerifyModal from "@/components/chat/HumanVerifyModal";
@@ -73,7 +72,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     sendSurprise,
     surpriseEffect,
     inCallMessages, sendInCallMessage,
-    supportsScreenShare, 
+    supportsScreenShare, stats, isPiPActive, togglePictureInPicture, supportsPiP,
     autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
@@ -303,6 +302,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       setShowMatchCelebration(true);
       celebrationTimerRef.current = setTimeout(() => setShowMatchCelebration(false), 3500);
       playConnect();
+      haptics.matchFound();
       // Session stats + profile card
       onChatStart();
       setConnectedAt(Date.now());
@@ -343,6 +343,31 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     const randomName = RANDOM_NICKNAMES[Math.floor(Math.random() * RANDOM_NICKNAMES.length)];
     setTempName(randomName);
   };
+
+  const handleInviteFriend = useCallback(() => {
+    const code = createPrivateRoom();
+    const link = `${window.location.origin}/chat?room=${code}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link);
+      toast({
+        title: "🚀 Private Invite Link Copied!",
+        description: `Room Code: ${code}. Send this link to a friend to chat!`,
+      });
+    }
+  }, [createPrivateRoom, toast]);
+
+  const handleStartAIChat = useCallback(() => {
+    stopChat();
+    navigate("/ai-chat");
+  }, [stopChat, navigate]);
+
+  const handleClearInterests = useCallback(() => {
+    setInterests([]);
+    toast({
+      title: "🎯 Filters Cleared",
+      description: "Searching all online users to match faster...",
+    });
+  }, [setInterests, toast]);
 
   const handleStart = useCallback(() => {
     if (!userName) return;
@@ -640,7 +665,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
                   )}
                 </div>
               </button>
-              {messages.length >= 3 && <ChatMoodMeter messages={messages} />}
             </div>
 
             {/* Desktop Call buttons side-by-side */}
@@ -863,6 +887,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           searchElapsed={searchElapsed}
           onStop={stopChat}
           interests={interests}
+          onInviteFriend={handleInviteFriend}
+          onStartAIChat={handleStartAIChat}
+          onClearInterests={handleClearInterests}
         />
       ) : (
         <>
@@ -947,6 +974,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         incomingReaction={incomingReaction}
         onRaiseHand={handleRaiseHand}
         strangerHandRaised={strangerHandRaised}
+        stats={stats}
+        isPiPActive={isPiPActive}
+        onTogglePiP={togglePictureInPicture}
+        supportsPiP={supportsPiP}
       />
 
       <MatchCelebration
