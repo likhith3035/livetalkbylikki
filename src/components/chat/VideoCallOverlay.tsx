@@ -447,7 +447,16 @@ const VideoCallOverlay = ({
               </div>
               <p className="text-sm text-muted-foreground">Audio Call</p>
               {remoteStream && (
-                <audio ref={(el) => { if (el && remoteStream) el.srcObject = remoteStream; }} autoPlay />
+                <audio
+                  ref={(el) => {
+                    if (el && remoteStream && el.srcObject !== remoteStream) {
+                      el.srcObject = remoteStream;
+                      el.play().catch(() => {});
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                />
               )}
             </div>
           ) : (

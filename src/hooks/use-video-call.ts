@@ -393,16 +393,18 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     if (!localStreamRef.current || !pcRef.current) return;
     const newFacing = facingMode === "user" ? "environment" : "user";
     try {
-      const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
-      oldVideoTrack?.stop();
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: newFacing },
+        video: { facingMode: { ideal: newFacing } },
         audio: false,
       });
       const newVideoTrack = newStream.getVideoTracks()[0];
+      const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
       const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
       if (sender && newVideoTrack) await sender.replaceTrack(newVideoTrack);
-      if (oldVideoTrack) localStreamRef.current.removeTrack(oldVideoTrack);
+      if (oldVideoTrack) {
+        localStreamRef.current.removeTrack(oldVideoTrack);
+        oldVideoTrack.stop();
+      }
       localStreamRef.current.addTrack(newVideoTrack);
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
       setFacingMode(newFacing);
@@ -561,6 +563,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       setIsAudioOnlySynced(false);
       onCallUpgraded?.();
       sendSignalingEventRef.current("webrtc:upgrade-video", { senderId: sessionId });
+      // Trigger WebRTC renegotiation so remote peer sees new video track
+      await handleRenegotiateOffer(pcRef.current, sendSignalingEventRef.current, sessionId);
     } catch { /* camera access denied */ }
   }, [sessionId, onCallUpgraded, setIsAudioOnlySynced]);
 
@@ -711,6 +715,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
               pcRef.current.addTrack(videoTrack, localStreamRef.current);
               localStreamRef.current.addTrack(videoTrack);
               setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+              await handleRenegotiateOffer(pcRef.current, sendSignalingEventRef.current, sessionId);
             }
           } catch { /* camera not available */ }
           break;
