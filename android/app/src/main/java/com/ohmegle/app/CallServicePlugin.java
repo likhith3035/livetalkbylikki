@@ -36,6 +36,7 @@ public class CallServicePlugin extends Plugin {
             String strangerName = call.getString("strangerName", "Stranger");
             Intent serviceIntent = new Intent(getContext(), CallForegroundService.class);
             serviceIntent.putExtra("strangerName", strangerName);
+            serviceIntent.putExtra("isIncoming", false);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 getContext().startForegroundService(serviceIntent);
@@ -47,6 +48,27 @@ public class CallServicePlugin extends Plugin {
             call.resolve(ret);
         } catch (Exception e) {
             call.reject("Failed to start call foreground service: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void startIncomingCallService(PluginCall call) {
+        try {
+            String strangerName = call.getString("strangerName", "Stranger");
+            Intent serviceIntent = new Intent(getContext(), CallForegroundService.class);
+            serviceIntent.putExtra("strangerName", strangerName);
+            serviceIntent.putExtra("isIncoming", true);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                getContext().startForegroundService(serviceIntent);
+            } else {
+                getContext().startService(serviceIntent);
+            }
+            JSObject ret = new JSObject();
+            ret.put("started", true);
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject("Failed to start incoming call service: " + e.getMessage());
         }
     }
 

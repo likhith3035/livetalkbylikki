@@ -131,6 +131,41 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     setIsAudioOnly(val);
   }, []);
 
+  const [audioOutput, setAudioOutput] = useState<"speaker" | "earpiece" | "bluetooth">("speaker");
+
+  const toggleAudioOutput = useCallback(async (audioElement?: HTMLAudioElement | null) => {
+    const outputs: ("speaker" | "earpiece" | "bluetooth")[] = ["speaker", "earpiece", "bluetooth"];
+    const nextIndex = (outputs.indexOf(audioOutput) + 1) % outputs.length;
+    const nextOutput = outputs[nextIndex];
+
+    setAudioOutput(nextOutput);
+
+    if (audioElement && typeof (audioElement as any).setSinkId === "function") {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioDevices = devices.filter((d) => d.kind === "audiooutput");
+        if (audioDevices.length > 0) {
+          const targetDevice = audioDevices.find((d) =>
+            nextOutput === "speaker"
+              ? d.label.toLowerCase().includes("speaker")
+              : nextOutput === "bluetooth"
+              ? d.label.toLowerCase().includes("bluetooth") || d.label.toLowerCase().includes("headset")
+              : true
+          ) || audioDevices[0];
+
+          await (audioElement as any).setSinkId(targetDevice.deviceId);
+        }
+      } catch (err) {
+        console.warn("WebRTC: setSinkId error", err);
+      }
+    }
+
+    toast({
+      title: `Audio Output: ${nextOutput.toUpperCase()}`,
+      description: `Routing audio to ${nextOutput === "speaker" ? "Phone Speaker" : nextOutput === "earpiece" ? "Earpiece" : "Bluetooth Headset"}`,
+    });
+  }, [audioOutput, toast]);
+
   const cleanup = useCallback(() => {
     console.log("WebRTC: Cleaning up call...");
     if (pcRef.current) {
@@ -415,7 +450,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     }
   }, [facingMode]);
 
-  // Native Android Custom Call Notification & Action Listener (Mute, Camera, End Call)
+  // Native Android Custom Call Notification & Action Listener (Mute, Camera, End Call, Accept, Decline)
   useEffect(() => {
     const isNativeAndroid =
       typeof window !== "undefined" &&
@@ -426,7 +461,19 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
 
     let actionListener: { remove: () => void } | null = null;
 
-    if (callStatus === "active") {
+    if (callStatus === "incoming") {
+      import("@/plugins/call-service").then(async ({ default: CallService }) => {
+        CallService.startIncomingCallService({ strangerName: "Stranger" }).catch(() => {});
+
+        actionListener = await CallService.addListener("callAction", (data) => {
+          if (data.action === "acceptCall") {
+            acceptCall();
+          } else if (data.action === "declineCall") {
+            declineCall();
+          }
+        });
+      });
+    } else if (callStatus === "active") {
       import("@/plugins/call-service").then(async ({ default: CallService }) => {
         CallService.startCallService({ strangerName: "Stranger" }).catch(() => {});
 
@@ -449,7 +496,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     return () => {
       if (actionListener) actionListener.remove();
     };
-  }, [callStatus, toggleMute, toggleCamera, endCall]);
+  }, [callStatus, toggleMute, toggleCamera, endCall, acceptCall, declineCall]);
 
   const screenCaptureListenerRef = useRef<{ remove: () => void } | null>(null);
   const screenCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -901,6 +948,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     remoteCameraOff,
     remoteBlurred,
     stats,
+    audioOutput,
+    toggleAudioOutput,
     isPiPActive,
     togglePictureInPicture,
     supportsPiP: typeof document !== "undefined" && !!document.pictureInPictureEnabled,

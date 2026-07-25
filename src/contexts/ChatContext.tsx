@@ -74,6 +74,8 @@ interface ChatContextValue {
   supportsScreenShare: boolean;
   surpriseEffect: { type: string; id: number } | null;
   stats: ReturnType<typeof useVideoCall>["stats"];
+  audioOutput: ReturnType<typeof useVideoCall>["audioOutput"];
+  toggleAudioOutput: ReturnType<typeof useVideoCall>["toggleAudioOutput"];
   isPiPActive: boolean;
   supportsPiP: boolean;
 
@@ -283,6 +285,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     handleSignalingEvent, cleanup,
     supportsScreenShare,
     stats,
+    audioOutput,
+    toggleAudioOutput,
     isPiPActive,
     togglePictureInPicture,
     supportsPiP,
@@ -399,6 +403,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     sendSurprise,
     surpriseEffect,
     stats,
+    audioOutput,
+    toggleAudioOutput,
     isPiPActive,
     togglePictureInPicture,
     supportsPiP,

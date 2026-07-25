@@ -72,7 +72,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     sendSurprise,
     surpriseEffect,
     inCallMessages, sendInCallMessage,
-    supportsScreenShare, stats, isPiPActive, togglePictureInPicture, supportsPiP,
+    supportsScreenShare, stats, audioOutput, toggleAudioOutput, isPiPActive, togglePictureInPicture, supportsPiP,
     autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
@@ -975,6 +975,8 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onRaiseHand={handleRaiseHand}
         strangerHandRaised={strangerHandRaised}
         stats={stats}
+        audioOutput={audioOutput}
+        onToggleAudioOutput={toggleAudioOutput}
         isPiPActive={isPiPActive}
         onTogglePiP={togglePictureInPicture}
         supportsPiP={supportsPiP}

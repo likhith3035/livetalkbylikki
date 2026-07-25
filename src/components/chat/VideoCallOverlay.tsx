@@ -3,7 +3,7 @@ import {
   Video, VideoOff, Mic, MicOff, PhoneOff, Phone, X,
   Monitor, MonitorOff, SwitchCamera, Sparkles, MessageSquare, Send,
   PictureInPicture2, Clock, Shield, Hand, Camera, Signal, Smile,
-  Zap, Languages, Globe, Settings
+  Zap, Languages, Globe, Settings, Volume2, Headphones, PhoneCall
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,8 @@ interface VideoCallOverlayProps {
   isPiPActive?: boolean;
   onTogglePiP?: () => void;
   supportsPiP?: boolean;
+  audioOutput?: "speaker" | "earpiece" | "bluetooth";
+  onToggleAudioOutput?: () => void;
 }
 
 const formatDuration = (seconds: number) => {
@@ -94,10 +96,11 @@ const VideoCallOverlay = ({
   incomingReaction,
   onRaiseHand,
   strangerHandRaised = false,
-  stats,
   isPiPActive = false,
   onTogglePiP,
   supportsPiP = true,
+  audioOutput = "speaker",
+  onToggleAudioOutput,
 }: VideoCallOverlayProps) => {
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -857,6 +860,23 @@ const VideoCallOverlay = ({
             >
               {/* Top row: extra controls */}
               <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
+                {onToggleAudioOutput && (
+                  <ControlButton
+                    onClick={onToggleAudioOutput}
+                    active={audioOutput !== "speaker"}
+                    icon={
+                      audioOutput === "speaker" ? (
+                        <Volume2 className="h-4 w-4 text-emerald-400" />
+                      ) : audioOutput === "bluetooth" ? (
+                        <Headphones className="h-4 w-4 text-blue-400" />
+                      ) : (
+                        <PhoneCall className="h-4 w-4 text-amber-400" />
+                      )
+                    }
+                    label={audioOutput.toUpperCase()}
+                    small
+                  />
+                )}
                 {isAudioOnly && onUpgradeToVideo && (
                   <ControlButton
                     onClick={onUpgradeToVideo}
