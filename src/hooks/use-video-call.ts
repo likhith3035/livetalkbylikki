@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { sounds } from "@/lib/sounds";
 import { RENEGOTIATE_EVENT, handleRenegotiateOffer } from "@/features/cross-device-sync/webrtcRenegotiation";
+import { useToast } from "@/hooks/use-toast";
 
 export type VideoCallStatus = "idle" | "requesting" | "incoming" | "connecting" | "active";
 
@@ -103,6 +104,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     isDegraded: false,
   });
   const [isPiPActive, setIsPiPActive] = useState(false);
+  const { toast } = useToast();
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -430,6 +432,15 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       setIsScreenSharing(false);
       sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: false });
     } else {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        toast({
+          title: "Screen Share Unavailable",
+          description: "Android OS restricts screen capture inside mobile WebViews. Please use Chrome on Desktop for full Screen Share support.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         screenStreamRef.current = screenStream;
@@ -447,9 +458,17 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         setLocalStream(new MediaStream(localStreamRef.current?.getTracks() || []));
         setIsScreenSharing(true);
         sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: true });
-      } catch { /* user cancelled */ }
+      } catch (err: any) {
+        if (err.name !== "NotAllowedError" && err.name !== "AbortError") {
+          toast({
+            title: "Screen Share Restricted On Mobile",
+            description: "Android OS limits screen capture inside WebViews. Open LiveTalk in desktop browser for full Screen Share capability.",
+            variant: "destructive",
+          });
+        }
+      }
     }
-  }, [isScreenSharing, facingMode, sessionId]);
+  }, [isScreenSharing, facingMode, sessionId, toast]);
 
   // Keep the ref pointing to the latest version
   useEffect(() => { toggleScreenShareRef.current = toggleScreenShare; }, [toggleScreenShare]);
