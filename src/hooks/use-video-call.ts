@@ -161,6 +161,26 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     pendingCandidatesRef.current = [];
   }, [setIsAudioOnlySynced]);
 
+  // Native Android Foreground Service for persistent background call (WhatsApp-style)
+  useEffect(() => {
+    const isNativeAndroid =
+      typeof window !== "undefined" &&
+      (window as any).Capacitor?.isNativePlatform?.() &&
+      (window as any).Capacitor?.getPlatform?.() === "android";
+
+    if (!isNativeAndroid) return;
+
+    if (callStatus === "active") {
+      import("@/plugins/call-service").then(({ default: CallService }) => {
+        CallService.startCallService().catch(() => {});
+      });
+    } else {
+      import("@/plugins/call-service").then(({ default: CallService }) => {
+        CallService.stopCallService().catch(() => {});
+      });
+    }
+  }, [callStatus]);
+
   // Drain buffered ICE candidates — safe to call multiple times
   const drainPendingCandidates = useCallback(async (pc: RTCPeerConnection) => {
     if (!pc.remoteDescription || pendingCandidatesRef.current.length === 0) return;

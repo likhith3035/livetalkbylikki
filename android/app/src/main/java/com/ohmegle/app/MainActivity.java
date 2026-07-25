@@ -22,6 +22,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // Register native Capacitor plugins BEFORE super.onCreate
         registerPlugin(ScreenCapturePlugin.class);
+        registerPlugin(CallServicePlugin.class);
 
         super.onCreate(savedInstanceState);
 

@@ -42,6 +42,12 @@
             android:name=".ScreenCaptureService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
+
+        <!-- Ongoing Call foreground service for background audio/video call persistence -->
+        <service
+            android:name=".CallForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="microphone|camera" />
     </application>
 
     <!-- Network -->
@@ -63,9 +69,11 @@
     <!-- Keep screen on during calls -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- Screen Sharing & Media Projection -->
+    <!-- Foreground Services for Background Call Persistence -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
     <!-- Vibration feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
