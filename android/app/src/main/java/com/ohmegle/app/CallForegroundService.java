@@ -204,11 +204,11 @@ public class CallForegroundService extends Service {
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager == null) return;
 
-            // Active call channel
+            // Active call channel (IMPORTANCE_DEFAULT for status bar icon & card)
             NotificationChannel activeChannel = new NotificationChannel(
                 CHANNEL_ID,
                 "LiveTalk by Likki Calls",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             );
             activeChannel.setDescription("Shows ongoing call control card when app is in background");
             manager.createNotificationChannel(activeChannel);

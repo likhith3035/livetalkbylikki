@@ -34,11 +34,17 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void requestMediaPermissions() {
-        String[] permissions = {
+        java.util.List<String> permList = new java.util.ArrayList<>(java.util.Arrays.asList(
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.MODIFY_AUDIO_SETTINGS
-        };
+        ));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permList.add(Manifest.permission.POST_NOTIFICATIONS);
+        }
+
+        String[] permissions = permList.toArray(new String[0]);
 
         boolean allGranted = true;
         for (String perm : permissions) {
