@@ -96,6 +96,7 @@ const VideoCallOverlay = ({
   incomingReaction,
   onRaiseHand,
   strangerHandRaised = false,
+  stats,
   isPiPActive = false,
   onTogglePiP,
   supportsPiP = true,
