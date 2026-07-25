@@ -1,16 +1,16 @@
 {
-  "latestVersion": "1.8.0",
+  "latestVersion": "1.9.0",
   "minimumVersion": "1.0.0",
   "forceUpdate": false,
   "downloadUrl": "https://github.com/likhith3035/livetalkbylikki/raw/main/livetalk.apk",
-  "releaseDate": "July 25, 2026 (04:35 PM)",
+  "releaseDate": "July 25, 2026 (04:47 PM)",
   "apkSize": "9.1 MB",
   "releaseNotes": [
-    "🛠️ VideoCallOverlay Stats Reference Error Fix",
-    "🔔 Native WhatsApp-Style Incoming Call Banner Notifications",
+    "⚡ Android 13+ POST_NOTIFICATIONS Runtime Permission Auto-Prompt",
+    "📌 Upgraded Active Call Channel to DEFAULT Importance (Persistent Status Bar Icon)",
+    "🔔 WhatsApp-Style Full-Screen Intent Heads-Up Banner Fixes",
     "🔊 In-Call Audio Output Selector (Speaker / Earpiece / Bluetooth)",
     "📲 Automatic In-App APK Updater with 5s Auto-Download",
-    "🔒 Native Biometric Security Lock (Fingerprint & Face ID)",
-    "⚡ Over-The-Air (OTA) Instant Web Updates"
+    "🔒 Native Biometric Hardware Security Lock"
   ]
 }

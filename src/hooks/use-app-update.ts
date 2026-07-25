@@ -11,7 +11,7 @@ export interface AppVersionInfo {
   releaseNotes: string[];
 }
 
-export const CURRENT_APP_VERSION = "1.7.0";
+export const CURRENT_APP_VERSION = "1.8.0";
 const DISMISSED_VERSION_KEY = "livetalk_dismissed_update_version";
 
 /**
