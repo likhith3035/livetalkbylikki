@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import MobileNav from "@/components/MobileNav";
+import ApkDownloadButton from "@/components/ApkDownloadButton";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSEO } from "@/hooks/use-seo";
 import { cn } from "@/lib/utils";
@@ -528,6 +529,7 @@ const InfoPage = () => {
               { id: "howto", label: "How to use it" },
               { id: "features", label: "All features (detailed)" },
               { id: "comparison", label: "LiveTalk vs Others" },
+              { id: "apk-vs-web", label: "📲 Website vs Mobile APK" },
               { id: "tech", label: "Technology stack" },
               { id: "settings", label: "Settings & preferences" },
               { id: "safety", label: "Safety tips" },
@@ -757,6 +759,96 @@ const InfoPage = () => {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ─── Section: Web vs APK Comparison ─── */}
+      <motion.section id="apk-vs-web" {...fadeUp} transition={{ delay: 0.23 }} className="space-y-8 scroll-mt-24">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary flex items-center gap-1.5">
+              <Smartphone className="h-3.5 w-3.5" /> Mobile App Breakdown
+            </span>
+          </div>
+          <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Smartphone className="h-8 w-8 text-primary" />
+            Website vs Mobile APK Differences
+          </h2>
+          <p className="text-base text-muted-foreground leading-relaxed font-medium">
+            LiveTalk is available as an instant web application and a full-featured native Android APK app. Here is a detailed side-by-side comparison of features between both versions.
+          </p>
+        </div>
+
+        <div className="rounded-[2rem] bg-card/30 backdrop-blur-md border border-border/50 overflow-hidden shadow-xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-border/40 bg-muted/30">
+                  <th className="py-4 px-5 font-semibold text-foreground">Feature / Capability</th>
+                  <th className="py-4 px-5 font-semibold text-foreground min-w-[200px]">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-blue-400" />
+                      <span>LiveTalk Web</span>
+                    </div>
+                  </th>
+                  <th className="py-4 px-5 font-semibold text-primary min-w-[240px]">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="h-4 w-4 text-primary" />
+                      <span>Android APK App</span>
+                      <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">RECOMMENDED</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/20">
+                <tr className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3.5 px-5 font-medium text-foreground">Instant Access (No Installation)</td>
+                  <td className="py-3.5 px-5 text-xs text-muted-foreground">✅ Instant One-Tap Browser Access</td>
+                  <td className="py-3.5 px-5 text-xs text-foreground">📥 APK Download Required (~7.3 MB)</td>
+                </tr>
+                <tr className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3.5 px-5 font-medium text-foreground">Native WhatsApp-Style Incoming Call Banner</td>
+                  <td className="py-3.5 px-5 text-xs text-muted-foreground">❌ Web Audio / Notification Only</td>
+                  <td className="py-3.5 px-5 text-xs font-bold text-emerald-400">🟢 High-Priority Heads-Up Call Banner Screen</td>
+                </tr>
+                <tr className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3.5 px-5 font-medium text-foreground">In-Call Audio Output Switcher</td>
+                  <td className="py-3.5 px-5 text-xs text-muted-foreground">❌ Default Speaker Only</td>
+                  <td className="py-3.5 px-5 text-xs font-bold text-emerald-400">🟢 1-Tap Speaker / Bluetooth / Earpiece Switch</td>
+                </tr>
+                <tr className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3.5 px-5 font-medium text-foreground">Background Call Persistence & Push Notifications</td>
+                  <td className="py-3.5 px-5 text-xs text-muted-foreground">⚠️ Requires Active Browser Tab</td>
+                  <td className="py-3.5 px-5 text-xs font-bold text-emerald-400">🟢 Native Foreground Service (Runs in Background)</td>
+                </tr>
+                <tr className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3.5 px-5 font-medium text-foreground">Native Biometric Security Lock</td>
+                  <td className="py-3.5 px-5 text-xs text-muted-foreground">🔒 Passcode Only</td>
+                  <td className="py-3.5 px-5 text-xs font-bold text-emerald-400">🟢 Hardware Fingerprint & Face Unlock</td>
+                </tr>
+                <tr className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3.5 px-5 font-medium text-foreground">Automatic In-App Updater</td>
+                  <td className="py-3.5 px-5 text-xs text-muted-foreground">⚡ Always Live on Netlify</td>
+                  <td className="py-3.5 px-5 text-xs font-bold text-emerald-400">📲 5s Auto-Download via GitHub</td>
+                </tr>
+                <tr className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3.5 px-5 font-medium text-foreground">Screen Capture Protection & Privacy Shield</td>
+                  <td className="py-3.5 px-5 text-xs text-muted-foreground">🔒 Basic Web Storage Shield</td>
+                  <td className="py-3.5 px-5 text-xs font-bold text-emerald-400">🛡️ Hardware Screen Capture Protection</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="p-6 border-t border-border/40 bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center sm:text-left">
+              <p className="text-sm font-semibold text-foreground">Ready for the ultimate Android calling experience?</p>
+              <p className="text-xs text-muted-foreground">Download the official LiveTalk Android APK directly from GitHub.</p>
+            </div>
+            <div className="shrink-0 w-full sm:w-auto">
+              <ApkDownloadButton variant="compact" />
+            </div>
           </div>
         </div>
       </motion.section>

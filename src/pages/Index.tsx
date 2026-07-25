@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   MessageSquare, ArrowRight, Sparkles, Shield, Zap, Users, Lock,
   EyeOff, Video, Gamepad2, Link2, Copy, Check, Hash, Share2,
-  Instagram, Linkedin, Mail, Camera,
+  Instagram, Linkedin, Mail, Camera, Smartphone, Globe, Download, CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,51 @@ const STEPS = [
   { num: "01", title: "Hit Start", desc: "No signup needed — just tap and go.", icon: Zap },
   { num: "02", title: "Get Matched", desc: "Paired with a random stranger instantly.", icon: Users },
   { num: "03", title: "Start Talking", desc: "Chat, call, play games — all up to you.", icon: MessageSquare },
+];
+
+const COMPARISON_ITEMS = [
+  {
+    feature: "Instant Access (No Installation)",
+    web: "✅ Instant One-Tap Browser Access",
+    apk: "📥 APK Download Required (~7.3 MB)",
+    isApkBest: false,
+  },
+  {
+    feature: "Native Incoming Call Banner (WhatsApp Style)",
+    web: "❌ Web Audio Alert Only",
+    apk: "🟢 High-Priority Heads-Up Banner",
+    isApkBest: true,
+  },
+  {
+    feature: "In-Call Audio Switcher (Speaker/Earpiece/Bluetooth)",
+    web: "❌ Speaker Output Only",
+    apk: "🟢 1-Tap Audio Output Routing",
+    isApkBest: true,
+  },
+  {
+    feature: "Background Call Persistence & Notifications",
+    web: "⚠️ Requires Active Tab",
+    apk: "🟢 Foreground Service (Runs in Background)",
+    isApkBest: true,
+  },
+  {
+    feature: "Native Biometric Hardware Lock (Fingerprint & Face ID)",
+    web: "🔒 Passcode Only",
+    apk: "🟢 Hardware Biometric Protection",
+    isApkBest: true,
+  },
+  {
+    feature: "Automatic In-App APK Updater",
+    web: "⚡ Always Live on Web",
+    apk: "📲 5s Auto-Download via GitHub",
+    isApkBest: true,
+  },
+  {
+    feature: "Screen Capture Protection & Shield",
+    web: "🔒 Basic Web Storage",
+    apk: "🛡️ Hardware Screen Shield",
+    isApkBest: true,
+  },
 ];
 
 // Simple fade-up animation
@@ -397,6 +442,83 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════ WEBSITE VS MOBILE APK COMPARISON ═══════════ */}
+      <section className="px-6 py-16 sm:py-20 border-t border-border/20 bg-background/50">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeUp}
+            className="text-center space-y-3"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Web vs Android APK</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold font-display tracking-tight">
+              Website vs <span className="text-gradient">Mobile App</span>
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-xl mx-auto">
+              Compare features between the instant web browser version and the powerful native Android APK build.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeUp}
+            className="overflow-hidden rounded-3xl border border-primary/20 bg-card/40 backdrop-blur-md shadow-xl"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-border/60 bg-muted/40">
+                    <th className="py-4 px-5 font-semibold text-foreground">Feature / Capability</th>
+                    <th className="py-4 px-5 font-semibold text-foreground min-w-[200px]">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-blue-400" />
+                        <span>LiveTalk Web</span>
+                      </div>
+                    </th>
+                    <th className="py-4 px-5 font-semibold text-primary min-w-[220px]">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="h-4 w-4 text-primary" />
+                        <span>Android APK</span>
+                        <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">RECOMMENDED</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {COMPARISON_ITEMS.map((item, index) => (
+                    <tr key={index} className="hover:bg-muted/20 transition-colors">
+                      <td className="py-3.5 px-5 font-medium text-foreground/90">{item.feature}</td>
+                      <td className="py-3.5 px-5 text-muted-foreground text-xs">{item.web}</td>
+                      <td className="py-3.5 px-5 text-xs font-semibold text-foreground">
+                        <span className={item.isApkBest ? "text-emerald-400 font-bold" : "text-foreground"}>
+                          {item.apk}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="p-5 border-t border-border/40 bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-xs text-muted-foreground text-center sm:text-left">
+                <span>Want WhatsApp-style calling, background notifications & 1-tap speaker switching?</span>
+              </div>
+              <div className="shrink-0 w-full sm:w-auto">
+                <ApkDownloadButton variant="compact" />
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
