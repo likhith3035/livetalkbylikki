@@ -69,6 +69,20 @@ public class MainActivity extends BridgeActivity {
 
 
 
+        // Auto-grant WebRTC media capture permissions (Camera, Mic, Screen Projection)
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(() -> {
+                    try {
+                        request.grant(request.getResources());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        });
+
         // Enable hardware acceleration
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null);
     }

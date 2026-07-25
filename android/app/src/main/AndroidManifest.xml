@@ -57,6 +57,10 @@
     <!-- Keep screen on during calls -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- Screen Sharing & Media Projection -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
     <!-- Vibration feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
 

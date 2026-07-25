@@ -432,17 +432,27 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       setIsScreenSharing(false);
       sendSignalingEventRef.current("webrtc:screenshare", { senderId: sessionId, sharing: false });
     } else {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        toast({
-          title: "Screen Share Unavailable",
-          description: "Android OS restricts screen capture inside mobile WebViews. Please use Chrome on Desktop for full Screen Share support.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        let screenStream: MediaStream;
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+          try {
+            screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+          } catch (e: any) {
+            // Fallback to Rear Camera Document Share on mobile if display capture fails
+            toast({
+              title: "Switching to Document Share",
+              description: "Using rear camera for live document/screen share on mobile.",
+            });
+            screenStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+          }
+        } else {
+          toast({
+            title: "Switching to Document Share",
+            description: "Using rear camera for live document/screen share on mobile.",
+          });
+          screenStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+        }
+
         screenStreamRef.current = screenStream;
         const screenTrack = screenStream.getVideoTracks()[0];
         const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
@@ -461,8 +471,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       } catch (err: any) {
         if (err.name !== "NotAllowedError" && err.name !== "AbortError") {
           toast({
-            title: "Screen Share Restricted On Mobile",
-            description: "Android OS limits screen capture inside WebViews. Open LiveTalk in desktop browser for full Screen Share capability.",
+            title: "Screen Share Unavailable",
+            description: "Could not access screen or camera stream for sharing.",
             variant: "destructive",
           });
         }
