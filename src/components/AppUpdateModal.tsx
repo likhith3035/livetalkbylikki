@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, Download, Clock, HardDrive, CheckCircle2, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,39 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
   } = updateState;
 
   const showModal = isOpenOverride !== undefined ? isOpenOverride : isUpdateAvailable;
+  const [countdown, setCountdown] = useState<number | null>(5);
+
+  const handleUpdateNow = useCallback(() => {
+    if (updateInfo?.downloadUrl) {
+      const link = document.createElement("a");
+      link.href = updateInfo.downloadUrl;
+      link.download = `LiveTalk-v${updateInfo.latestVersion}.apk`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, [updateInfo]);
+
+  useEffect(() => {
+    if (!showModal || !updateInfo) return;
+    setCountdown(5);
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleUpdateNow();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showModal, updateInfo, handleUpdateNow]);
 
   if (!showModal || !updateInfo) return null;
 
@@ -41,20 +74,8 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
     releaseNotes,
   } = updateInfo;
 
-  const handleUpdateNow = () => {
-    if (downloadUrl) {
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `LiveTalk-v${latestVersion}.apk`;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
   const handleDismiss = () => {
+    setCountdown(null); // Pause auto-countdown on manual dismiss
     if (forceUpdate) return; // Prevent dismissal if update is required
     if (onCloseOverride) {
       onCloseOverride();
@@ -165,8 +186,14 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
           )}
 
           {/* Message Prompt */}
-          <p className="mb-5 text-center text-xs text-muted-foreground">
-            Update now to enjoy the latest features, improvements, and bug fixes.
+          <p className="mb-5 text-center text-xs text-muted-foreground font-medium">
+            {countdown !== null && countdown > 0 ? (
+              <span className="text-primary font-semibold animate-pulse">
+                ⚡ Auto-starting update download in {countdown}s...
+              </span>
+            ) : (
+              "Update now to enjoy the latest features, improvements, and bug fixes."
+            )}
           </p>
 
           {/* Action Buttons */}
@@ -188,7 +215,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
               onClick={handleUpdateNow}
             >
               <Download className="h-4 w-4" />
-              Update Now
+              {countdown !== null && countdown > 0 ? `Update Now (${countdown}s)` : "Update Now"}
             </Button>
           </div>
         </motion.div>

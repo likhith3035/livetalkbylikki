@@ -1,20 +1,15 @@
 {
-  "latestVersion": "1.5.0",
+  "latestVersion": "1.7.0",
   "minimumVersion": "1.0.0",
   "forceUpdate": false,
-  "downloadUrl": "https://livetalkbylikki.netlify.app/livetalk.apk",
-  "releaseDate": "July 24, 2026 (01:20 AM)",
-  "apkSize": "7.2 MB",
+  "downloadUrl": "https://github.com/likhith3035/livetalkbylikki/raw/main/livetalk.apk",
+  "releaseDate": "July 25, 2026 (03:55 PM)",
+  "apkSize": "7.3 MB",
   "releaseNotes": [
+    "🔔 Native WhatsApp-Style Incoming Call Banner Notifications",
+    "🔊 In-Call Audio Output Selector (Speaker / Earpiece / Bluetooth)",
+    "📲 Automatic In-App APK Updater with 5s Auto-Download",
     "🔒 Native Biometric Security Lock (Fingerprint & Face ID)",
-    "🔔 Native Android Background Push Notifications",
-    "⚡ Instant Over-The-Air (OTA) Live Web Updates",
-    "📴 100% Offline Device-Side AI Engine",
-    "✨ AI Chat Companion & Personalities (Luna, Nova, Titan, Zen, Cyber)",
-    "🤖 10+ AI Model Providers (Sarvam AI, Gemini, Claude, OpenAI, Groq)",
-    "🧊 Instant AI Icebreakers & Silent Room Detector",
-    "🔄 WebRTC Auto-Reconnection & TURN Fallback",
-    "🛡️ Local Privacy Mode & Screen Capture Protection",
-    "📊 Session Stats & Daily Streak Tracker"
+    "⚡ Over-The-Air (OTA) Instant Web Updates"
   ]
 }

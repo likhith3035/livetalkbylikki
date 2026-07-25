@@ -54,11 +54,21 @@ export function useAppUpdate() {
         return false;
       }
 
-      // Fetch remote version server over HTTPS (works inside native Capacitor Android webview)
-      const versionUrl = "https://livetalkbylikki.netlify.app/version.json";
-      const response = await fetch(`${versionUrl}?t=${Date.now()}`, {
-        headers: { "Cache-Control": "no-cache" },
-      });
+      // Fetch remote version payload directly from GitHub raw (with Netlify fallback)
+      const primaryUrl = "https://raw.githubusercontent.com/likhith3035/livetalkbylikki/main/public/version.json";
+      const fallbackUrl = "https://livetalkbylikki.netlify.app/version.json";
+      
+      let response: Response;
+      try {
+        response = await fetch(`${primaryUrl}?t=${Date.now()}`, {
+          headers: { "Cache-Control": "no-cache" },
+        });
+        if (!response.ok) throw new Error(`Primary fetch failed: ${response.status}`);
+      } catch (err) {
+        response = await fetch(`${fallbackUrl}?t=${Date.now()}`, {
+          headers: { "Cache-Control": "no-cache" },
+        });
+      }
 
       if (!response.ok) {
         if (!silent) console.warn("[AppUpdate] Version server returned non-200 status:", response.status);
