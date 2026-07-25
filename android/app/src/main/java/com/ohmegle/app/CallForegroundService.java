@@ -107,7 +107,7 @@ public class CallForegroundService extends Service {
         // Custom Layout RemoteViews matching user request UI card design
         RemoteViews customView = new RemoteViews(getPackageName(), R.layout.custom_call_notification);
         customView.setTextViewText(R.id.notification_caller_name, strangerName);
-        customView.setTextViewText(R.id.notification_call_duration, "LiveTalk Call Active");
+        customView.setTextViewText(R.id.notification_call_duration, "LiveTalk by Likki • Call Active");
 
         customView.setOnClickPendingIntent(R.id.btn_notification_mute, pMute);
         customView.setOnClickPendingIntent(R.id.btn_notification_camera, pCamera);
@@ -151,7 +151,7 @@ public class CallForegroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
-                "Active Calls",
+                "LiveTalk by Likki Calls",
                 NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("Shows ongoing call control card when app is in background");

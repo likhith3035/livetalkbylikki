@@ -25,9 +25,9 @@ public class ScreenCaptureService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("LiveTalk Screen Share")
+            .setContentTitle("LiveTalk by Likki Screen Share")
             .setContentText("Sharing your screen in a video call...")
-            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .build();
@@ -51,7 +51,7 @@ public class ScreenCaptureService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
-                "Screen Capture",
+                "LiveTalk by Likki Screen Share",
                 NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("Active during screen sharing in video calls");
