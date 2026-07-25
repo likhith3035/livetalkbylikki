@@ -161,41 +161,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     pendingCandidatesRef.current = [];
   }, [setIsAudioOnlySynced]);
 
-  // Native Android Custom Call Notification & Action Listener (Mute, Camera, End Call)
-  useEffect(() => {
-    const isNativeAndroid =
-      typeof window !== "undefined" &&
-      (window as any).Capacitor?.isNativePlatform?.() &&
-      (window as any).Capacitor?.getPlatform?.() === "android";
 
-    if (!isNativeAndroid) return;
-
-    let actionListener: { remove: () => void } | null = null;
-
-    if (callStatus === "active") {
-      import("@/plugins/call-service").then(async ({ default: CallService }) => {
-        CallService.startCallService({ strangerName: "Stranger" }).catch(() => {});
-
-        actionListener = await CallService.addListener("callAction", (data) => {
-          if (data.action === "toggleMute") {
-            toggleMute();
-          } else if (data.action === "toggleCamera") {
-            toggleCamera();
-          } else if (data.action === "endCall") {
-            endCall();
-          }
-        });
-      });
-    } else {
-      import("@/plugins/call-service").then(({ default: CallService }) => {
-        CallService.stopCallService().catch(() => {});
-      });
-    }
-
-    return () => {
-      if (actionListener) actionListener.remove();
-    };
-  }, [callStatus, toggleMute, toggleCamera, endCall]);
 
   // Drain buffered ICE candidates — safe to call multiple times
   const drainPendingCandidates = useCallback(async (pc: RTCPeerConnection) => {
@@ -448,6 +414,42 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       // Camera flip not supported on this device
     }
   }, [facingMode]);
+
+  // Native Android Custom Call Notification & Action Listener (Mute, Camera, End Call)
+  useEffect(() => {
+    const isNativeAndroid =
+      typeof window !== "undefined" &&
+      (window as any).Capacitor?.isNativePlatform?.() &&
+      (window as any).Capacitor?.getPlatform?.() === "android";
+
+    if (!isNativeAndroid) return;
+
+    let actionListener: { remove: () => void } | null = null;
+
+    if (callStatus === "active") {
+      import("@/plugins/call-service").then(async ({ default: CallService }) => {
+        CallService.startCallService({ strangerName: "Stranger" }).catch(() => {});
+
+        actionListener = await CallService.addListener("callAction", (data) => {
+          if (data.action === "toggleMute") {
+            toggleMute();
+          } else if (data.action === "toggleCamera") {
+            toggleCamera();
+          } else if (data.action === "endCall") {
+            endCall();
+          }
+        });
+      });
+    } else {
+      import("@/plugins/call-service").then(({ default: CallService }) => {
+        CallService.stopCallService().catch(() => {});
+      });
+    }
+
+    return () => {
+      if (actionListener) actionListener.remove();
+    };
+  }, [callStatus, toggleMute, toggleCamera, endCall]);
 
   const screenCaptureListenerRef = useRef<{ remove: () => void } | null>(null);
   const screenCanvasRef = useRef<HTMLCanvasElement | null>(null);
