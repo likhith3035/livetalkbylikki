@@ -760,19 +760,26 @@ const VideoCallOverlay = ({
 
           {/* Subtitles Overlay Pill */}
           <AnimatePresence>
-            {subtitles.isActive && subtitles.subtitle && (
+            {subtitles.isActive && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 max-w-[90%] sm:max-w-md px-4 py-2 rounded-2xl bg-card/90 border border-primary/40 shadow-2xl backdrop-blur-xl text-center select-none pointer-events-none"
+                className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 max-w-[90%] sm:max-w-md px-4 py-2.5 rounded-2xl bg-card/95 border border-primary/40 shadow-2xl backdrop-blur-xl text-center select-none pointer-events-none"
               >
                 <p className="text-xs sm:text-sm font-semibold text-foreground tracking-wide leading-relaxed">
-                  {subtitles.subtitle}
+                  {subtitles.subtitle || (
+                    <span className="text-muted-foreground/80 font-normal italic flex items-center justify-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Listening in {subtitles.fromLang.split("-")[0].toUpperCase()}... (Speak into mic)
+                    </span>
+                  )}
                 </p>
-                <span className="text-[9px] font-bold text-primary uppercase tracking-widest block mt-0.5">
-                  Live Captions (Web Speech)
-                </span>
+                <div className="flex items-center justify-center gap-1.5 mt-1">
+                  <span className="text-[9px] font-bold text-primary uppercase tracking-widest">
+                    CC Subtitles ({subtitles.fromLang.split("-")[0].toUpperCase()} ➔ {subtitles.toLang.toUpperCase()})
+                  </span>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

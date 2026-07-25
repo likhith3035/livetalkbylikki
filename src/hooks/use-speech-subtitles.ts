@@ -46,6 +46,22 @@ async function translateText(text: string, fromCode: string, toCode: string): Pr
 
   if (src === tgt) return text;
 
+  // Primary: Google Translate Free Endpoint
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${tgt}&dt=t&q=${encodeURIComponent(text)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data && data[0] && data[0][0] && data[0][0][0]) {
+      const translated = data[0].map((item: any) => item[0]).join("");
+      if (translated) {
+        return `${text} ➔ ${translated}`;
+      }
+    }
+  } catch (e) {
+    // Fallthrough to Secondary
+  }
+
+  // Secondary: MyMemory Translate API
   try {
     const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${tgt}`);
     const data = await res.json();
@@ -53,21 +69,20 @@ async function translateText(text: string, fromCode: string, toCode: string): Pr
       return `${text} ➔ ${data.responseData.translatedText}`;
     }
   } catch (e) {
-    console.warn("[Subtitles] Translation fetch failed:", e);
+    // Fallthrough to raw text
   }
+
   return text;
 }
 
 interface UseSpeechSubtitlesOptions {
   defaultFromLang?: string;
   defaultToLang?: string;
-  enabled?: boolean;
 }
 
 export function useSpeechSubtitles({
   defaultFromLang = "en-US",
   defaultToLang = "en",
-  enabled = false,
 }: UseSpeechSubtitlesOptions = {}) {
   const [subtitle, setSubtitle] = useState<string>("");
   const [isActive, setIsActive] = useState<boolean>(false);
@@ -78,6 +93,24 @@ export function useSpeechSubtitles({
 
   const recognitionRef = useRef<any>(null);
   const hideTimeoutRef = useRef<any>(null);
+  const restartTimeoutRef = useRef<any>(null);
+  const shouldRunRef = useRef<boolean>(false);
+
+  const stopSubtitles = useCallback(() => {
+    shouldRunRef.current = false;
+    if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
+    setIsActive(false);
+    setSubtitle("");
+  }, []);
 
   const startSubtitles = useCallback((overrideFrom?: string) => {
     const activeFrom = overrideFrom || fromLang;
@@ -87,16 +120,15 @@ export function useSpeechSubtitles({
       setIsSupported(false);
       toast({
         title: "Subtitles Not Supported",
-        description: "Web Speech API is not supported in this browser. Please try Chrome, Edge, or Safari.",
+        description: "Web Speech API is not supported in this browser. Please use Chrome, Edge, or Safari.",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
-      }
+      stopSubtitles();
+      shouldRunRef.current = true;
 
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
@@ -106,7 +138,7 @@ export function useSpeechSubtitles({
       recognition.onstart = () => {
         setIsActive(true);
         const fromObj = SPOKEN_LANGUAGES.find((l) => l.code === activeFrom);
-        setSubtitle(`🎙️ Subtitles active (${fromObj ? fromObj.name : activeFrom}) - Speak into mic...`);
+        setSubtitle(`🎙️ Subtitles Active (${fromObj ? fromObj.name : activeFrom}) - Listening...`);
       };
 
       recognition.onresult = async (event: any) => {
@@ -123,13 +155,17 @@ export function useSpeechSubtitles({
 
           if (srcCode !== tgtCode) {
             const translated = await translateText(currentTranscript, activeFrom, toLang);
-            setSubtitle(translated);
+            if (shouldRunRef.current) {
+              setSubtitle(translated);
+            }
           }
 
           if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
           hideTimeoutRef.current = setTimeout(() => {
-            setSubtitle("");
-          }, 5000);
+            if (shouldRunRef.current) {
+              setSubtitle("");
+            }
+          }, 6000);
         }
       };
 
@@ -140,6 +176,7 @@ export function useSpeechSubtitles({
             description: "Please allow microphone access in your browser settings to enable live subtitles.",
             variant: "destructive",
           });
+          shouldRunRef.current = false;
           setIsActive(false);
         } else if (err.error !== "no-speech") {
           console.warn("[Subtitles] Speech recognition error:", err.error);
@@ -147,8 +184,17 @@ export function useSpeechSubtitles({
       };
 
       recognition.onend = () => {
-        if (enabled && recognitionRef.current) {
-          try { recognition.start(); } catch (e) {}
+        if (shouldRunRef.current) {
+          if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
+          restartTimeoutRef.current = setTimeout(() => {
+            if (shouldRunRef.current && recognitionRef.current) {
+              try {
+                recognitionRef.current.start();
+              } catch (e) {
+                console.warn("[Subtitles] Auto-restart error:", e);
+              }
+            }
+          }, 300);
         } else {
           setIsActive(false);
         }
@@ -156,51 +202,45 @@ export function useSpeechSubtitles({
 
       recognition.start();
       recognitionRef.current = recognition;
+      setIsActive(true);
     } catch (e) {
       console.warn("[Subtitles] Failed to initialize speech recognition:", e);
       setIsActive(false);
     }
-  }, [fromLang, toLang, enabled, toast]);
-
-  const stopSubtitles = useCallback(() => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
-      recognitionRef.current = null;
-    }
-    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-    setIsActive(false);
-    setSubtitle("");
-  }, []);
+  }, [fromLang, toLang, stopSubtitles, toast]);
 
   const toggleSubtitles = useCallback(() => {
-    if (isActive) {
+    if (isActive || shouldRunRef.current) {
       stopSubtitles();
+      toast({
+        title: "Subtitles Disabled",
+        description: "Live video captions turned off.",
+      });
     } else {
       startSubtitles();
+      toast({
+        title: "Subtitles Enabled",
+        description: `Listening in ${fromLang.split("-")[0].toUpperCase()} and translating to ${toLang.toUpperCase()}`,
+      });
     }
-  }, [isActive, startSubtitles, stopSubtitles]);
+  }, [isActive, startSubtitles, stopSubtitles, fromLang, toLang, toast]);
 
   const updateFromLanguage = useCallback((code: string) => {
     setFromLang(code);
-    if (isActive) {
+    if (shouldRunRef.current) {
       startSubtitles(code);
     }
-  }, [isActive, startSubtitles]);
+  }, [startSubtitles]);
 
   const updateToLanguage = useCallback((code: string) => {
     setToLang(code);
   }, []);
 
   useEffect(() => {
-    if (enabled) {
-      startSubtitles();
-    } else {
-      stopSubtitles();
-    }
     return () => {
       stopSubtitles();
     };
-  }, [enabled, startSubtitles, stopSubtitles]);
+  }, [stopSubtitles]);
 
   return {
     subtitle,
