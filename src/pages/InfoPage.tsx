@@ -109,6 +109,24 @@ const FEATURES_DETAILED = [
     tech: "Uses the same WebRTC infrastructure as video calls but requests audio-only media streams. Upgrade to video adds a video track to the existing peer connection without reconnecting.",
     details: "Audio calls show a minimal UI with waveform visualization. The call quality adapts to network conditions automatically using WebRTC's built-in bandwidth estimation.",
   },
+  {
+    icon: Globe, title: "Live Video Subtitles & Auto Translation 🌐", category: "Communication",
+    desc: "Turn on CC Subtitles during any video call! LiveTalk uses Web Speech Recognition to display real-time speech captions and automatically translates Telugu (తెలుగు), Hindi, Spanish, French, German, Japanese, and 120+ languages into English live.",
+    tech: "Powered by browser Web Speech API (SpeechRecognition) combined with client-side async translation API. Features auto-hiding caption pills with pointer-events-none to prevent touch gesture interference.",
+    details: "Speech recognition runs in a separate OS background worker thread for 0% CPU frame lag. Subtitles automatically fade out 5 seconds after silence.",
+  },
+  {
+    icon: Mic, title: "Voice Memos & Audio Notes 🎤", category: "Messaging",
+    desc: "Hold the microphone button in text chat to record up to 15-second voice memos. Includes a recording pulse animation, countdown timer, and interactive waveform audio playback bubble in chat.",
+    tech: "Uses Web MediaRecorder API to record audio chunks into compressed webm/ogg blobs. Uploaded to Supabase Storage with instant waveform player state.",
+    details: "Includes play/pause toggle controls, equalizer animation bars, and automatic microphone stream track cleanup upon release.",
+  },
+  {
+    icon: Radio, title: "WebRTC Live Quality Diagnostics 📊", category: "Communication",
+    desc: "Tap the stats indicator on video calls to view real-time network health diagnostics including Ping/RTT (ms), FPS, resolution (1080p, 720p, 480p), packet loss %, and connection grade.",
+    tech: "Queries RTCPeerConnection.getStats() every 2 seconds to aggregate inbound/outbound video and audio stream telemetry.",
+    details: "Helps users diagnose weak Wi-Fi or cellular data connections during P2P call sessions.",
+  },
 
   {
     icon: SkipForward, title: "Next / Skip ⏭️", category: "Navigation",
@@ -297,6 +315,10 @@ const CHALLENGES = [
 const COMPARISON = [
   { feature: "Anonymous Chat 💬", LiveTalk: true, others: true },
   { feature: "No Registration 🔓", LiveTalk: true, others: false },
+  { feature: "Live Video Subtitles 🌐", LiveTalk: true, others: false },
+  { feature: "Voice Memo Messages 🎤", LiveTalk: true, others: false },
+  { feature: "Telugu to English Translation 🇮🇳", LiveTalk: true, others: false },
+  { feature: "Live WebRTC Diagnostic Stats 📊", LiveTalk: true, others: false },
   { feature: "AI Chat Companion 🤖", LiveTalk: true, others: false },
   { feature: "Free Local LLM & Sarvam AI ⚡", LiveTalk: true, others: false },
   { feature: "Real-Time Message Translation 🌍", LiveTalk: true, others: false },
@@ -322,10 +344,22 @@ const COMPARISON = [
 
 const RELEASES = [
   {
-    version: "v1.5.0",
+    version: "v1.6.0",
     tag: "Latest Release",
-    date: "July 20, 2026",
+    date: "July 25, 2026",
     isCurrent: true,
+    highlights: [
+      { category: "🌐 Live Subtitles & Translation", desc: "Added real-time video call speech subtitles with automatic live translation from Telugu (తెలుగు), Hindi, Spanish, French, German, Japanese, and 120+ languages into English." },
+      { category: "🎤 Chat Voice Memos", desc: "Added hold-to-record voice notes in text chat with 15-second countdown timer, pulse animation, and interactive waveform audio playback bubbles." },
+      { category: "📊 WebRTC Diagnostic Stats", desc: "Added real-time video call health diagnostic overlay showing Ping/RTT (ms), FPS, stream resolution (1080p/720p/480p), packet loss, and quality grade." },
+      { category: "🚀 Navigation & UX", desc: "Added dedicated 1-tap Home & Back navigation buttons, full-screen drag boundary constraints for floating widgets, and smart search wait cards." }
+    ]
+  },
+  {
+    version: "v1.5.0",
+    tag: "Major Update",
+    date: "July 20, 2026",
+    isCurrent: false,
     highlights: [
       { category: "🎨 Profile & Cropper", desc: "Redesigned ProfilePage with Instagram style. Added touch pinch-to-zoom, scroll wheel zoom, and real-time 'How others see you' live preview card inside avatar cropper modal." },
       { category: "📱 Mobile UX", desc: "Ultra-compact mobile top header bar, smaller action pills with icon+text, and optimized vertical padding for max chat space." },
