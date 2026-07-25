@@ -1,11 +1,12 @@
 {
-  "latestVersion": "1.7.0",
+  "latestVersion": "1.8.0",
   "minimumVersion": "1.0.0",
   "forceUpdate": false,
   "downloadUrl": "https://github.com/likhith3035/livetalkbylikki/raw/main/livetalk.apk",
-  "releaseDate": "July 25, 2026 (03:55 PM)",
-  "apkSize": "7.3 MB",
+  "releaseDate": "July 25, 2026 (04:35 PM)",
+  "apkSize": "9.1 MB",
   "releaseNotes": [
+    "🛠️ VideoCallOverlay Stats Reference Error Fix",
     "🔔 Native WhatsApp-Style Incoming Call Banner Notifications",
     "🔊 In-Call Audio Output Selector (Speaker / Earpiece / Bluetooth)",
     "📲 Automatic In-App APK Updater with 5s Auto-Download",
