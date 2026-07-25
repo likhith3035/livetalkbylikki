@@ -140,10 +140,6 @@ export default function MobileNav() {
                   <p className="text-[10px] text-muted-foreground leading-none mt-0.5">Enter handoff code</p>
                 </div>
               </motion.button>
-
-              <div className="p-2 pt-1">
-                <ApkDownloadButton variant="full" />
-              </div>
             </motion.div>
           )}
         </AnimatePresence>

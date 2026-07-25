@@ -173,7 +173,6 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
           </div>
         </button>
 
-        <ApkDownloadButton variant="compact" />
         <OnlineBadge count={onlineCount} />
       </div>
     </header>
