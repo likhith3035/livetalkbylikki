@@ -3,6 +3,7 @@ import { Home, MessageSquare, User, Settings, Info, X, Smartphone, Shield, Shiel
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
+import ApkDownloadButton from "@/components/ApkDownloadButton";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
@@ -139,6 +140,10 @@ export default function MobileNav() {
                   <p className="text-[10px] text-muted-foreground leading-none mt-0.5">Enter handoff code</p>
                 </div>
               </motion.button>
+
+              <div className="p-2 pt-1">
+                <ApkDownloadButton variant="full" />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -9,9 +9,10 @@ export interface ApkInfo {
   isNew?: boolean;
 }
 
-export const GITHUB_RELEASE_APK_URL = "/livetalk.apk";
+export const GITHUB_RELEASE_APK_URL =
+  "https://github.com/likhith3035/livetalkbylikki/raw/main/livetalk.apk";
 
-// APK is hosted directly on web app at /livetalk.apk
+// APK hosted on GitHub Raw CDN (direct & instant download)
 export const APK_INFO: ApkInfo = {
   version: "1.6.0",
   size: "8.5 MB",

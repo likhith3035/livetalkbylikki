@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { Moon, Sun, ChevronLeft, Video, Phone, Globe, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
+import ApkDownloadButton from "@/components/ApkDownloadButton";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
@@ -172,6 +173,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
           </div>
         </button>
 
+        <ApkDownloadButton variant="compact" />
         <OnlineBadge count={onlineCount} />
       </div>
     </header>
