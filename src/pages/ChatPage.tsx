@@ -293,7 +293,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
       }
       joinPrivateRoom(pendingCode, isCreator);
     }
-  }, [initialRoomCode, joinPrivateRoom, joinRoomById, userName, searchParams]);
+  }, [initialRoomCode, joinPrivateRoom, joinRoomById, userName, setUserName, searchParams]);
 
   const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

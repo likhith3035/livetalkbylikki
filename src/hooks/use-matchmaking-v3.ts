@@ -61,7 +61,7 @@ export function useFirebaseMatchmakingV3({ sessionId, stableId, userName, intere
     set(matchRef, record)
       .then(() => console.log("[V4] Match Record Created Successfully"))
       .catch(err => console.error("[V4] Failed to set match record:", err));
-  }, [sessionId, stableId]);
+  }, [sessionId, stableId, userName]);
 
   const findMatch = useCallback(async () => {
     if (matchedGuardRef.current || status !== "searching") return;
