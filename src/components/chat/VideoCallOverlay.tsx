@@ -96,7 +96,7 @@ const VideoCallOverlay = ({
   incomingReaction,
   onRaiseHand,
   strangerHandRaised = false,
-  stats,
+  stats = null,
   isPiPActive = false,
   onTogglePiP,
   supportsPiP = true,
@@ -721,15 +721,15 @@ const VideoCallOverlay = ({
                   {formatDuration(callDuration)}
                 </span>
                 {/* Quality dots & WebRTC stats */}
-                {stats ? (
+                {stats && stats.qualityGrade ? (
                   <div className="flex items-center gap-1.5 ml-1 border-l border-border/40 pl-2 text-[10px] font-mono">
                     <span className={cn("font-bold flex items-center gap-0.5", stats.qualityGrade === "good" ? "text-emerald-400" : stats.qualityGrade === "fair" ? "text-amber-400" : "text-rose-400")}>
                       <Signal className="h-3 w-3" />
-                      {stats.rtt !== null ? `${stats.rtt}ms` : "P2P"}
+                      {stats.rtt !== null && stats.rtt !== undefined ? `${stats.rtt}ms` : "P2P"}
                     </span>
-                    <span className="text-[9px] bg-secondary/80 text-foreground px-1 rounded font-sans uppercase font-bold">{stats.resolution}</span>
-                    <span className="text-[9px] text-muted-foreground opacity-80">{stats.fps}fps</span>
-                    {stats.packetLoss > 0 && (
+                    <span className="text-[9px] bg-secondary/80 text-foreground px-1 rounded font-sans uppercase font-bold">{stats.resolution || "720p"}</span>
+                    <span className="text-[9px] text-muted-foreground opacity-80">{stats.fps || 30}fps</span>
+                    {(stats.packetLoss || 0) > 0 && (
                       <span className="text-[9px] text-rose-400 font-bold">{stats.packetLoss}% loss</span>
                     )}
                   </div>

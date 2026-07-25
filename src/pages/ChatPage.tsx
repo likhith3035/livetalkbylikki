@@ -974,7 +974,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         incomingReaction={incomingReaction}
         onRaiseHand={handleRaiseHand}
         strangerHandRaised={strangerHandRaised}
-        stats={stats}
+        stats={stats || null}
         audioOutput={audioOutput}
         onToggleAudioOutput={toggleAudioOutput}
         isPiPActive={isPiPActive}
