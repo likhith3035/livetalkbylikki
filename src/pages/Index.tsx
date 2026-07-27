@@ -206,17 +206,31 @@ const Index = () => {
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-4 pb-8 sm:pt-16 sm:pb-16 lg:pt-20 lg:pb-20 overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-12 pb-16 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28 overflow-hidden">
         {/* Subtle gradient orb */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/8 blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px] pointer-events-none" />
         
-        <div className="relative z-10 max-w-2xl mx-auto space-y-3.5 sm:space-y-5">
+        <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+          {/* Online badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 backdrop-blur-sm px-4 py-2 text-xs font-medium text-muted-foreground"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            {onlineCount.toLocaleString()} people online
+          </motion.div>
+
           {/* Heading */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-3xl sm:text-5xl lg:text-6xl font-bold font-display leading-[1.15] tracking-tight"
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display leading-[1.1] tracking-tight"
           >
             Talk to anyone, <br />
             <span className="text-gradient">anonymously</span>
@@ -226,8 +240,8 @@ const Index = () => {
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xs sm:text-base text-muted-foreground max-w-md sm:max-w-lg mx-auto leading-relaxed"
+            transition={{ delay: 0.35 }}
+            className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed"
           >
             No sign-ups. No tracking. Just real conversations with real people from around the world.
           </motion.p>
@@ -236,52 +250,53 @@ const Index = () => {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-[11px] sm:text-xs text-muted-foreground/60 font-medium"
+            transition={{ delay: 0.45 }}
+            className="text-sm text-muted-foreground/50 font-medium"
           >
             Built with 💜 by{" "}
-            <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary/75 hover:text-primary transition-colors hover:underline underline-offset-4">
+            <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary/70 hover:text-primary transition-colors hover:underline underline-offset-4">
               Likhith Kami
             </a>
           </motion.p>
 
-          {/* CTA Buttons - Premium, Compact & Perfectly Proportioned */}
+          {/* CTA Buttons - Complete Actions */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col items-center gap-3 pt-1 w-full max-w-xs sm:max-w-sm mx-auto"
+            className="flex flex-col items-center gap-4 pt-2 w-full max-w-md mx-auto"
           >
-            {/* Primary CTA */}
-            <Button
-              variant="glow"
-              size="lg"
-              className="w-full h-13 sm:h-14 px-6 text-sm sm:text-base font-bold rounded-2xl gap-3 shadow-xl shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              onClick={() => navigate("/chat")}
-            >
-              <MessageSquare className="h-5 w-5" />
-              Start Anonymous Chat
-              <ArrowRight className="h-4 w-4 ml-auto" />
-            </Button>
+            {/* Primary Action */}
+            <div className="w-full text-center space-y-2">
+              <Button
+                variant="glow"
+                size="lg"
+                className="w-full h-15 text-base sm:text-lg font-bold rounded-2xl gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                onClick={() => navigate("/chat")}
+              >
+                <MessageSquare className="h-6 w-6" />
+                Start Anonymous Chat
+                <ArrowRight className="h-5 w-5 ml-auto" />
+              </Button>
+              <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-1.5 pt-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
+                Instant • Free • No Signup Required
+              </p>
+            </div>
 
-            <p className="text-[11px] sm:text-xs text-muted-foreground font-medium flex items-center justify-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-              Instant • Free • No Signup Required
-            </p>
-
-            {/* Secondary Actions: Private Room & Join Code */}
-            <div className="flex items-center gap-2 w-full pt-1">
+            {/* Secondary Actions: Create Private Room & Join Room Code */}
+            <div className="flex items-center gap-3 w-full">
               <Button
                 variant="outline"
-                className="flex-1 h-9 sm:h-10 text-xs font-semibold rounded-xl gap-1.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                className="flex-1 h-11 text-xs sm:text-sm font-semibold rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
                 onClick={generateAndJoinRoom}
               >
-                <Link2 className="h-3.5 w-3.5 text-primary" />
-                Private Room
+                <Link2 className="h-4 w-4 text-primary" />
+                Create Private Room
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 h-9 sm:h-10 text-xs font-semibold rounded-xl gap-1.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                className="flex-1 h-11 text-xs sm:text-sm font-semibold rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
                 onClick={() => {
                   const nextState = !showJoinInput;
                   setShowJoinInput(nextState);
@@ -293,9 +308,14 @@ const Index = () => {
                   }
                 }}
               >
-                <Users className="h-3.5 w-3.5 text-primary" />
-                Enter Code
+                <Users className="h-4 w-4 text-primary" />
+                Join Room Code
               </Button>
+            </div>
+
+            {/* Compact APK Download */}
+            <div className="pt-1">
+              <ApkDownloadButton variant="compact" />
             </div>
           </motion.div>
 
