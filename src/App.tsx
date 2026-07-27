@@ -89,7 +89,7 @@ const AnimatedRoutes = () => {
         animate="animate"
         exit="exit"
         transition={pageTransition}
-        className="flex flex-1 flex-col h-full min-h-0 overflow-hidden w-full"
+        className="flex flex-1 flex-col min-h-0 w-full"
       >
         <Routes location={location}>
           <Route path="/" element={<Index />} />
