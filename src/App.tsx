@@ -48,6 +48,59 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
   });
 }
 
+import { Component, ReactNode } from "react";
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class GlobalErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error("[GlobalErrorBoundary] Caught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center space-y-4">
+          <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold">
+            🔄
+          </div>
+          <h2 className="text-xl font-bold text-foreground">Something went wrong</h2>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            An update was applied or a connection error occurred. Please refresh to load the latest version.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              this.setState({ hasError: false });
+              window.location.reload();
+            }}
+            className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-lg hover:opacity-90 transition-all"
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const Index = lazyWithRetry(() => import("./pages/Index"));
 const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
 const RoomPage = lazyWithRetry(() => import("./pages/RoomPage"));
@@ -145,13 +198,15 @@ const AppContent = () => {
             <FeedbackSharePopup />
             <FloatingChatWidget />
             <AppUpdateModal />
-            <Suspense fallback={
-              <div className="flex-1 flex items-center justify-center bg-[#09090B] text-muted-foreground text-sm animate-pulse min-h-[50vh]">
-                Loading...
-              </div>
-            }>
-              <AnimatedRoutes />
-            </Suspense>
+            <GlobalErrorBoundary>
+              <Suspense fallback={
+                <div className="flex-1 flex items-center justify-center bg-[#09090B] text-muted-foreground text-sm animate-pulse min-h-[50vh]">
+                  Loading...
+                </div>
+              }>
+                <AnimatedRoutes />
+              </Suspense>
+            </GlobalErrorBoundary>
           </AppShell>
         </ChatProvider>
       </BrowserRouter>
