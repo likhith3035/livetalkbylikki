@@ -12,6 +12,8 @@ interface SwipeableMessageProps {
 
 const SWIPE_THRESHOLD = 60;
 
+const isTouchDevice = typeof window !== "undefined" && ('ontouchstart' in window || (navigator.maxTouchPoints || 0) > 0);
+
 const SwipeableMessage = ({
   children,
   onSwipeRight,
@@ -36,7 +38,9 @@ const SwipeableMessage = ({
     }
   };
 
-  if (disabled) return <>{children}</>;
+  const isDragEnabled = !disabled && isTouchDevice;
+
+  if (!isDragEnabled) return <>{children}</>;
 
   return (
     <div className="relative overflow-visible">

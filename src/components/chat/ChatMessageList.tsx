@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
-import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X, File as FileIcon, Play, Pause, Mic, Download, BarChart3, Check } from "lucide-react";
+import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X, File as FileIcon, Play, Pause, Mic, Download, BarChart3, Check, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -239,11 +239,16 @@ const ChatMessageList = ({
   autoTranslations,
 }: ChatMessageListProps) => {
   const { settings } = useSettings();
+  const containerRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [showTranslateFor, setShowTranslateFor] = useState<string | null>(null);
   const [translationsMap, setTranslationsMap] = useState<Record<string, { text: string; langName: string; loading?: boolean; error?: boolean }>>({});
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
+  const [newMessagesBelow, setNewMessagesBelow] = useState(0);
+  const prevMsgLengthRef = useRef(messages.length);
 
   const toggleMenu = useCallback((msgId: string) => {
     setActiveMenuId((prev) => (prev === msgId ? null : msgId));
@@ -277,9 +282,36 @@ const ChatMessageList = ({
     });
   };
 
-  useEffect(() => {
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    const isUp = distanceFromBottom > 140;
+    setIsScrolledUp(isUp);
+    if (!isUp) {
+      setNewMessagesBelow(0);
+    }
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, strangerTyping]);
+    setIsScrolledUp(false);
+    setNewMessagesBelow(0);
+  }, []);
+
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    const isMyMsg = lastMsg?.sender === "you";
+    const addedCount = messages.length - prevMsgLengthRef.current;
+    prevMsgLengthRef.current = messages.length;
+
+    if (isMyMsg || !isScrolledUp) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+      setNewMessagesBelow(0);
+    } else if (addedCount > 0 && isScrolledUp) {
+      setNewMessagesBelow((prev) => prev + addedCount);
+    }
+  }, [messages, strangerTyping, isScrolledUp]);
 
   useEffect(() => {
     if (highlightMessageId) {
@@ -380,8 +412,10 @@ const ChatMessageList = ({
 
   return (
     <div
+      ref={containerRef}
+      onScroll={handleScroll}
       className={cn(
-        "flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 space-y-3 mx-auto w-full max-w-3xl transition-all duration-300",
+        "flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 space-y-3 mx-auto w-full max-w-3xl transition-all duration-300 relative",
         isReplying ? "pb-12" : "pb-6"
       )}
     >
@@ -972,6 +1006,27 @@ const ChatMessageList = ({
             </motion.div>
           );
         })()}
+      </AnimatePresence>
+
+      {/* Floating Scroll to Bottom button when scrolled up */}
+      <AnimatePresence>
+        {isScrolledUp && (
+          <motion.button
+            initial={{ opacity: 0, y: 12, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.9 }}
+            onClick={scrollToBottom}
+            className="sticky bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold text-xs shadow-2xl hover:bg-primary/90 transition-all active:scale-95 border border-white/20 cursor-pointer"
+            aria-label="Scroll to latest messages"
+          >
+            <ChevronDown className="h-4 w-4 animate-bounce" />
+            <span>
+              {newMessagesBelow > 0 
+                ? `${newMessagesBelow} New Message${newMessagesBelow > 1 ? "s" : ""} Below` 
+                : "Scroll to Bottom"}
+            </span>
+          </motion.button>
+        )}
       </AnimatePresence>
 
       <div ref={endRef} />
