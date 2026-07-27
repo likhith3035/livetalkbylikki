@@ -98,7 +98,8 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
             <button
               onClick={onAudioCall}
               className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
-              aria-label="Audio call"
+              aria-label="Start Voice Call"
+              title="Voice Call (Talk with Microphone)"
             >
               <Phone className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-primary" />
             </button>
@@ -107,7 +108,8 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
             <button
               onClick={onVideoCall}
               className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
-              aria-label="Video call"
+              aria-label="Start Video Call"
+              title="Video Call (Face to Face Camera)"
             >
               <Video className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-primary" />
             </button>
@@ -121,8 +123,8 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
                   ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400"
                   : "border-border/75 bg-card text-foreground hover:bg-secondary"
               )}
-              aria-label="Toggle Auto Translate"
-              title="Auto-Translate Stranger Messages"
+              aria-label="Toggle Language Auto-Translate"
+              title="Language Translator (Translate messages automatically)"
             >
               <Globe className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
             </button>

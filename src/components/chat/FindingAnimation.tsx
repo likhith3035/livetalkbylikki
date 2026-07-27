@@ -166,31 +166,36 @@ export const FindingAnimation = ({
           </AnimatePresence>
         </div>
 
-        {/* Elapsed Timer & Title */}
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <h2 className="text-2xl sm:text-3xl font-black font-display text-foreground tracking-tighter uppercase italic leading-none">
-              Searching<span className="text-primary animate-pulse">...</span>
-            </h2>
-            <div className="flex items-center justify-center gap-2 px-3 py-1 rounded-lg bg-primary/5 border border-primary/10 w-fit mx-auto">
-              <div className="h-1.5 w-1.5 rounded-full bg-online animate-pulse" />
-              <span className="text-xs font-bold text-muted-foreground tabular-nums">
-                {searchElapsed}s elapsed
-              </span>
-            </div>
-          </div>
-
-          {/* Target Interests Pill */}
-          {interests.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-1.5 max-w-xs mx-auto">
-              {interests.map((i) => (
-                <span key={i} className="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold rounded-lg uppercase tracking-wide">
-                  #{i}
+          {/* Elapsed Timer & Privacy Badge */}
+          <div className="space-y-2">
+            <div className="space-y-1">
+              <h2 className="text-2xl sm:text-3xl font-black font-display text-foreground tracking-tighter uppercase italic leading-none">
+                Searching<span className="text-primary animate-pulse">...</span>
+              </h2>
+              <div className="flex items-center justify-center gap-2 px-3 py-1 rounded-lg bg-primary/5 border border-primary/10 w-fit mx-auto">
+                <div className="h-1.5 w-1.5 rounded-full bg-online animate-pulse" />
+                <span className="text-xs font-bold text-muted-foreground tabular-nums">
+                  {searchElapsed}s elapsed
                 </span>
-              ))}
+              </div>
             </div>
-          )}
-        </div>
+
+            {/* Beginner Reassurance Badge */}
+            <p className="text-[11px] font-semibold text-emerald-400/90 flex items-center justify-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 py-1 px-3 rounded-full w-fit mx-auto">
+              🔒 Privacy Safe: Your camera & mic are OFF until matched
+            </p>
+
+            {/* Target Interests Pill */}
+            {interests.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1.5 max-w-xs mx-auto pt-1">
+                {interests.map((i) => (
+                  <span key={i} className="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold rounded-lg uppercase tracking-wide">
+                    #{i}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
 
         {/* ── Interactive Assistant Card when searchElapsed >= 8s ── */}
         <AnimatePresence>

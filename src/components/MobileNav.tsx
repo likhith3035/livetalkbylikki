@@ -7,14 +7,14 @@ import ApkDownloadButton from "@/components/ApkDownloadButton";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { icon: Home,          path: "/",         label: "Home",       accent: "#10b981" },
-  { icon: MessageSquare, path: "/chat",      label: "Chat",       accent: "hsl(var(--primary))" },
-  { icon: Bot,           path: "/ai-chat",   label: "AI Chat",    accent: "#ec4899" },
-  { icon: Shield,        path: "/safety",    label: "Safety",     accent: "#14b8a6" },
-  { icon: User,          path: "/profile",   label: "Profile",    accent: "#8b5cf6" },
-  { icon: Settings,      path: "/settings",  label: "Settings",   accent: "#64748b" },
-  { icon: ShieldAlert,   path: "/guidelines",label: "Guidelines", accent: "#f59e0b" },
-  { icon: Info,          path: "/info",      label: "Info",       accent: "#0ea5e9" },
+  { icon: Home,          path: "/",         label: "Home Page",       accent: "#10b981" },
+  { icon: MessageSquare, path: "/chat",      label: "Start Chat",      accent: "hsl(var(--primary))" },
+  { icon: Bot,           path: "/ai-chat",   label: "AI Wingman",      accent: "#ec4899" },
+  { icon: Shield,        path: "/safety",    label: "Safety Center",   accent: "#14b8a6" },
+  { icon: User,          path: "/profile",   label: "My Profile",      accent: "#8b5cf6" },
+  { icon: Settings,      path: "/settings",  label: "App Settings",    accent: "#64748b" },
+  { icon: ShieldAlert,   path: "/guidelines",label: "Community Rules", accent: "#f59e0b" },
+  { icon: Info,          path: "/info",      label: "Help & FAQ",      accent: "#0ea5e9" },
 ];
 
 
@@ -136,8 +136,8 @@ export default function MobileNav() {
                   <Smartphone className="h-4 w-4 text-amber-500" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Join via Code</p>
-                  <p className="text-[10px] text-muted-foreground leading-none mt-0.5">Enter handoff code</p>
+                  <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Phone Transfer</p>
+                  <p className="text-[10px] text-muted-foreground leading-none mt-0.5">Transfer chat to phone</p>
                 </div>
               </motion.button>
             </motion.div>
