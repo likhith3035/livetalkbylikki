@@ -582,7 +582,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }
 
   return (
-    <div className={cn("flex flex-col bg-background relative z-0 h-dvh lg:h-full overflow-hidden", status === "connected" && privacyModeActive && "select-none")}>
+    <div className={cn("flex flex-col bg-background relative z-0 h-full min-h-0 overflow-hidden flex-1", status === "connected" && privacyModeActive && "select-none")}>
       <LiquidBackground />
       <ChatWallpaper />
       <div className={cn("flex flex-col flex-1 min-h-0", privacyAlertActive && "blur-lg pointer-events-none transition-all duration-300")}>

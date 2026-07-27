@@ -200,7 +200,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background overflow-x-hidden">
+    <div className="flex-1 overflow-y-auto flex flex-col bg-background overflow-x-hidden">
       <div className="lg:hidden">
         <Header onlineCount={onlineCount} />
       </div>
