@@ -8,7 +8,7 @@ interface SEOProps {
 }
 
 const DEFAULT_DESC = "Free anonymous chat & video platform by Likhith Kami (Likki). Connect instantly with strangers worldwide — no signup, no tracking. Features video call, games, private rooms & AI chat.";
-const DEFAULT_KEYWORDS = "livetalk, live talk, livetalkbylikki, likhith kami, likki, omegle alternative, anonymous chat, video chat strangers, random chat, talk to strangers online, free chat app";
+const DEFAULT_KEYWORDS = "livetalk, live talk, livetalk by likki, livetalkbylikki, live talk app, likhith kami, likki, omegle alternative, anonymous chat, video chat strangers, random chat, talk to strangers online, free chat app, livetalk chat";
 const DEFAULT_IMAGE = "https://livetalkbylikki.netlify.app/og-image.jpg";
 
 export const useSEO = ({ title, description, keywords, image }: SEOProps) => {

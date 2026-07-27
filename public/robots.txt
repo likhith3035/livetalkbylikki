@@ -2,11 +2,14 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /chat
+Disallow: /ai-chat
 Disallow: /profile
 Disallow: /settings
 Disallow: /room/
 Disallow: /handoff
 
+# LiveTalk by Likhith Kami (Likki) — Free Anonymous Chat & Video
+# Website: https://livetalkbylikki.netlify.app/
 # Developer: Likhith Kami (Likki)
 # Contact: kamilikhith@gmail.com
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -160,8 +160,6 @@ const AppContent = () => {
 };
 
 const App = () => {
-  const [isReady, setIsReady] = useState(false);
-
   useEffect(() => {
     const handleChunkError = (e: ErrorEvent | PromiseRejectionEvent) => {
       const message = "reason" in e ? (e.reason?.message || String(e.reason)) : (e.message || String(e));
@@ -180,40 +178,16 @@ const App = () => {
     window.addEventListener("error", handleChunkError);
     window.addEventListener("unhandledrejection", handleChunkError);
 
-    // Ping Supabase to make sure it's awake before showing the app
-    const checkConnection = async () => {
-      // 5-second timeout to prevent being stuck forever if Supabase is down
-      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 5000));
-      
-      try {
-        // Quick, lightweight call to wake it up if needed.
-        await Promise.race([
-          supabase.auth.getSession(),
-          timeout
-        ]);
-      } catch (e) {
-        console.warn("[App] Supabase connection check timed out or failed:", e);
-      } finally {
-        setIsReady(true);
-      }
-    };
-
-    checkConnection();
+    // Warm up Supabase in the background — don't block rendering
+    supabase.auth.getSession().catch((e) => {
+      console.warn("[App] Supabase warmup failed (non-blocking):", e);
+    });
 
     return () => {
       window.removeEventListener("error", handleChunkError);
       window.removeEventListener("unhandledrejection", handleChunkError);
     };
   }, []);
-
-  if (!isReady) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-muted-foreground animate-pulse text-sm">Waking up servers, please wait...</p>
-      </div>
-    );
-  }
 
   return (
     <QueryClientProvider client={queryClient}>
