@@ -829,7 +829,7 @@ const ChatMessageList = ({
 
             {/* Reactions are now rendered inside each bubble's wrapper — see stranger/you blocks above */}
           </motion.div>
-        ))}
+        })}
       </AnimatePresence>
 
       {strangerTyping && (
