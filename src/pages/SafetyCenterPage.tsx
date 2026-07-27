@@ -25,7 +25,7 @@ const SafetyCenterPage = () => {
     };
 
     return (
-        <div className="flex-1 overflow-y-auto flex flex-col bg-background relative">
+        <div className="flex min-h-screen flex-col bg-background relative overflow-hidden">
       {/* Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none page-bg-orbs">
         <div className="absolute top-[10%] right-[-10%] w-96 h-96 rounded-full bg-primary/10 blur-[130px] float-slow" />

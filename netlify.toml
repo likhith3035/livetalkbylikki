@@ -28,7 +28,7 @@
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self)"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=()"
 
 # APK download headers
 [[headers]]

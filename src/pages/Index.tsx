@@ -200,13 +200,13 @@ const Index = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col bg-background overflow-x-hidden">
+    <div className="flex min-h-screen flex-col bg-background overflow-x-hidden">
       <div className="lg:hidden">
         <Header onlineCount={onlineCount} />
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-6 pb-10 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28 overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-20 pb-20 sm:pt-28 sm:pb-28 lg:pt-32 lg:pb-32 overflow-hidden">
         {/* Subtle gradient orb */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px] pointer-events-none" />
         
@@ -259,57 +259,93 @@ const Index = () => {
             </a>
           </motion.p>
 
-          {/* CTA Buttons - Exact Layout matching Screenshot */}
+          {/* CTA Buttons - Simplified for Non-Tech & Family Users */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="flex flex-col items-center gap-4 pt-2 w-full max-w-md mx-auto"
           >
-            {/* Primary Chat Action */}
-            <Button
-              variant="glow"
-              size="lg"
-              className="w-full h-15 text-base sm:text-lg font-bold rounded-2xl gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              onClick={() => navigate("/chat")}
-            >
-              <MessageSquare className="h-6 w-6" />
-              Start Chatting
-              <ArrowRight className="h-5 w-5 ml-auto" />
-            </Button>
-
-            {/* APK Download Card (Full Variant) */}
-            <div className="w-full">
-              <ApkDownloadButton variant="full" />
+            {/* GIANT PRIMARY ACTION */}
+            <div className="w-full text-center space-y-2">
+              <Button
+                variant="glow"
+                size="lg"
+                className="w-full h-16 text-lg font-bold rounded-2xl gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                onClick={() => navigate("/chat")}
+              >
+                <MessageSquare className="h-6 w-6" />
+                Start Anonymous Chat
+                <ArrowRight className="h-5 w-5 ml-auto" />
+              </Button>
+              <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-1.5 pt-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
+                Instant • Free • No Signup Required
+              </p>
             </div>
 
-            {/* Invite Friend & Join Room Buttons */}
-            <div className="flex items-center gap-3 w-full">
-              <Button
-                variant="outline"
-                className="flex-1 h-12 text-sm font-semibold rounded-2xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
-                onClick={generateAndJoinRoom}
-              >
-                <Link2 className="h-4 w-4 text-primary" />
-                Invite Friend
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 h-12 text-sm font-semibold rounded-2xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
-                onClick={() => {
-                  const nextState = !showJoinInput;
-                  setShowJoinInput(nextState);
-                  if (nextState) {
-                    setRoomCode(null);
-                    setTimeout(() => {
-                      joinPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }, 100);
-                  }
-                }}
-              >
-                <Users className="h-4 w-4 text-primary" />
-                Join Room
-              </Button>
+            {/* 3-Step Simple Visual Guide for Beginners */}
+            <div className="grid grid-cols-3 gap-2 w-full pt-4 pb-2">
+              <div className="flex flex-col items-center text-center p-2.5 rounded-xl bg-card/40 border border-border/40">
+                <span className="text-base font-bold text-primary mb-0.5">1️⃣</span>
+                <span className="text-[11px] font-semibold text-foreground">Tap Start</span>
+                <span className="text-[9px] text-muted-foreground">No account</span>
+              </div>
+              <div className="flex flex-col items-center text-center p-2.5 rounded-xl bg-card/40 border border-border/40">
+                <span className="text-base font-bold text-primary mb-0.5">2️⃣</span>
+                <span className="text-[11px] font-semibold text-foreground">Get Matched</span>
+                <span className="text-[9px] text-muted-foreground">Random stranger</span>
+              </div>
+              <div className="flex flex-col items-center text-center p-2.5 rounded-xl bg-card/40 border border-border/40">
+                <span className="text-base font-bold text-primary mb-0.5">3️⃣</span>
+                <span className="text-[11px] font-semibold text-foreground">Start Talking</span>
+                <span className="text-[9px] text-muted-foreground">Text or Video</span>
+              </div>
+            </div>
+
+            {/* Secondary Actions (Collapsible/Organized so beginners aren't confused) */}
+            <div className="w-full pt-2">
+              <details className="group rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm text-left">
+                <summary className="flex items-center justify-between px-4 py-3 text-xs font-semibold text-muted-foreground cursor-pointer select-none hover:text-foreground">
+                  <span className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    Private Room with Friend or App Download
+                  </span>
+                  <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="p-4 pt-1 space-y-3 border-t border-border/30">
+                  <div className="w-full">
+                    <ApkDownloadButton variant="full" />
+                  </div>
+                  <div className="flex items-center gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-10 text-xs font-medium rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                      onClick={generateAndJoinRoom}
+                    >
+                      <Link2 className="h-3.5 w-3.5 text-primary" />
+                      Create Private Room
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-10 text-xs font-medium rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                      onClick={() => {
+                        const nextState = !showJoinInput;
+                        setShowJoinInput(nextState);
+                        if (nextState) {
+                          setRoomCode(null);
+                          setTimeout(() => {
+                            joinPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 100);
+                        }
+                      }}
+                    >
+                      <Users className="h-3.5 w-3.5 text-primary" />
+                      Enter Room Code
+                    </Button>
+                  </div>
+                </div>
+              </details>
             </div>
           </motion.div>
 

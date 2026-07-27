@@ -582,7 +582,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }
 
   return (
-    <div className={cn("flex flex-col bg-background relative z-0 h-full min-h-0 overflow-hidden flex-1", status === "connected" && privacyModeActive && "select-none")}>
+    <div className={cn("flex flex-col bg-background relative z-0 h-full w-full flex-1 min-h-0 overflow-hidden", status === "connected" && privacyModeActive && "select-none")}>
       <LiquidBackground />
       <ChatWallpaper />
       <div className={cn("flex flex-col flex-1 min-h-0", privacyAlertActive && "blur-lg pointer-events-none transition-all duration-300")}>
@@ -1030,10 +1030,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
               onClose={() => {
                 setActiveGame("none");
                 roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "canvas" } });
-              }}
-              onSendToChat={(dataUrl) => {
-                handleImageUpload(dataUrl);
-                toast({ title: "🎨 Drawing Sent!", description: "Your canvas drawing was sent to the chat." });
               }}
             />
           )}

@@ -415,7 +415,7 @@ const ChatMessageList = ({
       ref={containerRef}
       onScroll={handleScroll}
       className={cn(
-        "flex-1 overflow-y-auto px-2 sm:px-5 lg:px-8 py-4 space-y-3 mx-auto w-full max-w-3xl transition-all duration-300 relative",
+        "flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-2 sm:px-5 lg:px-8 py-4 space-y-3 mx-auto w-full max-w-3xl transition-all duration-300 relative",
         isReplying ? "pb-12" : "pb-6"
       )}
     >

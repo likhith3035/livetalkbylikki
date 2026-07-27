@@ -36,13 +36,14 @@ export default function ApkDownloadButton({ variant = "compact", className }: Ap
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className={cn(
-            "relative rounded-2xl border border-border/40 bg-card overflow-hidden shadow-md",
+            "relative rounded-2xl border border-border/60 bg-card overflow-hidden shadow-lg",
             className
           )}
         >
+          {/* Top accent */}
+          <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-green-500 via-primary to-blue-500" />
 
-
-          <div className="p-3.5 sm:p-5 space-y-2.5 sm:space-y-4">
+          <div className="p-5 space-y-4">
             {/* App info row */}
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-background border border-border/50 flex items-center justify-center overflow-hidden shadow-sm">
