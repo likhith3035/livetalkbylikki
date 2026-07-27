@@ -259,44 +259,43 @@ const Index = () => {
             </a>
           </motion.p>
 
-          {/* CTA Buttons - Complete Actions */}
+          {/* CTA Buttons - Exact Layout matching Screenshot */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="flex flex-col items-center gap-4 pt-2 w-full max-w-md mx-auto"
           >
-            {/* Primary Action */}
-            <div className="w-full text-center space-y-2">
-              <Button
-                variant="glow"
-                size="lg"
-                className="w-full h-15 text-base sm:text-lg font-bold rounded-2xl gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                onClick={() => navigate("/chat")}
-              >
-                <MessageSquare className="h-6 w-6" />
-                Start Anonymous Chat
-                <ArrowRight className="h-5 w-5 ml-auto" />
-              </Button>
-              <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-1.5 pt-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-                Instant • Free • No Signup Required
-              </p>
+            {/* Primary Chat Action */}
+            <Button
+              variant="glow"
+              size="lg"
+              className="w-full h-15 text-base sm:text-lg font-bold rounded-2xl gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              onClick={() => navigate("/chat")}
+            >
+              <MessageSquare className="h-6 w-6" />
+              Start Chatting
+              <ArrowRight className="h-5 w-5 ml-auto" />
+            </Button>
+
+            {/* APK Download Card (Full Variant) */}
+            <div className="w-full">
+              <ApkDownloadButton variant="full" />
             </div>
 
-            {/* Secondary Actions: Create Private Room & Join Room Code */}
+            {/* Invite Friend & Join Room Buttons */}
             <div className="flex items-center gap-3 w-full">
               <Button
                 variant="outline"
-                className="flex-1 h-11 text-xs sm:text-sm font-semibold rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
+                className="flex-1 h-12 text-sm font-semibold rounded-2xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
                 onClick={generateAndJoinRoom}
               >
                 <Link2 className="h-4 w-4 text-primary" />
-                Create Private Room
+                Invite Friend
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 h-11 text-xs sm:text-sm font-semibold rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
+                className="flex-1 h-12 text-sm font-semibold rounded-2xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
                 onClick={() => {
                   const nextState = !showJoinInput;
                   setShowJoinInput(nextState);
@@ -309,13 +308,8 @@ const Index = () => {
                 }}
               >
                 <Users className="h-4 w-4 text-primary" />
-                Join Room Code
+                Join Room
               </Button>
-            </div>
-
-            {/* Compact APK Download */}
-            <div className="pt-1">
-              <ApkDownloadButton variant="compact" />
             </div>
           </motion.div>
 
