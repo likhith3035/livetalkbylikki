@@ -206,110 +206,139 @@ const Index = () => {
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative flex flex-col items-center justify-start text-center px-6 pt-6 pb-12 sm:pt-10 sm:pb-16 lg:pt-12 lg:pb-20">
-        {/* Subtle gradient orb */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px] pointer-events-none" />
-        
-        <div className="relative z-10 max-w-2xl mx-auto space-y-5">
+      <section className="relative flex flex-col items-center justify-start text-center px-4 sm:px-6 pt-6 pb-12 sm:pt-10 sm:pb-16 lg:pt-14 lg:pb-20 overflow-visible">
+        {/* Glowing Background Radial Glows */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full bg-gradient-to-tr from-primary/15 via-purple-500/10 to-indigo-500/10 blur-[130px] pointer-events-none" />
+
+        <div className="relative z-10 max-w-2xl mx-auto space-y-6">
           {/* Online badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 backdrop-blur-sm px-4 py-2 text-xs font-medium text-muted-foreground">
-            <span className="relative flex h-2 w-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card/70 backdrop-blur-md px-4 py-1.5 text-xs font-semibold text-foreground shadow-sm">
+            <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
             </span>
-            {onlineCount.toLocaleString()} people online
+            <span className="text-emerald-500 font-bold">{onlineCount.toLocaleString()} online</span>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="text-muted-foreground font-medium">100% Free & Anonymous</span>
           </div>
 
-          {/* Heading */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-display leading-[1.1] tracking-tight">
+          {/* Main Heading */}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-display leading-[1.1] tracking-tight">
             Talk to anyone, <br />
-            <span className="text-gradient">anonymously</span>
+            <span className="bg-gradient-to-r from-primary via-purple-500 to-indigo-600 bg-clip-text text-transparent drop-shadow-sm">
+              anonymously
+            </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            No sign-ups. No tracking. Just real conversations with real people from around the world.
+          <p className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
+            No sign-ups. No tracking. Just real, instant conversations with real people from around the world.
           </p>
 
           {/* Developer credit */}
-          <p className="text-xs text-muted-foreground/50 font-medium">
+          <p className="text-xs text-muted-foreground/60 font-medium">
             Built with 💜 by{" "}
-            <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary/70 hover:text-primary transition-colors hover:underline underline-offset-4">
+            <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline underline-offset-4">
               Likhith Kami
             </a>
           </p>
 
-          {/* CTA Buttons - Directly Visible & Easy to Use */}
-          <div className="flex flex-col items-center gap-3 pt-2 w-full max-w-md mx-auto">
-            {/* GIANT PRIMARY ACTION */}
-            <div className="w-full text-center space-y-1.5">
-              <Button
-                variant="glow"
-                size="lg"
-                className="w-full h-15 text-lg font-bold rounded-2xl gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                onClick={() => navigate("/chat")}
-              >
-                <MessageSquare className="h-6 w-6" />
-                Start Anonymous Chat
-                <ArrowRight className="h-5 w-5 ml-auto" />
-              </Button>
-              <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-                Instant • Free • No Registration Required
-              </p>
-            </div>
-
-            {/* Direct Action Buttons: Private Room & Join Code */}
-            <div className="flex items-center gap-2 w-full pt-1">
-              <Button
-                variant="outline"
-                className="flex-1 h-11 px-3 text-xs font-semibold rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
-                onClick={generateAndJoinRoom}
-              >
-                <Link2 className="h-4 w-4 text-primary" />
-                Create Private Room
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 h-11 px-3 text-xs font-semibold rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
-                onClick={() => {
-                  const nextState = !showJoinInput;
-                  setShowJoinInput(nextState);
-                  if (nextState) {
-                    setRoomCode(null);
-                    setTimeout(() => {
-                      joinPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }, 100);
-                  }
-                }}
-              >
-                <Users className="h-4 w-4 text-primary" />
-                Enter Room Code
-              </Button>
-            </div>
-
-            {/* APK Download Button */}
-            <div className="w-full pt-1">
-              <ApkDownloadButton variant="full" />
-            </div>
-
-            {/* 3-Step Simple Visual Guide for Beginners */}
-            <div className="grid grid-cols-3 gap-2 w-full pt-3">
-              <div className="flex flex-col items-center text-center p-2 rounded-xl bg-card/40 border border-border/40">
-                <span className="text-sm font-bold text-primary mb-0.5">1️⃣</span>
-                <span className="text-[11px] font-semibold text-foreground">Tap Start</span>
-                <span className="text-[9px] text-muted-foreground">No account</span>
+          {/* HERO GLASS COMMAND CENTER */}
+          <div className="w-full max-w-md mx-auto pt-2">
+            <div className="rounded-3xl border border-primary/25 bg-card/85 backdrop-blur-2xl p-5 sm:p-6 shadow-2xl shadow-primary/10 space-y-4 text-left">
+              {/* PRIMARY HUGE ACTION */}
+              <div className="space-y-2">
+                <Button
+                  variant="glow"
+                  size="lg"
+                  className="w-full h-15 text-lg font-extrabold rounded-2xl gap-3 shadow-xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  onClick={() => navigate("/chat")}
+                >
+                  <MessageSquare className="h-6 w-6" />
+                  Start Anonymous Chat
+                  <ArrowRight className="h-5 w-5 ml-auto" />
+                </Button>
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium px-1 pt-0.5">
+                  <span className="flex items-center gap-1 text-emerald-500 font-semibold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    Instant Match
+                  </span>
+                  <span>No Account Required</span>
+                </div>
               </div>
-              <div className="flex flex-col items-center text-center p-2 rounded-xl bg-card/40 border border-border/40">
-                <span className="text-sm font-bold text-primary mb-0.5">2️⃣</span>
-                <span className="text-[11px] font-semibold text-foreground">Get Matched</span>
-                <span className="text-[9px] text-muted-foreground">Random stranger</span>
+
+              {/* DIVIDER */}
+              <div className="relative flex items-center justify-center py-1">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/60" />
+                </div>
+                <span className="relative bg-card px-3 text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">
+                  or choose private mode
+                </span>
               </div>
-              <div className="flex flex-col items-center text-center p-2 rounded-xl bg-card/40 border border-border/40">
-                <span className="text-sm font-bold text-primary mb-0.5">3️⃣</span>
-                <span className="text-[11px] font-semibold text-foreground">Start Talking</span>
-                <span className="text-[9px] text-muted-foreground">Text or Video</span>
+
+              {/* SECONDARY PRIVATE ROOM & JOIN CODE ACTIONS */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <Button
+                  variant="outline"
+                  className="h-12 px-3 text-xs font-bold rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                  onClick={generateAndJoinRoom}
+                >
+                  <Link2 className="h-4 w-4 text-primary shrink-0" />
+                  <span className="truncate">Create Private Room</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-12 px-3 text-xs font-bold rounded-xl gap-2 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                  onClick={() => {
+                    const nextState = !showJoinInput;
+                    setShowJoinInput(nextState);
+                    if (nextState) {
+                      setRoomCode(null);
+                      setTimeout(() => {
+                        joinPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }, 100);
+                    }
+                  }}
+                >
+                  <Users className="h-4 w-4 text-primary shrink-0" />
+                  <span className="truncate">Enter Room Code</span>
+                </Button>
               </div>
+
+              {/* APK DOWNLOAD COMPACT FOOTER PILL */}
+              <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-500 font-bold text-xs">
+                    📱
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[11px] font-bold text-foreground">Android App</p>
+                    <p className="text-[9px] text-muted-foreground">Direct APK • Free</p>
+                  </div>
+                </div>
+                <ApkDownloadButton variant="compact" />
+              </div>
+            </div>
+          </div>
+
+          {/* 3-STEP QUICK HOW IT WORKS */}
+          <div className="grid grid-cols-3 gap-2.5 w-full max-w-md mx-auto pt-2">
+            <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-card/60 border border-border/40 backdrop-blur-sm transition-all hover:border-primary/30">
+              <span className="text-base font-extrabold text-primary mb-0.5">1️⃣</span>
+              <span className="text-xs font-bold text-foreground">Tap Start</span>
+              <span className="text-[10px] text-muted-foreground">Instant access</span>
+            </div>
+            <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-card/60 border border-border/40 backdrop-blur-sm transition-all hover:border-primary/30">
+              <span className="text-base font-extrabold text-primary mb-0.5">2️⃣</span>
+              <span className="text-xs font-bold text-foreground">Get Matched</span>
+              <span className="text-[10px] text-muted-foreground">Random stranger</span>
+            </div>
+            <div className="flex flex-col items-center text-center p-3 rounded-2xl bg-card/60 border border-border/40 backdrop-blur-sm transition-all hover:border-primary/30">
+              <span className="text-base font-extrabold text-primary mb-0.5">3️⃣</span>
+              <span className="text-xs font-bold text-foreground">Start Chatting</span>
+              <span className="text-[10px] text-muted-foreground">Text & Video</span>
+            </div>
           </div>
         </div>
 
