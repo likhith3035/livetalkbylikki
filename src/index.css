@@ -109,6 +109,17 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    height: 100%;
+    height: 100vh;
+    height: 100svh;
+    max-height: 100svh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
     transition: background-color 0.3s ease, color 0.3s ease;

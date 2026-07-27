@@ -456,22 +456,25 @@ const ChatMessageList = ({
       )}
 
       <AnimatePresence initial={false}>
-        {messages.map((msg) => (
-          <motion.div
-            key={msg.id}
-            id={`msg-${msg.id}`}
-            custom={msg.sender}
-            variants={messageVariants}
-            initial="hidden"
-            animate="visible"
-            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-            className={cn(
-              "flex flex-col relative w-full",
-              msg.sender === "you" && "items-end",
-              msg.sender === "stranger" && "items-start",
-              msg.sender === "system" && "items-center"
-            )}
-          >
+        {messages.map((msg, idx) => {
+          const isRecent = idx >= messages.length - 20;
+          
+          return (
+            <motion.div
+              key={msg.id}
+              id={`msg-${msg.id}`}
+              custom={msg.sender}
+              variants={isRecent ? messageVariants : undefined}
+              initial={isRecent ? "hidden" : false}
+              animate={isRecent ? "visible" : false}
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+              className={cn(
+                "flex flex-col relative w-full",
+                msg.sender === "you" && "items-end",
+                msg.sender === "stranger" && "items-start",
+                msg.sender === "system" && "items-center"
+              )}
+            >
             <SwipeableMessage
               isMine={msg.sender === "you"}
               disabled={msg.sender === "system" || msg.deleted}
