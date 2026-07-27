@@ -206,30 +206,16 @@ const Index = () => {
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-6 pb-12 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24 overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-4 pb-8 sm:pt-16 sm:pb-16 lg:pt-20 lg:pb-20 overflow-hidden">
         {/* Subtle gradient orb */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/8 blur-[120px] pointer-events-none" />
         
-        <div className="relative z-10 max-w-2xl mx-auto space-y-4 sm:space-y-6">
-          {/* Online badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 backdrop-blur-sm px-4 py-2 text-xs font-medium text-muted-foreground"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-            {onlineCount.toLocaleString()} people online
-          </motion.div>
-
+        <div className="relative z-10 max-w-2xl mx-auto space-y-3.5 sm:space-y-5">
           {/* Heading */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
             className="text-3xl sm:text-5xl lg:text-6xl font-bold font-display leading-[1.15] tracking-tight"
           >
             Talk to anyone, <br />
@@ -240,8 +226,8 @@ const Index = () => {
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="text-sm sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed"
+            transition={{ delay: 0.2 }}
+            className="text-xs sm:text-base text-muted-foreground max-w-md sm:max-w-lg mx-auto leading-relaxed"
           >
             No sign-ups. No tracking. Just real conversations with real people from around the world.
           </motion.p>
@@ -250,11 +236,11 @@ const Index = () => {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.45 }}
-            className="text-xs sm:text-sm text-muted-foreground/60 font-medium"
+            transition={{ delay: 0.3 }}
+            className="text-[11px] sm:text-xs text-muted-foreground/60 font-medium"
           >
             Built with 💜 by{" "}
-            <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary/70 hover:text-primary transition-colors hover:underline underline-offset-4">
+            <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary/75 hover:text-primary transition-colors hover:underline underline-offset-4">
               Likhith Kami
             </a>
           </motion.p>

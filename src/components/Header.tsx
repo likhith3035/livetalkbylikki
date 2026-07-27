@@ -136,7 +136,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
   }
 
   return (
-    <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40 lg:hidden" style={{ willChange: "transform", contain: "layout style" }}>
+    <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 bg-background/98 backdrop-blur-md border-b border-border/40 sticky top-0 z-40 lg:hidden" style={{ willChange: "transform", contain: "layout style" }}>
       {/* Left: Logo */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate("/")}>
