@@ -206,7 +206,7 @@ const Index = () => {
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-16 pb-16 sm:pt-28 sm:pb-28 lg:pt-32 lg:pb-32 overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-6 pb-10 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28 overflow-hidden">
         {/* Subtle gradient orb */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px] pointer-events-none" />
         
