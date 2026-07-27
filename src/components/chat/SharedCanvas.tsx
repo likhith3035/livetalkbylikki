@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback, memo } from "react";
 import { createPortal } from "react-dom";
-import { Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2, Download, Sparkles, Pencil, Square, Circle, Minus, ArrowUpRight, Type, Undo2, Redo2 } from "lucide-react";
+import { Eraser, Trash2, ArrowLeft, MousePointer2, CheckCircle2, Download, Sparkles, Pencil, Square, Circle, Minus, ArrowUpRight, Type, Undo2, Redo2, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RoomChannel } from "@/lib/types";
@@ -10,6 +10,7 @@ interface SharedCanvasProps {
   roomChannel?: RoomChannel;
   sessionId?: string;
   onClose: () => void;
+  onSendToChat?: (dataUrl: string) => void;
 }
 
 interface RemoteCursor {
@@ -109,7 +110,7 @@ const CursorOverlay = memo(({ roomChannel, sessionId }: { roomChannel?: RoomChan
 });
 CursorOverlay.displayName = "CursorOverlay";
 
-const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) => {
+const SharedCanvas = ({ roomChannel, sessionId, onClose, onSendToChat }: SharedCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const draftCanvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -132,6 +133,50 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
   // Text tool overlay
   const [textOverlay, setTextOverlay] = useState<{ x: number; y: number } | null>(null);
   const [textInput, setTextInput] = useState("");
+
+  // Send to Chat prompt states
+  const [showSendPrompt, setShowSendPrompt] = useState(false);
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
+
+  const exportCanvasDataUrl = useCallback((): string | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) return null;
+
+    tempCtx.fillStyle = "#0a0a0f";
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    tempCtx.drawImage(canvas, 0, 0);
+
+    return tempCanvas.toDataURL("image/png");
+  }, []);
+
+  const handleFinishDrawing = useCallback(() => {
+    const hasDrawn = historyIndexRef.current > 0;
+    if (hasDrawn && onSendToChat) {
+      const dataUrl = exportCanvasDataUrl();
+      if (dataUrl) {
+        setPreviewDataUrl(dataUrl);
+        setShowSendPrompt(true);
+        return;
+      }
+    }
+    onClose();
+  }, [onClose, onSendToChat, exportCanvasDataUrl]);
+
+  const handleDirectSendToChat = useCallback(() => {
+    if (onSendToChat) {
+      const dataUrl = exportCanvasDataUrl();
+      if (dataUrl) {
+        onSendToChat(dataUrl);
+        onClose();
+      }
+    }
+  }, [onSendToChat, onClose, exportCanvasDataUrl]);
 
   // Use refs for UI state so drawing and sync listeners don't re-trigger and run resize (which clears canvas!)
   const stateRef = useRef({ color: "#7c3aed", brushSize: 6, activeTool: "draw", isGlow: false });
@@ -743,7 +788,7 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={onClose}
+            onClick={handleFinishDrawing}
             className="group flex items-center gap-1.5 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl pr-3 sm:pr-4"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
@@ -760,13 +805,25 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {onSendToChat && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDirectSendToChat}
+              className="rounded-xl h-8 sm:h-9 px-3 sm:px-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest italic gap-1.5 border-primary/40 hover:bg-primary/20 text-primary"
+              title="Send canvas drawing directly to chat"
+            >
+              <Send className="h-3.5 w-3.5" />
+              <span>Send to Chat</span>
+            </Button>
+          )}
           <Button 
             variant="glow" 
             size="sm" 
-            onClick={onClose}
+            onClick={handleFinishDrawing}
             className="rounded-xl h-8 sm:h-9 px-3 sm:px-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest italic"
           >
-            I'm Done
+            Done
           </Button>
         </div>
       </div>
@@ -985,6 +1042,85 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
           E2E Synced • Privately Encrypted
         </div>
       </div>
+
+      {/* Send Canvas to Chat Confirmation Modal */}
+      <AnimatePresence>
+        {showSendPrompt && previewDataUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[250] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none"
+            onClick={() => setShowSendPrompt(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              className="bg-card border border-border/80 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4 text-center pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Send Drawing to Chat?</span>
+                </div>
+                <button
+                  onClick={() => setShowSendPrompt(false)}
+                  className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Live Canvas Image Preview */}
+              <div className="rounded-2xl border border-primary/20 bg-black/40 p-2 overflow-hidden flex items-center justify-center">
+                <img
+                  src={previewDataUrl}
+                  alt="Drawing Preview"
+                  className="max-h-48 w-full object-contain rounded-xl shadow-inner"
+                />
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Would you like to send this drawing as an image message to your chat partner?
+              </p>
+
+              {/* Modal Buttons */}
+              <div className="flex flex-col gap-2 pt-1">
+                <Button
+                  variant="glow"
+                  size="lg"
+                  className="w-full h-11 rounded-2xl gap-2 text-xs font-bold uppercase tracking-wider"
+                  onClick={() => {
+                    if (previewDataUrl && onSendToChat) {
+                      onSendToChat(previewDataUrl);
+                    }
+                    setShowSendPrompt(false);
+                    onClose();
+                  }}
+                >
+                  <Send className="h-4 w-4" />
+                  Send to Chat
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full h-10 rounded-2xl text-xs font-medium border-border/80 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setShowSendPrompt(false);
+                    onClose();
+                  }}
+                >
+                  Dismiss & Close
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 

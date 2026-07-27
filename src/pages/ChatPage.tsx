@@ -1031,6 +1031,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
                 setActiveGame("none");
                 roomChannel?.send({ type: "broadcast", event: "game_stop", payload: { senderId: sessionId, game: "canvas" } });
               }}
+              onSendToChat={(dataUrl) => {
+                handleImageUpload(dataUrl);
+                toast({ title: "🎨 Drawing Sent!", description: "Your canvas drawing was sent to the chat." });
+              }}
             />
           )}
         </AnimatePresence>
