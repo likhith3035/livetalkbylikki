@@ -206,11 +206,11 @@ const Index = () => {
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-20 pb-20 sm:pt-28 sm:pb-28 lg:pt-32 lg:pb-32 overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-6 pb-12 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24 overflow-hidden">
         {/* Subtle gradient orb */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px] pointer-events-none" />
         
-        <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+        <div className="relative z-10 max-w-2xl mx-auto space-y-4 sm:space-y-6">
           {/* Online badge */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -230,7 +230,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display leading-[1.1] tracking-tight"
+            className="text-3xl sm:text-5xl lg:text-6xl font-bold font-display leading-[1.15] tracking-tight"
           >
             Talk to anyone, <br />
             <span className="text-gradient">anonymously</span>
@@ -241,7 +241,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed"
+            className="text-sm sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed"
           >
             No sign-ups. No tracking. Just real conversations with real people from around the world.
           </motion.p>
@@ -251,7 +251,7 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.45 }}
-            className="text-sm text-muted-foreground/50 font-medium"
+            className="text-xs sm:text-sm text-muted-foreground/60 font-medium"
           >
             Built with 💜 by{" "}
             <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary/70 hover:text-primary transition-colors hover:underline underline-offset-4">
@@ -259,18 +259,18 @@ const Index = () => {
             </a>
           </motion.p>
 
-          {/* CTA Buttons - Premium, Clean & Beautiful */}
+          {/* CTA Buttons - Premium, Compact & Perfectly Proportioned */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col items-center gap-3.5 pt-2 w-full max-w-sm mx-auto"
+            className="flex flex-col items-center gap-3 pt-1 w-full max-w-xs sm:max-w-sm mx-auto"
           >
             {/* Primary CTA */}
             <Button
               variant="glow"
               size="lg"
-              className="w-full h-14 px-6 text-base font-bold rounded-2xl gap-3 shadow-xl shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full h-13 sm:h-14 px-6 text-sm sm:text-base font-bold rounded-2xl gap-3 shadow-xl shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
               onClick={() => navigate("/chat")}
             >
               <MessageSquare className="h-5 w-5" />
@@ -278,21 +278,16 @@ const Index = () => {
               <ArrowRight className="h-4 w-4 ml-auto" />
             </Button>
 
-            <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-1.5">
+            <p className="text-[11px] sm:text-xs text-muted-foreground font-medium flex items-center justify-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
               Instant • Free • No Signup Required
             </p>
 
-            {/* APK Download Button */}
-            <div className="w-full pt-1">
-              <ApkDownloadButton variant="full" />
-            </div>
-
             {/* Secondary Actions: Private Room & Join Code */}
-            <div className="flex items-center gap-2 w-full">
+            <div className="flex items-center gap-2 w-full pt-1">
               <Button
                 variant="outline"
-                className="flex-1 h-10 text-xs font-semibold rounded-xl gap-1.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                className="flex-1 h-9 sm:h-10 text-xs font-semibold rounded-xl gap-1.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
                 onClick={generateAndJoinRoom}
               >
                 <Link2 className="h-3.5 w-3.5 text-primary" />
@@ -300,7 +295,7 @@ const Index = () => {
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 h-10 text-xs font-semibold rounded-xl gap-1.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                className="flex-1 h-9 sm:h-10 text-xs font-semibold rounded-xl gap-1.5 border-border/80 hover:border-primary/40 hover:bg-primary/5 transition-all"
                 onClick={() => {
                   const nextState = !showJoinInput;
                   setShowJoinInput(nextState);
@@ -313,7 +308,7 @@ const Index = () => {
                 }}
               >
                 <Users className="h-3.5 w-3.5 text-primary" />
-                Join Room
+                Enter Code
               </Button>
             </div>
           </motion.div>
