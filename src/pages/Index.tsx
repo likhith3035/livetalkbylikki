@@ -340,7 +340,6 @@ const Index = () => {
               <span className="text-[10px] text-muted-foreground">Text & Video</span>
             </div>
           </div>
-        </div>
 
           {/* Join Room Input */}
           <AnimatePresence>
