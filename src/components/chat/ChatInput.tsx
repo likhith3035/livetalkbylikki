@@ -48,6 +48,7 @@ const ChatInput = ({
   const [uploading, setUploading] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showQuickEmojis, setShowQuickEmojis] = useState(false);
+  const [showIcebreakers, setShowIcebreakers] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileTypeFilter, setFileTypeFilter] = useState<string>("*");
   const throttleRef = useRef<number>(0);
@@ -265,6 +266,18 @@ const ChatInput = ({
               Reactions
             </button>
 
+            {/* Icebreaker Pill */}
+            <button
+              onClick={() => setShowIcebreakers((v) => !v)}
+              className={cn(
+                "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border rounded-full text-[10px] sm:text-[11px] font-semibold active:scale-95 transition-all shrink-0",
+                showIcebreakers ? "bg-yellow-500/20 border-yellow-500/40 text-yellow-500" : "bg-card border-border/60 text-foreground hover:bg-secondary/50"
+              )}
+            >
+              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-500" />
+              Topics
+            </button>
+
             {/* Images Pill */}
             <button
               onClick={() => triggerFileSelect("image/*")}
@@ -355,9 +368,9 @@ const ChatInput = ({
         )}
 
 
-        {!hasMessages && (
+        {(!hasMessages || showIcebreakers) && (
           <div className="mx-auto max-w-3xl mb-1.5 sm:mb-3">
-            <Icebreakers onSelect={(text) => onSend(text)} disabled={!isConnected} />
+            <Icebreakers onSelect={(text) => { onSend(text); setShowIcebreakers(false); }} disabled={!isConnected} />
           </div>
         )}
 

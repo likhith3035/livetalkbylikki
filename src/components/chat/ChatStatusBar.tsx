@@ -1,4 +1,4 @@
-import { SkipForward, X, Tags, Video, Phone, Play, Settings } from "lucide-react";
+import { SkipForward, X, Tags, Video, Phone, Play, Settings, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useChatContext } from "@/contexts/ChatContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { ChatToolsMenu } from "@/components/chat/ChatToolsMenu";
+import { exportChatAsText, copyToClipboard, downloadAsFile } from "@/lib/chat-export";
 
 interface ChatStatusBarProps {
   status: ChatStatus;
@@ -236,6 +237,38 @@ const ChatStatusBar = ({
 
         {status === "connected" && (
           <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onAudioCall}
+              disabled={isVideoCallActive}
+              className={cn(
+                "gap-1.5 h-8 px-2.5 sm:px-3 text-xs font-bold transition-all hover:scale-[1.03]",
+                settings.liquidGlassEnabled
+                  ? "bg-secondary/60 hover:bg-secondary text-foreground border border-border/40 shadow-sm"
+                  : "bg-secondary/40 border border-border/40 hover:bg-secondary/60 text-foreground"
+              )}
+              title="Start voice call"
+            >
+              <Phone className="h-3.5 w-3.5 text-primary" />
+              <span className="hidden sm:inline">Call</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onVideoCall}
+              disabled={isVideoCallActive}
+              className={cn(
+                "gap-1.5 h-8 px-2.5 sm:px-3 text-xs font-bold transition-all hover:scale-[1.03]",
+                settings.liquidGlassEnabled
+                  ? "bg-secondary/60 hover:bg-secondary text-foreground border border-border/40 shadow-sm"
+                  : "bg-secondary/40 border border-border/40 hover:bg-secondary/60 text-foreground"
+              )}
+              title="Start video call"
+            >
+              <Video className="h-3.5 w-3.5 text-primary" />
+              <span className="hidden sm:inline">Video</span>
+            </Button>
             <ChatToolsMenu
               messages={messages}
               onSearchResult={onSearchResult}

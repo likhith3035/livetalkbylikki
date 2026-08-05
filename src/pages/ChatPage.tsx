@@ -135,6 +135,15 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [showLangPicker, setShowLangPicker] = useState(false);
   const { targetLang, setTargetLang, translations, translateMessage } = useChatTranslator();
 
+  // Auto-populate random nickname so users can jump right into chat in 1 tap
+  useEffect(() => {
+    const saved = localStorage.getItem("livetalk_user_name");
+    if (!saved && !tempName) {
+      const random = RANDOM_NICKNAMES[Math.floor(Math.random() * RANDOM_NICKNAMES.length)];
+      setTempName(random);
+    }
+  }, [tempName]);
+
   useEffect(() => {
     if (targetLang !== "off" && messages.length > 0) {
       const lastMsg = messages[messages.length - 1];
@@ -370,10 +379,15 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }, [setInterests, toast]);
 
   const handleStart = useCallback(() => {
-    if (!userName) return;
+    let effectiveName = userName;
+    if (!effectiveName) {
+      effectiveName = tempName || RANDOM_NICKNAMES[Math.floor(Math.random() * RANDOM_NICKNAMES.length)];
+      setUserName(effectiveName);
+      localStorage.setItem("livetalk_user_name", effectiveName);
+    }
     setShowInterests(false);
     requireVerification(() => startChat());
-  }, [startChat, userName, requireVerification]);
+  }, [startChat, userName, tempName, setUserName, requireVerification]);
 
   useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
 

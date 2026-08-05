@@ -109,9 +109,94 @@ interface ChatContextValue {
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
+const defaultChatContextValue: ChatContextValue = {
+  messages: [],
+  status: "idle",
+  onlineCount: 0,
+  interests: [],
+  matchedInterests: [],
+  strangerTyping: false,
+  strangerTypingText: undefined,
+  autoReconnectCountdown: null,
+  sessionId: "",
+  roomId: null,
+  roomChannel: null,
+  searchElapsed: 0,
+  disappearTimer: null,
+  userName: "",
+  setUserName: () => {},
+  strangerName: "Stranger",
+  strangerAvatar: "",
+  strangerMood: "",
+  setInterests: () => {},
+  startChat: () => {},
+  sendMessage: () => {},
+  sendTyping: () => {},
+  nextChat: () => {},
+  stopChat: () => {},
+  reactToMessage: () => {},
+  blockStranger: () => {},
+  createPrivateRoom: () => "",
+  joinPrivateRoom: () => {},
+  joinRoomById: () => {},
+  deleteMessage: () => {},
+  pinMessage: () => {},
+  setDisappearTimer: () => {},
+  reportStranger: () => {},
+  stableId: "",
+  addMessage: () => {},
+  privateRoomCode: null,
+  sendSignalingEvent: () => {},
+  registerCrossDeviceSignaling: () => {},
+  callStatus: "idle",
+  isAudioOnly: false,
+  localStream: null,
+  remoteStream: null,
+  isMuted: false,
+  isCameraOff: false,
+  isScreenSharing: false,
+  remoteIsScreenSharing: false,
+  isBlurred: false,
+  facingMode: "user",
+  remoteMuted: false,
+  remoteCameraOff: false,
+  remoteBlurred: false,
+  supportsScreenShare: false,
+  surpriseEffect: null,
+  stats: null,
+  audioOutput: "default",
+  toggleAudioOutput: () => {},
+  isPiPActive: false,
+  supportsPiP: false,
+  startCall: () => {},
+  acceptCall: () => {},
+  declineCall: () => {},
+  endCall: () => {},
+  toggleMute: () => {},
+  toggleCamera: () => {},
+  flipCamera: () => {},
+  toggleScreenShare: () => {},
+  toggleBlur: () => {},
+  upgradeToVideo: () => {},
+  sendSurprise: () => {},
+  togglePictureInPicture: () => {},
+  inCallMessages: [],
+  sendInCallMessage: () => {},
+  localPrivacyModeActive: false,
+  strangerPrivacyModeActive: false,
+  privacyModeActive: false,
+  privacyAlertActive: false,
+  togglePrivacyMode: () => {},
+  sendPrivacyAlert: () => {},
+  privacyLogs: [],
+};
+
 export const useChatContext = () => {
   const ctx = useContext(ChatContext);
-  if (!ctx) throw new Error("useChatContext must be used within ChatProvider");
+  if (!ctx) {
+    console.warn("[useChatContext] Context accessed outside ChatProvider. Using safe fallback.");
+    return defaultChatContextValue;
+  }
   return ctx;
 };
 
@@ -363,10 +448,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (status !== "connected" && callStatus !== "idle") {
-      cleanup();
+      endCall();
       setInCallMessages([]);
     }
-  }, [status, callStatus, cleanup]);
+  }, [status, callStatus, endCall]);
 
   // Show toast notification when stranger sends a message and user is NOT on /chat page
   useEffect(() => {
