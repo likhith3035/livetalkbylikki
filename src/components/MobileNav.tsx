@@ -150,7 +150,7 @@ export default function MobileNav() {
           whileTap={{ scale: 0.88 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
           className={cn(
-            "h-14 w-14 rounded-2xl flex items-center justify-center shadow-2xl relative overflow-hidden",
+            "h-12 w-12 sm:h-14 sm:w-14 rounded-2xl flex items-center justify-center shadow-2xl relative overflow-hidden border border-white/20",
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           )}
           style={{ backgroundColor: "hsl(var(--primary))", willChange: "transform" }}

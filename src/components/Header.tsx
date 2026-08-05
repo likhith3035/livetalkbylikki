@@ -1,11 +1,13 @@
-import { forwardRef } from "react";
-import { Moon, Sun, ChevronLeft, Video, Phone, Globe, Home } from "lucide-react";
+import { useState, useEffect, forwardRef } from "react";
+import { Moon, Sun, ChevronLeft, Video, Phone, Globe, Home, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
 import ApkDownloadButton from "@/components/ApkDownloadButton";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
+import { db } from "@/lib/firebase";
+import { ref as firebaseRef, onValue } from "firebase/database";
 
 interface HeaderProps {
   onlineCount: number;
@@ -27,6 +29,40 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
 }, ref) => {
   const { settings, updateSetting } = useSettings();
   const navigate = useNavigate();
+  const [announcement, setAnnouncement] = useState<string>("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("echo_global_announcement") || "";
+    if (saved) setAnnouncement(saved);
+
+    const handleCustom = (e: any) => {
+      setAnnouncement(e.detail || localStorage.getItem("echo_global_announcement") || "");
+    };
+    const handleStorage = () => {
+      setAnnouncement(localStorage.getItem("echo_global_announcement") || "");
+    };
+
+    window.addEventListener("echo_announcement_change", handleCustom);
+    window.addEventListener("storage", handleStorage);
+
+    let unsub: () => void = () => {};
+    if (db) {
+      const annRef = firebaseRef(db, "settings/global_announcement");
+      unsub = onValue(annRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const val = snapshot.val();
+          setAnnouncement(val);
+          localStorage.setItem("echo_global_announcement", val);
+        }
+      }, () => {});
+    }
+
+    return () => {
+      window.removeEventListener("echo_announcement_change", handleCustom);
+      window.removeEventListener("storage", handleStorage);
+      unsub();
+    };
+  }, []);
 
   const isConnectedHeader = !!strangerName;
 
@@ -136,7 +172,14 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
   }
 
   return (
-    <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40 lg:hidden" style={{ willChange: "transform", contain: "layout style" }}>
+    <>
+      {announcement && (
+        <div className="w-full bg-gradient-to-r from-purple-600 via-primary to-indigo-600 text-white text-[11px] font-bold py-1 px-3 flex items-center justify-center gap-2 shadow-md relative z-50 overflow-hidden">
+          <Megaphone className="h-3.5 w-3.5 animate-bounce shrink-0 text-yellow-300" />
+          <span className="truncate">{announcement}</span>
+        </div>
+      )}
+      <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40 lg:hidden" style={{ willChange: "transform", contain: "layout style" }}>
       {/* Left: Logo */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate("/")}>
@@ -178,6 +221,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         <OnlineBadge count={onlineCount} />
       </div>
     </header>
+    </>
   );
 });
 
