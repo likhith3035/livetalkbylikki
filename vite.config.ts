@@ -17,16 +17,22 @@ export default defineConfig(({ mode }) => ({
     include: ["qrcode.react"],
   },
   build: {
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          firebase: ['firebase/app', 'firebase/database'],
-          supabase: ['@supabase/supabase-js'],
-          ui: ['framer-motion', 'lucide-react']
-        }
-      }
-    }
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("firebase")) return "firebase-vendor";
+            if (id.includes("@supabase")) return "supabase-vendor";
+            if (id.includes("framer-motion")) return "motion-vendor";
+            if (id.includes("lucide-react")) return "icons-vendor";
+            if (id.includes("recharts")) return "charts-vendor";
+            if (id.includes("react-dom") || id.includes("react-router")) return "react-vendor";
+            return "vendor";
+          }
+        },
+      },
+    },
   },
   plugins: [
     react(),
