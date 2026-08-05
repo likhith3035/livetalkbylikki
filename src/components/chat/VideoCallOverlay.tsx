@@ -115,7 +115,8 @@ const VideoCallOverlay = ({
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [chatSubtitle, setChatSubtitle] = useState<string>("");
-  const [activeFilter, setActiveFilter] = useState<VideoFilter>(VIDEO_FILTERS[0]);
+  const [audioAutoplayBlocked, setAudioAutoplayBlocked] = useState(false);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
   const qualityIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { settings } = useSettings();
@@ -423,9 +424,18 @@ const VideoCallOverlay = ({
   if (callStatus === "connecting") {
     return (
       <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/90 backdrop-blur-lg animate-fade-in">
-        <div className="text-center space-y-3">
-          <div className="h-12 w-12 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">Connecting {isAudioOnly ? "audio" : "video"}...</p>
+        <div className="flex flex-col items-center gap-6 rounded-2xl bg-card border border-border p-8 shadow-2xl max-w-xs w-full mx-4">
+          <div className="h-16 w-16 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin flex items-center justify-center">
+            {isAudioOnly ? <Phone className="h-6 w-6 text-primary animate-pulse" /> : <Video className="h-6 w-6 text-primary animate-pulse" />}
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-lg font-display font-semibold text-foreground">Connecting {isAudioOnly ? "audio" : "video"}...</p>
+            <p className="text-xs text-muted-foreground">Establishing secure WebRTC peer connection</p>
+          </div>
+          <Button onClick={onEndCall} variant="danger" className="rounded-full h-11 px-6 gap-2 text-xs font-bold shadow-lg">
+            <PhoneOff className="h-4 w-4" />
+            Cancel Call
+          </Button>
         </div>
       </div>
     );
@@ -450,12 +460,30 @@ const VideoCallOverlay = ({
                 <Phone className="h-10 w-10 text-primary" />
               </div>
               <p className="text-sm text-muted-foreground">Audio Call</p>
+              {audioAutoplayBlocked && (
+                <Button
+                  size="sm"
+                  variant="glow"
+                  onClick={() => {
+                    if (audioElRef.current) {
+                      audioElRef.current.play().then(() => setAudioAutoplayBlocked(false)).catch(() => {});
+                    }
+                  }}
+                  className="gap-2 text-xs font-bold rounded-full bg-primary text-primary-foreground shadow-lg animate-bounce"
+                >
+                  <Volume2 className="h-4 w-4" />
+                  Tap to Unmute Audio
+                </Button>
+              )}
               {remoteStream && (
                 <audio
                   ref={(el) => {
+                    audioElRef.current = el;
                     if (el && remoteStream && el.srcObject !== remoteStream) {
                       el.srcObject = remoteStream;
-                      el.play().catch(() => {});
+                      el.play()
+                        .then(() => setAudioAutoplayBlocked(false))
+                        .catch(() => setAudioAutoplayBlocked(true));
                     }
                   }}
                   autoPlay

@@ -35,6 +35,11 @@ export function useFirebaseSignaling({ sessionId, roomId, onEvent }: SignalingOp
       if (eventId) processedIds.add(eventId);
 
       if (data.payload?.senderId !== sessionId) {
+        // Ignore stale signaling events older than 15 seconds from previous room sessions
+        if (data.timestamp && Date.now() - data.timestamp > 15000) {
+          remove(snapshot.ref).catch(() => {});
+          return;
+        }
         onEvent(data.type, data.payload);
         // Delay removal slightly so both sides can read it
         setTimeout(() => remove(snapshot.ref).catch(() => {}), 2000);

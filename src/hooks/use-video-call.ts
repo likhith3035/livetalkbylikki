@@ -18,17 +18,6 @@ const getIceServers = (): RTCConfiguration => {
   // Free public TURN servers — these relay traffic when direct P2P fails (symmetric NAT, mobile networks)
   // Using Open Relay (metered.ca) free tier + Cloudflare TURN public credentials
   const turnServers: RTCIceServer[] = [
-    // Cloudflare TURN — free, no account needed
-    {
-      urls: "turn:turn.cloudflare.com:3478",
-      username: "free",
-      credential: "free",
-    },
-    {
-      urls: "turn:turn.cloudflare.com:3478?transport=tcp",
-      username: "free",
-      credential: "free",
-    },
     // Open Relay Project — free public TURN
     {
       urls: "turn:openrelay.metered.ca:80",
@@ -220,21 +209,19 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     setRemoteStream(remote);
 
     pc.ontrack = (e) => {
-      console.log("WebRTC: Received remote track", e.track.kind);
-      // Add tracks to the existing stream instead of creating a new one each time
-      e.streams[0]?.getTracks().forEach((track) => {
-        if (!remote.getTrackById(track.id)) {
-          remote.addTrack(track);
+      console.log("WebRTC: Received remote track", e.track?.kind);
+      if (e.streams && e.streams[0]) {
+        e.streams[0].getTracks().forEach((track) => {
+          if (!remote.getTrackById(track.id)) {
+            remote.addTrack(track);
+          }
+        });
+      } else if (e.track) {
+        if (!remote.getTrackById(e.track.id)) {
+          remote.addTrack(e.track);
         }
-      });
-      // Force a React re-render by updating state with same object reference trick
-      setRemoteStream((prev) => {
-        if (prev === remote) {
-          // Create a shallow copy to trigger re-render while preserving tracks
-          return new MediaStream(remote.getTracks());
-        }
-        return remote;
-      });
+      }
+      setRemoteStream(new MediaStream(remote.getTracks()));
     };
 
     pc.onicecandidate = (e) => {
@@ -383,10 +370,19 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       // DO NOT drain pendingCandidatesRef here — remote description not set yet.
       // Candidates will be drained in webrtc:offer handler after setRemoteDescription.
       sendSignalingEventRef.current("webrtc:accept", { senderId: sessionId, audioOnly });
-    } catch (err) {
+    } catch (err: any) {
       console.error("WebRTC: acceptCall failed:", err);
       setCallStatusSynced("idle");
       cleanup();
+      toast({
+        variant: "destructive",
+        title: "Call Access Denied",
+        description: err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError"
+          ? "Microphone or Camera permission was denied in your browser settings."
+          : typeof window !== "undefined" && !window.isSecureContext
+          ? "Calls require HTTPS. Please access the site over HTTPS."
+          : err?.message || "Could not access microphone or camera. Check if another app is using it.",
+      });
     }
   }, [sessionId, getMedia, createPeerConnection, cleanup, setCallStatusSynced]);
 
@@ -713,36 +709,50 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
         case "webrtc:offer": {
           let pc = pcRef.current;
           const offer = payload.offer as RTCSessionDescriptionInit;
-          const isRenegotiation = !!payload.renegotiation;
 
-          if (!pc && isRenegotiation) {
+          if (!pc) {
             try {
               setCallStatusSynced("connecting");
               const stream = await getMedia("user", isAudioOnlyRef.current);
               pc = createPeerConnection();
               stream.getTracks().forEach((track) => pc!.addTrack(track, stream));
             } catch (err) {
-              console.error("WebRTC: renegotiation setup failed:", err);
+              console.error("WebRTC: offer setup failed:", err);
               break;
             }
           }
           if (!pc) break;
 
-          // Guard: only process offer if we're in a state that can receive one.
-          // "stable" with a local description means we're the offer side (caller) — skip.
-          // "have-remote-offer" means we already processed this offer — skip duplicate.
-          const sigState = pc.signalingState;
-          if (sigState === "have-local-offer" || sigState === "have-remote-offer") {
-            console.warn(`WebRTC: Ignoring duplicate webrtc:offer in state "${sigState}"`);
-            break;
+          const offerSenderId = (payload.senderId as string) || "";
+          const isOfferCollision =
+            pc.signalingState !== "stable" &&
+            (pc.signalingState === "have-local-offer" || !!payload.renegotiation);
+
+          // Polite peer pattern: smaller sessionId is polite
+          const isPolite = sessionId.localeCompare(offerSenderId) < 0;
+
+          if (isOfferCollision) {
+            if (!isPolite) {
+              console.warn(`WebRTC: Impolite peer ignoring offer collision in state "${pc.signalingState}"`);
+              break;
+            }
+            try {
+              console.log("WebRTC: Polite peer rolling back local offer to resolve collision");
+              await pc.setLocalDescription({ type: "rollback" });
+            } catch (err) {
+              console.warn("WebRTC: Rollback error during collision:", err);
+            }
           }
 
-          await pc.setRemoteDescription(new RTCSessionDescription(offer));
-          // Now safe to drain buffered ICE candidates
-          await drainPendingCandidates(pc);
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          sendSignalingEventRef.current("webrtc:answer", { senderId: sessionId, answer: pc.localDescription?.toJSON() });
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(offer));
+            await drainPendingCandidates(pc);
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            sendSignalingEventRef.current("webrtc:answer", { senderId: sessionId, answer: pc.localDescription?.toJSON() });
+          } catch (err) {
+            console.error("WebRTC: Failed processing remote offer:", err);
+          }
           break;
         }
 
@@ -922,6 +932,27 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
 
     return () => clearInterval(interval);
   }, [callStatus]);
+
+  // 15-second safety timer for "connecting" or "requesting" status
+  useEffect(() => {
+    if (callStatus !== "connecting" && callStatus !== "requesting") return;
+
+    const timeout = setTimeout(() => {
+      if (callStatusRef.current === "connecting" || callStatusRef.current === "requesting") {
+        console.warn("WebRTC: Connection timed out after 15s — resetting to idle");
+        sendSignalingEventRef.current("webrtc:end", { senderId: sessionId });
+        cleanup();
+        setCallStatusSynced("idle");
+        toast({
+          variant: "destructive",
+          title: "Call Connection Timed Out",
+          description: "Could not establish media connection. Please try calling again.",
+        });
+      }
+    }, 15000);
+
+    return () => clearTimeout(timeout);
+  }, [callStatus, cleanup, setCallStatusSynced, sessionId, toast]);
 
   // Cleanup on unmount
   useEffect(() => {
