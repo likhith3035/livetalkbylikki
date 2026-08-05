@@ -1,20 +1,32 @@
 {
   "rules": {
-    ".read": false,
+    ".read": true,
     ".write": false,
-
+    
     "settings": {
+      ".read": true,
+      ".write": true,
+      "global_announcement": {
+        ".read": true,
+        ".write": true
+      },
+      "maintenance_mode": {
+        ".read": true,
+        ".write": true
+      },
       "safety": {
         "profanity_list": {
           ".read": true,
-          ".write": "auth != null"
+          ".write": true
         }
       }
     },
-
+    
     "admin": {
+      ".read": true,
+      ".write": true,
       "reports": {
-        ".read": "auth != null",
+        ".read": true,
         "$reportId": {
           ".write": true
         }
@@ -22,54 +34,56 @@
       "blacklist": {
         ".read": true,
         "$uid": {
-          ".write": "auth != null"
+          ".write": true
         }
       },
       "appeals": {
-        ".read": "auth != null",
+        ".read": true,
         "$uid": {
           ".write": true
         }
       },
       "violations": {
-        ".read": "auth != null",
+        ".read": true,
         "$uid": {
           ".write": true
         }
       }
     },
-
+    
     "lobby": {
       ".read": true,
+      ".write": true,
       "$sessionId": {
-        ".write": "auth != null || !newData.exists()"
+        ".write": true
       }
     },
-
+    
     "matches": {
       ".read": true,
       "$matchId": {
-        ".write": "auth != null || !newData.exists()",
+        ".write": true,
         ".validate": "!newData.exists() || newData.hasChildren(['user1', 'user2', 'roomId'])"
       }
     },
-
+    
     "rooms": {
       ".read": true,
       "$roomId": {
-        ".write": "auth != null || !newData.exists()"
+        ".write": true
       }
     },
-
+    
     "analytics": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": true
     },
 
     "presence": {
       ".read": true,
+      ".write": true,
       "$uid": {
-        ".write": "auth != null || !newData.exists()",
+        ".write": true,
         ".validate": "!newData.exists() || newData.hasChildren(['online_at'])"
       }
     }

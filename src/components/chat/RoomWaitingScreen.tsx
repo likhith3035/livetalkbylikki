@@ -3,7 +3,7 @@ import QRCodeLib from "qrcode";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Copy, Check, Share2, X, Link2, Hash, Wifi, WifiOff, Clock,
-  Loader2, QrCode
+  Loader2, QrCode, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ import { db } from "@/lib/firebase";
 import { ref, onValue, off } from "firebase/database";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
+import { StoryShareCardModal } from "./StoryShareCardModal";
 
 const APP_URL = typeof window !== "undefined" ? window.location.origin : "https://LiveTalkbylikki.netlify.app";
 const ROOM_EXPIRY_SECONDS = 300; // 5 minutes
@@ -168,6 +169,7 @@ function QRDisplay({ value, isDark }: { value: string; isDark: boolean }) {
 
 export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined, isMatched, handoffPanel }: RoomWaitingScreenProps) {
   const { toast } = useToast();
+  const [showStoryModal, setShowStoryModal] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("waiting");
@@ -283,25 +285,32 @@ export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined,
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
+  // Lock body scroll while waiting screen is active
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const expiryPercent = (secondsLeft / ROOM_EXPIRY_SECONDS) * 100;
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-start justify-center bg-black/60 backdrop-blur-md overflow-y-auto">
-      {/* Scroll padding so content doesn't touch edges on very short screens */}
-      <div className="w-full max-w-sm mx-auto px-3 py-4 sm:py-8">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/75 backdrop-blur-md p-3 overflow-hidden select-none">
+      <div className="w-full max-w-sm mx-auto my-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
         >
-          <div className="relative rounded-[2rem] border border-white/10 bg-zinc-950/80 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+          <div className="relative rounded-[2rem] border border-white/10 bg-zinc-950/90 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden max-h-[90vh] flex flex-col">
             {/* Top glow bar */}
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-violet-500 via-primary to-blue-500" />
             {/* Ambient glow */}
             <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 p-5 sm:p-6 flex flex-col items-center gap-4 sm:gap-5">
+            <div className="relative z-10 p-4 sm:p-5 flex flex-col items-center gap-3.5 sm:gap-4 overflow-y-auto">
 
               {/* Header */}
               <div className="w-full flex items-center justify-between">
@@ -357,8 +366,8 @@ export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined,
                       className="relative"
                     >
                       <QRBackgroundRipples />
-                      {/* Responsive QR: full width on tiny screens */}
-                      <div className="w-[clamp(180px,60vw,220px)] aspect-square">
+                      {/* Responsive QR: compact for zero-scroll fit */}
+                      <div className="w-[clamp(140px,45vw,175px)] aspect-square">
                         <QRDisplay value={joinUrl} isDark={true} />
                       </div>
                     </motion.div>
@@ -407,16 +416,33 @@ export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined,
                     Copy Link
                   </Button>
                 </div>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleShare}
-                  className="h-10 gap-2 text-[10px] font-bold uppercase tracking-wide rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                  Share Invite
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleShare}
+                    className="h-10 gap-2 text-[10px] font-bold uppercase tracking-wide rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                    Share Invite
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowStoryModal(true)}
+                    className="h-10 gap-1.5 text-[10px] font-bold uppercase tracking-wide rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 hover:bg-purple-500/25"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                    Story Card
+                  </Button>
+                </div>
               </div>
+
+              <StoryShareCardModal
+                roomCode={roomCode}
+                isOpen={showStoryModal}
+                onClose={() => setShowStoryModal(false)}
+              />
 
               {/* Waiting status / offline */}
               <AnimatePresence mode="wait">

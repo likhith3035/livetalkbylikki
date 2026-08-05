@@ -41,6 +41,9 @@ export const useSoundNotifications = () => {
   const playConnect = useCallback(() => {
     try {
       const ctx = getCtx();
+      if (ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
       const notes = [880, 1100]; // A5 → C#6
 
       notes.forEach((freq, i) => {
@@ -68,6 +71,9 @@ export const useSoundNotifications = () => {
   const playDisconnect = useCallback(() => {
     try {
       const ctx = getCtx();
+      if (ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
 
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();

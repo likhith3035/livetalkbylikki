@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Shield, Lock } from "lucide-react";
 
@@ -30,7 +30,9 @@ export default function PrivacyWatermark({ userName = "You", strangerName = "Str
     { id: 6, baseTop: "32%", baseLeft: "22%" },
   ];
 
-  const shortSession = sessionId ? sessionId.substring(0, 10) : "LT-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const shortSession = useMemo(() => {
+    return sessionId ? sessionId.substring(0, 10) : "LT-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  }, [sessionId]);
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-40 select-none">
