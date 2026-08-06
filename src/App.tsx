@@ -104,17 +104,18 @@ class GlobalErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
 import Index from "./pages/Index";
 import ChatPage from "./pages/ChatPage";
 import RoomPage from "./pages/RoomPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import SafetyCenterPage from "./pages/SafetyCenterPage";
-import InfoPage from "./pages/InfoPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import TermsPage from "./pages/TermsPage";
-import GuidelinesPage from "./pages/GuidelinesPage";
-import AIChatPage from "./features/ai-chat/components/AIChatPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
-import HandoffPage from "./pages/HandoffPage";
+
+const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
+const SettingsPage = lazyWithRetry(() => import("./pages/SettingsPage"));
+const SafetyCenterPage = lazyWithRetry(() => import("./pages/SafetyCenterPage"));
+const InfoPage = lazyWithRetry(() => import("./pages/InfoPage"));
+const PrivacyPage = lazyWithRetry(() => import("./pages/PrivacyPage"));
+const TermsPage = lazyWithRetry(() => import("./pages/TermsPage"));
+const GuidelinesPage = lazyWithRetry(() => import("./pages/GuidelinesPage"));
+const AIChatPage = lazyWithRetry(() => import("./features/ai-chat/components/AIChatPage"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const HandoffPage = lazyWithRetry(() => import("./pages/HandoffPage"));
 
 const queryClient = new QueryClient();
 
