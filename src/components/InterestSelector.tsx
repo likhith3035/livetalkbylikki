@@ -34,7 +34,7 @@ const InterestSelector = ({ selected, onChange }: InterestSelectorProps) => {
         <span className="text-xs text-muted-foreground">{selected.length}/{MAX_INTERESTS}</span>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <input
           type="text"
           value={customInput}
@@ -42,14 +42,16 @@ const InterestSelector = ({ selected, onChange }: InterestSelectorProps) => {
           onKeyDown={(e) => e.key === "Enter" && addCustom()}
           placeholder="Type an interest and press Enter..."
           disabled={selected.length >= MAX_INTERESTS}
-          className="flex-1 min-w-0 rounded-lg border border-border bg-secondary/50 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+          className="flex-1 min-w-0 h-9 rounded-lg border border-border bg-secondary/50 px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
         />
         <button
+          type="button"
           onClick={addCustom}
           disabled={!customInput.trim() || selected.length >= MAX_INTERESTS}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/20 text-primary transition-colors hover:bg-primary/30 disabled:opacity-40"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/20 text-primary transition-colors hover:bg-primary/30 disabled:opacity-40"
+          aria-label="Add interest"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-4 w-4" />
         </button>
       </div>
 

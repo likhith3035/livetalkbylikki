@@ -66,9 +66,9 @@ export default function MobileNav() {
       {/* FAB + menu */}
       <div
         ref={menuRef}
-        className="fixed z-[60] lg:hidden flex flex-col items-end gap-3"
+        className="fixed z-[60] lg:hidden flex flex-col items-end gap-3 transition-all duration-300"
         style={{ 
-          bottom: "calc(20px + env(safe-area-inset-bottom, 0px))", 
+          bottom: pathname === "/chat" ? "calc(76px + env(safe-area-inset-bottom, 0px))" : "calc(20px + env(safe-area-inset-bottom, 0px))", 
           right: "16px",
           willChange: "transform" 
         }}

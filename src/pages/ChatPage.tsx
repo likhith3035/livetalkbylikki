@@ -490,9 +490,9 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   useEffect(() => {
     if (!roomChannel) return;
     // We re-use the roomChannel broadcast for call reactions (fast, no Firebase write)
-    const handleCallEvent = (payload: any) => {
-      const data = payload.payload as { senderId: string; emoji?: string; type?: string };
-      if (data.senderId === sessionId) return;
+    const handleCallEvent = (payload: { event?: string; payload?: { senderId?: string; emoji?: string; type?: string } }) => {
+      const data = payload.payload;
+      if (!data || data.senderId === sessionId) return;
       if (payload.event === "call:reaction" && data.emoji) {
         setIncomingReaction({ emoji: data.emoji, id: Date.now() });
       }
@@ -523,7 +523,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         title: "Appeal Received",
         description: "Your appeal has been submitted for review.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Appeal submission error:", error);
       toast({
         variant: "destructive",

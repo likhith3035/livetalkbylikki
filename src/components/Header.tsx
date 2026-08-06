@@ -73,23 +73,22 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         className="flex items-center justify-between px-2.5 sm:px-4 py-1.5 sm:py-3 bg-background border-b border-border/30 sticky top-0 z-40 lg:hidden"
         style={{ willChange: "transform" }}
       >
-        {/* Left: Circular back & home buttons */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onBack ? onBack : () => navigate("/")}
-            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
+            className="h-10 w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0 min-h-[40px] min-w-[40px]"
             aria-label="Exit chat"
             title="Back"
           >
-            <ChevronLeft className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={() => navigate("/")}
-            className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-primary/30 bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-95 shadow-sm shrink-0"
+            className="h-10 w-10 rounded-full border border-primary/30 bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-95 shadow-sm shrink-0 min-h-[40px] min-w-[40px]"
             aria-label="Go to Home"
             title="Go to Home"
           >
-            <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <Home className="h-4 w-4" />
           </button>
         </div>
 

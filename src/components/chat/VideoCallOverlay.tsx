@@ -501,7 +501,8 @@ const VideoCallOverlay = ({
                     playsInline
                     muted
                     className={cn(
-                      "h-full w-full object-cover",
+                      "h-full w-full",
+                      isScreenSharing ? "object-contain" : "object-cover",
                       (isBlurred || !tabFocused || privacyAlertActive) && "video-blur"
                     )}
                     style={{
