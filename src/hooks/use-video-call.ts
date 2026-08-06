@@ -3,61 +3,8 @@ import { sounds } from "@/lib/sounds";
 import { RENEGOTIATE_EVENT, handleRenegotiateOffer } from "@/features/cross-device-sync/webrtcRenegotiation";
 import { useToast } from "@/hooks/use-toast";
 
-export type VideoCallStatus = "idle" | "requesting" | "incoming" | "connecting" | "active";
-
-export interface WebRTCStats {
-  rtt: number | null;
-  resolution: string;
-  fps: number;
-  packetLoss: number;
-  qualityGrade: "good" | "fair" | "poor";
-  isDegraded: boolean;
-}
-
-const getIceServers = (): RTCConfiguration => {
-  // Free public TURN servers — these relay traffic when direct P2P fails (symmetric NAT, mobile networks)
-  // Using Open Relay (metered.ca) free tier + Cloudflare TURN public credentials
-  const turnServers: RTCIceServer[] = [
-    // Open Relay Project — free public TURN
-    {
-      urls: "turn:openrelay.metered.ca:80",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-    {
-      urls: "turn:openrelay.metered.ca:443",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-    {
-      urls: "turn:openrelay.metered.ca:443?transport=tcp",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-  ];
-
-  const stunServers: RTCIceServer[] = [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-    { urls: "stun:global.stun.twilio.com:3478" },
-  ];
-
-  // Allow overriding via env var (e.g. your own Twilio/Coturn credentials)
-  try {
-    const customServers = import.meta.env.VITE_ICE_SERVERS;
-    if (customServers) {
-      const parsed = JSON.parse(customServers);
-      if (Array.isArray(parsed)) {
-        console.log("WebRTC: Using custom ICE servers from environment");
-        return { iceServers: [...parsed, ...stunServers] };
-      }
-    }
-  } catch (e) {
-    console.error("WebRTC: Failed to parse VITE_ICE_SERVERS", e);
-  }
-
-  return { iceServers: [...stunServers, ...turnServers] };
-};
+import { VideoCallStatus, WebRTCStats, getIceServers } from "@/features/video-call/webrtcConfig";
+export type { VideoCallStatus, WebRTCStats };
 
 const ICE_CONFIG = getIceServers();
 
