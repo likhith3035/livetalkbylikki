@@ -1,179 +1,155 @@
-<h1 align="center">✨ Livetalk by Likki ✨</h1>
+<h1 align="center">✨ Livetalk by Likki (Ohmegle) ✨</h1>
 
 <p align="center">
-  <strong>The #1 Omegle Alternative — Where Privacy Meets Premium Human Connection.</strong><br>
-  A high-performance, hybrid-powered anonymous video & text chat platform engineered for the modern web.
+  <strong>The Next-Generation Anonymous WebRTC Video & Real-Time Chat Platform.</strong><br>
+  A high-performance, zero-log, hybrid-backed platform engineered for modern web & mobile devices.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
   <img src="https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
-  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase">
-  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
-  <img src="https://img.shields.io/badge/WebRTC-333333?style=for-the-badge&logo=webrtc&logoColor=white" alt="WebRTC">
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind">
+  <img src="https://img.shields.io/badge/TypeScript-5.8-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Firebase-Realtime_DB-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase">
+  <img src="https://img.shields.io/badge/Supabase-Realtime-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/WebRTC-P2P_Mesh-333333?style=for-the-badge&logo=webrtc&logoColor=white" alt="WebRTC">
+  <img src="https://img.shields.io/badge/Capacitor-Android-1192E8?style=for-the-badge&logo=capacitor&logoColor=white" alt="Capacitor">
+  <img src="https://img.shields.io/badge/Tailwind-CSS_v3-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind">
+  <img src="https://img.shields.io/badge/Vitest-Unit_Tested-6E9F18?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest">
 </p>
 
 ---
 
-## 💎 Project Evolution: Branding & SEO Overhaul (Latest)
+## 🚀 Key Highlights & Architectural Overview
 
-We recently underwent a significant identity and performance update to ensure **LiveTalk by Likki** stays ahead of the competition:
+Livetalk combines the spontaneous charm of classic video roulette with state-of-the-art WebRTC P2P communication, strict client-side encryption, and modern responsive design system standards.
 
-- **New Identity**: Introducing **LikkiTalk**, **LikkiMeet**, and **LikkiChat** as unique brand identifiers for maximum search engine dominance.
-- **Pixel-Perfect Branding**: Implemented a new interlocking-rings logo with true transparency, optimized for all viewport sizes and high-DPI displays.
-- **Advanced SEO Engine**: A custom `useSEO` hook now manages dynamic, page-specific metadata, including rich OpenGraph previews and targeted keyword injection.
-- **Matchmaking Refinement**: Added a centered, high-contrast "Stop" button for instant search cancellation and a more responsive header layout.
+> [!NOTE]
+> **Zero-Log Privacy Policy**: All matchmaking keys, temporary room signals, and WebRTC handshakes are held in transient memory only and purged immediately upon connection or disconnect.
 
 ---
 
-## 🚀 The Vision
+## ⚡ Technical Stack
 
-Livetalk is built to bring back the raw, spontaneous, and private human connections of the early internet, but with the speed and elegance of the modern era. No accounts, no trackers, no historical logs. Just you and a stranger, connecting instantly.
+| Layer | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend Framework** | React 18 + Vite | Fast HMR, optimized production code-splitting with `lazyWithRetry()` |
+| **Language & Safety** | TypeScript 5.8 | Strict type checking with 0 explicit `any` violations |
+| **Realtime Engine** | Firebase RTDB + Supabase | Low-latency matchmaking queues & fallback signaling |
+| **Media Transport** | P2P WebRTC | Adaptive ICE candidate resolution (Google STUN + OpenRelay TURN) |
+| **Styling & UI** | Tailwind CSS + Framer Motion | Dynamic dark/light themes, fluid micro-animations, WCAG 2.2 AA contrast |
+| **Mobile & Native** | Capacitor + PWA | Native Android background call keep-alive foreground services |
+| **Testing** | Vitest | Unit & integration testing suite for media cleanup & AI algorithms |
 
 ---
 
-## 🤝 How Matchmaking & Connection Flow
-
-<p align="center">
-  <img src="docs/assets/matching.png" alt="Matchmaking Visual" width="80%" style="border-radius: 15px;">
-</p>
-
-Experience a seamless connection flow powered by our **Hybrid-Logic Engine**. 
-
-### 1. The Matchmaking Pulse
-When you click "Start", our system places you in a high-speed **Lobby** on Firebase. It instantly scans for other waiting users and prioritizes those with **Shared Interests**.
+## 🤝 Architecture & Matchmaking Sequence
 
 ```mermaid
 sequenceDiagram
-    participant UA as 👤 User A
-    participant FB as 🔥 Firebase Lobby
-    participant UB as 👤 User B
-    
-    UA->>FB: Enter Lobby (Interests: Tech, Music)
-    UB->>FB: Enter Lobby (Interests: Tech, Gaming)
-    Note over FB: Engine detects shared interest: "Tech"
-    FB-->>UA: Match Found! (Stranger: User B)
-    FB-->>UB: Match Found! (Stranger: User A)
-```
+    autonumber
+    participant ClientA as 👤 User A
+    participant Firebase as 🔥 Firebase RTDB
+    participant ClientB as 👤 User B
+    participant WebRTC as 🌐 Direct P2P Channel
 
-### 2. The Smart Handshake
-Once matched, a private **Signaling Channel** is created. Users exchange encrypted "handshake" data (ICE Candidates) via Firebase to find the fastest direct path to each other.
-
-```mermaid
-graph LR
-    A["👤 User A"] -- "1. Send Offer" --> F[("🔥 Firebase Signaling")]
-    F -- "2. Receive Offer" --> B["👤 User B"]
-    B -- "3. Send Answer" --> F
-    F -- "4. Receive Answer" --> A
-    A <== "5. Direct WebRTC P2P Connection" ==> B
-```
-
-### 3. Live Interaction
-The moment you connect:
-- **Video/Audio**: Streamed directly between you and the stranger (Peer-to-Peer).
-- **Text Chat**: Handled by **Supabase Realtime** for lightning-fast message delivery and reactions.
-- **Privacy Assurance**: All transient data in Firebase is **deleted the nanosecond** you are connected.
-
----
-
-## 🌟 Premium Features
-
-<p align="center">
-  <img src="docs/assets/features.png" alt="Features Gallery" width="90%" style="border-radius: 15px;">
-</p>
-
-| Feature | Description | Technical Edge |
-| :--- | :--- | :--- |
-| ⚡ **Instant Match** | Connect with strangers across the globe in milliseconds. | Firebase RTDB optimized lobby. |
-| 🎥 **HD Video Calls** | One-tap switch from text to high-latency video chat. | P2P WebRTC with Firebase signaling. |
-| 🛡️ **Zero-Log Privacy** | Your data only exists as long as your conversation does. | Aggressive transient data policy. |
-| 🎮 **In-Chat Games** | Break the ice with built-in games like Tic-Tac-Toe. | Real-time state syncing. |
-| 🌈 **Glassmorphic UI** | Stunning themes like **Ocean**, **Sunset**, and **Midnight**. | Tailwind CSS + Framer Motion. |
-| 🎭 **Mood Meter** | Express yourself with a real-time reactive mood indicator. | Live Supabase presence sync. |
-| 📍 **Interest Match** | Find people who share your specific passions. | Weighted interest pairing logic. |
-| 📱 **Full PWA Support** | Desktop-class experience on iOS and Android. | Service Worker optimization. |
-
----
-
-## 🛡️ Privacy & Security First
-
-<p align="center">
-  <img src="docs/assets/security.png" alt="Security Visual" width="60%" style="border-radius: 15px;">
-</p>
-
-- **Stateless Design**: We don't use databases for message history. Once you refresh or disconnect, the chat is gone forever.
-- **Transient Signaling**: Firebase keys are only held in memory during the matchmaking phase and wiped the moment the connection is established.
-- **Environment Isolation**: Critical API keys are managed via `.env` files to prevent exposure in open-source clones.
-
----
-
-## 📂 Project Structure
-
-```text
-src/
-├── components/
-│   ├── chat/        # 💠 Core engine: Games, Polls, Video, Mood Meter
-│   ├── ui/          # 🎨 Polished primitive components (Tailwind + Radix)
-│   └── common/      # ⚙️ Shared UI: Headers, Logos, Navigation
-├── contexts/        # 🧠 Global State: Chat, Auth, Themes
-├── hooks/           # 🎣 Custom Logic: Matchmaking, Signaling, SEO
-├── integrations/    # 🔗 Connectors: Supabase, Firebase, Giphy
-├── lib/             # 🛠️ Utilities: Haptics, Sound Engine, Theme Tokens
-└── pages/           # 📄 Route Layouts: Index, Chat, Safety, Profile
+    ClientA->>Firebase: Register in Matchmaking Lobby (Interests: Tech, Music)
+    ClientB->>Firebase: Register in Matchmaking Lobby (Interests: Tech, Gaming)
+    Note over Firebase: Matchmaker calculates weighted interest overlap ("Tech")
+    Firebase-->>ClientA: Match Assigned (Session ID)
+    Firebase-->>ClientB: Match Assigned (Session ID)
+    ClientA->>Firebase: Publish WebRTC SDP Offer
+    Firebase-->>ClientB: Receive WebRTC SDP Offer
+    ClientB->>Firebase: Publish WebRTC SDP Answer
+    Firebase-->>ClientA: Receive WebRTC SDP Answer
+    Note over Firebase: Purge transient signaling keys from RTDB
+    ClientA<==>ClientB: Direct Encrypted WebRTC P2P Video/Audio Stream
 ```
 
 ---
 
-## 🚦 Installation & Setup
+## 🌟 Features & Capabilities
 
-### 1. Prerequisite
-Ensure you have **Node.js 18+** and a package manager installed.
+- 🎥 **HD WebRTC P2P Video Calls**: Turn-assisted peer-to-peer audio and video streaming with real-time resolution/FPS monitoring.
+- 💬 **Real-time Encrypted Text Chat**: Instant messaging powered by Supabase Realtime with emoji reactions, message translation, and sound notifications.
+- 📱 **Mobile-First Dynamic Viewport (`100dvh`)**: Mobile Safari and Chrome layout stability with dynamic viewport height support and safe-area padding.
+- 🎮 **In-Chat Games & AI Wingman**: Integrated Tic-Tac-Toe AI minigames and interactive icebreakers.
+- 🔒 **Biometric Lock & Security**: Built-in biometric protection options (`capacitor-native-biometric`).
+- 🤖 **Cross-Device Handoff**: Scan QR code to transfer calls seamlessly between mobile and desktop devices.
+- 🎨 **Glassmorphism & Theme System**: Responsive high-contrast design system adhering to WCAG 2.2 AA accessibility guidelines.
 
-### 2. Fast Track Setup
+---
+
+## 🚦 Getting Started
+
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm** or **bun** / **yarn**
+
+### 2. Clone & Install Dependencies
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/likhith3035/ohmegle.git
 cd ohmegle
 
-# Install dependencies
+# Install package dependencies
 npm install
-
-# Setup environment variables
-cp .env.example .env
 ```
 
-### 3. Backend Configuration
-- **Supabase**: Create a new project and add your URL/Publishable Key to `.env`.
-- **Firebase**: Enable **Realtime Database** and set location to `us-central1`. 
-- **Security Rules**: Copy the rules from [DEVELOPMENT.md](./DEVELOPMENT.md) into your Firebase console.
+### 3. Environment Setup
+Create a `.env` file in the project root (reference `.env.example`):
+```env
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 
-### 4. Launch
-```bash
-npm run dev
+VITE_SUPABASE_URL=https://your_supabase_id.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ---
 
-## 👨‍💻 Developer & Visionary
+## ⚙️ Development & Testing Commands
 
-Developed with 💜❤️ by **Likhith Kami(likki)**.
+```bash
+# Start local development server
+npm run dev
 
-<div align="center">
-  <a href="https://instagram.com/Lucky__likhith" target="_blank">
-    <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram">
-  </a>
-  <a href="https://www.linkedin.com/in/likhith-kami/" target="_blank">
-    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn">
-  </a>
-  <a href="mailto:kamilikhith@gmail.com">
-    <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email">
-  </a>
-</div>
+# Run TypeScript type check
+npx tsc --noEmit
 
-<p align="center">
-  <br>
-  <i>"Redefining human connection, one private conversation at a time."</i><br>
-  <b>© 2026 Livetalk. Open Source. MIT License.</b>
-</p>
+# Run Vitest test suite
+npm test
+
+# Run ESLint check
+npm run lint
+
+# Build production bundle
+npm run build
+
+# Preview production build locally
+npm run preview
+```
+
+---
+
+## 📱 Mobile App Build (Capacitor Android)
+
+To build the native Android application package:
+
+```bash
+# Sync web build to native Android project
+npx cap sync android
+
+# Open Android Studio project
+npx cap open android
+```
+
+---
+
+## 📜 License & Compliance
+
+Distributed under the MIT License. Built with strict adherence to privacy-first web standards.
