@@ -1,10 +1,16 @@
 // Web Audio API sound effects — no external files needed
 
+interface CustomWindow extends Window {
+  __echoAudioCtx?: AudioContext;
+  webkitAudioContext?: typeof AudioContext;
+}
+
 const audioCtx = () => {
-  if (!(window as any).__echoAudioCtx) {
-    (window as any).__echoAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const win = window as unknown as CustomWindow;
+  if (!win.__echoAudioCtx) {
+    win.__echoAudioCtx = new (window.AudioContext || win.webkitAudioContext!)();
   }
-  return (window as any).__echoAudioCtx as AudioContext;
+  return win.__echoAudioCtx;
 };
 
 const playTone = (frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.15) => {

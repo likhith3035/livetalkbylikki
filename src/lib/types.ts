@@ -8,21 +8,21 @@ import { RealtimeChannel } from "@supabase/supabase-js";
  */
 export interface BaseChannel {
   on(type: "broadcast" | "presence" | "postgres_changes", 
-     filter: { event: string; [key: string]: any }, 
-     callback: (payload: any) => void): BaseChannel;
+     filter: { event: string; [key: string]: unknown }, 
+     callback: (payload: unknown) => void): BaseChannel;
   
   off?(type: "broadcast" | "presence" | "postgres_changes", 
-       filter: { event: string; [key: string]: any }): BaseChannel;
+       filter: { event: string; [key: string]: unknown }): BaseChannel;
   
   subscribe(callback?: (status: string) => void): { unsubscribe: () => void };
   
-  send(data: { type: string; event: string; payload: any }): Promise<any> | void;
+  send(data: { type: string; event: string; payload: unknown }): Promise<unknown> | void;
   
   unsubscribe(): void;
 
-  track?(state: any): Promise<any>;
+  track?(state: Record<string, unknown>): Promise<unknown>;
   
-  presenceState?(): any;
+  presenceState?(): Record<string, unknown>;
 
   roomId?: string;
 }
