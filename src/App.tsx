@@ -14,6 +14,7 @@ import FeedbackSharePopup from "@/components/FeedbackSharePopup";
 import ScrollToTop from "@/components/ScrollToTop";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { AppUpdateModal } from "@/components/AppUpdateModal";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 
 function clearAppCachesAndReload() {
   const lastReload = Number(window.sessionStorage.getItem("lazy_retry_last_ts") || "0");
