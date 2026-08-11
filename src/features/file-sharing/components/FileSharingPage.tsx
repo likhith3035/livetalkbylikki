@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Header from "@/components/Header";
+import MobileNav from "@/components/MobileNav";
 import { UploadDropzone } from "./UploadDropzone";
 import { EnterShareCodeCard } from "./EnterShareCodeCard";
 import { SharedAccessView } from "./SharedAccessView";
@@ -11,7 +13,7 @@ import { MySharesView } from "./MySharesView";
 import { SharedFileItem, ShareRecord } from "../types";
 import {
   Share2, KeyRound, UploadCloud, FolderOpen, ShieldCheck, Sparkles,
-  ArrowRight, HardDrive, Lock
+  ArrowRight, HardDrive, Lock, ArrowLeft, Home
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,29 +53,59 @@ export const FileSharingPage: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full min-h-screen bg-background text-foreground py-6 sm:py-10 px-4 sm:px-8 max-w-6xl mx-auto space-y-8 animate-fade-in">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs font-semibold border-primary/30 text-primary bg-primary/10">
-              <ShieldCheck className="h-3.5 w-3.5" /> Direct File Sharing
-            </Badge>
-            <Badge variant="secondary" className="text-[10px] uppercase font-mono">
-              Fast & Encrypted
-            </Badge>
-          </div>
+    <div className="flex-1 w-full min-h-screen bg-background text-foreground pb-12">
+      {/* Mobile Top Header with Logo, Theme Toggle & Back Button */}
+      <div className="lg:hidden sticky top-0 z-40">
+        <Header onlineCount={3} onBack={() => navigate("/")} />
+      </div>
 
-          <h1 className="text-2xl sm:text-4xl font-display font-extrabold text-foreground tracking-tight">
-            File Sharing & Share Code
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
-            Upload files up to 100 MB each and generate secure 6-character share codes, direct links, or QR codes.
-          </p>
+      <div className="py-6 sm:py-10 px-4 sm:px-8 max-w-6xl mx-auto space-y-8 animate-fade-in">
+        {/* Navigation Bar / Back Action */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="rounded-xl border-border/80 hover:bg-secondary gap-1.5 font-semibold text-xs transition-all active:scale-95 shadow-sm"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="rounded-xl hover:bg-secondary gap-1.5 font-semibold text-xs text-muted-foreground hover:text-foreground transition-all active:scale-95"
+            >
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Home</span>
+            </Button>
+          </div>
         </div>
 
-        {/* Tab Navigation Buttons */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-card border border-border/80 shadow-md overflow-x-auto w-full sm:w-auto">
+        {/* Header Banner */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs font-semibold border-primary/30 text-primary bg-primary/10">
+                <ShieldCheck className="h-3.5 w-3.5" /> Direct File Sharing
+              </Badge>
+              <Badge variant="secondary" className="text-[10px] uppercase font-mono">
+                Fast & Encrypted
+              </Badge>
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl font-display font-extrabold text-foreground tracking-tight">
+              File Sharing & Share Code
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
+              Upload files up to 100 MB each and generate secure 6-character share codes, direct links, or QR codes.
+            </p>
+          </div>
+
+          {/* Tab Navigation Buttons */}
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-card border border-border/80 shadow-md overflow-x-auto w-full sm:w-auto">
           <button
             type="button"
             onClick={() => { setActiveTab("home"); setActiveAccessCode(null); setSearchParams({}); }}
@@ -254,6 +286,10 @@ export const FileSharingPage: React.FC = () => {
         onClose={() => setIsShareModalOpen(false)}
         selectedFiles={shareModalFiles}
       />
+      </div>
+
+      {/* Floating Mobile Hamburger Navigation */}
+      <MobileNav />
     </div>
   );
 };
