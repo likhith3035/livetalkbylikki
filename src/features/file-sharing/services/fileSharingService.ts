@@ -141,33 +141,31 @@ export async function uploadFileWithProgress({
   let fileUrl = "";
   let storagePath = "";
 
-  // 3. Attempt Supabase Storage Upload for images only (chat-images or room-media buckets)
-  if (file.type.startsWith("image/")) {
-    try {
-      const fileName = `${Date.now()}_${safeName}`;
-      
-      // Try primary 'chat-images' bucket
-      let uploadRes = await supabase.storage.from("chat-images").upload(fileName, file, { cacheControl: "3600", upsert: false });
-      let bucketName = "chat-images";
+  // 3. Attempt Supabase Storage Upload for all file types (chat-images or room-media buckets)
+  try {
+    const fileName = `${Date.now()}_${safeName}`;
+    
+    // Try primary 'chat-images' bucket
+    let uploadRes = await supabase.storage.from("chat-images").upload(fileName, file, { cacheControl: "3600", upsert: false });
+    let bucketName = "chat-images";
 
-      // If chat-images fails, try 'room-media' bucket
-      if (uploadRes.error) {
-        uploadRes = await supabase.storage.from("room-media").upload(fileName, file, { cacheControl: "3600", upsert: false });
-        bucketName = "room-media";
-      }
-
-      if (!uploadRes.error && uploadRes.data) {
-        storagePath = fileName;
-        const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
-        fileUrl = publicUrlData.publicUrl;
-        onProgress?.(100);
-      }
-    } catch {
-      /* fallback to local Data URL below */
+    // If chat-images fails, try 'room-media' bucket
+    if (uploadRes.error) {
+      uploadRes = await supabase.storage.from("room-media").upload(fileName, file, { cacheControl: "3600", upsert: false });
+      bucketName = "room-media";
     }
+
+    if (!uploadRes.error && uploadRes.data) {
+      storagePath = fileName;
+      const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+      fileUrl = publicUrlData.publicUrl;
+      onProgress?.(100);
+    }
+  } catch (err) {
+    console.warn("[FileSharing] Supabase upload failed, falling back to local data URL:", err);
   }
 
-  // 4. Fallback to Local Data URL if Supabase not connected
+  // 4. Fallback to Local Data URL if Supabase upload failed
   if (!fileUrl) {
     fileUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -208,7 +206,7 @@ export async function uploadFileWithProgress({
 }
 
 /**
- * Create a Share Record for one or multiple files
+ * Create a Share Record for one or multiple files with Cloud Sync
  */
 export async function createShareRecord({
   files,
@@ -248,8 +246,21 @@ export async function createShareRecord({
     status: "active",
   };
 
+  // Save locally
   const shares = getSavedShares();
   saveShares([shareRecord, ...shares]);
+
+  // Sync share record to Supabase Cloud Storage for cross-device access
+  try {
+    const jsonBlob = new Blob([JSON.stringify(shareRecord)], { type: "application/json" });
+    const sharePath = `share_codes/${code}.json`;
+    let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, jsonBlob, { cacheControl: "60", upsert: true });
+    if (uploadRes.error) {
+      await supabase.storage.from("room-media").upload(sharePath, jsonBlob, { cacheControl: "60", upsert: true });
+    }
+  } catch (err) {
+    console.warn("[FileSharing] Could not sync share code to cloud:", err);
+  }
 
   return shareRecord;
 }
@@ -295,7 +306,7 @@ export function recordFailedCodeAttempt() {
 }
 
 /**
- * Retrieve & Validate a Share Record by Code
+ * Retrieve & Validate a Share Record by Code (Cross-Device Enabled)
  */
 export async function getShareRecordByCode(code: string): Promise<{
   share: ShareRecord | null;
@@ -308,7 +319,32 @@ export async function getShareRecordByCode(code: string): Promise<{
   if (!cleanCode) return { share: null, statusMessage: "Please enter a valid share code." };
 
   const shares = getSavedShares();
-  const found = shares.find((s) => s.code.toUpperCase() === cleanCode);
+  let found = shares.find((s) => s.code.toUpperCase() === cleanCode) || null;
+
+  // If not found in local browser storage, fetch from Supabase Cloud Storage
+  if (!found) {
+    try {
+      const sharePath = `share_codes/${cleanCode}.json`;
+      const { data: urlData1 } = supabase.storage.from("chat-images").getPublicUrl(sharePath);
+      let response = await fetch(`${urlData1.publicUrl}?t=${Date.now()}`);
+
+      if (!response.ok) {
+        const { data: urlData2 } = supabase.storage.from("room-media").getPublicUrl(sharePath);
+        response = await fetch(`${urlData2.publicUrl}?t=${Date.now()}`);
+      }
+
+      if (response.ok) {
+        const fetchedRecord: ShareRecord = await response.json();
+        if (fetchedRecord && fetchedRecord.code) {
+          found = fetchedRecord;
+          // Cache locally for fast subsequent access
+          saveShares([fetchedRecord, ...shares]);
+        }
+      }
+    } catch (err) {
+      console.warn("[FileSharing] Cloud share code lookup error:", err);
+    }
+  }
 
   if (!found) {
     recordFailedCodeAttempt();
@@ -336,8 +372,10 @@ export async function getShareRecordByCode(code: string): Promise<{
 /**
  * Increment Download Count for a Share Record
  */
-export function incrementDownloadCount(shareId: string) {
+export async function incrementDownloadCount(shareId: string) {
   const shares = getSavedShares();
+  let targetShare: ShareRecord | null = null;
+
   const updated = shares.map((s) => {
     if (s.id === shareId) {
       const newCount = s.downloadCount + 1;
@@ -345,16 +383,34 @@ export function incrementDownloadCount(shareId: string) {
       if (s.maxDownloads !== null && newCount >= s.maxDownloads) {
         newStatus = "limit_reached";
       }
-      return {
+      targetShare = {
         ...s,
         downloadCount: newCount,
         lastDownloadedAt: Date.now(),
         status: newStatus as ShareStatus,
       };
+      return targetShare;
     }
     return s;
   });
+
   saveShares(updated);
+
+  // Sync updated download count to Supabase Cloud Storage
+  if (targetShare && (targetShare as ShareRecord).code) {
+    try {
+      const code = (targetShare as ShareRecord).code;
+      const jsonBlob = new Blob([JSON.stringify(targetShare)], { type: "application/json" });
+      const sharePath = `share_codes/${code}.json`;
+      let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, jsonBlob, { cacheControl: "60", upsert: true });
+      if (uploadRes.error) {
+        await supabase.storage.from("room-media").upload(sharePath, jsonBlob, { cacheControl: "60", upsert: true });
+      }
+    } catch {
+      /* ignore sync error */
+    }
+  }
+}
 }
 
 /**
