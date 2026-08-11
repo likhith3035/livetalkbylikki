@@ -25,24 +25,7 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("node_modules")) {
             if (id.includes("firebase")) return "firebase-vendor";
             if (id.includes("@supabase")) return "supabase-vendor";
-            if (id.includes("framer-motion")) return "motion-vendor";
-            if (id.includes("lucide-react")) return "icons-vendor";
             if (id.includes("recharts")) return "charts-vendor";
-            if (
-              id.includes("/react/") ||
-              id.includes("\\react\\") ||
-              id.includes("/react-dom/") ||
-              id.includes("\\react-dom\\") ||
-              id.includes("/react-router/") ||
-              id.includes("\\react-router\\") ||
-              id.includes("/react-router-dom/") ||
-              id.includes("\\react-router-dom\\") ||
-              id.includes("/scheduler/") ||
-              id.includes("\\scheduler\\") ||
-              id.includes("@radix-ui")
-            ) {
-              return "react-vendor";
-            }
             return "vendor";
           }
         },
