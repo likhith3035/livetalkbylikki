@@ -38,7 +38,8 @@ export default defineConfig(({ mode }) => ({
               id.includes("/react-router-dom/") ||
               id.includes("\\react-router-dom\\") ||
               id.includes("/scheduler/") ||
-              id.includes("\\scheduler\\")
+              id.includes("\\scheduler\\") ||
+              id.includes("@radix-ui")
             ) {
               return "react-vendor";
             }
