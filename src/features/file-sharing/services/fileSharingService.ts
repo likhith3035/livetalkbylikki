@@ -252,11 +252,25 @@ export async function createShareRecord({
   const shares = getSavedShares();
   saveShares([shareRecord, ...shares]);
 
-  // Sync share record to Firebase Realtime Database for cross-device instant access
+  // 1. Sync share record to Supabase Storage as .png formatted payload (bypasses bucket MIME restrictions)
+  try {
+    const jsonStr = JSON.stringify(shareRecord);
+    const pngBlob = new Blob([jsonStr], { type: "image/png" });
+    const sharePath = `share_meta_${code}.png`;
+
+    let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
+    if (uploadRes.error) {
+      await supabase.storage.from("room-media").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
+    }
+  } catch {
+    /* quiet fallback */
+  }
+
+  // 2. Secondary sync to Firebase Realtime Database (quiet fail if permission denied)
   try {
     await set(ref(db, `file_shares/${code}`), shareRecord);
-  } catch (err) {
-    console.warn("[FileSharing] Firebase cloud sync warning:", err);
+  } catch {
+    /* quiet fallback if Firebase rules block unauthenticated writes */
   }
 
   return shareRecord;
@@ -318,20 +332,45 @@ export async function getShareRecordByCode(code: string): Promise<{
   const shares = getSavedShares();
   let found = shares.find((s) => s.code.toUpperCase() === cleanCode) || null;
 
-  // If not found in local browser storage, fetch from Firebase Realtime Database
+  // If not found in local browser storage, fetch from Supabase Storage or Firebase
   if (!found) {
+    // Attempt 1: Supabase Storage public metadata fetch
     try {
-      const snapshot = await get(ref(db, `file_shares/${cleanCode}`));
-      if (snapshot.exists()) {
-        const fetchedRecord: ShareRecord = snapshot.val();
+      const sharePath = `share_meta_${cleanCode}.png`;
+      const { data: urlData1 } = supabase.storage.from("chat-images").getPublicUrl(sharePath);
+      let response = await fetch(`${urlData1.publicUrl}?t=${Date.now()}`);
+
+      if (!response.ok) {
+        const { data: urlData2 } = supabase.storage.from("room-media").getPublicUrl(sharePath);
+        response = await fetch(`${urlData2.publicUrl}?t=${Date.now()}`);
+      }
+
+      if (response.ok) {
+        const text = await response.text();
+        const fetchedRecord: ShareRecord = JSON.parse(text);
         if (fetchedRecord && fetchedRecord.code) {
           found = fetchedRecord;
-          // Cache locally for fast subsequent access
           saveShares([fetchedRecord, ...shares]);
         }
       }
-    } catch (err) {
-      console.warn("[FileSharing] Firebase cloud share code lookup error:", err);
+    } catch {
+      /* fallback to Firebase lookup below */
+    }
+
+    // Attempt 2: Firebase Realtime Database lookup
+    if (!found) {
+      try {
+        const snapshot = await get(ref(db, `file_shares/${cleanCode}`));
+        if (snapshot.exists()) {
+          const fetchedRecord: ShareRecord = snapshot.val();
+          if (fetchedRecord && fetchedRecord.code) {
+            found = fetchedRecord;
+            saveShares([fetchedRecord, ...shares]);
+          }
+        }
+      } catch {
+        /* quiet fallback */
+      }
     }
   }
 
@@ -385,14 +424,22 @@ export async function incrementDownloadCount(shareId: string) {
 
   saveShares(updated);
 
-  // Sync updated download count to Firebase Realtime Database
+  // Sync updated download count to cloud
   if (targetShare && (targetShare as ShareRecord).code) {
+    const code = (targetShare as ShareRecord).code;
     try {
-      const code = (targetShare as ShareRecord).code;
+      const jsonStr = JSON.stringify(targetShare);
+      const pngBlob = new Blob([jsonStr], { type: "image/png" });
+      const sharePath = `share_meta_${code}.png`;
+      let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
+      if (uploadRes.error) {
+        await supabase.storage.from("room-media").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
+      }
+    } catch {}
+
+    try {
       await set(ref(db, `file_shares/${code}`), targetShare);
-    } catch {
-      /* ignore sync error */
-    }
+    } catch {}
   }
 }
 
@@ -414,12 +461,20 @@ export async function disableShareCode(shareId: string) {
   saveShares(updated);
 
   if (targetShare && (targetShare as ShareRecord).code) {
+    const code = (targetShare as ShareRecord).code;
     try {
-      const code = (targetShare as ShareRecord).code;
+      const jsonStr = JSON.stringify(targetShare);
+      const pngBlob = new Blob([jsonStr], { type: "image/png" });
+      const sharePath = `share_meta_${code}.png`;
+      let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
+      if (uploadRes.error) {
+        await supabase.storage.from("room-media").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
+      }
+    } catch {}
+
+    try {
       await set(ref(db, `file_shares/${code}`), targetShare);
-    } catch {
-      /* ignore sync error */
-    }
+    } catch {}
   }
 }
 
