@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import MobileNav from "@/components/MobileNav";
+import QrScanner from "@/components/chat/QrScanner";
 import { UploadDropzone } from "./UploadDropzone";
 import { EnterShareCodeCard } from "./EnterShareCodeCard";
 import { SharedAccessView } from "./SharedAccessView";
@@ -13,7 +14,7 @@ import { MySharesView } from "./MySharesView";
 import { SharedFileItem, ShareRecord } from "../types";
 import {
   Share2, KeyRound, UploadCloud, FolderOpen, ShieldCheck, Sparkles,
-  ArrowRight, HardDrive, Lock, ArrowLeft, Home
+  ArrowRight, HardDrive, Lock, ArrowLeft, Home, QrCode, Camera
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,7 +23,7 @@ export const FileSharingPage: React.FC = () => {
   const navigate = useNavigate();
 
   const codeFromUrl = searchParams.get("code");
-  const [activeTab, setActiveTab] = useState<"home" | "upload" | "enter_code" | "files" | "shares">(
+  const [activeTab, setActiveTab] = useState<"home" | "upload" | "enter_code" | "scan_qr" | "files" | "shares">(
     codeFromUrl ? "enter_code" : "home"
   );
 
@@ -44,6 +45,24 @@ export const FileSharingPage: React.FC = () => {
   const handleAccessCode = (code: string) => {
     setSearchParams({ code: code.toUpperCase() });
     setActiveAccessCode(code.toUpperCase());
+  };
+
+  const handleQrScanSuccess = (decodedText: string) => {
+    let scannedCode = decodedText.trim().toUpperCase();
+    const urlMatch = decodedText.match(/[?&]code=([A-Za-z0-9]{6})/i) || decodedText.match(/\/share\/([A-Za-z0-9]{6})/i);
+    if (urlMatch) {
+      scannedCode = urlMatch[1].toUpperCase();
+    } else if (scannedCode.length > 6) {
+      const cleanMatch = scannedCode.match(/[A-Z0-9]{6}/);
+      if (cleanMatch) scannedCode = cleanMatch[0];
+    }
+
+    if (scannedCode.length === 6) {
+      toast.success(`✅ QR Code Scanned: ${scannedCode}`);
+      handleAccessCode(scannedCode);
+    } else {
+      toast.error("Invalid QR Code. Please scan a valid File Share QR Code.");
+    }
   };
 
   const handleClearAccessCode = () => {
@@ -114,6 +133,17 @@ export const FileSharingPage: React.FC = () => {
             }`}
           >
             <KeyRound className="h-3.5 w-3.5" /> Enter Code
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab("scan_qr"); setActiveAccessCode(null); setSearchParams({}); }}
+            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
+              activeTab === "scan_qr"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <QrCode className="h-3.5 w-3.5" /> Scan QR
           </button>
           <button
             type="button"
