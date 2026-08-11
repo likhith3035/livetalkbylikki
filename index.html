@@ -9,10 +9,10 @@
 
   <!-- Primary Meta Tags -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <title>LiveTalk by Likhith Kami (Likki) – Anonymous Chat &amp; Video</title>
-  <meta name="title" content="LiveTalk by Likhith Kami (Likki) – Anonymous Chat &amp; Video" />
-  <meta name="description" content="LiveTalk is a free anonymous chat app built by Likhith Kami (Likki). Talk to strangers instantly — no signup, no tracking. The #1 Omegle alternative with video calls, games &amp; more. Created by Kami Likhith, Full Stack Developer." />
-  <meta name="keywords" content="livetalk, live talk, livetalkbylikki, livetalk by likki, likhith kami, likki, omegle alternative, anonymous chat, video chat strangers, random chat, talk to strangers online, free chat app, live talk app, livetalk chat" />
+  <title>LiveTalk by Likhith Kami (Likki) – Free Anonymous Chat, Video Calls & Encrypted File Sharing</title>
+  <meta name="title" content="LiveTalk by Likhith Kami (Likki) – Free Anonymous Chat, Video Calls & Encrypted File Sharing" />
+  <meta name="description" content="LiveTalk is a free anonymous chat app built by Likhith Kami (Likki). Talk to strangers instantly — no signup, no tracking. The #1 Omegle alternative with HD video calls, built-in games, AES-256 encrypted file sharing, 1-click ZIP downloads, burn-after-reading shares, and AI chat companions. Created by Kami Likhith, Full Stack Developer." />
+  <meta name="keywords" content="livetalk, live talk, livetalkbylikki, livetalk by likki, likhith kami, likki, omegle alternative, anonymous chat, video chat strangers, random chat, talk to strangers online, free chat app, live talk app, livetalk chat, encrypted file sharing, AES-256 encryption, burn after reading, zip download, anonymous file transfer, secure file sharing, client-side encryption, web crypto api" />
   <meta name="author" content="Likhith Kami" />
   <meta name="creator" content="Likhith Kami" />
   <meta name="publisher" content="Likhith Kami" />
@@ -33,8 +33,8 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="LiveTalk by Likhith Kami" />
   <meta property="og:url" content="https://livetalkbylikki.netlify.app/" />
-  <meta property="og:title" content="LiveTalk by Likhith Kami (Likki) – Anonymous Chat &amp; Video" />
-  <meta property="og:description" content="Free anonymous chat app by Likhith Kami. Talk to strangers instantly — no signup, no tracking. Video calls, games, private rooms &amp; more." />
+  <meta property="og:title" content="LiveTalk by Likhith Kami (Likki) – Anonymous Chat, Video & Encrypted File Sharing" />
+  <meta property="og:description" content="Free anonymous chat app by Likhith Kami. Talk to strangers instantly — no signup, no tracking. HD video calls, games, private rooms, AES-256 encrypted file sharing & more." />
   <meta property="og:image" content="https://livetalkbylikki.netlify.app/og-image.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -42,8 +42,8 @@
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="LiveTalk by Likhith Kami – Anonymous Chat &amp; Video" />
-  <meta name="twitter:description" content="Free anonymous chat app by Likhith Kami (Likki). No signup, no tracking. Video calls, games &amp; more." />
+  <meta name="twitter:title" content="LiveTalk by Likhith Kami – Anonymous Chat, Video & Encrypted File Sharing" />
+  <meta name="twitter:description" content="Free anonymous chat app by Likhith Kami (Likki). No signup, no tracking. HD video calls, games, AES-256 encrypted file sharing & more." />
   <meta name="twitter:image" content="https://livetalkbylikki.netlify.app/og-image.jpg" />
   <meta name="twitter:creator" content="@likhith_kami" />
 
@@ -110,7 +110,22 @@
       "End-to-end encryption",
       "Dark mode",
       "PWA support",
-      "Android APK"
+      "Android APK",
+      "Encrypted file sharing with AES-256 Web Crypto",
+      "1-click ZIP bundle download",
+      "Burn after reading self-destruct shares",
+      "Client-side file encryption with passcode lock",
+      "In-browser code and file previewer",
+      "Live upload speed and ETA tracker",
+      "Offline mode with network detection",
+      "Storage cleaner and trash purge",
+      "Custom folders and file tagging",
+      "Share code with QR and native Web Share API",
+      "AI Chat Companions",
+      "Real-time chat translation",
+      "Live video subtitles",
+      "Voice memos",
+      "Cross-device handoff"
     ]
   }
   </script>
@@ -244,6 +259,38 @@
           "@type": "Answer",
           "text": "LiveTalk is built by Likhith Kami using React 18, TypeScript, Vite, Tailwind CSS, Firebase Realtime Database, WebRTC for video calls, and Capacitor for Android. It is deployed on Netlify."
         }
+      },
+      {
+        "@type": "Question",
+        "name": "Does LiveTalk support file sharing?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! LiveTalk features a 100% client-side encrypted file sharing system. Upload files, generate a unique 6-character share code, and share with anyone. Files are encrypted with AES-256 Web Crypto API, support burn-after-reading self-destruct mode, and recipients can download all files as a single ZIP bundle."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is LiveTalk file sharing encrypted?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! LiveTalk uses AES-256-GCM encryption via the browser Web Crypto API. All encryption happens entirely client-side — your files never leave your browser unencrypted. You set a secret passcode and only someone with that passcode can decrypt and view the files."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is burn-after-reading in LiveTalk?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Burn-after-reading is LiveTalk's self-destruct file sharing mode. When enabled, shared files automatically delete after being viewed once by the recipient. The share code becomes permanently invalid after a single use — perfect for sending sensitive documents."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does LiveTalk store my files on a server?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No! LiveTalk's file sharing is 100% client-side. Files are stored only in your browser's local storage. Nothing is uploaded to any server. Your files stay on your device and are never transmitted to external servers."
+        }
       }
     ]
   }
@@ -293,6 +340,9 @@
 
           <h2>LiveTalk Features at a Glance</h2>
           <p>LiveTalk by Likhith Kami offers: anonymous text chat, HD video calls, voice calls, built-in games (Tic-Tac-Toe, Canvas, Truth or Dare), GIF sharing, emoji reactions, private rooms with invite codes, interest-based matching, chat themes and wallpapers, dark mode, PWA support for mobile browsers, and a native Android APK. All features are 100% free — LiveTalk has no premium plans, no ads, and no hidden fees.</p>
+
+          <h2>Encrypted File Sharing — New in LiveTalk</h2>
+          <p>LiveTalk now includes a 100% client-side encrypted file sharing platform. Share files securely using unique 6-character share codes — no server uploads, no cloud storage. Key features include: AES-256-GCM Web Crypto encryption with passcode-locked files, 1-click ZIP bundle downloads via JSZip, burn-after-reading self-destruct mode for one-time-view shares, in-browser rich code and document previewer, live upload speed and ETA tracking, custom folders and color tagging, 1-tap storage cleaner with trash auto-purge, offline network detection banner, and native Web Share API integration. All file data remains exclusively in your browser's local storage — LiveTalk never uploads your files to any external server.</p>
 
           <h2>About the Creator — Likhith Kami</h2>
           <p>LiveTalk was designed and developed by Likhith Kami, a Full Stack Developer also known as Likki or Kami Likhith. Likhith built LiveTalk (Live Talk) as a modern, privacy-focused alternative to Omegle. The tech stack includes React 18, TypeScript, Vite, WebRTC for peer-to-peer video, Firebase Realtime Database, Supabase, and Capacitor for Android. LiveTalk by Likki is deployed on Netlify.</p>

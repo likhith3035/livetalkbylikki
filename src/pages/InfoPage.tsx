@@ -7,7 +7,8 @@ import {
   Timer, Copy, Pin, Forward, Palette, Code2, Database, Server, Monitor,
   Layers, Cpu, FileCode2, Smartphone, Radio, ChevronDown, ChevronUp,
   Star, Headphones, Mic, Phone, ScreenShare, UserCheck, Fingerprint,
-  Check, X, Info, ShieldAlert, Code, Bot
+  Check, X, Info, ShieldAlert, Code, Bot,
+  FolderArchive, ShieldCheck, Eye, Flame, FileText, HardDrive, Upload, Download, Tag, Unlock
 } from "lucide-react";
 import {
   Accordion,
@@ -231,6 +232,74 @@ const FEATURES_DETAILED = [
     tech: "Built with Capacitor native Android bridge and Vite PWA Workbox service workers.",
     details: "Provides home screen app icons, fast launch speeds, and push notification readiness.",
   },
+
+  /* ─── File Sharing Features ─── */
+  {
+    icon: FolderArchive, title: "Encrypted File Sharing 📁", category: "File Sharing",
+    desc: "Share files securely using unique 6-character share codes. Upload multiple files, set passwords, expiration timers, and download limits. Recipients enter the code to access files instantly — 100% client-side, no server uploads.",
+    tech: "Files are converted to Data URLs via FileReader and stored in browser localStorage. Share records are indexed by unique 6-char alphanumeric codes generated client-side.",
+    details: "All file data stays exclusively in your browser. Nothing is uploaded to any external server. Files support categories (images, videos, documents, audio, archives) with automatic detection.",
+  },
+  {
+    icon: Lock, title: "AES-256 Web Crypto Encryption 🔐", category: "File Sharing",
+    desc: "Lock your files with a secret passcode using military-grade AES-256-GCM encryption. Encryption and decryption happen entirely in your browser using the Web Crypto API — your passcode never leaves your device.",
+    tech: "Uses window.crypto.subtle.importKey() with AES-GCM algorithm, 12-byte random IV, and 256-bit key derivation from user passcode. Encrypted data is base64-encoded for localStorage storage.",
+    details: "Encrypted files display a 🔒 prefix in the file manager. Decryption requires the exact passcode — incorrect passcodes throw a Web Crypto DOMException, ensuring zero partial decryption.",
+  },
+  {
+    icon: Download, title: "1-Click ZIP Bundle Download 📦", category: "File Sharing",
+    desc: "Recipients can download all shared files as a single ZIP archive with one click. No more downloading files one by one — the entire share is bundled into a compact ZIP file named after the share code.",
+    tech: "Powered by JSZip library. Files are fetched as blobs, added to a JSZip instance, and generated as a downloadable ZIP blob via zip.generateAsync(). Falls back to individual downloads on failure.",
+    details: "ZIP files are named LiveTalk_Share_CODE.zip. The download process shows a toast notification for progress. Works with any number of files in the share.",
+  },
+  {
+    icon: Flame, title: "Burn After Reading 🔥", category: "File Sharing",
+    desc: "Enable self-destruct mode when creating a share. After the recipient views the files once, the share code is permanently burned and can never be accessed again. Perfect for sensitive documents.",
+    tech: "Sets a 'burnAfterReading' flag on the share record. On first access, the share status is changed to 'burned' in localStorage, permanently invalidating the code.",
+    details: "Burned shares display a flame icon and 'This share has self-destructed' message. The burn is irreversible — not even the original sender can recover the share.",
+  },
+  {
+    icon: Eye, title: "In-Browser File Previewer 👁️", category: "File Sharing",
+    desc: "Preview text files, code, and documents directly in your browser without downloading. Supports syntax highlighting for popular programming languages and shows file metadata like size and type.",
+    tech: "Text-based files are rendered in a modal with monospace font and line numbers. Binary files show metadata cards with download buttons.",
+    details: "Supports previewing .txt, .json, .js, .ts, .html, .css, .md, .py, .java, .xml and more. Images and videos use native browser rendering.",
+  },
+  {
+    icon: Upload, title: "Live Upload Speed & ETA ⚡", category: "File Sharing",
+    desc: "See real-time upload speed (MB/s) and estimated time remaining while uploading files. A progress bar shows exactly how much has been processed with live speed calculations.",
+    tech: "Tracks bytes processed per second using Date.now() timestamps. ETA is calculated as remainingBytes / currentSpeed. Progress percentage updates in real-time via React state.",
+    details: "Speed adapts dynamically as network conditions change. The indicator shows both the instantaneous speed and a smoothed average for accuracy.",
+  },
+  {
+    icon: Trash2, title: "1-Tap Storage Cleaner 🧹", category: "File Sharing",
+    desc: "Clean up your browser storage with one tap. The storage cleaner purges trashed files and expired share records, showing you exactly how much space is reclaimed.",
+    tech: "Filters localStorage files by isInTrash flag and share records by status. Saves only active items back to localStorage. Shows reclaimed bytes via formatBytes().",
+    details: "The cleaner button appears only when there are trashed items. It also purges disabled and burned share records to free up localStorage space.",
+  },
+  {
+    icon: Tag, title: "Custom Folders & Tagging 🏷️", category: "File Sharing",
+    desc: "Organize your files into custom folders with color-coded tags. Create folders like Work, Personal, or Favorites and move files between them. Filter by category (Images, Videos, Documents, Audio, Archives).",
+    tech: "Folders are stored as separate localStorage records with unique IDs and color assignments. Files reference folder IDs for grouping. Category filtering uses file MIME type detection.",
+    details: "Supports creating unlimited custom folders, renaming, and bulk file operations. The file manager includes search, sort (by date, name, size), and multi-select capabilities.",
+  },
+  {
+    icon: Share2, title: "Native Web Share & QR Codes 📲", category: "File Sharing",
+    desc: "Share your file code via the native Web Share API — send directly to WhatsApp, Telegram, Instagram, email, or any app on your device. QR codes are also generated for easy scanning.",
+    tech: "Uses navigator.share() with title, text, and URL. Falls back to clipboard copy on browsers without Web Share API support. QR codes generated client-side.",
+    details: "The share modal includes both a 'Copy Code' button and a 'Share via App' button. Recipients can access files by entering the 6-character code on the File Sharing page.",
+  },
+  {
+    icon: HardDrive, title: "Storage Allocation Dashboard 📊", category: "File Sharing",
+    desc: "A visual dashboard showing your browser storage usage broken down by file category. See exactly how much space Images, Videos, Documents, Audio, and Archives occupy with a color-coded segmented progress bar.",
+    tech: "Aggregates file sizes by category from localStorage, renders a multi-segment CSS progress bar with per-category colors, and shows percentage breakdowns.",
+    details: "The dashboard updates in real-time as you add or remove files. Shows total used vs available storage with percentage indicators.",
+  },
+  {
+    icon: Wifi, title: "Offline Detection Banner 📡", category: "File Sharing",
+    desc: "A glassmorphism top banner automatically appears when your device loses internet connection. It warns you that some features may not work offline and disappears when connectivity is restored.",
+    tech: "Uses navigator.onLine property with 'online'/'offline' event listeners on the window object. The banner renders at the application root level above all content.",
+    details: "The banner uses backdrop-blur and semi-transparent styling to remain visible without blocking content. Offline state is also reflected in the PWA service worker.",
+  },
 ];
 
 const TECH_STACK = [
@@ -292,6 +361,11 @@ const FAQ = [
   { q: "Is LiveTalk better than Omegle?", a: "LiveTalk is built as a modern alternative to Omegle with better features, a beautiful UI, no ads, built-in games, reactions, GIFs, video calls, and a focus on privacy. It's what Omegle should have been!" },
   { q: "Who built LiveTalk?", a: "LiveTalk was designed and developed by Likhith Kami (Likki) as a passion project. He is a Full Stack Developer, and you can explore his other projects and official websites on the Kami Likhith Portfolio (https://devlikhith.vercel.app/)." },
   { q: "What is the tech stack of LiveTalk?", a: "LiveTalk uses a professional 'Pro-Level' stack: TypeScript for reliable code, React 18 for the user interface, Vite for lightning-fast speeds, Tailwind CSS for the premium design, and Supabase / WebRTC for instant real-time messaging and video calls. This ensures a seamless, secure experience on any device." },
+  { q: "Does LiveTalk support file sharing?", a: "Yes! LiveTalk includes a full 100% client-side encrypted file sharing platform. Upload files, generate a unique 6-character share code, set passwords, expiration timers, and download limits. Recipients enter the code to download files. Everything stays in your browser — zero server uploads." },
+  { q: "Is LiveTalk file sharing encrypted?", a: "Yes! LiveTalk uses military-grade AES-256-GCM encryption via the browser's Web Crypto API. You can lock any file with a secret passcode. Encryption and decryption happen entirely in your browser — your passcode never leaves your device." },
+  { q: "What is burn-after-reading?", a: "Burn-after-reading is LiveTalk's self-destruct file sharing mode. When enabled, shared files automatically delete after being viewed once. The share code becomes permanently invalid after a single use — perfect for sending sensitive documents that should not be stored." },
+  { q: "Can I download multiple shared files at once?", a: "Yes! LiveTalk's 1-click ZIP bundle download packages all shared files into a single ZIP archive that downloads instantly. Powered by JSZip, it works entirely in your browser with a fallback to individual downloads if needed." },
+  { q: "Are my shared files stored on a server?", a: "No! LiveTalk's file sharing is 100% client-side. Files are converted to Data URLs and stored exclusively in your browser's localStorage. Nothing is uploaded to any external server. Your files never leave your device." },
 ];
 
 const CHALLENGES = [
@@ -341,6 +415,14 @@ const COMPARISON = [
   { feature: "No Ads 🚫", LiveTalk: true, others: false },
   { feature: "PWA & Native APK 📱", LiveTalk: true, others: false },
   { feature: "Dark Mode 🌙", LiveTalk: true, others: false },
+  { feature: "AES-256 Encrypted File Sharing 🔐", LiveTalk: true, others: false },
+  { feature: "1-Click ZIP Bundle Download 📦", LiveTalk: true, others: false },
+  { feature: "Burn After Reading Shares 🔥", LiveTalk: true, others: false },
+  { feature: "Client-Side File Encryption 🛡️", LiveTalk: true, others: false },
+  { feature: "In-Browser File Previewer 👁️", LiveTalk: true, others: false },
+  { feature: "Custom Folders & Tagging 🏷️", LiveTalk: true, others: false },
+  { feature: "Storage Dashboard & Cleaner 🧹", LiveTalk: true, others: false },
+  { feature: "Offline Network Detection 📡", LiveTalk: true, others: false },
 ];
 
 const RELEASES = [
@@ -348,12 +430,31 @@ const RELEASES = [
     version: "v1.6.0",
     tag: "Latest Release",
     date: "July 25, 2026",
-    isCurrent: true,
+    isCurrent: false,
     highlights: [
       { category: "🌐 Live Subtitles & Translation", desc: "Added real-time video call speech subtitles with automatic live translation from Telugu (తెలుగు), Hindi, Spanish, French, German, Japanese, and 120+ languages into English." },
       { category: "🎤 Chat Voice Memos", desc: "Added hold-to-record voice notes in text chat with 15-second countdown timer, pulse animation, and interactive waveform audio playback bubbles." },
       { category: "📊 WebRTC Diagnostic Stats", desc: "Added real-time video call health diagnostic overlay showing Ping/RTT (ms), FPS, stream resolution (1080p/720p/480p), packet loss, and quality grade." },
       { category: "🚀 Navigation & UX", desc: "Added dedicated 1-tap Home & Back navigation buttons, full-screen drag boundary constraints for floating widgets, and smart search wait cards." }
+    ]
+  },
+  {
+    version: "v1.7.0",
+    tag: "Latest Release",
+    date: "August 12, 2026",
+    isCurrent: true,
+    highlights: [
+      { category: "📁 Encrypted File Sharing", desc: "Brand new 100% client-side file sharing platform with unique 6-character share codes, password protection, expiration timers, download limits, and custom folders." },
+      { category: "🔐 AES-256 Web Crypto Encryption", desc: "Military-grade AES-256-GCM file encryption using browser Web Crypto API. Lock and unlock files with a secret passcode — encryption happens entirely in your browser." },
+      { category: "📦 1-Click ZIP Bundle Download", desc: "Recipients can download all shared files as a single ZIP archive with one click using JSZip. Falls back to individual downloads on failure." },
+      { category: "🔥 Burn After Reading Mode", desc: "Self-destruct file sharing — shared files auto-delete after being viewed once. The share code is permanently burned after a single use." },
+      { category: "👁️ In-Browser File Previewer", desc: "Preview text, code, and documents directly in the browser with syntax highlighting. No downloads needed for text-based files." },
+      { category: "⚡ Live Upload Speed & ETA", desc: "Real-time upload speed (MB/s) and estimated time remaining with dynamic progress tracking." },
+      { category: "🧹 1-Tap Storage Cleaner", desc: "Purge trashed files and expired share records with one tap. Shows exactly how much browser storage is reclaimed." },
+      { category: "🏷️ Custom Folders & Tagging", desc: "Organize files into custom folders, filter by category, search, sort, and multi-select for bulk operations." },
+      { category: "📲 Native Web Share API", desc: "Share file codes via WhatsApp, Telegram, email, or any app using the browser's native sharing interface." },
+      { category: "📡 Offline Detection Banner", desc: "Glassmorphism banner automatically warns when internet connection is lost and disappears when restored." },
+      { category: "📊 Storage Allocation Dashboard", desc: "Visual breakdown of browser storage usage by file category with color-coded segmented progress bar." }
     ]
   },
   {
@@ -442,9 +543,9 @@ const InfoPage = () => {
   const onlineCount = useOnlineCount();
   
   useSEO({ 
-    title: "About LiveTalk – Built by Likhith Kami (Likki)", 
-    description: "Learn about LiveTalk — the free anonymous chat app built by Likhith Kami (Likki / Kami Likhith). Tech stack, features, FAQ, and the developer behind the project.",
-    keywords: "likhith kami, kami likhith, likki developer, likhith kami portfolio, likhith kami website, likhith kami project, likhith livetalk, likki livetalk, LiveTalk FAQ, LiveTalk features, anonymous chat tech stack, who made livetalk, livetalk developer"
+    title: "About LiveTalk – Built by Likhith Kami (Likki) | Features, Encrypted File Sharing & FAQ", 
+    description: "Learn about LiveTalk — the free anonymous chat app built by Likhith Kami (Likki / Kami Likhith). Explore 40+ features including AES-256 encrypted file sharing, burn-after-reading, 1-click ZIP downloads, AI chat companions, HD video calls, and more.",
+    keywords: "likhith kami, kami likhith, likki developer, likhith kami portfolio, likhith kami website, likhith kami project, likhith livetalk, likki livetalk, LiveTalk FAQ, LiveTalk features, anonymous chat tech stack, who made livetalk, livetalk developer, encrypted file sharing, AES-256 encryption, burn after reading, zip download, client-side encryption"
   });
 
 
