@@ -1,6 +1,10 @@
 import { useState, useEffect, forwardRef } from "react";
-import { Moon, Sun, ChevronLeft, Video, Phone, Globe, Home, Megaphone } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {
+  Moon, Sun, ChevronLeft, Video, Phone, Globe, Home, Megaphone, Menu,
+  MessageSquare, User, Settings as SettingsIcon, Info, Shield, ShieldAlert,
+  Bot, Wand2, Share2, Smartphone, Sparkles
+} from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
 import ApkDownloadButton from "@/components/ApkDownloadButton";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -8,6 +12,22 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/firebase";
 import { ref as firebaseRef, onValue } from "firebase/database";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose
+} from "@/components/ui/sheet";
+
+const drawerNavItems = [
+  { icon: Home,          path: "/",                 label: "Home Page",       accent: "#10b981" },
+  { icon: MessageSquare, path: "/chat",              label: "Start Chat",      accent: "hsl(var(--primary))" },
+  { icon: Bot,           path: "/ai-chat",           label: "AI Wingman",      accent: "#ec4899" },
+  { icon: Wand2,         path: "/prompt-analyzer",   label: "Prompt Analyzer", accent: "#a855f7" },
+  { icon: Share2,        path: "/file-sharing",      label: "File Sharing",    accent: "#3b82f6" },
+  { icon: Shield,        path: "/safety",            label: "Safety Center",   accent: "#14b8a6" },
+  { icon: User,          path: "/profile",           label: "My Profile",      accent: "#8b5cf6" },
+  { icon: SettingsIcon,  path: "/settings",          label: "App Settings",    accent: "#64748b" },
+  { icon: ShieldAlert,   path: "/guidelines",        label: "Community Rules", accent: "#f59e0b" },
+  { icon: Info,          path: "/info",              label: "Help & FAQ",      accent: "#0ea5e9" },
+];
 
 interface HeaderProps {
   onlineCount: number;
@@ -29,7 +49,9 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
 }, ref) => {
   const { settings, updateSetting } = useSettings();
   const navigate = useNavigate();
+  const location = useLocation();
   const [announcement, setAnnouncement] = useState<string>("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("echo_global_announcement") || "";
@@ -179,8 +201,93 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         </div>
       )}
       <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40 lg:hidden" style={{ willChange: "transform", contain: "layout style" }}>
-      {/* Left: Logo */}
-      <div className="flex items-center gap-3">
+      {/* Left: Hamburger Drawer + Logo */}
+      <div className="flex items-center gap-2.5">
+        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <SheetTrigger asChild>
+            <button
+              type="button"
+              className="h-9 w-9 rounded-xl border border-border/80 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
+              aria-label="Open Navigation Menu"
+              title="Menu"
+            >
+              <Menu className="h-5 w-5 text-foreground" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[82vw] max-w-xs p-5 bg-card/95 backdrop-blur-2xl border-r border-border/50 flex flex-col justify-between">
+            <div className="space-y-6">
+              <SheetHeader className="text-left pb-4 border-b border-border/40">
+                <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setDrawerOpen(false); navigate("/"); }}>
+                  <BrandLogo className="h-8 w-8 drop-shadow-md" aria-label="LiveTalk" />
+                  <div>
+                    <SheetTitle className="text-base font-display font-bold text-foreground">
+                      LiveTalk
+                    </SheetTitle>
+                    <p className="text-[10px] text-muted-foreground font-mono">By Likhith Kami (Likki)</p>
+                  </div>
+                </div>
+              </SheetHeader>
+
+              {/* Navigation Items */}
+              <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[65vh]">
+                {drawerNavItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        navigate(item.path);
+                      }}
+                      className={cn(
+                        "flex items-center gap-3 px-3.5 py-2.5 rounded-2xl w-full text-left transition-all active:scale-95",
+                        isActive
+                          ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20"
+                          : "text-foreground hover:bg-secondary/80 font-medium"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
+                          isActive ? "bg-white/20" : "bg-secondary"
+                        )}
+                      >
+                        <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-foreground")} />
+                      </div>
+                      <span className="text-xs font-semibold">{item.label}</span>
+                    </button>
+                  );
+                })}
+
+                <div className="my-2 h-px bg-border/40" />
+
+                {/* Handoff Utility */}
+                <button
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    navigate("/handoff");
+                  }}
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl w-full text-left transition-all active:scale-95 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold text-xs"
+                >
+                  <div className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0 bg-amber-500/15">
+                    <Smartphone className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold">Phone Transfer</p>
+                    <p className="text-[10px] text-muted-foreground">Transfer chat to phone</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Footer inside Drawer */}
+            <div className="pt-4 border-t border-border/40 text-center space-y-2">
+              <ApkDownloadButton className="w-full h-9 text-xs" />
+              <p className="text-[10px] text-muted-foreground">100% Free & Anonymous</p>
+            </div>
+          </SheetContent>
+        </Sheet>
+
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate("/")}>
           <BrandLogo
             className="h-8 w-8 sm:h-9 sm:w-9 drop-shadow-md hover:scale-105 transition-transform"
