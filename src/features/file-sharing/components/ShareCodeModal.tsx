@@ -179,19 +179,21 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
               <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                 <Download className="h-3.5 w-3.5 text-primary" /> Max Downloads
               </label>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
-                {(["unlimited", "1", "5", "10", "25"] as DownloadLimitOption[]).map((opt) => (
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                {(["unlimited", "1", "5", "10", "25", "burn"] as DownloadLimitOption[]).map((opt) => (
                   <button
                     key={opt}
                     type="button"
                     onClick={() => setDownloadLimit(opt)}
-                    className={`py-1.5 text-xs font-semibold rounded-xl border transition-all ${
+                    className={`py-1.5 text-[11px] font-semibold rounded-xl border transition-all ${
                       downloadLimit === opt
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        ? opt === "burn"
+                          ? "bg-amber-600 text-white border-amber-600 shadow-sm font-bold"
+                          : "bg-primary text-primary-foreground border-primary shadow-sm"
                         : "bg-secondary/40 text-muted-foreground border-border/60 hover:text-foreground"
                     }`}
                   >
-                    {opt === "unlimited" ? "Unlimited" : `${opt} max`}
+                    {opt === "unlimited" ? "Unlimited" : opt === "burn" ? "🔥 Burn (1x)" : `${opt} max`}
                   </button>
                 ))}
               </div>

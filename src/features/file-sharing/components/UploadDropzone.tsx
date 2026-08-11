@@ -41,11 +41,15 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onUploadComplete
     if (!safeFiles.length) return;
 
     // Initialize progress items
+    const now = Date.now();
     const newItems: UploadProgressItem[] = safeFiles.map((f) => ({
       id: "up-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
       file: f,
       progress: 0,
       status: "uploading",
+      startTime: now,
+      speedBytesPerSec: 0,
+      remainingSeconds: 0,
     }));
 
     setUploads((prev) => [...newItems, ...prev]);
@@ -54,13 +58,30 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onUploadComplete
     const completedFileItems: SharedFileItem[] = [];
 
     for (const item of newItems) {
+      const itemStartTime = Date.now();
       try {
         const result = await uploadFileWithProgress({
           file: item.file,
           folderId,
           onProgress: (percent) => {
+            const currentNow = Date.now();
+            const elapsedSec = Math.max(0.1, (currentNow - itemStartTime) / 1000);
+            const uploadedBytes = (item.file.size * percent) / 100;
+            const speed = uploadedBytes / elapsedSec;
+            const remainingBytes = item.file.size - uploadedBytes;
+            const remSec = speed > 0 ? Math.ceil(remainingBytes / speed) : 0;
+
             setUploads((prev) =>
-              prev.map((u) => (u.id === item.id ? { ...u, progress: percent } : u))
+              prev.map((u) =>
+                u.id === item.id
+                  ? {
+                      ...u,
+                      progress: percent,
+                      speedBytesPerSec: speed,
+                      remainingSeconds: remSec,
+                    }
+                  : u
+              )
             );
           },
         });
@@ -201,7 +222,11 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({ onUploadComplete
                     <div className="space-y-1">
                       <Progress value={item.progress} className="h-1.5 rounded-full" />
                       <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-                        <span>Uploading...</span>
+                        <span>
+                          {item.speedBytesPerSec && item.speedBytesPerSec > 0
+                            ? `${formatBytes(item.speedBytesPerSec)}/s • ${item.remainingSeconds || 0}s remaining`
+                            : "Uploading..."}
+                        </span>
                         <span>{item.progress}%</span>
                       </div>
                     </div>

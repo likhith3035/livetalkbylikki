@@ -109,6 +109,7 @@ export function calculateExpirationTimestamp(option: ExpirationOption): number |
  */
 export function parseDownloadLimit(option: DownloadLimitOption): number | null {
   if (option === "unlimited") return null;
+  if (option === "burn") return 1;
   const parsed = parseInt(option, 10);
   return isNaN(parsed) ? null : parsed;
 }
@@ -227,7 +228,8 @@ export async function createShareRecord({
 
   const code = generateShareCode(6);
   const expiresAt = calculateExpirationTimestamp(expirationOption);
-  const maxDownloads = parseDownloadLimit(downloadLimitOption);
+  const isBurnAfterReading = downloadLimitOption === "burn";
+  const maxDownloads = isBurnAfterReading ? 1 : parseDownloadLimit(downloadLimitOption);
   let passwordHash: string | undefined = undefined;
 
   if (password.trim()) {
@@ -246,6 +248,7 @@ export async function createShareRecord({
     hasPassword: !!passwordHash,
     passwordHash,
     status: "active",
+    isBurnAfterReading,
   };
 
   // Save locally
@@ -379,6 +382,11 @@ export async function getShareRecordByCode(code: string): Promise<{
     return { share: null, statusMessage: "We couldn't find an active share with that code. Please check and try again." };
   }
 
+  // Check if burned or disabled
+  if (found.status === "burned" || (found.isBurnAfterReading && found.downloadCount >= 1)) {
+    return { share: found, isDisabled: true, statusMessage: "🔥 This self-destruct share code auto-deleted after 1st download." };
+  }
+
   // Check if disabled
   if (found.status === "disabled" || found.disabledAt) {
     return { share: found, isDisabled: true, statusMessage: "This share code is no longer active." };
@@ -408,7 +416,9 @@ export async function incrementDownloadCount(shareId: string) {
     if (s.id === shareId) {
       const newCount = s.downloadCount + 1;
       let newStatus = s.status;
-      if (s.maxDownloads !== null && newCount >= s.maxDownloads) {
+      if (s.isBurnAfterReading) {
+        newStatus = "burned";
+      } else if (s.maxDownloads !== null && newCount >= s.maxDownloads) {
         newStatus = "limit_reached";
       }
       targetShare = {

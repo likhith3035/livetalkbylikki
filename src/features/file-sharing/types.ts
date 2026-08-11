@@ -1,10 +1,10 @@
 export type FileCategory = "documents" | "images" | "videos" | "audio" | "archives" | "other";
 
-export type ShareStatus = "active" | "expired" | "disabled" | "limit_reached";
+export type ShareStatus = "active" | "expired" | "disabled" | "limit_reached" | "burned";
 
 export type ExpirationOption = "never" | "1h" | "1d" | "7d" | "30d";
 
-export type DownloadLimitOption = "unlimited" | "1" | "5" | "10" | "25";
+export type DownloadLimitOption = "unlimited" | "1" | "5" | "10" | "25" | "burn";
 
 export type SortOption = "newest" | "oldest" | "name_asc" | "name_desc" | "size_largest" | "size_smallest";
 
@@ -34,6 +34,7 @@ export interface ShareRecord {
   hasPassword: boolean;
   passwordHash?: string;
   status: ShareStatus;
+  isBurnAfterReading?: boolean;
   disabledAt?: number | null;
   lastDownloadedAt?: number | null;
 }
@@ -49,6 +50,9 @@ export interface UploadProgressItem {
   file: File;
   progress: number; // 0 to 100
   status: "uploading" | "completed" | "error" | "cancelled";
+  speedBytesPerSec?: number;
+  remainingSeconds?: number;
+  startTime?: number;
   errorMessage?: string;
 }
 

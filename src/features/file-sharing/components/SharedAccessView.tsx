@@ -206,6 +206,11 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
               <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary">
                 Code: {share.code}
               </Badge>
+              {share.isBurnAfterReading && (
+                <Badge variant="destructive" className="text-[10px] font-bold gap-1 bg-amber-600 text-white animate-pulse">
+                  🔥 Burn After Reading (Auto-deletes after 1st download)
+                </Badge>
+              )}
               <Badge variant="secondary" className="text-[10px] font-semibold gap-1 text-muted-foreground border border-border/50">
                 <Clock className="h-3 w-3 text-primary" />
                 {formatRemainingTime(share.expiresAt)}
