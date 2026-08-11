@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { ref, set, get } from "firebase/database";
 import {
   SharedFileItem, ShareRecord, FolderItem, ShareStatus,
   ExpirationOption, DownloadLimitOption, SortOption, FileCategory, StorageUsageStats
@@ -250,16 +252,11 @@ export async function createShareRecord({
   const shares = getSavedShares();
   saveShares([shareRecord, ...shares]);
 
-  // Sync share record to Supabase Cloud Storage for cross-device access
+  // Sync share record to Firebase Realtime Database for cross-device instant access
   try {
-    const jsonBlob = new Blob([JSON.stringify(shareRecord)], { type: "application/json" });
-    const sharePath = `share_codes/${code}.json`;
-    let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, jsonBlob, { cacheControl: "60", upsert: true });
-    if (uploadRes.error) {
-      await supabase.storage.from("room-media").upload(sharePath, jsonBlob, { cacheControl: "60", upsert: true });
-    }
+    await set(ref(db, `file_shares/${code}`), shareRecord);
   } catch (err) {
-    console.warn("[FileSharing] Could not sync share code to cloud:", err);
+    console.warn("[FileSharing] Firebase cloud sync warning:", err);
   }
 
   return shareRecord;
@@ -321,20 +318,12 @@ export async function getShareRecordByCode(code: string): Promise<{
   const shares = getSavedShares();
   let found = shares.find((s) => s.code.toUpperCase() === cleanCode) || null;
 
-  // If not found in local browser storage, fetch from Supabase Cloud Storage
+  // If not found in local browser storage, fetch from Firebase Realtime Database
   if (!found) {
     try {
-      const sharePath = `share_codes/${cleanCode}.json`;
-      const { data: urlData1 } = supabase.storage.from("chat-images").getPublicUrl(sharePath);
-      let response = await fetch(`${urlData1.publicUrl}?t=${Date.now()}`);
-
-      if (!response.ok) {
-        const { data: urlData2 } = supabase.storage.from("room-media").getPublicUrl(sharePath);
-        response = await fetch(`${urlData2.publicUrl}?t=${Date.now()}`);
-      }
-
-      if (response.ok) {
-        const fetchedRecord: ShareRecord = await response.json();
+      const snapshot = await get(ref(db, `file_shares/${cleanCode}`));
+      if (snapshot.exists()) {
+        const fetchedRecord: ShareRecord = snapshot.val();
         if (fetchedRecord && fetchedRecord.code) {
           found = fetchedRecord;
           // Cache locally for fast subsequent access
@@ -342,7 +331,7 @@ export async function getShareRecordByCode(code: string): Promise<{
         }
       }
     } catch (err) {
-      console.warn("[FileSharing] Cloud share code lookup error:", err);
+      console.warn("[FileSharing] Firebase cloud share code lookup error:", err);
     }
   }
 
@@ -396,16 +385,11 @@ export async function incrementDownloadCount(shareId: string) {
 
   saveShares(updated);
 
-  // Sync updated download count to Supabase Cloud Storage
+  // Sync updated download count to Firebase Realtime Database
   if (targetShare && (targetShare as ShareRecord).code) {
     try {
       const code = (targetShare as ShareRecord).code;
-      const jsonBlob = new Blob([JSON.stringify(targetShare)], { type: "application/json" });
-      const sharePath = `share_codes/${code}.json`;
-      let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, jsonBlob, { cacheControl: "60", upsert: true });
-      if (uploadRes.error) {
-        await supabase.storage.from("room-media").upload(sharePath, jsonBlob, { cacheControl: "60", upsert: true });
-      }
+      await set(ref(db, `file_shares/${code}`), targetShare);
     } catch {
       /* ignore sync error */
     }
@@ -415,15 +399,28 @@ export async function incrementDownloadCount(shareId: string) {
 /**
  * Disable a Share Code immediately
  */
-export function disableShareCode(shareId: string) {
+export async function disableShareCode(shareId: string) {
   const shares = getSavedShares();
+  let targetShare: ShareRecord | null = null;
+
   const updated = shares.map((s) => {
     if (s.id === shareId) {
-      return { ...s, status: "disabled" as ShareStatus, disabledAt: Date.now() };
+      targetShare = { ...s, status: "disabled" as ShareStatus, disabledAt: Date.now() };
+      return targetShare;
     }
     return s;
   });
+
   saveShares(updated);
+
+  if (targetShare && (targetShare as ShareRecord).code) {
+    try {
+      const code = (targetShare as ShareRecord).code;
+      await set(ref(db, `file_shares/${code}`), targetShare);
+    } catch {
+      /* ignore sync error */
+    }
+  }
 }
 
 /**
