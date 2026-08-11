@@ -4,7 +4,8 @@ import {
   Sparkles, MessageSquare, Plus, Key, Cpu, Send, Square, Copy,
   Trash2, RefreshCw, Check, Bot, User as UserIcon, Zap, AlertCircle,
   Menu, X, Shield, ChevronDown, HelpCircle, Download, Search, Eraser,
-  Hash, Type, Mic, MicOff, Volume2, VolumeX, Pin, Sliders, Wand2, ChevronLeft, ArrowLeft, Home
+  Hash, Type, Mic, MicOff, Volume2, VolumeX, Pin, Sliders, Wand2, ChevronLeft, ArrowLeft, Home,
+  PanelLeft, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -154,6 +155,30 @@ export const AIChatPage: React.FC = () => {
   const [showLocalGuideModal, setShowLocalGuideModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showSidebarMobile, setShowSidebarMobile] = useState(false);
+  const [isSidebarOpenDesktop, setIsSidebarOpenDesktop] = useState<boolean>(() => {
+    const saved = localStorage.getItem("aichat_sidebar_desktop_open");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  const toggleSidebarDesktop = () => {
+    setIsSidebarOpenDesktop((prev) => {
+      const next = !prev;
+      localStorage.setItem("aichat_sidebar_desktop_open", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Keyboard shortcut Ctrl+\ or Cmd+\ to toggle Gemini AI style sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
+        e.preventDefault();
+        toggleSidebarDesktop();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
@@ -671,13 +696,43 @@ export const AIChatPage: React.FC = () => {
         {/* ─────────── SIDEBAR ─────────── */}
         <aside
           className={cn(
-            "w-72 bg-card/90 border-r border-border/50 flex flex-col justify-between p-3.5 backdrop-blur-xl transition-all duration-300 z-30",
-            "absolute inset-y-0 left-0 lg:static lg:translate-x-0",
-            showSidebarMobile ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
+            "bg-card/90 border-r border-border/50 flex flex-col justify-between backdrop-blur-xl transition-all duration-300 z-30 shrink-0",
+            "absolute inset-y-0 left-0 lg:static",
+            showSidebarMobile ? "translate-x-0 shadow-2xl w-72 p-3.5" : "-translate-x-full lg:translate-x-0",
+            isSidebarOpenDesktop
+              ? "lg:w-72 lg:p-3.5 lg:opacity-100"
+              : "lg:w-0 lg:p-0 lg:opacity-0 lg:overflow-hidden lg:border-none"
           )}
         >
           {/* Top: New Chat + Controls */}
           <div className="space-y-3">
+            {/* Top Sidebar Header Row (Gemini Style) */}
+            <div className="flex items-center justify-between pb-2 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold">
+                  <Bot className="h-4 w-4" />
+                </div>
+                <span className="text-xs font-bold text-foreground font-display">AI Studio Sidebar</span>
+              </div>
+
+              <button
+                onClick={toggleSidebarDesktop}
+                className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-muted-foreground hover:text-primary hover:bg-primary/10 border border-border/50 transition-all active:scale-95"
+                title="Collapse sidebar (Ctrl + \)"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+                <span className="text-[10px]">Close</span>
+              </button>
+
+              <button
+                onClick={() => setShowSidebarMobile(false)}
+                className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground"
+                title="Close menu"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
             <Button
               variant="outline"
               onClick={() => navigate("/chat")}
@@ -940,11 +995,37 @@ export const AIChatPage: React.FC = () => {
           {/* Top Bar Header */}
           <div className="h-14 px-4 border-b border-border/40 flex items-center justify-between bg-card/60 backdrop-blur-md shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
+              {/* Mobile Sidebar Toggle */}
               <button
                 onClick={() => setShowSidebarMobile(!showSidebarMobile)}
                 className="lg:hidden p-2 rounded-xl bg-secondary border border-border/60 text-foreground"
+                title="Toggle menu"
               >
                 <Menu className="h-4 w-4" />
+              </button>
+
+              {/* Desktop Gemini AI Style Sidebar Toggle */}
+              <button
+                onClick={toggleSidebarDesktop}
+                className={cn(
+                  "hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 shrink-0 shadow-sm",
+                  isSidebarOpenDesktop
+                    ? "bg-secondary/80 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground"
+                    : "bg-primary text-primary-foreground border-primary shadow-primary/20 hover:opacity-90"
+                )}
+                title={isSidebarOpenDesktop ? "Collapse sidebar (Ctrl + \\)" : "Expand sidebar (Ctrl + \\)"}
+              >
+                {isSidebarOpenDesktop ? (
+                  <>
+                    <PanelLeftClose className="h-4 w-4" />
+                    <span className="hidden xl:inline text-[11px]">Hide Sidebar</span>
+                  </>
+                ) : (
+                  <>
+                    <PanelLeftOpen className="h-4 w-4" />
+                    <span className="text-[11px]">Open Sidebar</span>
+                  </>
+                )}
               </button>
 
               <Button

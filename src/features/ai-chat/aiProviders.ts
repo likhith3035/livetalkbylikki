@@ -38,8 +38,8 @@ export const AI_PROVIDERS: AIProviderInfo[] = [
     id: "sarvam",
     name: "Sarvam AI",
     isLocal: false,
-    defaultModel: "sarvam-30b",
-    availableModels: ["sarvam-30b", "sarvam-105b"],
+    defaultModel: "sarvam-105b",
+    availableModels: ["sarvam-105b", "sarvam-105b-conversations"],
   },
   {
     id: "groq",
@@ -302,6 +302,9 @@ export async function streamAIChat({
     "Content-Type": "application/json",
   };
   if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+  if (providerId === "sarvam" && apiKey) {
+    headers["api-subscription-key"] = apiKey;
+  }
   if (providerId === "openrouter") {
     headers["HTTP-Referer"] = window.location.origin;
     headers["X-Title"] = "LiveTalk AI Chat";
@@ -335,8 +338,12 @@ export async function streamAIChat({
 
   if (!response.ok) {
     const errJson = await response.json().catch(() => ({}));
-    const errMsg = errJson.error?.message || `${provider.name} error (${response.status})`;
+    let errMsg = errJson.error?.message || `${provider.name} error (${response.status})`;
     console.error(`[AI Chat] ${provider.name} API error:`, errMsg, errJson);
+    // User-friendly message for quota/credit issues
+    if (response.status === 402 || errJson.error?.code === "insufficient_quota_error") {
+      errMsg = `${provider.name}: No credits available. Please add credits at your ${provider.name} dashboard or switch to a different AI provider.`;
+    }
     throw new Error(errMsg);
   }
 
@@ -457,6 +464,9 @@ export async function testAIProviderKey({
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+    if (providerId === "sarvam" && apiKey) {
+      headers["api-subscription-key"] = apiKey;
+    }
     if (providerId === "openrouter") {
       headers["HTTP-Referer"] = window.location.origin;
       headers["X-Title"] = "LiveTalk AI Chat";
