@@ -10,11 +10,11 @@ import {
   getSavedFiles, getSavedFolders, createFolder, moveFileToFolder,
   toggleFileTrash, calculateStorageUsage, filterAndSortFiles, deleteFilePermanently
 } from "../services/fileSharingService";
-import { formatBytes } from "../utils/cryptoCode";
+import { formatBytes, encryptData, decryptData } from "../utils/cryptoCode";
 import { FilePreviewModal } from "./FilePreviewModal";
 import {
   Folder, FolderPlus, Search, Filter, ArrowUpDown, Trash2, Eye, Download,
-  FileText, HardDrive, MoreVertical, Sparkles, FolderOpen, Tag, Check, Move
+  FileText, HardDrive, MoreVertical, Sparkles, FolderOpen, Tag, Check, Move, Lock, Unlock
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,6 +79,75 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({
     toggleFileTrash(fileId, true);
     handleRefresh();
     toast.success("Moved file to Trash.");
+  };
+
+  const handleEncryptSelected = async () => {
+    const selected = files.filter((f) => selectedFileIds.has(f.id));
+    if (!selected.length) {
+      toast.error("Please select at least one file to encrypt.");
+      return;
+    }
+
+    const passcode = prompt("Enter a secret passcode for AES-256 Web Crypto encryption:");
+    if (!passcode || !passcode.trim()) return;
+
+    try {
+      const updated = await Promise.all(
+        files.map(async (f) => {
+          if (selectedFileIds.has(f.id)) {
+            const encryptedUrl = await encryptData(f.url, passcode.trim());
+            return {
+              ...f,
+              url: `enc:${encryptedUrl}`,
+              name: f.name.startsWith("🔒 ") ? f.name : `🔒 ${f.name}`,
+            };
+          }
+          return f;
+        })
+      );
+
+      saveFiles(updated);
+      setFiles(updated);
+      setSelectedFileIds(new Set());
+      toast.success(`Encrypted ${selected.length} file(s) with AES-256 Web Crypto API!`);
+    } catch {
+      toast.error("Failed to encrypt files.");
+    }
+  };
+
+  const handleDecryptSelected = async () => {
+    const selected = files.filter((f) => selectedFileIds.has(f.id) && f.url.startsWith("enc:"));
+    if (!selected.length) {
+      toast.error("Please select encrypted file(s) to unlock.");
+      return;
+    }
+
+    const passcode = prompt("Enter passcode to unlock AES-256 encrypted file(s):");
+    if (!passcode || !passcode.trim()) return;
+
+    try {
+      const updated = await Promise.all(
+        files.map(async (f) => {
+          if (selectedFileIds.has(f.id) && f.url.startsWith("enc:")) {
+            const rawEnc = f.url.replace("enc:", "");
+            const decryptedUrl = await decryptData(rawEnc, passcode.trim());
+            return {
+              ...f,
+              url: decryptedUrl,
+              name: f.name.replace(/^🔒\s*/, ""),
+            };
+          }
+          return f;
+        })
+      );
+
+      saveFiles(updated);
+      setFiles(updated);
+      setSelectedFileIds(new Set());
+      toast.success("Decrypted and unlocked file(s)!");
+    } catch {
+      toast.error("Incorrect passcode. Decryption failed.");
+    }
   };
 
   const handleCreateShareFromSelected = () => {
@@ -252,19 +321,41 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({
 
       {/* Batch Action Toolbar */}
       {selectedFileIds.size > 0 && (
-        <div className="p-3 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-between animate-fade-in">
-          <span className="text-xs font-bold text-primary">
+        <div className="p-3.5 rounded-2xl bg-primary/10 border border-primary/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in">
+          <span className="text-xs font-bold text-primary shrink-0">
             {selectedFileIds.size} file(s) selected
           </span>
 
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleCreateShareFromSelected}
-            className="text-xs font-bold rounded-xl gap-1.5 bg-primary text-primary-foreground"
-          >
-            <Sparkles className="h-3.5 w-3.5" /> Create Share Code for Selected
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleEncryptSelected}
+              className="text-xs font-bold rounded-xl gap-1.5 border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
+            >
+              <Lock className="h-3.5 w-3.5" /> AES-256 Encrypt
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleDecryptSelected}
+              className="text-xs font-bold rounded-xl gap-1.5 border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10"
+            >
+              <Unlock className="h-3.5 w-3.5" /> Decrypt File(s)
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleCreateShareFromSelected}
+              className="text-xs font-bold rounded-xl gap-1.5 bg-primary text-primary-foreground"
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Share Selected
+            </Button>
+          </div>
         </div>
       )}
 

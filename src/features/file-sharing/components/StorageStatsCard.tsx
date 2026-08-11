@@ -1,11 +1,15 @@
 import React from "react";
 import { SharedFileItem, FileCategory } from "../types";
 import { formatBytes } from "../utils/cryptoCode";
-import { HardDrive, Image, FileText, Video, Music, Archive, File } from "lucide-react";
+import { HardDrive, Image, FileText, Video, Music, Archive, File, Trash2 } from "lucide-react";
+import { saveFiles, getSavedShares, saveShares } from "../services/fileSharingService";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface StorageStatsCardProps {
   files: SharedFileItem[];
   maxStorageBytes?: number; // default 10 GB
+  onStorageCleaned?: () => void;
 }
 
 const CATEGORY_CONFIG: Record<
@@ -23,10 +27,24 @@ const CATEGORY_CONFIG: Record<
 export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
   files,
   maxStorageBytes = 10 * 1024 * 1024 * 1024, // 10 GB
+  onStorageCleaned,
 }) => {
   const activeFiles = files.filter((f) => !f.isInTrash);
+  const trashedFiles = files.filter((f) => f.isInTrash);
   const totalUsedBytes = activeFiles.reduce((acc, f) => acc + f.size, 0);
+  const trashedBytes = trashedFiles.reduce((acc, f) => acc + f.size, 0);
   const usedPercent = Math.min(100, Math.round((totalUsedBytes / maxStorageBytes) * 100));
+
+  const handleCleanStorage = () => {
+    const active = files.filter((f) => !f.isInTrash);
+    saveFiles(active);
+
+    const shares = getSavedShares().filter((s) => s.status !== "disabled" && s.status !== "burned");
+    saveShares(shares);
+
+    toast.success(`Purged ${trashedFiles.length} item(s). Reclaimed ${formatBytes(trashedBytes)}!`);
+    onStorageCleaned?.();
+  };
 
   const byCategory = activeFiles.reduce(
     (acc, f) => {
@@ -38,9 +56,9 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
 
   return (
     <div className="p-5 rounded-3xl bg-card border border-border/80 shadow-md space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-2xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-center">
+          <div className="h-9 w-9 rounded-2xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-center shrink-0">
             <HardDrive className="h-4 w-4" />
           </div>
           <div>
@@ -51,9 +69,23 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
           </div>
         </div>
 
-        <span className="text-xs font-mono font-bold text-primary px-2.5 py-1 rounded-xl bg-primary/10 border border-primary/20">
-          {activeFiles.length} File(s)
-        </span>
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          {trashedFiles.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCleanStorage}
+              className="text-xs rounded-xl gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Clean Trash ({formatBytes(trashedBytes)})
+            </Button>
+          )}
+
+          <span className="text-xs font-mono font-bold text-primary px-2.5 py-1 rounded-xl bg-primary/10 border border-primary/20 shrink-0">
+            {activeFiles.length} File(s)
+          </span>
+        </div>
       </div>
 
       {/* Multi-Segment Categorized Progress Bar */}

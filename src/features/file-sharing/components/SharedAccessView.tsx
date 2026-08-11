@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -93,20 +94,42 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
     toast.success(`Downloading ${fileItem.name}...`);
   };
 
-  const handleDownloadAll = () => {
+  const handleDownloadAll = async () => {
     if (!share || !share.files.length) return;
     incrementDownloadCount(share.id);
 
-    toast.info(`Downloading all ${share.files.length} files...`);
-    share.files.forEach((f, idx) => {
-      setTimeout(() => {
-        const a = document.createElement("a");
-        a.href = f.url;
-        a.download = f.name;
-        a.target = "_blank";
-        a.click();
-      }, idx * 500);
-    });
+    toast.info(`Packaging ${share.files.length} file(s) into ZIP archive...`);
+    try {
+      const zip = new JSZip();
+
+      for (const fileItem of share.files) {
+        const response = await fetch(fileItem.url);
+        const blob = await response.blob();
+        zip.file(fileItem.name, blob);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const zipUrl = URL.createObjectURL(zipBlob);
+
+      const a = document.createElement("a");
+      a.href = zipUrl;
+      a.download = `LiveTalk_Share_${share.code}.zip`;
+      a.click();
+      URL.revokeObjectURL(zipUrl);
+
+      toast.success(`ZIP Archive LiveTalk_Share_${share.code}.zip downloaded!`);
+    } catch {
+      toast.error("Failed to generate ZIP bundle. Falling back to individual downloads.");
+      share.files.forEach((f, idx) => {
+        setTimeout(() => {
+          const a = document.createElement("a");
+          a.href = f.url;
+          a.download = f.name;
+          a.target = "_blank";
+          a.click();
+        }, idx * 500);
+      });
+    }
   };
 
   if (isLoading) {

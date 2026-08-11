@@ -90,3 +90,59 @@ export function formatBytes(bytes: number, decimals = 1): string {
 export function sanitizeFileName(fileName: string): string {
   return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
+
+/**
+ * Encrypt data using AES-256 GCM Web Crypto API
+ */
+export async function encryptData(data: string, secretKey: string): Promise<string> {
+  const enc = new TextEncoder();
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    enc.encode(secretKey.padStart(32, "0").slice(0, 32)),
+    "AES-GCM",
+    false,
+    ["encrypt"]
+  );
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    keyMaterial,
+    enc.encode(data)
+  );
+
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+
+/**
+ * Decrypt data using AES-256 GCM Web Crypto API
+ */
+export async function decryptData(encryptedBase64: string, secretKey: string): Promise<string> {
+  const binary = atob(encryptedBase64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  const iv = bytes.slice(0, 12);
+  const ciphertext = bytes.slice(12);
+
+  const enc = new TextEncoder();
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    enc.encode(secretKey.padStart(32, "0").slice(0, 32)),
+    "AES-GCM",
+    false,
+    ["decrypt"]
+  );
+
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    keyMaterial,
+    ciphertext
+  );
+
+  return new TextDecoder().decode(decrypted);
+}
