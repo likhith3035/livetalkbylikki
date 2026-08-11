@@ -17,6 +17,7 @@ import {
   Share2, KeyRound, UploadCloud, FolderOpen, ShieldCheck, Sparkles,
   ArrowRight, HardDrive, Lock, ArrowLeft, Home, QrCode, Camera
 } from "lucide-react";
+import { getSavedFiles } from "../services/fileSharingService";
 import { toast } from "sonner";
 
 export const FileSharingPage: React.FC = () => {
@@ -31,6 +32,7 @@ export const FileSharingPage: React.FC = () => {
   const [activeAccessCode, setActiveAccessCode] = useState<string | null>(codeFromUrl);
   const [shareModalFiles, setShareModalFiles] = useState<SharedFileItem[]>([]);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [allFiles, setAllFiles] = useState<SharedFileItem[]>(getSavedFiles);
 
   useEffect(() => {
     if (codeFromUrl) {
@@ -41,6 +43,7 @@ export const FileSharingPage: React.FC = () => {
   const handleUploadCompleted = (files: SharedFileItem[]) => {
     setShareModalFiles(files);
     setIsShareModalOpen(true);
+    setAllFiles(getSavedFiles());
   };
 
   const handleAccessCode = (code: string) => {
@@ -242,7 +245,7 @@ export const FileSharingPage: React.FC = () => {
               </div>
 
               {/* Storage Quota Categorized Chart */}
-              <StorageStatsCard files={files} />
+              <StorageStatsCard files={allFiles} />
             </div>
           )}
 
