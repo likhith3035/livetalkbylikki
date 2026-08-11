@@ -265,6 +265,26 @@ export const FileSharingPage: React.FC = () => {
             </div>
           )}
 
+          {/* Scan QR Code Tab */}
+          {activeTab === "scan_qr" && (
+            <div className="max-w-md mx-auto animate-fade-in py-4">
+              <div className="bg-card border border-border/80 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5 text-center">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-foreground flex items-center justify-center gap-2">
+                    <Camera className="h-5 w-5 text-primary" /> Camera QR Scanner
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Point your camera at a LiveTalk File Share QR code or upload a QR image.
+                  </p>
+                </div>
+
+                <QrScanner
+                  onScanSuccess={handleQrScanSuccess}
+                />
+              </div>
+            </div>
+          )}
+
           {/* My Files Tab */}
           {activeTab === "files" && (
             <div className="animate-fade-in">
