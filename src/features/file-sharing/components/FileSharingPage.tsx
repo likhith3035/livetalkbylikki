@@ -78,33 +78,33 @@ export const FileSharingPage: React.FC = () => {
         <Header onlineCount={3} onBack={() => navigate("/")} />
       </div>
 
-      <div className="py-6 sm:py-10 px-4 sm:px-8 max-w-6xl mx-auto space-y-8 animate-fade-in">
+      <div className="py-4 sm:py-6 px-3 sm:px-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
         {/* Header Banner */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs font-semibold border-primary/30 text-primary bg-primary/10">
-                <ShieldCheck className="h-3.5 w-3.5" /> Direct File Sharing
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5">
+              <Badge variant="outline" className="text-[11px] font-semibold border-primary/30 text-primary bg-primary/10 px-2 py-0.5">
+                <ShieldCheck className="h-3 w-3" /> Direct File Sharing
               </Badge>
-              <Badge variant="secondary" className="text-[10px] uppercase font-mono">
+              <Badge variant="secondary" className="text-[9px] uppercase font-mono px-1.5 py-0.5">
                 Fast & Encrypted
               </Badge>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-display font-extrabold text-foreground tracking-tight">
+            <h1 className="text-xl sm:text-3xl font-display font-extrabold text-foreground tracking-tight">
               File Sharing & Share Code
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
+            <p className="text-[11px] sm:text-xs text-muted-foreground max-w-lg">
               Upload files up to 100 MB each and generate secure 6-character share codes, direct links, or QR codes.
             </p>
           </div>
 
           {/* Tab Navigation Buttons */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-card border border-border/80 shadow-md overflow-x-auto w-full sm:w-auto">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-card border border-border/80 shadow-sm overflow-x-auto w-full sm:w-auto">
           <button
             type="button"
             onClick={() => { setActiveTab("home"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 ${
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 ${
               activeTab === "home" && !activeAccessCode
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -115,57 +115,57 @@ export const FileSharingPage: React.FC = () => {
           <button
             type="button"
             onClick={() => { setActiveTab("upload"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
               activeTab === "upload"
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <UploadCloud className="h-3.5 w-3.5" /> Upload
+            <UploadCloud className="h-3 w-3" /> Upload
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("enter_code")}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
               activeTab === "enter_code" || activeAccessCode
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <KeyRound className="h-3.5 w-3.5" /> Enter Code
+            <KeyRound className="h-3 w-3" /> Enter Code
           </button>
           <button
             type="button"
             onClick={() => { setActiveTab("scan_qr"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
               activeTab === "scan_qr"
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <QrCode className="h-3.5 w-3.5" /> Scan QR
+            <QrCode className="h-3 w-3" /> Scan QR
           </button>
           <button
             type="button"
             onClick={() => { setActiveTab("files"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
               activeTab === "files"
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <FolderOpen className="h-3.5 w-3.5" /> My Files
+            <FolderOpen className="h-3 w-3" /> My Files
           </button>
           <button
             type="button"
             onClick={() => { setActiveTab("shares"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
               activeTab === "shares"
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Share2 className="h-3.5 w-3.5" /> My Shares
+            <Share2 className="h-3 w-3" /> My Shares
           </button>
         </div>
       </div>

@@ -191,6 +191,7 @@ const AppContent = () => {
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <PullToRefreshIndicator />
       <BiometricLockModal
         isOpen={biometrics.isLocked}
         biometricType={biometrics.biometricType}
