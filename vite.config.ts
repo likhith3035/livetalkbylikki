@@ -7,14 +7,15 @@ import viteCompression from "vite-plugin-compression";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 8080,
+    strictPort: true,
     hmr: {
       overlay: false,
     },
   },
   optimizeDeps: {
-    include: ["qrcode.react"],
+    include: ["react", "react-dom", "react-router-dom", "qrcode.react"],
   },
   build: {
     chunkSizeWarningLimit: 1000,
@@ -27,7 +28,20 @@ export default defineConfig(({ mode }) => ({
             if (id.includes("framer-motion")) return "motion-vendor";
             if (id.includes("lucide-react")) return "icons-vendor";
             if (id.includes("recharts")) return "charts-vendor";
-            if (id.includes("react-dom") || id.includes("react-router")) return "react-vendor";
+            if (
+              id.includes("/react/") ||
+              id.includes("\\react\\") ||
+              id.includes("/react-dom/") ||
+              id.includes("\\react-dom\\") ||
+              id.includes("/react-router/") ||
+              id.includes("\\react-router\\") ||
+              id.includes("/react-router-dom/") ||
+              id.includes("\\react-router-dom\\") ||
+              id.includes("/scheduler/") ||
+              id.includes("\\scheduler\\")
+            ) {
+              return "react-vendor";
+            }
             return "vendor";
           }
         },
@@ -36,8 +50,8 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    viteCompression({ algorithm: 'gzip' }),
-    viteCompression({ algorithm: 'brotliCompress' }),
+    mode === 'production' && viteCompression({ algorithm: 'gzip' }),
+    mode === 'production' && viteCompression({ algorithm: 'brotliCompress' }),
     VitePWA({
       registerType: "autoUpdate",
       devOptions: {
