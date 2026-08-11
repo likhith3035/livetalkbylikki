@@ -113,6 +113,8 @@ const PrivacyPage = lazyWithRetry(() => import("./pages/PrivacyPage"));
 const TermsPage = lazyWithRetry(() => import("./pages/TermsPage"));
 const GuidelinesPage = lazyWithRetry(() => import("./pages/GuidelinesPage"));
 const AIChatPage = lazyWithRetry(() => import("./features/ai-chat/components/AIChatPage"));
+const PromptAnalyzerPage = lazyWithRetry(() => import("./features/prompt-analyzer/components/PromptAnalyzerPage"));
+const FileSharingPage = lazyWithRetry(() => import("./features/file-sharing/components/FileSharingPage"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 const HandoffPage = lazyWithRetry(() => import("./pages/HandoffPage"));
@@ -149,6 +151,9 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/ai-chat" element={<AIChatPage />} />
+          <Route path="/prompt-analyzer" element={<PromptAnalyzerPage />} />
+          <Route path="/file-sharing" element={<FileSharingPage />} />
+          <Route path="/share/:code" element={<FileSharingPage />} />
           <Route path="/room/:code" element={<RoomPage />} />
           <Route path="/handoff" element={<HandoffPage />} />
           <Route path="/profile" element={<ProfilePage />} />
