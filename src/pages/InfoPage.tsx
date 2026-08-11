@@ -552,7 +552,7 @@ const InfoPage = () => {
   const categories = [...new Set(FEATURES_DETAILED.map((f) => f.category))];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background relative overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-background relative overflow-x-hidden">
       {/* Structured Data for AI/Search Engines */}
       <script
         type="application/ld+json"
