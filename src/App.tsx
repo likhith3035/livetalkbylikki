@@ -177,6 +177,7 @@ const AnimatedRoutes = () => {
 
 
 import { useBiometrics } from "@/hooks/use-biometrics";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { BiometricLockModal } from "@/components/security/BiometricLockModal";
 import { requestNotificationPermission } from "@/lib/notifications";
 
@@ -192,6 +193,7 @@ const AppContent = () => {
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <OfflineBanner />
       <PullToRefreshIndicator />
       <BiometricLockModal
         isOpen={biometrics.isLocked}

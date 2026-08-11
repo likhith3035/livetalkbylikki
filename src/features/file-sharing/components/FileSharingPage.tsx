@@ -11,6 +11,7 @@ import { SharedAccessView } from "./SharedAccessView";
 import { ShareCodeModal } from "./ShareCodeModal";
 import { FileManagerView } from "./FileManagerView";
 import { MySharesView } from "./MySharesView";
+import { StorageStatsCard } from "./StorageStatsCard";
 import { SharedFileItem, ShareRecord } from "../types";
 import {
   Share2, KeyRound, UploadCloud, FolderOpen, ShieldCheck, Sparkles,
@@ -239,6 +240,9 @@ export const FileSharingPage: React.FC = () => {
                 </h4>
                 <UploadDropzone onUploadCompleted={handleUploadCompleted} />
               </div>
+
+              {/* Storage Quota Categorized Chart */}
+              <StorageStatsCard files={files} />
             </div>
           )}
 
