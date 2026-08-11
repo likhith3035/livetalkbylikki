@@ -60,30 +60,6 @@ export const FileSharingPage: React.FC = () => {
       </div>
 
       <div className="py-6 sm:py-10 px-4 sm:px-8 max-w-6xl mx-auto space-y-8 animate-fade-in">
-        {/* Navigation Bar / Back Action */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="rounded-xl border-border/80 hover:bg-secondary gap-1.5 font-semibold text-xs transition-all active:scale-95 shadow-sm"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/")}
-              className="rounded-xl hover:bg-secondary gap-1.5 font-semibold text-xs text-muted-foreground hover:text-foreground transition-all active:scale-95"
-            >
-              <Home className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to Home</span>
-            </Button>
-          </div>
-        </div>
-
         {/* Header Banner */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-6">
           <div className="space-y-1">
