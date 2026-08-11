@@ -411,7 +411,6 @@ export async function incrementDownloadCount(shareId: string) {
     }
   }
 }
-}
 
 /**
  * Disable a Share Code immediately
