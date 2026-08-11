@@ -115,7 +115,7 @@ export function parseDownloadLimit(option: DownloadLimitOption): number | null {
 }
 
 /**
- * Upload single or multiple files with progress callback
+ * Upload single or multiple files locally with progress callback (100% Client-Side)
  */
 export async function uploadFileWithProgress({
   file,
@@ -141,51 +141,23 @@ export async function uploadFileWithProgress({
 
   const safeName = sanitizeFileName(file.name);
   const fileId = "file-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
-  let fileUrl = "";
-  let storagePath = "";
 
-  // 3. Attempt Supabase Storage Upload for all file types (chat-images or room-media buckets)
-  try {
-    const fileName = `${Date.now()}_${safeName}`;
-    
-    // Try primary 'chat-images' bucket
-    let uploadRes = await supabase.storage.from("chat-images").upload(fileName, file, { cacheControl: "3600", upsert: false });
-    let bucketName = "chat-images";
-
-    // If chat-images fails, try 'room-media' bucket
-    if (uploadRes.error) {
-      uploadRes = await supabase.storage.from("room-media").upload(fileName, file, { cacheControl: "3600", upsert: false });
-      bucketName = "room-media";
-    }
-
-    if (!uploadRes.error && uploadRes.data) {
-      storagePath = fileName;
-      const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
-      fileUrl = publicUrlData.publicUrl;
+  // Read file as 100% client-side Data URL (Zero Server Upload)
+  const fileUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        onProgress(percent);
+      }
+    };
+    reader.onload = () => {
       onProgress?.(100);
-    }
-  } catch (err) {
-    console.warn("[FileSharing] Supabase upload failed, falling back to local data URL:", err);
-  }
-
-  // 4. Fallback to Local Data URL if Supabase upload failed
-  if (!fileUrl) {
-    fileUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onprogress = (e) => {
-        if (e.lengthComputable && onProgress) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          onProgress(percent);
-        }
-      };
-      reader.onload = () => {
-        onProgress?.(100);
-        resolve(reader.result as string);
-      };
-      reader.onerror = () => reject(new Error("Failed to read file."));
-      reader.readAsDataURL(file);
-    });
-  }
+      resolve(reader.result as string);
+    };
+    reader.onerror = () => reject(new Error("Failed to read file on client side."));
+    reader.readAsDataURL(file);
+  });
 
   const category = detectFileCategory(file.name, file.type);
   const newFileItem: SharedFileItem = {
@@ -195,13 +167,13 @@ export async function uploadFileWithProgress({
     mimeType: file.type || "application/octet-stream",
     category,
     url: fileUrl,
-    storagePath,
+    storagePath: "",
     uploadedAt: Date.now(),
     folderId,
     isInTrash: false,
   };
 
-  // Save to persistent local state
+  // Save to persistent client-side localStorage
   const files = getSavedFiles();
   saveFiles([newFileItem, ...files]);
 
@@ -209,7 +181,7 @@ export async function uploadFileWithProgress({
 }
 
 /**
- * Create a Share Record for one or multiple files with Cloud Sync
+ * Create a Share Record for one or multiple files (100% Client-Side)
  */
 export async function createShareRecord({
   files,
@@ -251,30 +223,9 @@ export async function createShareRecord({
     isBurnAfterReading,
   };
 
-  // Save locally
+  // Save locally in client browser (0 Server retention)
   const shares = getSavedShares();
   saveShares([shareRecord, ...shares]);
-
-  // 1. Sync share record to Supabase Storage as .png formatted payload (bypasses bucket MIME restrictions)
-  try {
-    const jsonStr = JSON.stringify(shareRecord);
-    const pngBlob = new Blob([jsonStr], { type: "image/png" });
-    const sharePath = `share_meta_${code}.png`;
-
-    let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
-    if (uploadRes.error) {
-      await supabase.storage.from("room-media").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
-    }
-  } catch {
-    /* quiet fallback */
-  }
-
-  // 2. Secondary sync to Firebase Realtime Database (quiet fail if permission denied)
-  try {
-    await set(ref(db, `file_shares/${code}`), shareRecord);
-  } catch {
-    /* quiet fallback if Firebase rules block unauthenticated writes */
-  }
 
   return shareRecord;
 }
@@ -433,59 +384,22 @@ export async function incrementDownloadCount(shareId: string) {
   });
 
   saveShares(updated);
-
-  // Sync updated download count to cloud
-  if (targetShare && (targetShare as ShareRecord).code) {
-    const code = (targetShare as ShareRecord).code;
-    try {
-      const jsonStr = JSON.stringify(targetShare);
-      const pngBlob = new Blob([jsonStr], { type: "image/png" });
-      const sharePath = `share_meta_${code}.png`;
-      let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
-      if (uploadRes.error) {
-        await supabase.storage.from("room-media").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
-      }
-    } catch {}
-
-    try {
-      await set(ref(db, `file_shares/${code}`), targetShare);
-    } catch {}
-  }
 }
 
 /**
- * Disable a Share Code immediately
+ * Disable a Share Code immediately (100% Client-Side)
  */
 export async function disableShareCode(shareId: string) {
   const shares = getSavedShares();
-  let targetShare: ShareRecord | null = null;
 
   const updated = shares.map((s) => {
     if (s.id === shareId) {
-      targetShare = { ...s, status: "disabled" as ShareStatus, disabledAt: Date.now() };
-      return targetShare;
+      return { ...s, status: "disabled" as ShareStatus, disabledAt: Date.now() };
     }
     return s;
   });
 
   saveShares(updated);
-
-  if (targetShare && (targetShare as ShareRecord).code) {
-    const code = (targetShare as ShareRecord).code;
-    try {
-      const jsonStr = JSON.stringify(targetShare);
-      const pngBlob = new Blob([jsonStr], { type: "image/png" });
-      const sharePath = `share_meta_${code}.png`;
-      let uploadRes = await supabase.storage.from("chat-images").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
-      if (uploadRes.error) {
-        await supabase.storage.from("room-media").upload(sharePath, pngBlob, { cacheControl: "60", upsert: true });
-      }
-    } catch {}
-
-    try {
-      await set(ref(db, `file_shares/${code}`), targetShare);
-    } catch {}
-  }
 }
 
 /**
