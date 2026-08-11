@@ -19,6 +19,20 @@ interface SharedAccessViewProps {
   onBackToSearch?: () => void;
 }
 
+function formatRemainingTime(expiresAt: number | null): string {
+  if (!expiresAt) return "Never expires";
+  const diff = expiresAt - Date.now();
+  if (diff <= 0) return "Expired";
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days > 0) return `Expires in ${days}d ${hours}h`;
+  if (hours > 0) return `Expires in ${hours}h ${minutes}m`;
+  return `Expires in ${minutes}m`;
+}
+
 export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
   initialCode,
   onBackToSearch,
@@ -185,12 +199,16 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
             <CheckCircle2 className="h-5 w-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-lg font-display font-bold text-foreground">
                 File Found ✓
               </h3>
               <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary">
                 Code: {share.code}
+              </Badge>
+              <Badge variant="secondary" className="text-[10px] font-semibold gap-1 text-muted-foreground border border-border/50">
+                <Clock className="h-3 w-3 text-primary" />
+                {formatRemainingTime(share.expiresAt)}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">

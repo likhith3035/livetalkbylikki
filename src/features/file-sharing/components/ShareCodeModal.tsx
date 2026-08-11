@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { QRCodeSVG } from "qrcode.react";
 import { SharedFileItem, ShareRecord, ExpirationOption, DownloadLimitOption } from "../types";
 import { createShareRecord, formatBytes } from "../services/fileSharingService";
-import { Copy, Check, QrCode, Lock, Clock, Download, ShieldCheck, FileText, Sparkles } from "lucide-react";
+import { Copy, Check, QrCode, Lock, Clock, Download, ShieldCheck, FileText, Sparkles, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ShareCodeModalProps {
@@ -80,6 +80,24 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
       setTimeout(() => setCopiedLink(false), 2000);
     } catch {
       toast.error("Failed to copy link.");
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (!shareUrl || !createdShare) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `LiveTalk File Share - Code ${createdShare.code}`,
+          text: `Access ${selectedFiles.length} shared file(s) via LiveTalk with code: ${createdShare.code}`,
+          url: shareUrl,
+        });
+        toast.success("Share menu opened!");
+      } catch {
+        /* share cancelled */
+      }
+    } else {
+      handleCopyLink();
     }
   };
 
@@ -225,23 +243,32 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
                 {createdShare.code}
               </div>
 
-              <div className="flex items-center justify-center gap-2 pt-1">
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
                 <Button
                   type="button"
                   onClick={handleCopyCode}
-                  className="rounded-xl text-xs font-bold gap-1.5 bg-primary text-primary-foreground px-4 py-2"
+                  className="rounded-xl text-xs font-bold gap-1.5 bg-primary text-primary-foreground px-3.5 py-2"
                 >
                   {copiedCode ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copiedCode ? "Code Copied!" : "Copy Share Code"}
+                  {copiedCode ? "Code Copied!" : "Copy Code"}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleNativeShare}
+                  className="rounded-xl text-xs font-bold gap-1.5 border border-primary/30 text-primary hover:bg-primary/10 px-3.5 py-2"
+                >
+                  <Share2 className="h-3.5 w-3.5" /> Share via App
                 </Button>
 
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowQR(!showQR)}
-                  className="rounded-xl text-xs font-bold gap-1.5 border-border/60"
+                  className="rounded-xl text-xs font-bold gap-1.5 border-border/60 px-3 py-2"
                 >
-                  <QrCode className="h-3.5 w-3.5" /> {showQR ? "Hide QR" : "QR Code"}
+                  <QrCode className="h-3.5 w-3.5" /> {showQR ? "Hide QR" : "QR"}
                 </Button>
               </div>
             </div>
