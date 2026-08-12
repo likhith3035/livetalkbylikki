@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SharedFileItem, ShareRecord } from "../types";
 import {
-  getShareRecordByCode, verifySharePassword, incrementDownloadCount
+  getShareRecordByCode, verifySharePassword, incrementDownloadCount, saveFiles, getSavedFiles
 } from "../services/fileSharingService";
 import { formatBytes } from "../utils/cryptoCode";
 import { FilePreviewModal } from "./FilePreviewModal";
 import {
   CheckCircle2, AlertTriangle, Lock, Download, Eye, Clock, ShieldAlert,
-  FileText, Sparkles, FolderArchive, ArrowLeft, RefreshCw, KeyRound, Copy, Check, EyeOff
+  FileText, Sparkles, FolderArchive, ArrowLeft, RefreshCw, KeyRound, Copy, Check, EyeOff,
+  Image as ImageIcon, Video, Music, FileCode, Archive, HardDriveDownload, Share2, Save
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,6 +33,25 @@ function formatRemainingTime(expiresAt: number | null): string {
   if (days > 0) return `Expires in ${days}d ${hours}h`;
   if (hours > 0) return `Expires in ${hours}h ${minutes}m`;
   return `Expires in ${minutes}m`;
+}
+
+function renderCategoryIcon(category: string, mimeType: string) {
+  if (category === "images" || mimeType.includes("image")) {
+    return <ImageIcon className="h-5 w-5 text-purple-400" />;
+  }
+  if (category === "videos" || mimeType.includes("video")) {
+    return <Video className="h-5 w-5 text-rose-400" />;
+  }
+  if (category === "audio" || mimeType.includes("audio")) {
+    return <Music className="h-5 w-5 text-amber-400" />;
+  }
+  if (category === "archives" || mimeType.includes("zip") || mimeType.includes("tar")) {
+    return <Archive className="h-5 w-5 text-emerald-400" />;
+  }
+  if (mimeType.includes("json") || mimeType.includes("code") || mimeType.includes("javascript") || mimeType.includes("text")) {
+    return <FileCode className="h-5 w-5 text-blue-400" />;
+  }
+  return <FileText className="h-5 w-5 text-primary" />;
 }
 
 export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
@@ -95,16 +115,53 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
     }
   };
 
-  const handleDownloadSingleFile = (fileItem: SharedFileItem) => {
+  const handleDownloadSingleFile = async (fileItem: SharedFileItem) => {
     if (!share) return;
     incrementDownloadCount(share.id);
 
-    const a = document.createElement("a");
-    a.href = fileItem.url;
-    a.download = fileItem.name;
-    a.target = "_blank";
-    a.click();
-    toast.success(`Downloading ${fileItem.name}...`);
+    toast.info(`Preparing download for "${fileItem.name}"...`);
+    try {
+      const response = await fetch(fileItem.url);
+      if (!response.ok) throw new Error("Fetch failed");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = fileItem.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+
+      toast.success(`Successfully downloaded "${fileItem.name}"!`);
+    } catch {
+      const a = document.createElement("a");
+      a.href = fileItem.url;
+      a.download = fileItem.name;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success(`Opening "${fileItem.name}"...`);
+    }
+  };
+
+  const handleSaveToMyFiles = (fileItem: SharedFileItem) => {
+    const existing = getSavedFiles();
+    const alreadySaved = existing.some((f) => f.name === fileItem.name && f.size === fileItem.size);
+    if (alreadySaved) {
+      toast.info(`"${fileItem.name}" is already saved in your File Manager.`);
+      return;
+    }
+    const newFile: SharedFileItem = {
+      ...fileItem,
+      id: "file-saved-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
+      uploadedAt: Date.now(),
+    };
+    saveFiles([newFile, ...existing]);
+    toast.success(`Saved "${fileItem.name}" to your File Manager!`);
   };
 
   const handleDownloadAll = async () => {
@@ -127,7 +184,9 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
       const a = document.createElement("a");
       a.href = zipUrl;
       a.download = `LiveTalk_Share_${share.code}.zip`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(zipUrl);
 
       toast.success(`ZIP Archive LiveTalk_Share_${share.code}.zip downloaded!`);
@@ -135,11 +194,7 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
       toast.error("Failed to generate ZIP bundle. Falling back to individual downloads.");
       share.files.forEach((f, idx) => {
         setTimeout(() => {
-          const a = document.createElement("a");
-          a.href = f.url;
-          a.download = f.name;
-          a.target = "_blank";
-          a.click();
+          handleDownloadSingleFile(f);
         }, idx * 500);
       });
     }
@@ -184,11 +239,11 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
     );
   }
 
-  // Password Protected Gate
-  if (!isPasswordUnlocked) {
+  // Password Lock Screen
+  if (share.hasPassword && !isPasswordUnlocked) {
     return (
-      <div className="p-6 sm:p-8 rounded-3xl bg-card border border-amber-500/30 text-center space-y-4 shadow-xl">
-        <div className="h-14 w-14 rounded-2xl bg-amber-500/15 text-amber-500 border border-amber-500/30 flex items-center justify-center mx-auto text-2xl">
+      <div className="p-8 rounded-3xl bg-card border border-amber-500/30 text-center space-y-5 shadow-xl animate-fade-in">
+        <div className="h-14 w-14 rounded-2xl bg-amber-500/15 text-amber-500 border border-amber-500/30 flex items-center justify-center mx-auto font-bold text-xl">
           <Lock className="h-7 w-7" />
         </div>
 
@@ -196,7 +251,7 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
           <h3 className="text-lg font-display font-bold text-foreground">
             Password Protected Share ({share.code})
           </h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground max-w-xs mx-auto">
             The uploader required a password to access these shared file(s).
           </p>
         </div>
@@ -321,13 +376,13 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
                   type="button"
                   size="sm"
                   onClick={() => {
-                    handleCopyText(cred.password!, "Password");
+                    handleCopyText(cred.password, "Password");
                     if (share.id) incrementDownloadCount(share.id);
                   }}
-                  className="text-xs rounded-xl gap-1.5 bg-amber-600 text-white font-bold shrink-0 hover:bg-amber-700"
+                  className="text-xs rounded-xl gap-1.5 bg-amber-500 text-white font-bold shrink-0 hover:bg-amber-600"
                 >
                   {copiedField === "Password" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copiedField === "Password" ? "Copied!" : "Copy Password"}
+                  {copiedField === "Password" ? "Copied Secret!" : "Copy Secret"}
                 </Button>
               </div>
             </div>
@@ -337,44 +392,23 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
           {cred.notes && (
             <div className="space-y-1 pt-1">
               <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Additional Notes & Instructions
+                Additional Notes
               </span>
-              <div className="p-3 rounded-xl bg-background border border-border/60 text-xs font-mono text-foreground leading-relaxed whitespace-pre-wrap flex justify-between items-start gap-2">
-                <span>{cred.notes}</span>
-                <button
-                  type="button"
-                  onClick={() => handleCopyText(cred.notes!, "Notes")}
-                  className="text-[11px] font-semibold text-primary hover:underline shrink-0"
-                >
-                  Copy Notes
-                </button>
+              <div className="p-3 rounded-xl bg-background border border-border/50 text-xs font-mono text-foreground whitespace-pre-wrap">
+                {cred.notes}
               </div>
             </div>
           )}
         </div>
-
-        {share.files.length > 0 && (
-          <div className="flex justify-end pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDownloadSingleFile(share.files[0])}
-              className="text-xs rounded-xl gap-1.5"
-            >
-              <Download className="h-3.5 w-3.5" /> Download Credential JSON
-            </Button>
-          </div>
-        )}
       </div>
     );
   }
 
-  // Text / Note Share View
-  if (isTextShare && (share.textContent || share.files.length > 0)) {
-    const rawText = share.textContent || "";
-    const noteTitle = share.files[0]?.name?.replace(/\.txt$/, "") || "Shared Text Note";
-    const wordCount = rawText.trim() ? rawText.trim().split(/\s+/).length : 0;
+  // Text Note View
+  if (isTextShare && share.textContent) {
+    const rawText = share.textContent;
+    const noteTitle = share.files[0]?.name.replace(/\.txt$/i, "") || "Shared Text Note";
+    const wordCount = rawText.split(/\s+/).filter(Boolean).length;
     const charCount = rawText.length;
 
     return (
@@ -450,20 +484,20 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
       {/* Header Info */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 flex items-center justify-center font-bold text-xl shrink-0">
-            <CheckCircle2 className="h-5 w-5" />
+          <div className="h-12 w-12 rounded-2xl bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 flex items-center justify-center font-bold text-xl shrink-0">
+            <CheckCircle2 className="h-6 w-6" />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-lg font-display font-bold text-foreground">
-                File Found ✓
+                Shared Files Received ✓
               </h3>
               <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary">
                 Code: {share.code}
               </Badge>
               {share.isBurnAfterReading && (
                 <Badge variant="destructive" className="text-[10px] font-bold gap-1 bg-amber-600 text-white animate-pulse">
-                  🔥 Burn After Reading (Auto-deletes after 1st download)
+                  🔥 Burn After Reading
                 </Badge>
               )}
               <Badge variant="secondary" className="text-[10px] font-semibold gap-1 text-muted-foreground border border-border/50">
@@ -472,28 +506,36 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Shared {new Date(share.createdAt).toLocaleDateString()} • {share.files.length} file(s) available
+              Shared {new Date(share.createdAt).toLocaleDateString()} • {share.files.length} file(s) ready to download or preview
             </p>
           </div>
         </div>
 
-        {isMulti && (
-          <Button
-            type="button"
-            onClick={handleDownloadAll}
-            className="w-full sm:w-auto text-xs font-bold rounded-xl gap-2 bg-primary text-primary-foreground"
-          >
-            <FolderArchive className="h-4 w-4" /> Download All ({share.files.length} Files)
-          </Button>
-        )}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {isMulti && (
+            <Button
+              type="button"
+              onClick={handleDownloadAll}
+              className="w-full sm:w-auto text-xs font-bold rounded-xl gap-2 bg-gradient-to-r from-primary to-purple-600 text-white shadow-md"
+            >
+              <FolderArchive className="h-4 w-4" /> Download All ZIP ({share.files.length} Files)
+            </Button>
+          )}
+
+          {onBackToSearch && (
+            <Button type="button" variant="outline" size="sm" onClick={onBackToSearch} className="text-xs rounded-xl gap-1.5">
+              <ArrowLeft className="h-3.5 w-3.5" /> Back
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Download limit indicator & progress bar */}
       {share.maxDownloads !== null && (
-        <div className="p-3 rounded-2xl bg-secondary/40 border border-border/50 space-y-1.5 text-xs">
+        <div className="p-3.5 rounded-2xl bg-secondary/40 border border-border/50 space-y-1.5 text-xs">
           <div className="flex items-center justify-between text-muted-foreground font-semibold text-[11px]">
-            <span className="flex items-center gap-1.5 text-foreground">
-              <Download className="h-3.5 w-3.5 text-primary" /> Download Quota Limit
+            <span className="flex items-center gap-1.5 text-foreground font-bold">
+              <Download className="h-3.5 w-3.5 text-primary" /> Download Quota & Self-Destruct
             </span>
             <span className="font-mono text-foreground font-bold">
               {share.downloadCount} of {share.maxDownloads} downloads used
@@ -517,40 +559,53 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
         {share.files.map((fileItem) => (
           <div
             key={fileItem.id}
-            className="p-4 rounded-2xl bg-secondary/40 border border-border/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-primary/40 transition-all group"
+            className="p-5 rounded-3xl bg-card border border-border/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-primary/50 transition-all shadow-md group"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-card border border-border flex items-center justify-center shrink-0">
-                <FileText className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="h-12 w-12 rounded-2xl bg-secondary/60 border border-border/70 flex items-center justify-center shrink-0 shadow-xs">
+                {renderCategoryIcon(fileItem.category, fileItem.mimeType)}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                   {fileItem.name}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                  <span>{formatBytes(fileItem.size)}</span>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-0.5">
+                  <span className="font-bold text-foreground">{formatBytes(fileItem.size)}</span>
                   <span>•</span>
                   <span className="capitalize">{fileItem.category}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
+            {/* Enhanced File Action Buttons */}
+            <div className="flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30 justify-end">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setPreviewFile(fileItem)}
-                className="flex-1 sm:flex-none text-xs rounded-xl gap-1.5 border-border/60"
+                className="flex-1 sm:flex-none text-xs rounded-xl gap-1.5 border-border/70 hover:bg-secondary"
+                title="Preview file in browser"
               >
                 <Eye className="h-3.5 w-3.5" /> Preview
               </Button>
 
               <Button
                 type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleSaveToMyFiles(fileItem)}
+                className="flex-1 sm:flex-none text-xs rounded-xl gap-1.5 border-border/70 hover:bg-secondary"
+                title="Save copy to your local File Manager"
+              >
+                <Save className="h-3.5 w-3.5 text-primary" /> Save
+              </Button>
+
+              <Button
+                type="button"
                 size="sm"
                 onClick={() => handleDownloadSingleFile(fileItem)}
-                className="flex-1 sm:flex-none text-xs rounded-xl gap-1.5 bg-primary text-primary-foreground font-bold"
+                className="flex-1 sm:flex-none text-xs font-bold rounded-xl gap-1.5 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
               >
                 <Download className="h-3.5 w-3.5" /> Download
               </Button>
