@@ -77,8 +77,22 @@ export const MySharesView: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-foreground">
-                          {item.files.length} file(s) attached
+                          {item.shareType === "password"
+                            ? "🔑 Password Credential"
+                            : item.shareType === "text"
+                            ? "📝 Text Note"
+                            : `${item.files.length} file(s) attached`}
                         </span>
+                        {item.shareType === "password" && (
+                          <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">
+                            Secret
+                          </Badge>
+                        )}
+                        {item.shareType === "text" && (
+                          <Badge variant="outline" className="text-[10px] text-blue-500 border-blue-500/30">
+                            Text Note
+                          </Badge>
+                        )}
                         {isDisabled ? (
                           <Badge variant="destructive" className="text-[10px]">Disabled</Badge>
                         ) : isExpired ? (

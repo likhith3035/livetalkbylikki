@@ -12,10 +12,12 @@ import { ShareCodeModal } from "./ShareCodeModal";
 import { FileManagerView } from "./FileManagerView";
 import { MySharesView } from "./MySharesView";
 import { StorageStatsCard } from "./StorageStatsCard";
+import { ShareTextCard } from "./ShareTextCard";
+import { SharePasswordCard } from "./SharePasswordCard";
 import { SharedFileItem, ShareRecord } from "../types";
 import {
   Share2, KeyRound, UploadCloud, FolderOpen, ShieldCheck, Sparkles,
-  ArrowRight, HardDrive, Lock, ArrowLeft, Home, QrCode, Camera
+  ArrowRight, HardDrive, Lock, ArrowLeft, Home, QrCode, Camera, FileText
 } from "lucide-react";
 import { getSavedFiles } from "../services/fileSharingService";
 import { toast } from "sonner";
@@ -25,7 +27,7 @@ export const FileSharingPage: React.FC = () => {
   const navigate = useNavigate();
 
   const codeFromUrl = searchParams.get("code");
-  const [activeTab, setActiveTab] = useState<"home" | "upload" | "enter_code" | "scan_qr" | "files" | "shares">(
+  const [activeTab, setActiveTab] = useState<"home" | "upload" | "share_text" | "share_password" | "enter_code" | "scan_qr" | "files" | "shares">(
     codeFromUrl ? "enter_code" : "home"
   );
 
@@ -129,6 +131,28 @@ export const FileSharingPage: React.FC = () => {
           </button>
           <button
             type="button"
+            onClick={() => { setActiveTab("share_text"); setActiveAccessCode(null); setSearchParams({}); }}
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
+              activeTab === "share_text"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText className="h-3 w-3" /> Share Text
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab("share_password"); setActiveAccessCode(null); setSearchParams({}); }}
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
+              activeTab === "share_password"
+                ? "bg-amber-600 text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Lock className="h-3 w-3" /> Share Password
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveTab("enter_code")}
             className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
               activeTab === "enter_code" || activeAccessCode
@@ -185,53 +209,77 @@ export const FileSharingPage: React.FC = () => {
           {/* Homepage Cards Grid */}
           {activeTab === "home" && (
             <div className="space-y-8 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {/* Upload & Share Card */}
-                <div className="bg-card border border-border/80 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4 hover:border-primary/50 transition-all group flex flex-col justify-between">
+                <div className="bg-card border border-border/80 rounded-3xl p-6 shadow-xl space-y-4 hover:border-primary/50 transition-all group flex flex-col justify-between">
                   <div className="space-y-3">
-                    <div className="h-14 w-14 rounded-2xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition-transform">
-                      <UploadCloud className="h-7 w-7" />
+                    <div className="h-12 w-12 rounded-2xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition-transform">
+                      <UploadCloud className="h-6 w-6" />
                     </div>
 
-                    <h3 className="text-xl font-display font-bold text-foreground">
-                      Upload & Share
+                    <h3 className="text-lg font-display font-bold text-foreground">
+                      Upload Files
                     </h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Upload documents, images, audio, video, or archive files. Automatically generate a 6-character short code or share link.
+                      Upload documents, images, audio, video, or archives. Share using short codes or QR codes.
                     </p>
                   </div>
 
                   <Button
                     type="button"
                     onClick={() => setActiveTab("upload")}
-                    className="w-full h-11 rounded-2xl bg-primary text-primary-foreground font-bold text-xs gap-2 shadow-md hover:scale-[1.01] transition-all mt-4"
+                    className="w-full h-10 rounded-2xl bg-primary text-primary-foreground font-bold text-xs gap-2 shadow-md hover:scale-[1.01] transition-all mt-3"
                   >
-                    Upload & Get Code <ArrowRight className="h-4 w-4" />
+                    Upload File <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
 
-                {/* Enter Share Code Card */}
-                <div className="bg-card border border-border/80 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4 hover:border-primary/50 transition-all group flex flex-col justify-between">
+                {/* Share Text Card */}
+                <div className="bg-card border border-border/80 rounded-3xl p-6 shadow-xl space-y-4 hover:border-primary/50 transition-all group flex flex-col justify-between">
                   <div className="space-y-3">
-                    <div className="h-14 w-14 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-500 flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition-transform">
-                      <KeyRound className="h-7 w-7" />
+                    <div className="h-12 w-12 rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-500 flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition-transform">
+                      <FileText className="h-6 w-6" />
                     </div>
 
-                    <h3 className="text-xl font-display font-bold text-foreground">
-                      Enter Share Code
+                    <h3 className="text-lg font-display font-bold text-foreground">
+                      Share Text & Notes
                     </h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Received a 6-character share code from someone? Enter it here to access and download the shared files instantly.
+                      Paste or write raw text, code snippets, or notes. Generate an instant share code.
                     </p>
                   </div>
 
                   <Button
                     type="button"
-                    onClick={() => setActiveTab("enter_code")}
+                    onClick={() => setActiveTab("share_text")}
                     variant="outline"
-                    className="w-full h-11 rounded-2xl border-primary/30 text-primary hover:bg-primary/10 font-bold text-xs gap-2 shadow-sm transition-all mt-4"
+                    className="w-full h-10 rounded-2xl border-primary/30 text-primary hover:bg-primary/10 font-bold text-xs gap-2 shadow-sm transition-all mt-3"
                   >
-                    Enter Code <ArrowRight className="h-4 w-4" />
+                    Share Text <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Share Password Card */}
+                <div className="bg-card border border-amber-500/30 rounded-3xl p-6 shadow-xl space-y-4 hover:border-amber-500/60 transition-all group flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="h-12 w-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition-transform">
+                      <Lock className="h-6 w-6" />
+                    </div>
+
+                    <h3 className="text-lg font-display font-bold text-foreground">
+                      Share Password & Secrets
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Share Wi-Fi keys, logins, or tokens with auto-burn self-destruct & password protection.
+                    </p>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => setActiveTab("share_password")}
+                    className="w-full h-10 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-xs gap-2 shadow-md hover:scale-[1.01] transition-all mt-3"
+                  >
+                    Share Password <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -262,6 +310,20 @@ export const FileSharingPage: React.FC = () => {
               </div>
 
               <UploadDropzone onUploadCompleted={handleUploadCompleted} />
+            </div>
+          )}
+
+          {/* Share Text Tab */}
+          {activeTab === "share_text" && (
+            <div className="animate-fade-in max-w-2xl mx-auto py-2">
+              <ShareTextCard />
+            </div>
+          )}
+
+          {/* Share Password Tab */}
+          {activeTab === "share_password" && (
+            <div className="animate-fade-in max-w-2xl mx-auto py-2">
+              <SharePasswordCard />
             </div>
           )}
 
