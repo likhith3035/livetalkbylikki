@@ -41,7 +41,15 @@ export const FileSharingPage: React.FC = () => {
     purgeExpiredShares();
 
     if (codeFromUrl) {
-      setActiveAccessCode(codeFromUrl.toUpperCase());
+      const upper = codeFromUrl.toUpperCase();
+      setActiveAccessCode(upper);
+      document.title = `LiveTalk Shared Files (${upper}) – Access Code`;
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute("content", `Shared Files Received (Code: ${upper}) - LiveTalk File Share`);
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute("content", `Access shared files securely on LiveTalk with code ${upper}. Encrypted, fast & 100% free.`);
+    } else {
+      document.title = "LiveTalk by Likhith Kami – Free Anonymous Chat, Video Calls & Encrypted File Sharing";
     }
   }, [codeFromUrl]);
 
