@@ -1,16 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ShareRecord } from "../types";
-import { getSavedShares, disableShareCode, formatBytes } from "../services/fileSharingService";
-import { Copy, Check, QrCode, Ban, Clock, Download, FileText, Share2, ShieldCheck } from "lucide-react";
+import {
+  getSavedShares,
+  disableShareCode,
+  deleteShareRecord,
+  deleteAllShares,
+  formatBytes,
+} from "../services/fileSharingService";
+import {
+  Copy,
+  Check,
+  QrCode,
+  Ban,
+  Clock,
+  Download,
+  FileText,
+  Share2,
+  Trash2,
+  Search,
+  Filter,
+  RefreshCw,
+  Lock,
+  KeyRound,
+  AlertTriangle,
+} from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const MySharesView: React.FC = () => {
   const [shares, setShares] = useState<ShareRecord[]>(getSavedShares);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTab, setFilterTab] = useState<"all" | "files" | "text" | "password" | "active" | "expired">("all");
+  
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [qrShare, setQrShare] = useState<ShareRecord | null>(null);
+  
+  // Confirmation state
+  const [deleteTargetShare, setDeleteTargetShare] = useState<ShareRecord | null>(null);
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
 
   const handleRefresh = () => {
     setShares(getSavedShares());
@@ -37,30 +77,146 @@ export const MySharesView: React.FC = () => {
     }
   };
 
-  const handleDisableShare = (id: string, code: string) => {
-    disableShareCode(id);
+  const handleDisableShare = async (id: string, code: string) => {
+    await disableShareCode(id);
     handleRefresh();
-    toast.info(`Share code ${code} has been disabled.`);
+    toast.info(`Share code ${code} has been revoked.`);
   };
+
+  const handleDeleteShare = async () => {
+    if (!deleteTargetShare) return;
+    const { id, code } = deleteTargetShare;
+    await deleteShareRecord(id, code);
+    setDeleteTargetShare(null);
+    handleRefresh();
+    toast.success(`Share code ${code} permanently deleted.`);
+  };
+
+  const handleDeleteAllShares = async () => {
+    await deleteAllShares();
+    setShowDeleteAllDialog(false);
+    handleRefresh();
+    toast.success("All share history has been cleared.");
+  };
+
+  // Filtered & Searched Share Records
+  const filteredShares = useMemo(() => {
+    return shares.filter((item) => {
+      const isExpired = item.expiresAt && Date.now() > item.expiresAt;
+      const isDisabled = item.status === "disabled" || !!item.disabledAt;
+      const isBurned = item.status === "burned";
+
+      // 1. Filter Tab
+      if (filterTab === "files" && item.shareType !== "file" && item.files.length === 0) return false;
+      if (filterTab === "text" && item.shareType !== "text" && !item.textContent) return false;
+      if (filterTab === "password" && item.shareType !== "password" && !item.credentialData) return false;
+      if (filterTab === "active" && (isDisabled || isExpired || isBurned)) return false;
+      if (filterTab === "expired" && (!isExpired && !isDisabled && !isBurned)) return false;
+
+      // 2. Search Query
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const matchCode = item.code.toLowerCase().includes(q);
+        const matchTitle = item.credentialData?.title?.toLowerCase().includes(q);
+        const matchText = item.textContent?.toLowerCase().includes(q);
+        const matchFiles = item.files.some((f) => f.name.toLowerCase().includes(q));
+        return matchCode || matchTitle || matchText || matchFiles;
+      }
+
+      return true;
+    });
+  }, [shares, filterTab, searchQuery]);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* View Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
         <div>
-          <h3 className="text-base sm:text-lg font-display font-bold text-foreground">
-            My Active & Past Share Codes
+          <h3 className="text-base sm:text-lg font-display font-bold text-foreground flex items-center gap-2">
+            <Share2 className="h-5 w-5 text-primary" /> My Share History ({shares.length})
           </h3>
           <p className="text-xs text-muted-foreground">
-            Manage your generated share codes, copy direct links, or revoke access anytime.
+            Manage, copy links, or permanently revoke generated share codes.
           </p>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="text-xs rounded-xl gap-1.5 border-border/60"
+            title="Refresh List"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> Refresh
+          </Button>
+
+          {shares.length > 0 && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowDeleteAllDialog(true)}
+              className="text-xs rounded-xl gap-1.5 font-bold shadow-sm"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Clear All
+            </Button>
+          )}
         </div>
       </div>
 
-      {shares.length > 0 ? (
+      {/* Filter & Search Bar */}
+      {shares.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          {/* Search Box */}
+          <div className="relative w-full sm:w-72">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search code, text, or file..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 text-xs rounded-xl h-9 bg-card border-border/70"
+            />
+          </div>
+
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-card border border-border/70 overflow-x-auto w-full sm:w-auto">
+            {(
+              [
+                { id: "all", label: "All" },
+                { id: "files", label: "📁 Files" },
+                { id: "text", label: "📝 Text" },
+                { id: "password", label: "🔑 Passwords" },
+                { id: "active", label: "Active" },
+                { id: "expired", label: "Expired/Revoked" },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setFilterTab(tab.id)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 ${
+                  filterTab === tab.id
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Share Cards List */}
+      {filteredShares.length > 0 ? (
         <div className="space-y-3">
-          {shares.map((item) => {
+          {filteredShares.map((item) => {
             const isExpired = item.expiresAt && Date.now() > item.expiresAt;
             const isDisabled = item.status === "disabled" || !!item.disabledAt;
+            const isBurned = item.status === "burned";
             const shareUrl = `${window.location.origin}/file-sharing?code=${item.code}`;
 
             return (
@@ -70,12 +226,12 @@ export const MySharesView: React.FC = () => {
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/40 pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="px-3 py-1.5 rounded-xl bg-primary/15 border border-primary/30 text-primary font-mono font-extrabold text-base tracking-widest shrink-0">
+                    <div className="px-3 py-1.5 rounded-xl bg-primary/15 border border-primary/30 text-primary font-mono font-extrabold text-base tracking-widest shrink-0 shadow-inner">
                       {item.code}
                     </div>
 
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs font-bold text-foreground">
                           {item.shareType === "password"
                             ? "🔑 Password Credential"
@@ -94,7 +250,9 @@ export const MySharesView: React.FC = () => {
                           </Badge>
                         )}
                         {isDisabled ? (
-                          <Badge variant="destructive" className="text-[10px]">Disabled</Badge>
+                          <Badge variant="destructive" className="text-[10px]">Revoked</Badge>
+                        ) : isBurned ? (
+                          <Badge variant="destructive" className="text-[10px] bg-amber-600 text-white">Burned</Badge>
                         ) : isExpired ? (
                           <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">Expired</Badge>
                         ) : (
@@ -107,7 +265,8 @@ export const MySharesView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto justify-end">
                     <Button
                       type="button"
                       variant="outline"
@@ -116,7 +275,7 @@ export const MySharesView: React.FC = () => {
                       className="text-xs rounded-xl gap-1.5 border-border/60"
                     >
                       {copiedCodeId === item.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                      Copy Code
+                      Code
                     </Button>
 
                     <Button
@@ -126,7 +285,7 @@ export const MySharesView: React.FC = () => {
                       onClick={() => handleCopyLink(item.code)}
                       className="text-xs rounded-xl gap-1.5 border-border/60"
                     >
-                      <Share2 className="h-3.5 w-3.5" /> Copy Link
+                      <Share2 className="h-3.5 w-3.5" /> Link
                     </Button>
 
                     <Button
@@ -140,18 +299,29 @@ export const MySharesView: React.FC = () => {
                       <QrCode className="h-3.5 w-3.5" />
                     </Button>
 
-                    {!isDisabled && (
+                    {!isDisabled && !isBurned && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDisableShare(item.id, item.code)}
-                        className="text-xs rounded-xl text-destructive hover:bg-destructive/10"
-                        title="Disable Share Code"
+                        className="text-xs rounded-xl text-amber-500 hover:bg-amber-500/10"
+                        title="Revoke Share Code"
                       >
-                        <Ban className="h-3.5 w-3.5" /> Disable
+                        <Ban className="h-3.5 w-3.5" />
                       </Button>
                     )}
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteTargetShare(item)}
+                      className="text-xs rounded-xl text-destructive hover:bg-destructive/10"
+                      title="Delete Share Code"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
 
@@ -169,6 +339,16 @@ export const MySharesView: React.FC = () => {
                     Shared Contents
                   </span>
                   <div className="flex flex-wrap gap-1.5">
+                    {item.credentialData?.title && (
+                      <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-semibold text-amber-500 flex items-center gap-1.5">
+                        <Lock className="h-3 w-3" /> {item.credentialData.title}
+                      </span>
+                    )}
+                    {item.textContent && (
+                      <span className="px-2.5 py-1 rounded-xl bg-blue-500/10 border border-blue-500/30 text-[11px] font-semibold text-blue-500 flex items-center gap-1.5 truncate max-w-xs">
+                        <FileText className="h-3 w-3" /> {item.textContent.slice(0, 40)}...
+                      </span>
+                    )}
                     {item.files.map((f) => (
                       <span key={f.id} className="px-2.5 py-1 rounded-xl bg-secondary/50 border border-border/40 text-[11px] font-medium text-foreground flex items-center gap-1.5">
                         <FileText className="h-3 w-3 text-primary" /> {f.name} ({formatBytes(f.size)})
@@ -205,12 +385,54 @@ export const MySharesView: React.FC = () => {
       ) : (
         <div className="p-10 rounded-3xl bg-card border border-border/80 text-center space-y-3">
           <Share2 className="h-10 w-10 text-muted-foreground/60 mx-auto" />
-          <h4 className="text-base font-display font-bold text-foreground">No Active Shares Yet</h4>
+          <h4 className="text-base font-display font-bold text-foreground">No Matching Shares</h4>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Your generated share codes and links will appear here.
+            {searchQuery || filterTab !== "all"
+              ? "No share codes match your current filter or search criteria."
+              : "Your generated share codes and links will appear here."}
           </p>
         </div>
       )}
+
+      {/* Delete Single Share Confirmation Dialog */}
+      <AlertDialog open={!!deleteTargetShare} onOpenChange={(open) => !open && setDeleteTargetShare(null)}>
+        <AlertDialogContent className="rounded-3xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-bold flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" /> Delete Share Code ({deleteTargetShare?.code})?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              This will permanently delete this share code and revoke remote access on all devices. Recipients will no longer be able to download or view these contents.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl text-xs">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteShare} className="rounded-xl text-xs font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Shares Confirmation Dialog */}
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent className="rounded-3xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-bold flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" /> Clear All Share History?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              This will permanently delete all {shares.length} generated share codes and revoke access across all devices. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl text-xs">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllShares} className="rounded-xl text-xs font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Clear All Shares
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

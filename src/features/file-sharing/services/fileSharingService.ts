@@ -568,6 +568,53 @@ export async function disableShareCode(shareId: string) {
 }
 
 /**
+ * Permanently delete a share record locally and revoke from Firebase & Supabase
+ */
+export async function deleteShareRecord(shareId: string, code?: string) {
+  const shares = getSavedShares();
+  const target = shares.find((s) => s.id === shareId || (code && s.code === code));
+  const shareCode = code || target?.code;
+
+  const filtered = shares.filter((s) => s.id !== shareId && s.code !== shareCode);
+  saveShares(filtered);
+
+  if (shareCode) {
+    // Revoke node in Firebase Realtime DB
+    try {
+      await remove(ref(db, `rooms/share_${shareCode}`));
+    } catch {
+      /* quiet fallback */
+    }
+
+    // Disable in Supabase table
+    try {
+      await supabase.from("file_shares").update({ status: "disabled" }).eq("code", shareCode);
+    } catch {
+      /* quiet fallback */
+    }
+  }
+}
+
+/**
+ * Permanently delete all saved share records and revoke cloud nodes
+ */
+export async function deleteAllShares() {
+  const shares = getSavedShares();
+
+  for (const s of shares) {
+    if (s.code) {
+      try {
+        await remove(ref(db, `rooms/share_${s.code}`));
+      } catch {
+        /* quiet fallback */
+      }
+    }
+  }
+
+  saveShares([]);
+}
+
+/**
  * Validate Password for a Password-Protected Share
  */
 export async function verifySharePassword(share: ShareRecord, passwordInput: string): Promise<boolean> {
