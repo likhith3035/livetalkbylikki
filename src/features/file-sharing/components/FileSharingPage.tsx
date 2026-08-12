@@ -153,9 +153,9 @@ export const FileSharingPage: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("enter_code")}
+            onClick={() => { setActiveTab("enter_code"); setActiveAccessCode(null); setSearchParams({}); }}
             className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
-              activeTab === "enter_code" || activeAccessCode
+              (activeTab === "enter_code" || activeAccessCode) && activeTab !== "home"
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
