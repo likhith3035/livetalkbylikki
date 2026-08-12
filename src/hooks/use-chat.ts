@@ -252,6 +252,7 @@ export function useChat(callbacks?: ChatCallbacks) {
             if (callbacksRef.current?.soundEnabled) haptics.vibrate(50);
             notifyIfEnabled("L Chat", payloadData.imageUrl ? "📷 Image" : payloadData.text.slice(0, 100), "message");
             channelMock.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: payloadData.messageId } });
+            setTimeout(() => remove(snapshot.ref).catch(() => {}), 3000);
             break;
           }
           case "read": {

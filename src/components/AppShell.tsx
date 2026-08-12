@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
 import DesktopSidebar from "@/components/DesktopSidebar";
+import PwaInstallBanner from "@/components/PwaInstallBanner";
+import PwaInstallModal from "@/components/PwaInstallModal";
 
 interface AppShellProps {
   children: ReactNode;
@@ -16,6 +18,8 @@ const AppShell = ({ children }: AppShellProps) => {
           {children}
         </div>
       </div>
+      <PwaInstallBanner />
+      <PwaInstallModal />
     </div>
   );
 };
