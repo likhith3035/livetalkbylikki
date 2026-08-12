@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 
 export type ChatTheme = "default" | "ocean" | "sunset" | "forest" | "rose" | "midnight" | "amber" | "cyan" | "crimson" | "lavender" | "emerald" | "slate";
 export type ChatWallpaper = "none" | "dots" | "grid" | "waves" | "gradient" | "bubbles" | "stars" | "zigzag" | "custom";
@@ -190,56 +190,64 @@ const SettingsContext = createContext<SettingsContextValue | null>(null);
 const loadSettings = (): SettingsState => {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   
-  const getBool = (key: string, def: boolean): boolean => {
-    const val = localStorage.getItem(key);
-    return val !== null ? val === "true" : def;
-  };
-  const getNum = (key: string, def: number): number => {
-    const val = localStorage.getItem(key);
-    if (val === null) return def;
-    const parsed = Number(val);
-    return Number.isNaN(parsed) ? def : parsed;
-  };
-  const getStr = (key: string, def: string): string => {
-    const val = localStorage.getItem(key);
-    return val !== null && val !== "undefined" && val !== "null" ? val : def;
-  };
+  try {
+    const getBool = (key: string, def: boolean): boolean => {
+      const val = localStorage.getItem(key);
+      return val !== null ? val === "true" : def;
+    };
+    const getNum = (key: string, def: number): number => {
+      const val = localStorage.getItem(key);
+      if (val === null) return def;
+      const parsed = Number(val);
+      return Number.isNaN(parsed) ? def : parsed;
+    };
+    const getStr = (key: string, def: string): string => {
+      const val = localStorage.getItem(key);
+      return val !== null && val !== "undefined" && val !== "null" ? val : def;
+    };
 
-  return {
-    darkMode: localStorage.getItem("echo.darkMode")
-      ? localStorage.getItem("echo.darkMode") === "true"
-      : DEFAULT_SETTINGS.darkMode,
-    soundEffects: localStorage.getItem("echo.soundEffects") === "true",
-    notifications: localStorage.getItem("echo.notifications") === "true",
-    chatTheme: (localStorage.getItem("echo.chatTheme") as ChatTheme) || DEFAULT_SETTINGS.chatTheme,
-    chatWallpaper: (localStorage.getItem("echo.chatWallpaper") as ChatWallpaper) || DEFAULT_SETTINGS.chatWallpaper,
-    protectionEnabled: localStorage.getItem("echo.protectionEnabled") !== "false",
-    notifyAlerts: localStorage.getItem("echo.notifyAlerts") !== "false",
-    autoStopOnScreenshot: localStorage.getItem("echo.autoStopOnScreenshot") === "true",
-    
-    // Liquid Glass settings parsing
-    liquidGlassEnabled: false,
-    glassOpacity: getNum("echo.glassOpacity", DEFAULT_SETTINGS.glassOpacity),
-    glassBlur: getNum("echo.glassBlur", DEFAULT_SETTINGS.glassBlur),
-    glassBorderOpacity: getNum("echo.glassBorderOpacity", DEFAULT_SETTINGS.glassBorderOpacity),
-    glassGlowIntensity: getNum("echo.glassGlowIntensity", DEFAULT_SETTINGS.glassGlowIntensity),
-    glassTintHSL: getStr("echo.glassTintHSL", DEFAULT_SETTINGS.glassTintHSL),
-    glassPreset: getStr("echo.glassPreset", DEFAULT_SETTINGS.glassPreset) as GlassPreset,
-    liquidBgSpeed: getNum("echo.liquidBgSpeed", DEFAULT_SETTINGS.liquidBgSpeed),
-    glassTextureIntensity: getNum("echo.glassTextureIntensity", DEFAULT_SETTINGS.glassTextureIntensity),
-    glassBorderWidth: getNum("echo.glassBorderWidth", DEFAULT_SETTINGS.glassBorderWidth),
+    return {
+      ...DEFAULT_SETTINGS,
+      darkMode: localStorage.getItem("echo.darkMode")
+        ? localStorage.getItem("echo.darkMode") === "true"
+        : DEFAULT_SETTINGS.darkMode,
+      soundEffects: localStorage.getItem("echo.soundEffects") === "true",
+      notifications: localStorage.getItem("echo.notifications") === "true",
+      chatTheme: (localStorage.getItem("echo.chatTheme") as ChatTheme) || DEFAULT_SETTINGS.chatTheme,
+      chatWallpaper: (localStorage.getItem("echo.chatWallpaper") as ChatWallpaper) || DEFAULT_SETTINGS.chatWallpaper,
+      protectionEnabled: localStorage.getItem("echo.protectionEnabled") !== "false",
+      notifyAlerts: localStorage.getItem("echo.notifyAlerts") !== "false",
+      autoStopOnScreenshot: localStorage.getItem("echo.autoStopOnScreenshot") === "true",
+      
+      messageFontSize: (getStr("echo.messageFontSize", DEFAULT_SETTINGS.messageFontSize) as MessageFontSize),
+      messageBubbleShape: (getStr("echo.messageBubbleShape", DEFAULT_SETTINGS.messageBubbleShape) as MessageBubbleShape),
 
-    // Custom Wallpaper settings parsing
-    chatWallpaperImage: getStr("echo.chatWallpaperImage", DEFAULT_SETTINGS.chatWallpaperImage),
-    chatWallpaperBlur: getNum("echo.chatWallpaperBlur", DEFAULT_SETTINGS.chatWallpaperBlur),
-    chatWallpaperOpacity: getNum("echo.chatWallpaperOpacity", DEFAULT_SETTINGS.chatWallpaperOpacity),
-    chatWallpaperBrightness: getNum("echo.chatWallpaperBrightness", DEFAULT_SETTINGS.chatWallpaperBrightness),
-    chatWallpaperSaturation: getNum("echo.chatWallpaperSaturation", DEFAULT_SETTINGS.chatWallpaperSaturation),
-    chatWallpaperOverlayPattern: getStr("echo.chatWallpaperOverlayPattern", DEFAULT_SETTINGS.chatWallpaperOverlayPattern) as any,
-    chatWallpaperOverlayOpacity: getNum("echo.chatWallpaperOverlayOpacity", DEFAULT_SETTINGS.chatWallpaperOverlayOpacity),
-    chatWallpaperOverlayBlendMode: getStr("echo.chatWallpaperOverlayBlendMode", DEFAULT_SETTINGS.chatWallpaperOverlayBlendMode) as any,
-    chatWallpaperParallaxEnabled: getBool("echo.chatWallpaperParallaxEnabled", DEFAULT_SETTINGS.chatWallpaperParallaxEnabled),
-  };
+      // Liquid Glass settings parsing
+      liquidGlassEnabled: false,
+      glassOpacity: getNum("echo.glassOpacity", DEFAULT_SETTINGS.glassOpacity),
+      glassBlur: getNum("echo.glassBlur", DEFAULT_SETTINGS.glassBlur),
+      glassBorderOpacity: getNum("echo.glassBorderOpacity", DEFAULT_SETTINGS.glassBorderOpacity),
+      glassGlowIntensity: getNum("echo.glassGlowIntensity", DEFAULT_SETTINGS.glassGlowIntensity),
+      glassTintHSL: getStr("echo.glassTintHSL", DEFAULT_SETTINGS.glassTintHSL),
+      glassPreset: getStr("echo.glassPreset", DEFAULT_SETTINGS.glassPreset) as GlassPreset,
+      liquidBgSpeed: getNum("echo.liquidBgSpeed", DEFAULT_SETTINGS.liquidBgSpeed),
+      glassTextureIntensity: getNum("echo.glassTextureIntensity", DEFAULT_SETTINGS.glassTextureIntensity),
+      glassBorderWidth: getNum("echo.glassBorderWidth", DEFAULT_SETTINGS.glassBorderWidth),
+
+      // Custom Wallpaper settings parsing
+      chatWallpaperImage: getStr("echo.chatWallpaperImage", DEFAULT_SETTINGS.chatWallpaperImage),
+      chatWallpaperBlur: getNum("echo.chatWallpaperBlur", DEFAULT_SETTINGS.chatWallpaperBlur),
+      chatWallpaperOpacity: getNum("echo.chatWallpaperOpacity", DEFAULT_SETTINGS.chatWallpaperOpacity),
+      chatWallpaperBrightness: getNum("echo.chatWallpaperBrightness", DEFAULT_SETTINGS.chatWallpaperBrightness),
+      chatWallpaperSaturation: getNum("echo.chatWallpaperSaturation", DEFAULT_SETTINGS.chatWallpaperSaturation),
+      chatWallpaperOverlayPattern: getStr("echo.chatWallpaperOverlayPattern", DEFAULT_SETTINGS.chatWallpaperOverlayPattern) as any,
+      chatWallpaperOverlayOpacity: getNum("echo.chatWallpaperOverlayOpacity", DEFAULT_SETTINGS.chatWallpaperOverlayOpacity),
+      chatWallpaperOverlayBlendMode: getStr("echo.chatWallpaperOverlayBlendMode", DEFAULT_SETTINGS.chatWallpaperOverlayBlendMode) as any,
+      chatWallpaperParallaxEnabled: getBool("echo.chatWallpaperParallaxEnabled", DEFAULT_SETTINGS.chatWallpaperParallaxEnabled),
+    };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
 };
 
 export const CHAT_THEMES: Record<ChatTheme, { label: string; bubble: string; accent: string }> = {

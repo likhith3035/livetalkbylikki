@@ -4,6 +4,8 @@ import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 import viteCompression from "vite-plugin-compression";
 
+// Force Vite re-optimization trigger
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -15,7 +17,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "qrcode.react"],
+    include: ["qrcode.react", "jszip"],
   },
   build: {
     chunkSizeWarningLimit: 1000,
@@ -110,6 +112,7 @@ export default defineConfig(({ mode }) => ({
     }),
   ].filter(Boolean),
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },

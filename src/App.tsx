@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, Component, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,6 +15,13 @@ import ScrollToTop from "@/components/ScrollToTop";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { AppUpdateModal } from "@/components/AppUpdateModal";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { useBiometrics } from "@/hooks/use-biometrics";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { BiometricLockModal } from "@/components/security/BiometricLockModal";
+import { requestNotificationPermission } from "@/lib/notifications";
+import Index from "./pages/Index";
+import ChatPage from "./pages/ChatPage";
+import RoomPage from "./pages/RoomPage";
 
 function clearAppCachesAndReload() {
   const lastReload = Number(window.sessionStorage.getItem("lazy_retry_last_ts") || "0");
@@ -48,8 +55,6 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
     }
   });
 }
-
-import { Component, ReactNode } from "react";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -101,10 +106,6 @@ class GlobalErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
     return this.props.children;
   }
 }
-
-import Index from "./pages/Index";
-import ChatPage from "./pages/ChatPage";
-import RoomPage from "./pages/RoomPage";
 
 const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
 const SettingsPage = lazyWithRetry(() => import("./pages/SettingsPage"));
@@ -172,14 +173,6 @@ const AnimatedRoutes = () => {
     </AnimatePresence>
   );
 };
-
-
-
-
-import { useBiometrics } from "@/hooks/use-biometrics";
-import { OfflineBanner } from "@/components/OfflineBanner";
-import { BiometricLockModal } from "@/components/security/BiometricLockModal";
-import { requestNotificationPermission } from "@/lib/notifications";
 
 const AppContent = () => {
   const biometrics = useBiometrics();
