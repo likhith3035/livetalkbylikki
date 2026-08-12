@@ -3,7 +3,8 @@ import { db } from "@/lib/firebase";
 import { ref, set, get } from "firebase/database";
 import {
   SharedFileItem, ShareRecord, FolderItem, ShareStatus,
-  ExpirationOption, DownloadLimitOption, SortOption, FileCategory, StorageUsageStats
+  ExpirationOption, DownloadLimitOption, SortOption, FileCategory, StorageUsageStats,
+  ShareType, PasswordCredentialPayload
 } from "../types";
 import { generateShareCode, hashPassword, detectFileCategory, isExecutableFile, sanitizeFileName, formatBytes } from "../utils/cryptoCode";
 
@@ -37,8 +38,19 @@ export function getSavedFiles(): SharedFileItem[] {
 export function saveFiles(files: SharedFileItem[]) {
   try {
     localStorage.setItem(STORAGE_FILES_KEY, JSON.stringify(files));
-  } catch {
-    /* localStorage full */
+  } catch (e) {
+    // If localStorage quota exceeded, trim old files and remove large inline Data URLs
+    try {
+      const sanitized = files.slice(0, 50).map((f) => {
+        if (f.url && f.url.startsWith("data:") && f.url.length > 300000) {
+          return { ...f, url: "" };
+        }
+        return f;
+      });
+      localStorage.setItem(STORAGE_FILES_KEY, JSON.stringify(sanitized));
+    } catch {
+      /* storage limit reached */
+    }
   }
 }
 
@@ -60,8 +72,18 @@ export function getSavedShares(): ShareRecord[] {
 export function saveShares(shares: ShareRecord[]) {
   try {
     localStorage.setItem(STORAGE_SHARES_KEY, JSON.stringify(shares));
-  } catch {
-    /* localStorage full */
+  } catch (e) {
+    try {
+      const sanitized = shares.slice(0, 30).map((s) => ({
+        ...s,
+        files: s.files.map((f) =>
+          f.url && f.url.startsWith("data:") && f.url.length > 300000 ? { ...f, url: "" } : f
+        ),
+      }));
+      localStorage.setItem(STORAGE_SHARES_KEY, JSON.stringify(sanitized));
+    } catch {
+      /* storage limit reached */
+    }
   }
 }
 
@@ -115,7 +137,7 @@ export function parseDownloadLimit(option: DownloadLimitOption): number | null {
 }
 
 /**
- * Upload single or multiple files locally with progress callback (100% Client-Side)
+ * Upload single or multiple files with progress callback
  */
 export async function uploadFileWithProgress({
   file,
@@ -141,23 +163,52 @@ export async function uploadFileWithProgress({
 
   const safeName = sanitizeFileName(file.name);
   const fileId = "file-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+  let fileUrl = "";
+  let storagePath = "";
 
-  // Read file as 100% client-side Data URL (Zero Server Upload)
-  const fileUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) {
-        const percent = Math.round((e.loaded / e.total) * 100);
-        onProgress(percent);
-      }
-    };
-    reader.onload = () => {
+  // Attempt 1: Upload to Supabase Storage for real cross-device sharing & light storage
+  try {
+    const ext = file.name.split(".").pop() || "bin";
+    storagePath = `shared_files/${Date.now()}_${fileId}.${ext}`;
+    
+    onProgress?.(15);
+    const { error } = await supabase.storage.from("chat-images").upload(storagePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+    if (!error) {
+      onProgress?.(90);
+      const { data } = supabase.storage.from("chat-images").getPublicUrl(storagePath);
+      fileUrl = data.publicUrl;
       onProgress?.(100);
-      resolve(reader.result as string);
-    };
-    reader.onerror = () => reject(new Error("Failed to read file on client side."));
-    reader.readAsDataURL(file);
-  });
+    }
+  } catch {
+    /* fallback below */
+  }
+
+  // Attempt 2: Fallback to Data URL for small files under 3.5MB
+  if (!fileUrl) {
+    if (file.size > 3.5 * 1024 * 1024) {
+      throw new Error(`File "${file.name}" (${formatBytes(file.size)}) could not be uploaded. Please check network connection.`);
+    }
+
+    fileUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          onProgress(percent);
+        }
+      };
+      reader.onload = () => {
+        onProgress?.(100);
+        resolve(reader.result as string);
+      };
+      reader.onerror = () => reject(new Error("Failed to read file on client side."));
+      reader.readAsDataURL(file);
+    });
+  }
 
   const category = detectFileCategory(file.name, file.type);
   const newFileItem: SharedFileItem = {
@@ -167,7 +218,7 @@ export async function uploadFileWithProgress({
     mimeType: file.type || "application/octet-stream",
     category,
     url: fileUrl,
-    storagePath: "",
+    storagePath,
     uploadedAt: Date.now(),
     folderId,
     isInTrash: false,
@@ -188,11 +239,17 @@ export async function createShareRecord({
   expirationOption = "7d",
   downloadLimitOption = "unlimited",
   password = "",
+  shareType = "file",
+  textContent,
+  credentialData,
 }: {
   files: SharedFileItem[];
   expirationOption: ExpirationOption;
   downloadLimitOption: DownloadLimitOption;
   password?: string;
+  shareType?: ShareType;
+  textContent?: string;
+  credentialData?: PasswordCredentialPayload;
 }): Promise<ShareRecord> {
   if (!files.length) {
     throw new Error("No files selected for share code creation.");
@@ -221,13 +278,113 @@ export async function createShareRecord({
     passwordHash,
     status: "active",
     isBurnAfterReading,
+    shareType,
+    textContent,
+    credentialData,
   };
 
   // Save locally in client browser (0 Server retention)
   const shares = getSavedShares();
   saveShares([shareRecord, ...shares]);
 
+  // Sync to Firebase for instant cross-device share code access
+  try {
+    await set(ref(db, `file_shares/${code}`), shareRecord);
+  } catch {
+    /* quiet fallback */
+  }
+
   return shareRecord;
+}
+
+/**
+ * Create a Text / Note Share Record
+ */
+export async function createTextShareRecord({
+  title,
+  textContent,
+  expirationOption = "7d",
+  downloadLimitOption = "unlimited",
+  password = "",
+}: {
+  title: string;
+  textContent: string;
+  expirationOption: ExpirationOption;
+  downloadLimitOption: DownloadLimitOption;
+  password?: string;
+}): Promise<ShareRecord> {
+  const cleanTitle = title.trim() || "Shared Text Note";
+  const cleanText = textContent.trim();
+  if (!cleanText) {
+    throw new Error("Text content cannot be empty.");
+  }
+
+  const encodedDataUrl = "data:text/plain;charset=utf-8," + encodeURIComponent(cleanText);
+  const fileName = (cleanTitle.toLowerCase().endsWith(".txt") ? cleanTitle : `${cleanTitle}.txt`);
+
+  const fileItem: SharedFileItem = {
+    id: "file-text-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+    name: fileName,
+    size: new Blob([cleanText]).size,
+    mimeType: "text/plain;charset=utf-8",
+    category: "documents",
+    url: encodedDataUrl,
+    uploadedAt: Date.now(),
+    isInTrash: false,
+  };
+
+  return createShareRecord({
+    files: [fileItem],
+    expirationOption,
+    downloadLimitOption,
+    password,
+    shareType: "text",
+    textContent: cleanText,
+  });
+}
+
+/**
+ * Create a Password / Secret Credential Share Record
+ */
+export async function createPasswordShareRecord({
+  credentialData,
+  expirationOption = "7d",
+  downloadLimitOption = "burn",
+  password = "",
+}: {
+  credentialData: PasswordCredentialPayload;
+  expirationOption: ExpirationOption;
+  downloadLimitOption: DownloadLimitOption;
+  password?: string;
+}): Promise<ShareRecord> {
+  const cleanTitle = credentialData.title.trim() || "Secret Credential";
+  if (!credentialData.password && !credentialData.username && !credentialData.notes) {
+    throw new Error("Please fill in at least a password, username, or note.");
+  }
+
+  const jsonStr = JSON.stringify(credentialData, null, 2);
+  const encodedDataUrl = "data:application/json;charset=utf-8," + encodeURIComponent(jsonStr);
+  const fileName = (cleanTitle.toLowerCase().endsWith(".json") ? cleanTitle : `${cleanTitle}.json`);
+
+  const fileItem: SharedFileItem = {
+    id: "file-cred-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+    name: fileName,
+    size: new Blob([jsonStr]).size,
+    mimeType: "application/json;charset=utf-8",
+    category: "other",
+    url: encodedDataUrl,
+    uploadedAt: Date.now(),
+    isInTrash: false,
+  };
+
+  return createShareRecord({
+    files: [fileItem],
+    expirationOption,
+    downloadLimitOption,
+    password,
+    shareType: "password",
+    credentialData,
+  });
 }
 
 /**
@@ -286,37 +443,32 @@ export async function getShareRecordByCode(code: string): Promise<{
   const shares = getSavedShares();
   let found = shares.find((s) => s.code.toUpperCase() === cleanCode) || null;
 
-  // If not found in local browser storage, fetch from Supabase Storage or Firebase
+  // If not found in local browser storage, fetch from Firebase Realtime DB or Supabase
   if (!found) {
-    // Attempt 1: Supabase Storage public metadata fetch
+    // Attempt 1: Firebase Realtime Database lookup (Fast & Realtime)
     try {
-      const sharePath = `share_meta_${cleanCode}.png`;
-      const { data: urlData1 } = supabase.storage.from("chat-images").getPublicUrl(sharePath);
-      let response = await fetch(`${urlData1.publicUrl}?t=${Date.now()}`);
-
-      if (!response.ok) {
-        const { data: urlData2 } = supabase.storage.from("room-media").getPublicUrl(sharePath);
-        response = await fetch(`${urlData2.publicUrl}?t=${Date.now()}`);
-      }
-
-      if (response.ok) {
-        const text = await response.text();
-        const fetchedRecord: ShareRecord = JSON.parse(text);
+      const snapshot = await get(ref(db, `file_shares/${cleanCode}`));
+      if (snapshot.exists()) {
+        const fetchedRecord: ShareRecord = snapshot.val();
         if (fetchedRecord && fetchedRecord.code) {
           found = fetchedRecord;
           saveShares([fetchedRecord, ...shares]);
         }
       }
     } catch {
-      /* fallback to Firebase lookup below */
+      /* quiet fallback */
     }
 
-    // Attempt 2: Firebase Realtime Database lookup
+    // Attempt 2: Supabase Storage public metadata fetch
     if (!found) {
       try {
-        const snapshot = await get(ref(db, `file_shares/${cleanCode}`));
-        if (snapshot.exists()) {
-          const fetchedRecord: ShareRecord = snapshot.val();
+        const sharePath = `share_meta_${cleanCode}.png`;
+        const { data: urlData1 } = supabase.storage.from("chat-images").getPublicUrl(sharePath);
+        let response = await fetch(`${urlData1.publicUrl}?t=${Date.now()}`);
+
+        if (response.ok) {
+          const text = await response.text();
+          const fetchedRecord: ShareRecord = JSON.parse(text);
           if (fetchedRecord && fetchedRecord.code) {
             found = fetchedRecord;
             saveShares([fetchedRecord, ...shares]);
