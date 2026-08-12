@@ -26,6 +26,7 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
   const [downloadLimit, setDownloadLimit] = useState<DownloadLimitOption>("unlimited");
   const [password, setPassword] = useState("");
   const [enablePassword, setEnablePassword] = useState(false);
+  const [customCode, setCustomCode] = useState("");
 
   const [createdShare, setCreatedShare] = useState<ShareRecord | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -43,6 +44,7 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
         expirationOption: expiration,
         downloadLimitOption: downloadLimit,
         password: enablePassword ? password : "",
+        customCode: customCode.trim() || undefined,
       });
 
       setCreatedShare(share);
@@ -197,6 +199,21 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Custom Vanity Code input */}
+            <div className="space-y-1.5 pt-1 border-t border-border/40">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" /> Custom Share Code (Optional)
+              </label>
+              <Input
+                type="text"
+                placeholder="e.g. MYCODE1 (Leave blank for random)"
+                value={customCode}
+                onChange={(e) => setCustomCode(e.target.value.toUpperCase())}
+                maxLength={12}
+                className="text-xs font-mono rounded-xl uppercase bg-background"
+              />
             </div>
 
             {/* Password protection option */}

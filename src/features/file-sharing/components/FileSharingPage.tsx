@@ -19,7 +19,7 @@ import {
   Share2, KeyRound, UploadCloud, FolderOpen, ShieldCheck, Sparkles,
   ArrowRight, HardDrive, Lock, ArrowLeft, Home, QrCode, Camera, FileText
 } from "lucide-react";
-import { getSavedFiles } from "../services/fileSharingService";
+import { getSavedFiles, purgeExpiredShares } from "../services/fileSharingService";
 import { toast } from "sonner";
 
 export const FileSharingPage: React.FC = () => {
@@ -37,6 +37,9 @@ export const FileSharingPage: React.FC = () => {
   const [allFiles, setAllFiles] = useState<SharedFileItem[]>(getSavedFiles);
 
   useEffect(() => {
+    // Auto-purge expired shares on app mount
+    purgeExpiredShares();
+
     if (codeFromUrl) {
       setActiveAccessCode(codeFromUrl.toUpperCase());
     }

@@ -488,6 +488,30 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
         )}
       </div>
 
+      {/* Download limit indicator & progress bar */}
+      {share.maxDownloads !== null && (
+        <div className="p-3 rounded-2xl bg-secondary/40 border border-border/50 space-y-1.5 text-xs">
+          <div className="flex items-center justify-between text-muted-foreground font-semibold text-[11px]">
+            <span className="flex items-center gap-1.5 text-foreground">
+              <Download className="h-3.5 w-3.5 text-primary" /> Download Quota Limit
+            </span>
+            <span className="font-mono text-foreground font-bold">
+              {share.downloadCount} of {share.maxDownloads} downloads used
+            </span>
+          </div>
+          <div className="h-2 w-full bg-secondary rounded-full overflow-hidden border border-border/40">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                share.isBurnAfterReading
+                  ? "bg-amber-500 animate-pulse"
+                  : "bg-gradient-to-r from-primary to-purple-600"
+              }`}
+              style={{ width: `${Math.min(100, (share.downloadCount / share.maxDownloads) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Files List Cards */}
       <div className="space-y-3">
         {share.files.map((fileItem) => (

@@ -232,6 +232,30 @@ export async function uploadFileWithProgress({
 }
 
 /**
+ * Automatically purge expired or burned share records from local storage
+ */
+export function purgeExpiredShares(): number {
+  try {
+    const shares = getSavedShares();
+    const now = Date.now();
+    const activeShares = shares.filter((s) => {
+      if (s.expiresAt && now > s.expiresAt) return false;
+      if (s.status === "burned") return false;
+      if (s.maxDownloads !== null && s.downloadCount >= s.maxDownloads) return false;
+      return true;
+    });
+
+    const purgedCount = shares.length - activeShares.length;
+    if (purgedCount > 0) {
+      saveShares(activeShares);
+    }
+    return purgedCount;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Create a Share Record for one or multiple files (100% Client-Side)
  */
 export async function createShareRecord({
@@ -242,6 +266,7 @@ export async function createShareRecord({
   shareType = "file",
   textContent,
   credentialData,
+  customCode,
 }: {
   files: SharedFileItem[];
   expirationOption: ExpirationOption;
@@ -250,12 +275,24 @@ export async function createShareRecord({
   shareType?: ShareType;
   textContent?: string;
   credentialData?: PasswordCredentialPayload;
+  customCode?: string;
 }): Promise<ShareRecord> {
   if (!files.length) {
     throw new Error("No files selected for share code creation.");
   }
 
-  const code = generateShareCode(6);
+  let code = generateShareCode(6);
+  if (customCode && customCode.trim()) {
+    const cleanCustom = customCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (cleanCustom.length < 3 || cleanCustom.length > 12) {
+      throw new Error("Custom share code must be between 3 and 12 alphanumeric characters.");
+    }
+    const existing = getSavedShares().find((s) => s.code.toUpperCase() === cleanCustom);
+    if (existing) {
+      throw new Error(`Custom code "${cleanCustom}" is already taken. Please choose a different code.`);
+    }
+    code = cleanCustom;
+  }
   const expiresAt = calculateExpirationTimestamp(expirationOption);
   const isBurnAfterReading = downloadLimitOption === "burn";
   const maxDownloads = isBurnAfterReading ? 1 : parseDownloadLimit(downloadLimitOption);
@@ -308,12 +345,14 @@ export async function createTextShareRecord({
   expirationOption = "7d",
   downloadLimitOption = "unlimited",
   password = "",
+  customCode,
 }: {
   title: string;
   textContent: string;
   expirationOption: ExpirationOption;
   downloadLimitOption: DownloadLimitOption;
   password?: string;
+  customCode?: string;
 }): Promise<ShareRecord> {
   const cleanTitle = title.trim() || "Shared Text Note";
   const cleanText = textContent.trim();
@@ -342,6 +381,7 @@ export async function createTextShareRecord({
     password,
     shareType: "text",
     textContent: cleanText,
+    customCode,
   });
 }
 
@@ -353,11 +393,13 @@ export async function createPasswordShareRecord({
   expirationOption = "7d",
   downloadLimitOption = "burn",
   password = "",
+  customCode,
 }: {
   credentialData: PasswordCredentialPayload;
   expirationOption: ExpirationOption;
   downloadLimitOption: DownloadLimitOption;
   password?: string;
+  customCode?: string;
 }): Promise<ShareRecord> {
   const cleanTitle = credentialData.title.trim() || "Secret Credential";
   if (!credentialData.password && !credentialData.username && !credentialData.notes) {
@@ -386,6 +428,7 @@ export async function createPasswordShareRecord({
     password,
     shareType: "password",
     credentialData,
+    customCode,
   });
 }
 
