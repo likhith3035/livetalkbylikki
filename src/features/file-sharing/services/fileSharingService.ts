@@ -443,9 +443,8 @@ export async function getShareRecordByCode(code: string): Promise<{
   const shares = getSavedShares();
   let found = shares.find((s) => s.code.toUpperCase() === cleanCode) || null;
 
-  // If not found in local browser storage, fetch from Firebase Realtime DB or Supabase
+  // If not found in local browser storage, fetch from Firebase Realtime DB
   if (!found) {
-    // Attempt 1: Firebase Realtime Database lookup (Fast & Realtime)
     try {
       const snapshot = await get(ref(db, `file_shares/${cleanCode}`));
       if (snapshot.exists()) {
@@ -457,26 +456,6 @@ export async function getShareRecordByCode(code: string): Promise<{
       }
     } catch {
       /* quiet fallback */
-    }
-
-    // Attempt 2: Supabase Storage public metadata fetch
-    if (!found) {
-      try {
-        const sharePath = `share_meta_${cleanCode}.png`;
-        const { data: urlData1 } = supabase.storage.from("chat-images").getPublicUrl(sharePath);
-        let response = await fetch(`${urlData1.publicUrl}?t=${Date.now()}`);
-
-        if (response.ok) {
-          const text = await response.text();
-          const fetchedRecord: ShareRecord = JSON.parse(text);
-          if (fetchedRecord && fetchedRecord.code) {
-            found = fetchedRecord;
-            saveShares([fetchedRecord, ...shares]);
-          }
-        }
-      } catch {
-        /* quiet fallback */
-      }
     }
   }
 
