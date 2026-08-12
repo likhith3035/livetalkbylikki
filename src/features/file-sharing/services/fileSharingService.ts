@@ -296,20 +296,6 @@ export async function createShareRecord({
     console.warn("[FileShare] Firebase sync warning:", err);
   }
 
-  // 3. Sync to Supabase Database file_shares table
-  try {
-    await supabase.from("file_shares").upsert({
-      code: code,
-      status: "active",
-      has_password: !!passwordHash,
-      password_hash: passwordHash || null,
-      max_downloads: maxDownloads,
-      expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
-    }, { onConflict: "code" });
-  } catch {
-    /* quiet fallback */
-  }
-
   return shareRecord;
 }
 
@@ -582,13 +568,6 @@ export async function deleteShareRecord(shareId: string, code?: string) {
     // Revoke node in Firebase Realtime DB
     try {
       await remove(ref(db, `rooms/share_${shareCode}`));
-    } catch {
-      /* quiet fallback */
-    }
-
-    // Disable in Supabase table
-    try {
-      await supabase.from("file_shares").update({ status: "disabled" }).eq("code", shareCode);
     } catch {
       /* quiet fallback */
     }
