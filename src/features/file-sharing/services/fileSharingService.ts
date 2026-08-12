@@ -283,15 +283,30 @@ export async function createShareRecord({
     credentialData,
   };
 
-  // Save locally in client browser (0 Server retention)
+  // 1. Save locally in client browser
   const shares = getSavedShares();
   saveShares([shareRecord, ...shares]);
 
-  // Sync to Firebase for instant cross-device share code access
+  const cleanRecord = JSON.parse(JSON.stringify(shareRecord));
+
+  // 2. Sync to Firebase Realtime Database
   try {
-    await set(ref(db, `file_shares/${code}`), shareRecord);
-  } catch {
-    /* quiet fallback */
+    await set(ref(db, `file_shares/${code}`), cleanRecord);
+  } catch (err) {
+    console.warn("[FileShare] Firebase sync warning:", err);
+  }
+
+  // 3. Sync to Supabase Storage public JSON file (100% Cloud Persistence)
+  try {
+    const jsonStr = JSON.stringify(cleanRecord);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const storagePath = `shares_meta/${code}.json`;
+    await supabase.storage.from("chat-images").upload(storagePath, blob, {
+      cacheControl: "3600",
+      upsert: true,
+    });
+  } catch (err) {
+    console.warn("[FileShare] Supabase metadata sync warning:", err);
   }
 
   return shareRecord;
@@ -443,12 +458,30 @@ export async function getShareRecordByCode(code: string): Promise<{
   const shares = getSavedShares();
   let found = shares.find((s) => s.code.toUpperCase() === cleanCode) || null;
 
-  // If not found in local browser storage, fetch from Firebase Realtime DB
+  // 1. Fetch from Firebase Realtime Database
   if (!found) {
     try {
       const snapshot = await get(ref(db, `file_shares/${cleanCode}`));
       if (snapshot.exists()) {
         const fetchedRecord: ShareRecord = snapshot.val();
+        if (fetchedRecord && fetchedRecord.code) {
+          found = fetchedRecord;
+          saveShares([fetchedRecord, ...shares]);
+        }
+      }
+    } catch {
+      /* quiet fallback */
+    }
+  }
+
+  // 2. Fetch from Supabase Storage public JSON file (100% Fallback)
+  if (!found) {
+    try {
+      const storagePath = `shares_meta/${cleanCode}.json`;
+      const { data: urlData } = supabase.storage.from("chat-images").getPublicUrl(storagePath);
+      const response = await fetch(`${urlData.publicUrl}?t=${Date.now()}`);
+      if (response.ok) {
+        const fetchedRecord: ShareRecord = await response.json();
         if (fetchedRecord && fetchedRecord.code) {
           found = fetchedRecord;
           saveShares([fetchedRecord, ...shares]);
