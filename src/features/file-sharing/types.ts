@@ -22,6 +22,15 @@ export interface SharedFileItem {
   trashedAt?: number | null;
 }
 
+export type ShareType = "file" | "text" | "password";
+
+export interface PasswordCredentialPayload {
+  title: string;
+  username?: string;
+  password?: string;
+  notes?: string;
+}
+
 export interface ShareRecord {
   id: string;
   code: string; // e.g. K7X4P9
@@ -37,6 +46,9 @@ export interface ShareRecord {
   isBurnAfterReading?: boolean;
   disabledAt?: number | null;
   lastDownloadedAt?: number | null;
+  shareType?: ShareType;
+  textContent?: string;
+  credentialData?: PasswordCredentialPayload;
 }
 
 export interface FolderItem {
