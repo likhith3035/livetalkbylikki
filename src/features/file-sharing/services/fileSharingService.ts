@@ -289,24 +289,25 @@ export async function createShareRecord({
 
   const cleanRecord = JSON.parse(JSON.stringify(shareRecord));
 
-  // 2. Sync to Firebase Realtime Database
+  // 2. Sync to Firebase Realtime Database (using permitted /rooms path)
   try {
-    await set(ref(db, `file_shares/${code}`), cleanRecord);
+    await set(ref(db, `rooms/share_${code}`), cleanRecord);
   } catch (err) {
     console.warn("[FileShare] Firebase sync warning:", err);
   }
 
-  // 3. Sync to Supabase Storage public JSON file (100% Cloud Persistence)
+  // 3. Sync to Supabase Database file_shares table
   try {
-    const jsonStr = JSON.stringify(cleanRecord);
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const storagePath = `shares_meta/${code}.json`;
-    await supabase.storage.from("chat-images").upload(storagePath, blob, {
-      cacheControl: "3600",
-      upsert: true,
-    });
-  } catch (err) {
-    console.warn("[FileShare] Supabase metadata sync warning:", err);
+    await supabase.from("file_shares").upsert({
+      code: code,
+      status: "active",
+      has_password: !!passwordHash,
+      password_hash: passwordHash || null,
+      max_downloads: maxDownloads,
+      expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+    }, { onConflict: "code" });
+  } catch {
+    /* quiet fallback */
   }
 
   return shareRecord;
@@ -458,10 +459,10 @@ export async function getShareRecordByCode(code: string): Promise<{
   const shares = getSavedShares();
   let found = shares.find((s) => s.code.toUpperCase() === cleanCode) || null;
 
-  // 1. Fetch from Firebase Realtime Database
+  // 1. Fetch from Firebase Realtime Database (using permitted /rooms path)
   if (!found) {
     try {
-      const snapshot = await get(ref(db, `file_shares/${cleanCode}`));
+      const snapshot = await get(ref(db, `rooms/share_${cleanCode}`));
       if (snapshot.exists()) {
         const fetchedRecord: ShareRecord = snapshot.val();
         if (fetchedRecord && fetchedRecord.code) {
