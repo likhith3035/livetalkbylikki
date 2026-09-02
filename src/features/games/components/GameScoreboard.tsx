@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { GameRoomState } from "../types";
 import { Button } from "@/components/ui/button";
-import { Volume2, VolumeX, ArrowLeft, QrCode, Eye } from "lucide-react";
+import { Volume2, VolumeX, ArrowLeft, QrCode, Eye, Sparkles } from "lucide-react";
 import { gameAudio } from "../services/gameSoundService";
 import { GameTurnTimer } from "./GameTurnTimer";
 import { GameMiniPIP } from "./GameMiniPIP";
+import { GameAvatar } from "./GameAvatar";
 
 interface GameScoreboardProps {
   room: GameRoomState;
@@ -38,6 +39,7 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
     name: "Waiting for player...",
     avatar: "👤",
     score: 0,
+    level: 1,
     isHost: false,
     isOnline: false,
     lastActive: Date.now(),
@@ -121,8 +123,8 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
         {/* Player 1 (Host) */}
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center text-lg font-bold">
-              {hostPlayer.avatar || "👤"}
+            <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center text-lg font-bold overflow-hidden">
+              <GameAvatar avatar={hostPlayer.avatar} fallback="👤" className="text-lg" />
             </div>
             {hostPlayer.isOnline ? (
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-background" />
@@ -132,9 +134,16 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
           </div>
 
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold truncate text-foreground">
-              {hostPlayer.name} {isHost && !isLocal && !isSpectator && "(You)"}
-            </span>
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="text-xs font-bold truncate text-foreground">
+                {hostPlayer.name} {isHost && !isLocal && !isSpectator && "(You)"}
+              </span>
+              {hostPlayer.level && hostPlayer.level > 1 && (
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-violet-500/20 text-violet-400 font-bold border border-violet-500/30">
+                  Lv.{hostPlayer.level}
+                </span>
+              )}
+            </div>
             <span className="text-sm font-black text-violet-400">
               {hostPlayer.score} <span className="text-[10px] font-medium text-muted-foreground">PTS</span>
             </span>
@@ -197,17 +206,24 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
         {/* Player 2 (Guest / AI) */}
         <div className="flex items-center gap-2.5 min-w-0 justify-end">
           <div className="flex flex-col items-end min-w-0">
-            <span className="text-xs font-bold truncate text-foreground">
-              {guestDisplayName} {!isHost && !isLocal && !isAI && !isSpectator && "(You)"}
-            </span>
+            <div className="flex items-center gap-1.5 truncate">
+              {guestPlayer.level && guestPlayer.level > 1 && !isAI && (
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-400 font-bold border border-cyan-500/30">
+                  Lv.{guestPlayer.level}
+                </span>
+              )}
+              <span className="text-xs font-bold truncate text-foreground">
+                {guestDisplayName} {!isHost && !isLocal && !isAI && !isSpectator && "(You)"}
+              </span>
+            </div>
             <span className="text-sm font-black text-cyan-400">
               {guestPlayer.score} <span className="text-[10px] font-medium text-muted-foreground">PTS</span>
             </span>
           </div>
 
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-lg font-bold">
-              {guestPlayer.avatar || (isAI ? "🤖" : "👤")}
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-lg font-bold overflow-hidden">
+              <GameAvatar avatar={guestPlayer.avatar} fallback={isAI ? "🤖" : "👤"} className="text-lg" />
             </div>
             {guestPlayer.isOnline ? (
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-background" />

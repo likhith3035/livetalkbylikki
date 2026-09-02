@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trophy, RotateCcw, Home, Sparkles, Frown, Meh, Crown, X } from "lucide-react";
 import { GameRoomState } from "../types";
+import { GameAvatar } from "./GameAvatar";
 
 interface VictoryModalProps {
   isOpen: boolean;
@@ -141,8 +142,8 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         <div className="relative z-10 grid grid-cols-3 items-center p-4 rounded-2xl bg-muted/40 border border-border/40 my-5 shadow-inner">
           {/* Host Player */}
           <div className="flex flex-col items-center gap-1.5">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center text-lg font-bold">
-              {hostPlayer.avatar || "👤"}
+            <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center text-lg font-bold overflow-hidden">
+              <GameAvatar avatar={hostPlayer.avatar} fallback="👤" className="text-lg" />
             </div>
             <span className="text-xs font-bold text-foreground truncate max-w-[90px]">
               {hostPlayer.name} {isHost && !isLocal && "(You)"}
@@ -173,8 +174,8 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
           {/* Guest Player */}
           <div className="flex flex-col items-center gap-1.5">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-lg font-bold">
-              {guestPlayer.avatar || (isAI ? "🤖" : "👤")}
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-lg font-bold overflow-hidden">
+              <GameAvatar avatar={guestPlayer.avatar} fallback={isAI ? "🤖" : "👤"} className="text-lg" />
             </div>
             <span className="text-xs font-bold text-foreground truncate max-w-[90px]">
               {guestDisplayName} {!isHost && !isLocal && !isAI && "(You)"}
