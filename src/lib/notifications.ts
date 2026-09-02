@@ -14,12 +14,12 @@ interface NotifConfig {
 }
 
 const NOTIFICATION_CONFIG: Record<NotificationType, NotifConfig> = {
-  message: { icon: "/pwa-icon-192.png", tag: "lchat-message", vibrate: [100, 50, 100], renotify: true, smallIcon: "ic_stat_chat", channelId: "messages" },
-  connected: { icon: "/pwa-icon-192.png", tag: "lchat-connected", vibrate: [200, 100, 200], renotify: true, smallIcon: "ic_stat_connect", channelId: "connections" },
-  disconnected: { icon: "/pwa-icon-192.png", tag: "lchat-disconnected", vibrate: [100], renotify: false, smallIcon: "ic_stat_disconnect", channelId: "connections" },
-  match: { icon: "/pwa-icon-192.png", tag: "lchat-match", vibrate: [100, 50, 100, 50, 200], renotify: true, smallIcon: "ic_stat_match", channelId: "connections" },
-  call: { icon: "/pwa-icon-192.png", tag: "lchat-call", vibrate: [300, 200, 300, 200, 300], renotify: true, smallIcon: "ic_stat_call", channelId: "calls" },
-  general: { icon: "/pwa-icon-192.png", tag: "lchat", vibrate: [100], renotify: false, smallIcon: "ic_stat_general", channelId: "general" },
+  message: { icon: "/logo.png", tag: "lchat-message", vibrate: [100, 50, 100], renotify: true, smallIcon: "ic_stat_chat", channelId: "messages" },
+  connected: { icon: "/logo.png", tag: "lchat-connected", vibrate: [200, 100, 200], renotify: true, smallIcon: "ic_stat_connect", channelId: "connections" },
+  disconnected: { icon: "/logo.png", tag: "lchat-disconnected", vibrate: [100], renotify: false, smallIcon: "ic_stat_disconnect", channelId: "connections" },
+  match: { icon: "/logo.png", tag: "lchat-match", vibrate: [100, 50, 100, 50, 200], renotify: true, smallIcon: "ic_stat_match", channelId: "connections" },
+  call: { icon: "/logo.png", tag: "lchat-call", vibrate: [300, 200, 300, 200, 300], renotify: true, smallIcon: "ic_stat_call", channelId: "calls" },
+  general: { icon: "/logo.png", tag: "lchat", vibrate: [100], renotify: false, smallIcon: "ic_stat_general", channelId: "general" },
 };
 
 // Track if app is in the foreground
@@ -165,7 +165,7 @@ function sendWebNotification(
     body,
     icon: config.icon,
     tag: config.tag,
-    badge: "/pwa-icon-192.png",
+    badge: "/logo.png",
     silent: false,
     renotify: config.renotify,
   };

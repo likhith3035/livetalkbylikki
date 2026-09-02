@@ -289,14 +289,6 @@ const Index = () => {
 
     const rawCode = joinCode.trim();
 
-    // Admin passphrase shortcut
-    if (rawCode.toLowerCase() === "likhith3035") {
-      sessionStorage.setItem("echo_admin_token", "5f064930eee39bdc7dd4c2b651b159cf83782a11b543");
-      toast({ title: "Welcome back, Admin", description: "Opening dashboard…" });
-      navigate("/admin/dashboard");
-      return;
-    }
-
     if (joinCode.length < 3 || joinCode.length > 30) {
       toast({ title: "Invalid code", description: "Room code must be between 3 and 30 characters.", variant: "destructive" });
       return;
@@ -536,6 +528,19 @@ const Index = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* ARCADE GAMES DIRECT BUTTON */}
+              <Button
+                variant="ghost"
+                className="w-full h-auto min-h-11 py-2.5 text-xs font-bold rounded-xl gap-2 border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 text-amber-400 transition-all flex items-center justify-between px-3 text-left"
+                onClick={() => navigate("/games")}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <Gamepad2 className="h-4 w-4 text-amber-400 shrink-0" />
+                  <span className="truncate text-[11px] sm:text-xs">🎮 1v1 Games Arcade (Play via QR Code & AI Bot)</span>
+                </div>
+                <ChevronRight className="h-4 w-4 opacity-70 shrink-0" />
+              </Button>
 
               {/* AI CHAT DIRECT BUTTON */}
               <Button

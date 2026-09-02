@@ -68,4 +68,52 @@ export const sounds = {
     setTimeout(() => playTone(1318, 0.15, "sine", 0.06), 60); // E6
     setTimeout(() => playTone(1760, 0.2, "sine", 0.04), 120); // A6
   },
+
+  /** Start loop for incoming or outgoing ringtone */
+  startRingtone: (type: "incoming" | "outgoing" = "incoming") => {
+    // Clear any existing ringtone loop
+    sounds.stopRingtone();
+
+    const playCycle = () => {
+      if (type === "incoming") {
+        // Melodic 2-burst marimba/phone ringtone chime
+        playTone(659, 0.15, "triangle", 0.22); // E5
+        setTimeout(() => playTone(880, 0.18, "triangle", 0.24), 140); // A5
+        setTimeout(() => playTone(987, 0.25, "triangle", 0.20), 280); // B5
+        setTimeout(() => {
+          playTone(659, 0.15, "triangle", 0.22);
+          setTimeout(() => playTone(880, 0.18, "triangle", 0.24), 140);
+          setTimeout(() => playTone(1318, 0.35, "triangle", 0.22), 280); // E6
+        }, 550);
+
+        // Haptic phone ring vibration loop for mobile devices
+        haptics.vibrate([400, 250, 400, 1200]);
+      } else {
+        // Soft standard PBX outgoing dial ringback pulse
+        playTone(440, 1.2, "sine", 0.10);
+        playTone(480, 1.2, "sine", 0.08);
+      }
+    };
+
+    playCycle();
+    const intervalId = setInterval(playCycle, type === "incoming" ? 2400 : 3500);
+    (window as any).__echoRingtoneInterval = intervalId;
+  },
+
+  /** Stop any currently playing ringtone or vibration */
+  stopRingtone: () => {
+    if (typeof window !== "undefined" && (window as any).__echoRingtoneInterval) {
+      clearInterval((window as any).__echoRingtoneInterval);
+      (window as any).__echoRingtoneInterval = null;
+    }
+    // Cancel any active vibration
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate(0);
+      } catch {
+        // Silently ignore
+      }
+    }
+  },
 };
+

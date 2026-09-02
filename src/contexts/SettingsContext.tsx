@@ -223,7 +223,7 @@ const loadSettings = (): SettingsState => {
       messageBubbleShape: (getStr("echo.messageBubbleShape", DEFAULT_SETTINGS.messageBubbleShape) as MessageBubbleShape),
 
       // Liquid Glass settings parsing
-      liquidGlassEnabled: false,
+      liquidGlassEnabled: getBool("echo.liquidGlassEnabled", DEFAULT_SETTINGS.liquidGlassEnabled),
       glassOpacity: getNum("echo.glassOpacity", DEFAULT_SETTINGS.glassOpacity),
       glassBlur: getNum("echo.glassBlur", DEFAULT_SETTINGS.glassBlur),
       glassBorderOpacity: getNum("echo.glassBorderOpacity", DEFAULT_SETTINGS.glassBorderOpacity),
@@ -289,6 +289,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("echo.protectionEnabled", String(settings.protectionEnabled));
     localStorage.setItem("echo.notifyAlerts", String(settings.notifyAlerts));
     localStorage.setItem("echo.autoStopOnScreenshot", String(settings.autoStopOnScreenshot));
+    localStorage.setItem("echo.messageFontSize", settings.messageFontSize);
+    localStorage.setItem("echo.messageBubbleShape", settings.messageBubbleShape);
 
     // Store Liquid Glass state
     localStorage.setItem("echo.liquidGlassEnabled", String(settings.liquidGlassEnabled));

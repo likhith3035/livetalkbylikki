@@ -50,6 +50,8 @@ const ProfilePage = () => {
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
+  const touchStartDist = useRef<number | null>(null);
+  const touchStartZoom = useRef<number>(1.0);
 
   // Strict matching option state
   const [strictMatch, setStrictMatch] = useState(() => {

@@ -2,7 +2,7 @@ import { useState, useEffect, forwardRef } from "react";
 import {
   Moon, Sun, ChevronLeft, Video, Phone, Globe, Home, Megaphone, Menu,
   MessageSquare, User, Settings as SettingsIcon, Info, Shield, ShieldAlert,
-  Bot, Wand2, Share2, Smartphone, Sparkles
+  Bot, Wand2, Share2, Smartphone, Sparkles, Gamepad2
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import OnlineBadge from "@/components/OnlineBadge";
@@ -19,6 +19,7 @@ import {
 const drawerNavItems = [
   { icon: Home,          path: "/",                 label: "Home Page",       accent: "#10b981" },
   { icon: MessageSquare, path: "/chat",              label: "Start Chat",      accent: "hsl(var(--primary))" },
+  { icon: Gamepad2,      path: "/games",             label: "Arcade Games",    accent: "#f59e0b" },
   { icon: Bot,           path: "/ai-chat",           label: "AI Wingman",      accent: "#ec4899" },
   { icon: Wand2,         path: "/prompt-analyzer",   label: "Prompt Analyzer", accent: "#a855f7" },
   { icon: Share2,        path: "/file-sharing",      label: "File Sharing",    accent: "#3b82f6" },

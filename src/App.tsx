@@ -19,9 +19,6 @@ import { useBiometrics } from "@/hooks/use-biometrics";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { BiometricLockModal } from "@/components/security/BiometricLockModal";
 import { requestNotificationPermission } from "@/lib/notifications";
-import Index from "./pages/Index";
-import ChatPage from "./pages/ChatPage";
-import RoomPage from "./pages/RoomPage";
 
 function clearAppCachesAndReload() {
   const lastReload = Number(window.sessionStorage.getItem("lazy_retry_last_ts") || "0");
@@ -107,6 +104,9 @@ class GlobalErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 }
 
+const Index = lazyWithRetry(() => import("./pages/Index"));
+const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
+const RoomPage = lazyWithRetry(() => import("./pages/RoomPage"));
 const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
 const SettingsPage = lazyWithRetry(() => import("./pages/SettingsPage"));
 const SafetyCenterPage = lazyWithRetry(() => import("./pages/SafetyCenterPage"));
@@ -117,6 +117,7 @@ const GuidelinesPage = lazyWithRetry(() => import("./pages/GuidelinesPage"));
 const AIChatPage = lazyWithRetry(() => import("./features/ai-chat/components/AIChatPage"));
 const PromptAnalyzerPage = lazyWithRetry(() => import("./features/prompt-analyzer/components/PromptAnalyzerPage"));
 const FileSharingPage = lazyWithRetry(() => import("./features/file-sharing/components/FileSharingPage"));
+const GamesPage = lazyWithRetry(() => import("./pages/GamesPage"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 const HandoffPage = lazyWithRetry(() => import("./pages/HandoffPage"));
@@ -153,6 +154,8 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/ai-chat" element={<AIChatPage />} />
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/games/:code" element={<GamesPage />} />
           <Route path="/prompt-analyzer" element={<PromptAnalyzerPage />} />
           <Route path="/file-sharing" element={<FileSharingPage />} />
           <Route path="/share/:code" element={<FileSharingPage />} />
