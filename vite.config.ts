@@ -17,21 +17,20 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ["qrcode.react", "jszip"],
+    include: ["react", "react-dom", "qrcode.react", "jszip"],
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
             if (id.includes("firebase")) return "firebase-vendor";
             if (id.includes("@supabase")) return "supabase-vendor";
-            if (id.includes("recharts")) return "charts-vendor";
-            if (id.includes("framer-motion")) return "framer-vendor";
-            if (id.includes("lucide-react")) return "icons-vendor";
-            if (id.includes("@radix-ui")) return "radix-vendor";
-            if (id.includes("jszip") || id.includes("html-to-image") || id.includes("qrcode") || id.includes("html5-qrcode")) return "utils-vendor";
+            if (id.includes("recharts") || id.includes("d3-")) return "charts-vendor";
+            if (id.includes("jszip") || id.includes("html-to-image") || id.includes("html5-qrcode")) return "utils-vendor";
+            // Keep react, react-dom, @radix-ui, lucide-react, and framer-motion together in the vendor chunk
+            // to guarantee synchronous React runtime availability and prevent forwardRef undefined errors
             return "vendor";
           }
         },
