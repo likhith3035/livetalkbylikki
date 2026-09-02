@@ -58,6 +58,16 @@
         ".validate": "!newData.exists() || newData.hasChildren(['timestamp']) || newData.hasChild('signal') || newData.hasChild('code')"
       }
     },
+
+    "game_lobby": {
+      ".read": true,
+      "$gameId": {
+        ".read": true,
+        "$playerId": {
+          ".write": true
+        }
+      }
+    },
     
     "matches": {
       ".read": true,
@@ -71,6 +81,26 @@
       ".read": true,
       "$roomId": {
         ".write": true
+      }
+    },
+
+    "game_reactions": {
+      ".read": true,
+      "$roomCode": {
+        ".read": true,
+        "$reactionId": {
+          ".write": true
+        }
+      }
+    },
+
+    "game_chat": {
+      ".read": true,
+      "$roomCode": {
+        ".read": true,
+        "$messageId": {
+          ".write": true
+        }
       }
     },
     
