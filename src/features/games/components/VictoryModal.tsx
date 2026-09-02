@@ -1,5 +1,5 @@
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +8,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trophy, RotateCcw, Home, Sparkles, Frown, Meh, Crown, X } from "lucide-react";
+import { Trophy, RotateCcw, Home, Sparkles, Frown, Meh, Crown, X, Zap } from "lucide-react";
 import { GameRoomState } from "../types";
 import { GameAvatar } from "./GameAvatar";
+import { triggerConfetti } from "../services/confettiEffect";
+import { getGamerProfile, getXpForNextLevel } from "../services/gameProgressionService";
 
 interface VictoryModalProps {
   isOpen: boolean;
@@ -35,6 +37,17 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   const isLocal = room.mode === "local";
   const isAI = room.mode === "ai";
   const isSeriesOver = room.status === "game_over" || !!room.seriesWinnerId;
+
+  const profile = getGamerProfile();
+  const xpNeeded = getXpForNextLevel(profile.level);
+  const xpPercent = Math.min(Math.round((profile.xp / xpNeeded) * 100), 100);
+
+  // Trigger confetti burst on victory or series championship
+  useEffect(() => {
+    if (isOpen && (isWinner || isSeriesOver || (isLocal && !isDraw))) {
+      triggerConfetti({ particleCount: isSeriesOver ? 120 : 70 });
+    }
+  }, [isOpen, isWinner, isSeriesOver, isLocal, isDraw]);
 
   const hostPlayer = room.players.host;
   const rawGuest = room.players.guest;
@@ -80,10 +93,10 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleDismiss()}>
       <DialogContent className="max-w-md p-6 rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/60 shadow-2xl text-center overflow-hidden">
-        {/* Celebration Halo */}
+        {/* Celebration Ambient Glow */}
         {(isWinner || (isLocal && !isDraw) || isSeriesOver) && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-amber-500/25 rounded-full blur-3xl animate-pulse" />
           </div>
         )}
 
@@ -115,7 +128,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
           <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight">
             {isSeriesOver
-              ? `👑 ${seriesWinnerName} is the Match Champion!`
+              ? `👑 ${seriesWinnerName} is the Champion!`
               : isDraw
               ? "Good Game! It's a Draw"
               : isLocal
@@ -139,9 +152,9 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         </DialogHeader>
 
         {/* Score Comparison Display Card */}
-        <div className="relative z-10 grid grid-cols-3 items-center p-4 rounded-2xl bg-muted/40 border border-border/40 my-5 shadow-inner">
+        <div className="relative z-10 grid grid-cols-3 items-center p-3.5 rounded-2xl bg-muted/40 border border-border/40 my-4 shadow-inner">
           {/* Host Player */}
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-1">
             <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center text-lg font-bold overflow-hidden">
               <GameAvatar avatar={hostPlayer.avatar} fallback="👤" className="text-lg" />
             </div>
@@ -173,7 +186,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           </div>
 
           {/* Guest Player */}
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-1">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-lg font-bold overflow-hidden">
               <GameAvatar avatar={guestPlayer.avatar} fallback={isAI ? "🤖" : "👤"} className="text-lg" />
             </div>
@@ -189,6 +202,25 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
                 ROUND WIN
               </span>
             )}
+          </div>
+        </div>
+
+        {/* Live Progression XP Breakdown Banner */}
+        <div className="p-3 rounded-2xl bg-card border border-border/60 relative z-10 mb-4 text-left">
+          <div className="flex items-center justify-between text-xs font-bold mb-1.5">
+            <span className="flex items-center gap-1 text-primary">
+              <Zap className="w-3.5 h-3.5 fill-primary text-primary" />
+              Level {profile.level} • {profile.title}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {isWinner ? "+110 XP" : isDraw ? "+70 XP" : "+30 XP"} Earned
+            </span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-primary to-violet-500 rounded-full transition-all duration-500"
+              style={{ width: `${xpPercent}%` }}
+            />
           </div>
         </div>
 

@@ -57,9 +57,10 @@ import {
   Flame,
   Swords,
   Eye,
-  User,
+  Percent,
   Sparkles,
   Edit3,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -455,6 +456,7 @@ export default function GamesPage() {
 
   const xpNeeded = getXpForNextLevel(gamerProfile.level);
   const xpPercent = Math.min(Math.round((gamerProfile.xp / xpNeeded) * 100), 100);
+  const winRate = gamerProfile.played > 0 ? Math.round((gamerProfile.wins / gamerProfile.played) * 100) : 0;
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased select-none">
@@ -622,7 +624,7 @@ export default function GamesPage() {
               </div>
 
               {/* Stats Counters */}
-              <div className="flex items-center gap-4 sm:gap-6">
+              <div className="flex items-center gap-3 sm:gap-6">
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-1 text-amber-500 font-black text-sm sm:text-base">
                     <Trophy className="w-4 h-4" />
@@ -636,7 +638,7 @@ export default function GamesPage() {
                 <div className="h-7 w-[1px] bg-border" />
 
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-orange-500 font-black text-sm sm:text-base">
+                  <div className={`flex items-center gap-1 font-black text-sm sm:text-base ${gamerProfile.streak >= 3 ? "text-rose-500 animate-pulse" : "text-orange-500"}`}>
                     <Flame className="w-4 h-4" />
                     <span>{gamerProfile.streak}</span>
                   </div>
@@ -649,6 +651,18 @@ export default function GamesPage() {
 
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-1 text-primary font-black text-sm sm:text-base">
+                    <Percent className="w-4 h-4" />
+                    <span>{winRate}%</span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                    Win Rate
+                  </span>
+                </div>
+
+                <div className="h-7 w-[1px] bg-border" />
+
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-1 text-foreground/80 font-black text-sm sm:text-base">
                     <Swords className="w-4 h-4" />
                     <span>{gamerProfile.played}</span>
                   </div>
