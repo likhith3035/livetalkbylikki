@@ -26,6 +26,11 @@ export type PersonalityId =
   | "teacher"
   | "doctor"
   | "coding_expert"
+  | "startup_mentor"
+  | "stoic_philosopher"
+  | "cyberpunk_hacker"
+  | "fitness_coach"
+  | "storyteller"
   | "gaming_buddy"
   | "study_partner"
   | "translator"
@@ -36,12 +41,16 @@ export type PersonalityId =
   | "sex_education_expert"
   | "custom";
 
+export type PersonalityCategory = "all" | "productivity" | "creative" | "learning" | "companions";
+
 export interface PersonalityConfig {
   id: PersonalityId;
   name: string;
   icon: string;
   description: string;
   systemPrompt: string;
+  category?: PersonalityCategory;
+  tagline?: string;
 }
 
 export interface TokenUsage {

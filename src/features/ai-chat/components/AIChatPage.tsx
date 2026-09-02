@@ -5,7 +5,7 @@ import {
   Trash2, RefreshCw, Check, Bot, User as UserIcon, Zap, AlertCircle,
   Menu, X, Shield, ChevronDown, HelpCircle, Download, Search, Eraser,
   Hash, Type, Mic, MicOff, Volume2, VolumeX, Pin, Sliders, Wand2, ChevronLeft, ArrowLeft, Home,
-  PanelLeft, PanelLeftClose, PanelLeftOpen
+  PanelLeftClose, PanelLeftOpen, Clock, Calendar, Rocket, Brain, Palette, Flame
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,28 +29,37 @@ import { useToast } from "@/hooks/use-toast";
 
 // ── Typing indicator component ──
 const TypingIndicator: React.FC = () => (
-  <div className="flex items-center gap-1 py-1">
+  <div className="flex items-center gap-1.5 py-1 px-1">
     {[0, 1, 2].map((i) => (
       <motion.span
         key={i}
-        className="h-2 w-2 rounded-full bg-primary/60"
+        className="h-2 w-2 rounded-full bg-primary/70"
         animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
         transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
       />
     ))}
-    <span className="text-[10px] text-muted-foreground ml-1.5 italic">Thinking…</span>
+    <span className="text-[11px] text-muted-foreground ml-1 font-semibold italic">Thinking…</span>
   </div>
 );
 
-// ── Suggestion chips ──
-const SUGGESTION_CHIPS = [
-  { label: "🧠 Explain quantum computing simply", prompt: "Explain quantum computing in simple terms" },
-  { label: "✍️ Write a short poem about stars", prompt: "Write a short poem about stars and the night sky" },
-  { label: "💻 Debug my JavaScript code", prompt: "Help me debug a JavaScript function that isn't returning the correct output" },
-  { label: "😂 Tell me a clever joke", prompt: "Tell me a clever, original joke that will make me laugh" },
-  { label: "📝 Summarize a topic for me", prompt: "Summarize the key concepts of machine learning in 5 bullet points" },
-  { label: "🌍 Plan a weekend trip", prompt: "Plan an ideal 2-day weekend trip for someone who loves nature and good food" },
-];
+// ── Audio Equalizer Waveform for TTS ──
+const AudioEqualizerWave: React.FC = () => (
+  <div className="flex items-center gap-0.5 h-3 px-1">
+    {[4, 12, 7, 10].map((h, i) => (
+      <motion.span
+        key={i}
+        className="w-0.5 bg-amber-400 rounded-full"
+        animate={{ height: ["4px", "12px", "4px"] }}
+        transition={{
+          duration: 0.5,
+          repeat: Infinity,
+          delay: i * 0.12,
+          ease: "easeInOut",
+        }}
+      />
+    ))}
+  </div>
+);
 
 // ── Magic Action Chips (Quick Tool Prefix Chips) ──
 const MAGIC_ACTION_CHIPS = [
@@ -60,6 +69,48 @@ const MAGIC_ACTION_CHIPS = [
   { icon: "✏️", label: "Polish", prefix: "Please polish the grammar and improve the tone of this text:\n\n" },
   { icon: "👔", label: "Make Formal", prefix: "Please rewrite this to sound professional, executive, and formal:\n\n" },
   { icon: "🎨", label: "Simplify (ELI5)", prefix: "Please explain this in very simple, beginner-friendly terms (ELI5):\n\n" },
+  { icon: "💡", label: "Brainstorm", prefix: "Please brainstorm 5 creative and actionable ideas for:\n\n" },
+  { icon: "🎭", label: "Roleplay", prefix: "Let's roleplay a realistic scenario where you act as:\n\n" },
+];
+
+// ── Categorized Prompt Starters Bento Grid for Empty State ──
+const BENTO_PROMPT_CATEGORIES = [
+  {
+    category: "💻 Code & Architecture",
+    icon: <Cpu className="h-4 w-4 text-cyan-400" />,
+    gradient: "from-cyan-500/10 to-blue-500/10 border-cyan-500/20",
+    items: [
+      { icon: "⚡", title: "Build Full-Stack API", prompt: "Write a complete Express + TypeScript REST API endpoint with Zod validation, JWT authentication, and structured error handling." },
+      { icon: "🐛", title: "Debug React Performance", prompt: "How do I profile and eliminate unnecessary React component re-renders using useMemo, useCallback, and React DevTools?" },
+    ],
+  },
+  {
+    category: "🚀 Product & Startup",
+    icon: <Rocket className="h-4 w-4 text-purple-400" />,
+    gradient: "from-purple-500/10 to-pink-500/10 border-purple-500/20",
+    items: [
+      { icon: "🎯", title: "MVP in 7 Days", prompt: "How should I validate a SaaS business idea in 7 days with zero initial ad budget? Give me a day-by-day action plan." },
+      { icon: "📈", title: "Viral Growth Tactics", prompt: "Give me 5 unconventional, high-impact growth hacking tactics for a consumer web application." },
+    ],
+  },
+  {
+    category: "🧠 Mindset & Wisdom",
+    icon: <Brain className="h-4 w-4 text-amber-400" />,
+    gradient: "from-amber-500/10 to-orange-500/10 border-amber-500/20",
+    items: [
+      { icon: "🏛️", title: "Stoic Resilience", prompt: "How would Marcus Aurelius advise dealing with overwhelming daily stress, difficult people, and uncertainty?" },
+      { icon: "⏱️", title: "Deep Work Routine", prompt: "Design an optimal 4-hour daily Deep Work routine for maximum cognitive focus and productivity." },
+    ],
+  },
+  {
+    category: "🎨 Creative & Story",
+    icon: <Palette className="h-4 w-4 text-emerald-400" />,
+    gradient: "from-emerald-500/10 to-teal-500/10 border-emerald-500/20",
+    items: [
+      { icon: "🌌", title: "Cyberpunk Novel Scene", prompt: "Write an atmospheric, suspenseful opening scene for a cyberpunk sci-fi novel set in Tokyo in 2099." },
+      { icon: "🎭", title: "Thought-Provoking Debate", prompt: "Let's have a friendly philosophical debate: Is artificial intelligence capable of genuine creativity or just advanced mimicry?" },
+    ],
+  },
 ];
 
 // ── Time formatter ──
@@ -108,8 +159,8 @@ function exportConversationAsMarkdown(conv: Conversation) {
 export const AIChatPage: React.FC = () => {
   const navigate = useNavigate();
   useSEO({
-    title: "AI Chat - Multi-Provider Assistant",
-    description: "Chat with OpenAI, Gemini, Claude, Ollama, LM Studio and more with custom AI personalities and local key privacy.",
+    title: "AI Chat Studio - Multi-Provider Intelligent Companion",
+    description: "Chat with OpenAI, Gemini, Claude, Groq, Ollama, LM Studio with rich personalities, local privacy, and speech synthesis.",
   });
 
   const onlineCount = useOnlineCount();
@@ -168,7 +219,7 @@ export const AIChatPage: React.FC = () => {
     });
   };
 
-  // Keyboard shortcut Ctrl+\ or Cmd+\ to toggle Gemini AI style sidebar
+  // Keyboard shortcut Ctrl+\ or Cmd+\ to toggle sidebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
@@ -182,6 +233,8 @@ export const AIChatPage: React.FC = () => {
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
 
   const activeConv = conversations.find((c) => c.id === activeConvId) || null;
 
@@ -197,13 +250,31 @@ export const AIChatPage: React.FC = () => {
     );
   }, [conversations, searchQuery]);
 
-  // Separate pinned and normal conversations
-  const pinnedConversations = useMemo(() => {
-    return filteredConversations.filter((c) => c.isPinned);
-  }, [filteredConversations]);
+  // Timeline grouping (Pinned, Today, Previous 7 Days, Older)
+  const timelineGroups = useMemo(() => {
+    const now = Date.now();
+    const ONE_DAY = 24 * 60 * 60 * 1000;
+    const SEVEN_DAYS = 7 * ONE_DAY;
 
-  const normalConversations = useMemo(() => {
-    return filteredConversations.filter((c) => !c.isPinned);
+    const pinned = filteredConversations.filter((c) => c.isPinned);
+    const unpinned = filteredConversations.filter((c) => !c.isPinned);
+
+    const today: Conversation[] = [];
+    const past7Days: Conversation[] = [];
+    const older: Conversation[] = [];
+
+    unpinned.forEach((c) => {
+      const age = now - (c.updatedAt || c.createdAt);
+      if (age < ONE_DAY) {
+        today.push(c);
+      } else if (age < SEVEN_DAYS) {
+        past7Days.push(c);
+      } else {
+        older.push(c);
+      }
+    });
+
+    return { pinned, today, past7Days, older };
   }, [filteredConversations]);
 
   // Persist conversations
@@ -218,15 +289,33 @@ export const AIChatPage: React.FC = () => {
     toast({ title: "🔑 Keys Saved", description: "Your API keys have been updated locally." });
   };
 
-  // Scroll to bottom on new messages
+  // Handle scroll detection for jump-to-bottom button
+  const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isUp = target.scrollHeight - target.scrollTop - target.clientHeight > 120;
+    setShowScrollBottomBtn(isUp);
+  };
+
+  // Scroll to bottom on new messages if not scrolled far up
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeConv?.messages, isGenerating]);
+    if (!showScrollBottomBtn) {
+      chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [activeConv?.messages, isGenerating, showScrollBottomBtn]);
+
+  // Clean up speech synthesis when active conversation changes
+  useEffect(() => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+    }
+  }, [activeConvId]);
 
   // Clean up speech synthesis on unmount
   useEffect(() => {
     return () => {
       if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (recognitionRef.current) recognitionRef.current.stop();
     };
   }, []);
 
@@ -244,6 +333,23 @@ export const AIChatPage: React.FC = () => {
     setConversations((prev) =>
       prev.map((c) => (c.id === convId ? { ...c, isPinned: !c.isPinned } : c))
     );
+  };
+
+  // Delete Conversation
+  const handleDeleteConversation = (convId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConversations((prev) => prev.filter((c) => c.id !== convId));
+    if (activeConvId === convId) {
+      setActiveConvId(null);
+    }
+  };
+
+  // Clear All Conversations
+  const handleClearAll = () => {
+    setConversations([]);
+    setActiveConvId(null);
+    setShowClearConfirm(false);
+    toast({ title: "Conversations Cleared", description: "All chat sessions deleted." });
   };
 
   // Voice Input Handler (Speech-to-Text)
@@ -265,7 +371,7 @@ export const AIChatPage: React.FC = () => {
     }
 
     try {
-      baseTextRef.current = inputText; // store text present before mic started
+      baseTextRef.current = inputText;
 
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
@@ -274,7 +380,7 @@ export const AIChatPage: React.FC = () => {
 
       recognition.onstart = () => {
         setIsListening(true);
-        toast({ title: "🎙️ Listening...", description: "Speak now! Your voice will turn into text." });
+        toast({ title: "🎙️ Listening...", description: "Speak now! Your speech is converting to text." });
       };
 
       recognition.onresult = (event: any) => {
@@ -317,7 +423,7 @@ export const AIChatPage: React.FC = () => {
       return;
     }
 
-    window.speechSynthesis.cancel(); // stop any current audio
+    window.speechSynthesis.cancel();
     const cleanText = text.replace(/```[\s\S]*?```/g, "Code block omitted.").replace(/[*_#]/g, "");
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 1.0;
@@ -336,7 +442,6 @@ export const AIChatPage: React.FC = () => {
   };
 
   const handlePersonalitySelected = (personality: PersonalityConfig, aiName?: string, aiAge?: number) => {
-    const info = getProviderInfo(selectedProvider);
     const displayTitle = aiName
       ? `${aiName}${aiAge ? ` (${aiAge} y/o)` : ""} • ${personality.name}`
       : `${personality.name} Chat`;
@@ -354,36 +459,24 @@ export const AIChatPage: React.FC = () => {
       aiName,
       aiAge,
     };
+
     setConversations((prev) => [newConv, ...prev]);
     setActiveConvId(newConv.id);
-  };
-
-  // Delete Conversation
-  const handleDeleteConversation = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setConversations((prev) => prev.filter((c) => c.id !== id));
-    if (activeConvId === id) setActiveConvId(null);
-  };
-
-  // Clear All Conversations
-  const handleClearAll = () => {
-    setConversations([]);
-    setActiveConvId(null);
-    setShowClearConfirm(false);
-    toast({ title: "🗑️ Cleared", description: "All conversations have been deleted." });
+    setShowSidebarMobile(false);
   };
 
   // Send Message
   const handleSend = async (overrideText?: string) => {
-    const textToSend = overrideText || inputText;
-    if (!textToSend.trim() || isGenerating) return;
+    const textToSend = (overrideText || inputText).trim();
+    if (!textToSend || isGenerating) return;
 
-    let conv = activeConv;
-    // If no active conversation, create one with default personality
-    if (!conv) {
-      conv = {
+    let targetConv = activeConv;
+
+    // Auto-create default conversation if none active
+    if (!targetConv) {
+      targetConv = {
         id: crypto.randomUUID(),
-        title: textToSend.trim().slice(0, 30),
+        title: "AI Assistant Chat",
         createdAt: Date.now(),
         updatedAt: Date.now(),
         personality: DEFAULT_PERSONALITY,
@@ -392,19 +485,19 @@ export const AIChatPage: React.FC = () => {
         messages: [],
         temperature,
       };
-      setConversations((prev) => [conv!, ...prev]);
-      setActiveConvId(conv.id);
+      setConversations((prev) => [targetConv!, ...prev]);
+      setActiveConvId(targetConv.id);
     }
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       sender: "user",
-      content: textToSend.trim(),
+      content: textToSend,
       timestamp: Date.now(),
     };
 
     const aiMessageId = crypto.randomUUID();
-    const initialAiMessage: ChatMessage = {
+    const aiPlaceholder: ChatMessage = {
       id: aiMessageId,
       sender: "ai",
       content: "",
@@ -414,13 +507,14 @@ export const AIChatPage: React.FC = () => {
       modelName: selectedModel,
     };
 
-    const updatedMessages = [...conv.messages, userMessage, initialAiMessage];
+    const updatedMessages = [...targetConv.messages, userMessage, aiPlaceholder];
+
     setConversations((prev) =>
       prev.map((c) =>
-        c.id === conv!.id
+        c.id === targetConv!.id
           ? {
               ...c,
-              title: c.messages.length === 0 ? textToSend.trim().slice(0, 30) : c.title,
+              title: c.messages.length === 0 ? textToSend.slice(0, 32) + (textToSend.length > 32 ? "..." : "") : c.title,
               updatedAt: Date.now(),
               messages: updatedMessages,
             }
@@ -428,35 +522,32 @@ export const AIChatPage: React.FC = () => {
       )
     );
 
-    setInputText("");
+    if (!overrideText) setInputText("");
     setIsGenerating(true);
-
     abortControllerRef.current = new AbortController();
 
     try {
       const apiKey = apiKeys[selectedProvider];
-      const customEndpoint = apiKeys.customEndpoint;
-
-      let systemPrompt = conv.personality.systemPrompt;
-      if (conv.aiName || conv.aiAge) {
-        const namePart = conv.aiName ? `Your name is ${conv.aiName}.` : "";
-        const agePart = conv.aiAge ? `You are ${conv.aiAge} years old.` : "";
-        systemPrompt = `${namePart} ${agePart} ${conv.personality.systemPrompt} Always stay in character as ${conv.aiName || conv.personality.name}.`;
+      let systemPrompt = targetConv.personality.systemPrompt;
+      if (targetConv.aiName || targetConv.aiAge) {
+        const namePart = targetConv.aiName ? `Your name is ${targetConv.aiName}.` : "";
+        const agePart = targetConv.aiAge ? `You are ${targetConv.aiAge} years old.` : "";
+        systemPrompt = `${namePart} ${agePart} ${targetConv.personality.systemPrompt} Always stay in character as ${targetConv.aiName || targetConv.personality.name}.`;
       }
 
       const usage = await streamAIChat({
         providerId: selectedProvider,
         modelName: selectedModel,
         apiKey,
-        customEndpoint,
+        customEndpoint: apiKeys.customEndpoint,
         systemPrompt,
-        messages: [...conv.messages, userMessage],
+        messages: [...targetConv.messages, userMessage],
         temperature,
         signal: abortControllerRef.current.signal,
         onChunk: (delta) => {
           setConversations((prev) =>
             prev.map((c) => {
-              if (c.id !== conv!.id) return c;
+              if (c.id !== targetConv!.id) return c;
               const msgs = c.messages.map((m) =>
                 m.id === aiMessageId ? { ...m, content: m.content + delta } : m
               );
@@ -466,10 +557,9 @@ export const AIChatPage: React.FC = () => {
         },
       });
 
-      // Update AI message upon completion with token usage
       setConversations((prev) =>
         prev.map((c) => {
-          if (c.id !== conv!.id) return c;
+          if (c.id !== targetConv!.id) return c;
           const msgs = c.messages.map((m) =>
             m.id === aiMessageId ? { ...m, isStreaming: false, usage } : m
           );
@@ -477,17 +567,14 @@ export const AIChatPage: React.FC = () => {
         })
       );
     } catch (err: any) {
-      if (err.name === "AbortError") {
-        toast({ title: "Stopped", description: "Generation stopped by user." });
-      } else {
-        const errorText = err?.message || "Failed to generate AI response.";
-        toast({ title: "AI Error", description: errorText, variant: "destructive" });
+      if (err.name !== "AbortError") {
+        toast({ title: "Generation Error", description: err.message, variant: "destructive" });
         setConversations((prev) =>
           prev.map((c) => {
-            if (c.id !== conv!.id) return c;
+            if (c.id !== targetConv!.id) return c;
             const msgs = c.messages.map((m) =>
               m.id === aiMessageId
-                ? { ...m, isStreaming: false, error: errorText, content: m.content || `⚠️ Error: ${errorText}` }
+                ? { ...m, isStreaming: false, error: err.message || "Failed to generate response." }
                 : m
             );
             return { ...c, messages: msgs };
@@ -517,7 +604,6 @@ export const AIChatPage: React.FC = () => {
     const userMsg = activeConv.messages[aiMsgIdx - 1];
     if (userMsg.sender !== "user") return;
 
-    // Truncate messages up to user message
     const previousMessages = activeConv.messages.slice(0, aiMsgIdx);
     const newAiMessageId = crypto.randomUUID();
     const newAiMsg: ChatMessage = {
@@ -609,17 +695,13 @@ export const AIChatPage: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Suggestion chip click
-  const handleSuggestionClick = (prompt: string) => {
-    handleSend(prompt);
-  };
-
   // Magic action chip click
   const handleMagicChipClick = (prefix: string) => {
     setInputText((prev) => (prev ? `${prefix}${prev}` : prefix));
   };
 
   const providerInfo = getProviderInfo(selectedProvider);
+  const isKeySet = providerInfo.isLocal || !!apiKeys[selectedProvider];
 
   // Helper render for conversation list item
   const renderConvItem = (conv: Conversation) => {
@@ -632,26 +714,25 @@ export const AIChatPage: React.FC = () => {
           setShowSidebarMobile(false);
         }}
         className={cn(
-          "p-2.5 rounded-2xl cursor-pointer border flex items-center justify-between text-xs transition-all group relative",
+          "p-2.5 rounded-2xl cursor-pointer border flex items-center justify-between text-xs transition-all group relative overflow-hidden",
           isActive
-            ? "bg-primary/15 border-primary/40 text-primary font-bold shadow-sm"
-            : "bg-transparent border-transparent hover:bg-secondary/50 text-foreground"
+            ? "bg-primary/15 border-primary/50 text-primary font-bold shadow-md shadow-primary/10"
+            : "bg-secondary/20 border-transparent hover:bg-secondary/60 text-foreground"
         )}
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-base shrink-0">{conv.personality.icon}</span>
+          <span className="text-base shrink-0 p-1 bg-background/50 rounded-xl shadow-xs">{conv.personality.icon}</span>
           <div className="min-w-0">
             <span className="truncate text-xs block font-semibold">{conv.title}</span>
             <span className="text-[9px] text-muted-foreground">{formatRelativeTime(conv.updatedAt)}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          {/* Pin Toggle */}
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={(e) => handleTogglePin(conv.id, e)}
             className={cn(
-              "p-1 hover:text-amber-400 transition-all",
+              "p-1 hover:text-amber-400 transition-all rounded-lg",
               conv.isPinned ? "text-amber-400 opacity-100" : "opacity-0 group-hover:opacity-100 text-muted-foreground"
             )}
             title={conv.isPinned ? "Unpin chat" : "Pin chat to top"}
@@ -659,10 +740,9 @@ export const AIChatPage: React.FC = () => {
             <Pin className="h-3.5 w-3.5 fill-current" />
           </button>
 
-          {/* Delete */}
           <button
             onClick={(e) => handleDeleteConversation(conv.id, e)}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500 transition-opacity rounded-lg"
             title="Delete conversation"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -687,7 +767,7 @@ export const AIChatPage: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 lg:hidden"
+              className="fixed inset-0 bg-black/70 backdrop-blur-md z-20 lg:hidden"
               onClick={() => setShowSidebarMobile(false)}
             />
           )}
@@ -696,32 +776,35 @@ export const AIChatPage: React.FC = () => {
         {/* ─────────── SIDEBAR ─────────── */}
         <aside
           className={cn(
-            "bg-card/90 border-r border-border/50 flex flex-col justify-between backdrop-blur-xl transition-all duration-300 z-30 shrink-0",
+            "bg-card/95 border-r border-border/50 flex flex-col justify-between backdrop-blur-2xl transition-all duration-300 z-30 shrink-0 shadow-xl",
             "absolute inset-y-0 left-0 lg:static",
-            showSidebarMobile ? "translate-x-0 shadow-2xl w-72 p-3.5" : "-translate-x-full lg:translate-x-0",
+            showSidebarMobile ? "translate-x-0 shadow-2xl w-80 p-4" : "-translate-x-full lg:translate-x-0",
             isSidebarOpenDesktop
-              ? "lg:w-72 lg:p-3.5 lg:opacity-100"
+              ? "lg:w-80 lg:p-4 lg:opacity-100"
               : "lg:w-0 lg:p-0 lg:opacity-0 lg:overflow-hidden lg:border-none"
           )}
         >
-          {/* Top: New Chat + Controls */}
-          <div className="space-y-3">
-            {/* Top Sidebar Header Row (Gemini Style) */}
-            <div className="flex items-center justify-between pb-2 border-b border-border/40">
+          {/* Top: Header + New Chat + Timeline Controls */}
+          <div className="space-y-3.5 overflow-hidden flex flex-col flex-1 min-h-0">
+            {/* Top Sidebar Header Row */}
+            <div className="flex items-center justify-between pb-2 border-b border-border/40 shrink-0">
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold">
+                <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-purple-600 text-white flex items-center justify-center font-bold shadow-md shadow-primary/20">
                   <Bot className="h-4 w-4" />
                 </div>
-                <span className="text-xs font-bold text-foreground font-display">AI Studio Sidebar</span>
+                <div>
+                  <span className="text-xs font-black text-foreground font-display block">AI Studio Hub</span>
+                  <span className="text-[9px] text-muted-foreground font-medium">{conversations.length} sessions stored</span>
+                </div>
               </div>
 
               <button
                 onClick={toggleSidebarDesktop}
-                className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-muted-foreground hover:text-primary hover:bg-primary/10 border border-border/50 transition-all active:scale-95"
+                className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-semibold text-muted-foreground hover:text-primary hover:bg-primary/10 border border-border/50 transition-all active:scale-95"
                 title="Collapse sidebar (Ctrl + \)"
               >
-                <PanelLeftClose className="h-4 w-4" />
-                <span className="text-[10px]">Close</span>
+                <PanelLeftClose className="h-3.5 w-3.5" />
+                <span className="text-[10px]">Hide</span>
               </button>
 
               <button
@@ -733,40 +816,51 @@ export const AIChatPage: React.FC = () => {
               </button>
             </div>
 
-            <Button
-              variant="outline"
-              onClick={() => navigate("/chat")}
-              className="w-full h-9 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Random Chat</span>
-            </Button>
+            {/* Quick Actions */}
+            <div className="space-y-2 shrink-0">
+              <Button
+                onClick={handleStartNewChat}
+                className="w-full h-11 rounded-2xl bg-gradient-to-r from-primary via-purple-600 to-pink-600 font-extrabold text-white text-xs shadow-lg shadow-primary/25 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ New AI Conversation</span>
+              </Button>
 
-            <Button
-              onClick={handleStartNewChat}
-              className="w-full h-11 rounded-2xl bg-gradient-to-r from-primary to-purple-600 font-extrabold text-white text-xs shadow-md shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all"
-            >
-              <Plus className="h-4 w-4" />
-              <span>New AI Conversation</span>
-            </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/chat")}
+                className="w-full h-8 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Stranger Chat</span>
+              </Button>
+            </div>
 
-            {/* Provider & Model Selectors + Temperature Tuning */}
-            <div className="p-2.5 rounded-2xl bg-secondary/40 border border-border/40 space-y-2">
+            {/* Provider & Model Selectors Card */}
+            <div className="p-3 rounded-2xl bg-secondary/40 border border-border/50 space-y-2 shrink-0 backdrop-blur-sm shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">AI Provider</span>
+                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider flex items-center gap-1">
+                  <Cpu className="h-3 w-3 text-primary" />
+                  <span>Engine & Provider</span>
+                </span>
                 <button
                   onClick={() => setShowKeysModal(true)}
-                  className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1"
+                  className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-lg border flex items-center gap-1 transition-all",
+                    isKeySet
+                      ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30"
+                      : "text-amber-400 bg-amber-500/10 border-amber-500/30 animate-pulse"
+                  )}
                 >
                   <Key className="h-3 w-3" />
-                  <span>API Keys</span>
+                  <span>{isKeySet ? "Key Ready" : "Set Key"}</span>
                 </button>
               </div>
 
               <select
                 value={selectedProvider}
                 onChange={(e) => handleProviderChange(e.target.value as AIProviderId)}
-                className="w-full h-9 rounded-xl bg-card border border-border/70 text-xs font-semibold text-foreground px-2.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full h-8.5 rounded-xl bg-card border border-border/70 text-xs font-bold text-foreground px-2.5 focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
               >
                 {AI_PROVIDERS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -781,13 +875,13 @@ export const AIChatPage: React.FC = () => {
                   className="w-full py-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl transition-all flex items-center justify-center gap-1"
                 >
                   <Zap className="h-3 w-3" />
-                  <span>Local Setup Guide (Ollama/LM Studio)</span>
+                  <span>Local Setup (Ollama / LM Studio)</span>
                 </button>
               )}
 
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block">
-                  Model (Optional)
+                  Model
                 </span>
                 <button
                   onClick={() => setShowTuning(!showTuning)}
@@ -808,7 +902,7 @@ export const AIChatPage: React.FC = () => {
                     setSelectedModel(e.target.value);
                   }
                 }}
-                className="w-full h-9 rounded-xl bg-card border border-border/70 text-xs font-semibold text-foreground px-2.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full h-8.5 rounded-xl bg-card border border-border/70 text-xs font-semibold text-foreground px-2.5 focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
               >
                 <option value="">✨ Auto-Detect (Recommended)</option>
                 {providerInfo.availableModels
@@ -829,7 +923,7 @@ export const AIChatPage: React.FC = () => {
                     setCustomModelInput(e.target.value);
                     setSelectedModel(e.target.value);
                   }}
-                  placeholder="Enter model name (e.g. sarvam-30b)..."
+                  placeholder="Enter model name..."
                   className="w-full h-8 mt-1 px-2.5 rounded-xl bg-card border border-border/70 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
                 />
               )}
@@ -844,7 +938,7 @@ export const AIChatPage: React.FC = () => {
                     className="overflow-hidden pt-2 border-t border-border/40 space-y-2"
                   >
                     <div className="flex items-center justify-between text-[10px] font-bold">
-                      <span className="text-muted-foreground">Creativity / Temperature</span>
+                      <span className="text-muted-foreground">Creativity / Temp</span>
                       <span className="text-primary">{temperature}</span>
                     </div>
                     <input
@@ -857,158 +951,121 @@ export const AIChatPage: React.FC = () => {
                       className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
                     />
                     <div className="flex justify-between text-[9px] font-semibold text-muted-foreground">
-                      <button onClick={() => setTemperature(0.2)} className="hover:text-foreground">🎯 Precise (0.2)</button>
-                      <button onClick={() => setTemperature(0.7)} className="hover:text-foreground">⚖️ Balanced (0.7)</button>
-                      <button onClick={() => setTemperature(1.0)} className="hover:text-foreground">🎨 Creative (1.0)</button>
+                      <button onClick={() => setTemperature(0.2)} className="hover:text-foreground">🎯 0.2</button>
+                      <button onClick={() => setTemperature(0.7)} className="hover:text-foreground">⚖️ 0.7</button>
+                      <button onClick={() => setTemperature(1.0)} className="hover:text-foreground">🎨 1.0</button>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Currency Selector */}
-              <div className="pt-1.5 border-t border-border/30">
-                <div className="flex items-center justify-between pb-1">
-                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Cost Currency</span>
-                  <span className="text-[10px] font-bold text-amber-400">
-                    {CURRENCIES.find((c) => c.code === selectedCurrency)?.symbol} {selectedCurrency}
-                  </span>
-                </div>
-                <select
-                  value={selectedCurrency}
-                  onChange={(e) => handleCurrencyChange(e.target.value)}
-                  className="w-full h-8 rounded-xl bg-card border border-border/70 text-xs font-semibold text-foreground px-2.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.symbol} {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             {/* Search Conversations */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+            <div className="relative shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search conversations..."
-                className="w-full h-8 pl-8 pr-2 rounded-xl bg-card border border-border/60 text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full h-8 pl-8.5 pr-8 rounded-xl bg-card border border-border/60 text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2"
                 >
                   <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
                 </button>
               )}
             </div>
 
-            {/* Conversations List Header */}
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] font-extrabold uppercase text-muted-foreground tracking-widest">
-                Conversations ({filteredConversations.length})
-              </span>
-              {conversations.length > 0 && (
-                <button
-                  onClick={() => setShowClearConfirm(true)}
-                  className="text-[10px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-0.5 transition-colors"
-                >
-                  <Eraser className="h-3 w-3" />
-                  <span>Clear All</span>
-                </button>
-              )}
-            </div>
-
-            {/* Clear All Confirmation */}
-            <AnimatePresence>
-              {showClearConfirm && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 space-y-2">
-                    <p className="text-[11px] text-rose-400 font-semibold">Delete all {conversations.length} conversations?</p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleClearAll}
-                        className="flex-1 py-1.5 rounded-lg bg-rose-500 text-white text-[10px] font-bold hover:bg-rose-600 transition-colors"
-                      >
-                        Yes, Delete All
-                      </button>
-                      <button
-                        onClick={() => setShowClearConfirm(false)}
-                        className="flex-1 py-1.5 rounded-lg bg-secondary text-foreground text-[10px] font-bold hover:bg-secondary/80 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Saved Conversations List (Pinned + Normal) */}
-            <div className="space-y-3 max-h-[38vh] overflow-y-auto pr-1">
+            {/* Timeline Conversation List */}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-0">
               {/* Pinned Section */}
-              {pinnedConversations.length > 0 && (
+              {timelineGroups.pinned.length > 0 && (
                 <div className="space-y-1">
                   <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1 px-1">
-                    <Pin className="h-3 w-3 fill-current" /> Pinned ({pinnedConversations.length})
+                    <Pin className="h-3 w-3 fill-current" /> Pinned ({timelineGroups.pinned.length})
                   </span>
-                  {pinnedConversations.map(renderConvItem)}
+                  {timelineGroups.pinned.map(renderConvItem)}
                 </div>
               )}
 
-              {/* Normal Section */}
-              <div className="space-y-1">
-                {pinnedConversations.length > 0 && normalConversations.length > 0 && (
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1 block pt-1">
-                    Recent
+              {/* Today Section */}
+              {timelineGroups.today.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 px-1">
+                    <Clock className="h-3 w-3" /> Today
                   </span>
-                )}
-                {normalConversations.map(renderConvItem)}
-              </div>
+                  {timelineGroups.today.map(renderConvItem)}
+                </div>
+              )}
 
-              {filteredConversations.length === 0 && searchQuery && (
-                <p className="text-[11px] text-muted-foreground text-center py-4 italic">
-                  No conversations match "{searchQuery}"
+              {/* Previous 7 Days */}
+              {timelineGroups.past7Days.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 px-1">
+                    <Calendar className="h-3 w-3" /> Previous 7 Days
+                  </span>
+                  {timelineGroups.past7Days.map(renderConvItem)}
+                </div>
+              )}
+
+              {/* Older Section */}
+              {timelineGroups.older.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 px-1">
+                    Older
+                  </span>
+                  {timelineGroups.older.map(renderConvItem)}
+                </div>
+              )}
+
+              {filteredConversations.length === 0 && (
+                <p className="text-[11px] text-muted-foreground text-center py-6 italic">
+                  {searchQuery ? `No sessions match "${searchQuery}"` : "No conversations yet."}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Bottom Security Note */}
-          <div className="pt-3 border-t border-border/40 flex items-center gap-2 text-[10px] text-muted-foreground/70">
-            <Shield className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-            <span>Local API Keys. Zero logs stored.</span>
+          {/* Bottom Sidebar Footer */}
+          <div className="pt-3 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground/80 shrink-0">
+            <span className="flex items-center gap-1">
+              <Shield className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <span>Zero logs stored</span>
+            </span>
+            {conversations.length > 0 && (
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                className="text-[10px] font-bold text-rose-400 hover:text-rose-300 transition-colors"
+              >
+                Clear All
+              </button>
+            )}
           </div>
         </aside>
 
-        {/* ─────────── MAIN CHAT ─────────── */}
+        {/* ─────────── MAIN CHAT CANVAS ─────────── */}
         <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-background/50 relative">
           {/* Top Bar Header */}
-          <div className="h-14 px-4 border-b border-border/40 flex items-center justify-between bg-card/60 backdrop-blur-md shrink-0">
-            <div className="flex items-center gap-2.5 min-w-0">
+          <div className="h-14 px-3 sm:px-4 border-b border-border/40 flex items-center justify-between bg-card/70 backdrop-blur-xl shrink-0 z-10 shadow-xs gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
               {/* Mobile Sidebar Toggle */}
               <button
                 onClick={() => setShowSidebarMobile(!showSidebarMobile)}
-                className="lg:hidden p-2 rounded-xl bg-secondary border border-border/60 text-foreground"
+                className="lg:hidden p-2 rounded-xl bg-secondary border border-border/60 text-foreground shrink-0"
                 title="Toggle menu"
               >
                 <Menu className="h-4 w-4" />
               </button>
 
-              {/* Desktop Gemini AI Style Sidebar Toggle */}
+              {/* Desktop Sidebar Toggle */}
               <button
                 onClick={toggleSidebarDesktop}
                 className={cn(
-                  "hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 shrink-0 shadow-sm",
+                  "hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 shrink-0 shadow-xs",
                   isSidebarOpenDesktop
                     ? "bg-secondary/80 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground"
                     : "bg-primary text-primary-foreground border-primary shadow-primary/20 hover:opacity-90"
@@ -1018,12 +1075,12 @@ export const AIChatPage: React.FC = () => {
                 {isSidebarOpenDesktop ? (
                   <>
                     <PanelLeftClose className="h-4 w-4" />
-                    <span className="hidden xl:inline text-[11px]">Hide Sidebar</span>
+                    <span className="hidden xl:inline text-[11px]">Hide</span>
                   </>
                 ) : (
                   <>
                     <PanelLeftOpen className="h-4 w-4" />
-                    <span className="text-[11px]">Open Sidebar</span>
+                    <span className="text-[11px]">Sidebar</span>
                   </>
                 )}
               </button>
@@ -1033,7 +1090,7 @@ export const AIChatPage: React.FC = () => {
                 size="sm"
                 onClick={() => navigate("/")}
                 className="h-8 w-8 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 flex items-center justify-center shrink-0 p-0"
-                title="Go to Home Landing Page"
+                title="Go to Home"
               >
                 <Home className="h-3.5 w-3.5" />
               </Button>
@@ -1046,33 +1103,47 @@ export const AIChatPage: React.FC = () => {
                 title="Return to Live Chat"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                <span className="hidden xs:inline">Back to Chat</span>
+                <span className="hidden sm:inline">Live Chat</span>
               </Button>
 
               {activeConv ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xl shrink-0">{activeConv.personality.icon}</span>
+                <div className="flex items-center gap-2 min-w-0 max-w-[120px] xs:max-w-[160px] sm:max-w-[240px] md:max-w-xs">
+                  <span className="text-xl shrink-0 p-1 bg-background/50 rounded-xl shadow-xs">{activeConv.personality.icon}</span>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       <h2 className="text-xs sm:text-sm font-bold text-foreground truncate">
                         {activeConv.title}
                       </h2>
                       {activeConv.isPinned && <Pin className="h-3 w-3 text-amber-400 fill-current shrink-0" />}
                     </div>
                     <p className="text-[10px] text-primary font-semibold truncate">
-                      {activeConv.personality.name} • {providerInfo.name} ({selectedModel || "Auto-Detect"}) • Temp: {temperature}
+                      {activeConv.personality.name} • {providerInfo.name} ({selectedModel || "Auto"})
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <Bot className="h-5 w-5 text-primary" />
-                  <span className="text-xs font-bold text-foreground">AI Chat Studio</span>
+                  <span className="text-xs font-bold text-foreground">AI Studio</span>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              {/* Currency Selector Pill */}
+              <select
+                value={selectedCurrency}
+                onChange={(e) => handleCurrencyChange(e.target.value)}
+                className="h-8 rounded-xl bg-secondary/80 border border-border/60 text-[10px] sm:text-[11px] font-bold text-foreground px-1.5 sm:px-2 focus:outline-none focus:ring-1 focus:ring-primary shrink-0 max-w-[70px] sm:max-w-none"
+                title="Change display currency"
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.symbol} {c.code}
+                  </option>
+                ))}
+              </select>
+
               {/* Export Chat Button */}
               {activeConv && activeConv.messages.length > 0 && (
                 <Button
@@ -1082,7 +1153,8 @@ export const AIChatPage: React.FC = () => {
                     exportConversationAsMarkdown(activeConv);
                     toast({ title: "📥 Exported", description: `Saved "${activeConv.title}.md" to Downloads.` });
                   }}
-                  className="rounded-xl text-xs font-bold h-8 gap-1 border-border/60 text-foreground hover:bg-secondary/60"
+                  className="rounded-xl text-xs font-bold h-8 px-2 sm:px-3 gap-1 border-border/60 text-foreground hover:bg-secondary/60 shrink-0"
+                  title="Export chat as Markdown"
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Export</span>
@@ -1093,70 +1165,131 @@ export const AIChatPage: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowHelpModal(true)}
-                className="rounded-xl text-xs font-bold h-8 gap-1 border-border/60 text-foreground hover:bg-secondary/60"
+                className="rounded-xl text-xs font-bold h-8 px-2 sm:px-3 gap-1 border-border/60 text-foreground hover:bg-secondary/60 shrink-0"
               >
                 <HelpCircle className="h-3.5 w-3.5 text-primary" />
-                <span className="hidden sm:inline">Help & Guide</span>
+                <span className="hidden md:inline">Guide</span>
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowKeysModal(true)}
-                className="rounded-xl text-xs font-bold h-8 gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                className={cn(
+                  "rounded-xl text-xs font-bold h-8 px-2 sm:px-3 gap-1 transition-all shrink-0",
+                  isKeySet
+                    ? "border-primary/30 text-primary hover:bg-primary/10"
+                    : "border-amber-500/40 text-amber-400 bg-amber-500/10 animate-pulse"
+                )}
               >
                 <Key className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Keys</span>
+                <span className="hidden sm:inline">{isKeySet ? "Keys" : "Setup Keys"}</span>
               </Button>
             </div>
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div
+            ref={messagesContainerRef}
+            onScroll={handleMessagesScroll}
+            className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4 relative"
+          >
             {!activeConv || activeConv.messages.length === 0 ? (
-              /* ── Empty State with Suggestion Chips ── */
-              <div className="flex flex-col items-center justify-center min-h-[60vh] text-center max-w-lg mx-auto space-y-5">
+              /* ── Empty State: Futuristic Studio Hero + Bento Grid ── */
+              <div className="flex flex-col items-center justify-center min-h-[70vh] text-center max-w-2xl mx-auto space-y-6 animate-fade-in py-4 sm:py-6">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="h-20 w-20 rounded-3xl bg-gradient-to-tr from-primary via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-xl shadow-primary/20"
+                  className="relative"
                 >
-                  <Sparkles className="h-10 w-10 animate-pulse" />
+                  <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-gradient-to-tr from-primary via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-2xl shadow-primary/30">
+                    <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 animate-pulse" />
+                  </div>
+                  <div className="absolute -inset-2 rounded-3xl bg-primary/20 blur-xl -z-10 animate-pulse" />
                 </motion.div>
-                <div>
-                  <h3 className="text-lg font-black text-foreground">Start an AI Conversation</h3>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Choose from {PERSONALITIES.length} unique AI personalities and connect via any provider.
+
+                <div className="space-y-1.5">
+                  <h1 className="text-xl sm:text-3xl font-black font-display text-foreground tracking-tight">
+                    Welcome to AI Studio
+                  </h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+                    Connect with {PERSONALITIES.length} specialized intelligence personas across OpenAI, Gemini, Claude, Groq, or local Ollama servers.
                   </p>
                 </div>
-                <Button
-                  onClick={handleStartNewChat}
-                  className="rounded-2xl px-6 h-11 font-bold text-xs bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                >
-                  Choose Personality & Start 🚀
-                </Button>
 
-                {/* Suggestion Chips */}
-                <div className="w-full pt-2">
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-2.5">Or try a quick prompt:</p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {SUGGESTION_CHIPS.map((chip) => (
-                      <motion.button
-                        key={chip.prompt}
-                        whileHover={{ scale: 1.03, y: -1 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleSuggestionClick(chip.prompt)}
-                        className="px-3 py-2 rounded-2xl bg-card/80 border border-border/60 text-[11px] font-semibold text-foreground hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm backdrop-blur-sm"
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button
+                    onClick={handleStartNewChat}
+                    className="rounded-2xl px-6 h-11 font-extrabold text-xs bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
+                    Select Persona & Start 🚀
+                  </Button>
+                </div>
+
+                {/* Persona Quick Chips */}
+                <div className="w-full pt-1">
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-2">
+                    Popular Personas:
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {PERSONALITIES.slice(0, 6).map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => handlePersonalitySelected(p)}
+                        className="px-3 py-1.5 rounded-xl bg-card/80 border border-border/60 hover:border-primary/50 text-[11px] font-bold text-foreground hover:bg-primary/10 transition-all flex items-center gap-1.5 shadow-xs backdrop-blur-sm active:scale-95"
                       >
-                        {chip.label}
-                      </motion.button>
+                        <span>{p.icon}</span>
+                        <span>{p.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Categorized Prompt Starters Bento Grid */}
+                <div className="w-full pt-2 space-y-3 text-left">
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider text-center">
+                    Or start instantly with a prompt:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {BENTO_PROMPT_CATEGORIES.map((cat) => (
+                      <div
+                        key={cat.category}
+                        className={cn(
+                          "p-3 rounded-2xl border bg-card/60 backdrop-blur-md space-y-2 shadow-xs transition-all hover:bg-card/90",
+                          cat.gradient
+                        )}
+                      >
+                        <div className="flex items-center gap-2 pb-1 border-b border-border/30">
+                          {cat.icon}
+                          <span className="text-xs font-black text-foreground">{cat.category}</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {cat.items.map((item) => (
+                            <button
+                              key={item.title}
+                              onClick={() => handleSend(item.prompt)}
+                              className="w-full p-2 rounded-xl bg-secondary/40 hover:bg-primary/15 border border-border/40 hover:border-primary/40 text-left transition-all group flex items-start gap-2 active:scale-[0.98]"
+                            >
+                              <span className="text-sm shrink-0">{item.icon}</span>
+                              <div className="min-w-0">
+                                <span className="text-[11px] font-bold text-foreground group-hover:text-primary transition-colors block truncate">
+                                  {item.title}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground line-clamp-1">
+                                  {item.prompt}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
               </div>
             ) : (
-              /* ── Messages ── */
+              /* ── Chat Messages ── */
               activeConv.messages.map((msg) => {
                 const isUser = msg.sender === "user";
                 const isLastAi = !isUser && msg.isStreaming;
@@ -1170,19 +1303,19 @@ export const AIChatPage: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.25, ease: "easeOut" }}
                     className={cn(
-                      "flex gap-3 max-w-3xl",
+                      "flex gap-2 sm:gap-3 max-w-3xl",
                       isUser ? "ml-auto flex-row-reverse" : "mr-auto"
                     )}
                     onMouseEnter={() => setHoveredMsgId(msg.id)}
                     onMouseLeave={() => setHoveredMsgId(null)}
                   >
-                    {/* Avatar */}
+                    {/* Avatar Badge */}
                     <div
                       className={cn(
-                        "h-8 w-8 rounded-full flex items-center justify-center text-xs shrink-0 font-bold shadow-sm transition-shadow duration-300",
+                        "h-8 w-8 sm:h-8.5 sm:w-8.5 rounded-2xl flex items-center justify-center text-xs shrink-0 font-bold shadow-md transition-shadow duration-300",
                         isUser
                           ? "bg-primary text-primary-foreground"
-                          : "bg-gradient-to-tr from-purple-500 to-pink-500 text-white",
+                          : "bg-gradient-to-tr from-purple-600 via-primary to-pink-500 text-white",
                         isLastAi && "ring-2 ring-primary/50 ring-offset-2 ring-offset-background shadow-lg shadow-primary/30"
                       )}
                     >
@@ -1190,13 +1323,13 @@ export const AIChatPage: React.FC = () => {
                     </div>
 
                     {/* Content Box */}
-                    <div className="flex flex-col min-w-0 max-w-[85%]">
+                    <div className="flex flex-col min-w-0 max-w-[86%] sm:max-w-[88%]">
                       <div
                         className={cn(
-                          "p-3.5 rounded-3xl text-xs leading-relaxed shadow-sm border",
+                          "p-3 sm:p-4 rounded-3xl text-xs leading-relaxed shadow-sm border break-words [overflow-wrap:anywhere]",
                           isUser
-                            ? "bg-primary text-primary-foreground border-primary/20 rounded-tr-none"
-                            : "bg-card/90 text-foreground border-border/60 backdrop-blur-xl rounded-tl-none"
+                            ? "bg-gradient-to-r from-primary to-purple-600 text-primary-foreground border-primary/20 rounded-tr-none shadow-md shadow-primary/10"
+                            : "bg-card/95 text-foreground border-border/60 backdrop-blur-2xl rounded-tl-none shadow-xs"
                         )}
                       >
                         {msg.content ? (
@@ -1205,7 +1338,7 @@ export const AIChatPage: React.FC = () => {
                             {/* Streaming cursor */}
                             {isLastAi && (
                               <motion.span
-                                className="inline-block w-[2px] h-4 bg-primary ml-0.5 align-middle"
+                                className="inline-block w-1.5 h-4 bg-primary ml-1 align-middle rounded-full"
                                 animate={{ opacity: [1, 0, 1] }}
                                 transition={{ duration: 0.8, repeat: Infinity }}
                               />
@@ -1214,59 +1347,54 @@ export const AIChatPage: React.FC = () => {
                         ) : isLastAi ? (
                           <TypingIndicator />
                         ) : (
-                          <span className="italic text-muted-foreground">Empty message</span>
+                          <span className="italic text-muted-foreground">Empty response</span>
                         )}
 
-                        {/* Token / Cost Details for AI messages */}
+                        {/* Token & Cost Details for AI messages */}
                         {!isUser && msg.usage && (
-                          <TokenBadge
-                            usage={msg.usage}
-                            providerName={providerInfo.name}
-                            modelName={msg.modelName || selectedModel}
-                            currencyCode={selectedCurrency}
-                          />
+                          <div className="pt-2 mt-2 border-t border-border/40">
+                            <TokenBadge
+                              usage={msg.usage}
+                              providerName={providerInfo.name}
+                              modelName={msg.modelName || selectedModel}
+                              currencyCode={selectedCurrency}
+                            />
+                          </div>
                         )}
                       </div>
 
-                      {/* Actions Dock */}
+                      {/* Floating Actions Toolbar */}
                       <div
                         className={cn(
-                          "flex items-center gap-2 mt-1 text-[10px] text-muted-foreground px-1 flex-wrap",
+                          "flex items-center gap-1 sm:gap-1.5 mt-1.5 text-[10px] text-muted-foreground px-1 flex-wrap",
                           isUser ? "justify-end" : "justify-start"
                         )}
                       >
-                        {/* Relative time — shown on hover */}
-                        <AnimatePresence>
-                          {isHovered && (
-                            <motion.span
-                              initial={{ opacity: 0, x: -4 }}
-                              animate={{ opacity: 0.7, x: 0 }}
-                              exit={{ opacity: 0 }}
-                              className="text-[9px] text-muted-foreground/60 mr-1"
-                            >
-                              {formatRelativeTime(msg.timestamp)}
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
+                        {/* Relative time */}
+                        <span className="text-[9px] text-muted-foreground/60 mr-1">
+                          {formatRelativeTime(msg.timestamp)}
+                        </span>
 
-                        {/* Text-to-Speech Button for AI messages */}
+                        {/* Text-to-Speech Button */}
                         {!isUser && msg.content && (
                           <button
                             onClick={() => handleToggleTTS(msg.id, msg.content)}
                             className={cn(
-                              "transition-colors flex items-center gap-1 font-bold",
-                              isSpeakingThis ? "text-amber-400 animate-pulse" : "hover:text-foreground text-muted-foreground"
+                              "px-2 py-0.5 rounded-lg border flex items-center gap-1 font-bold transition-all",
+                              isSpeakingThis
+                                ? "text-amber-400 bg-amber-500/10 border-amber-500/30 shadow-xs"
+                                : "hover:text-foreground text-muted-foreground border-transparent hover:border-border/50"
                             )}
-                            title={isSpeakingThis ? "Stop speaking" : "Listen to response (TTS)"}
+                            title={isSpeakingThis ? "Stop audio" : "Read aloud (TTS)"}
                           >
-                            {isSpeakingThis ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                            <span>{isSpeakingThis ? "Stop" : "Listen"}</span>
+                            {isSpeakingThis ? <AudioEqualizerWave /> : <Volume2 className="h-3 w-3" />}
+                            <span>{isSpeakingThis ? "Speaking" : "Listen"}</span>
                           </button>
                         )}
 
                         <button
                           onClick={() => handleCopyMessage(msg.content, msg.id)}
-                          className="hover:text-foreground transition-colors flex items-center gap-1"
+                          className="px-2 py-0.5 rounded-lg hover:bg-secondary/60 hover:text-foreground transition-all flex items-center gap-1"
                         >
                           {copiedId === msg.id ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
                           <span>{copiedId === msg.id ? "Copied" : "Copy"}</span>
@@ -1275,16 +1403,16 @@ export const AIChatPage: React.FC = () => {
                         {!isUser && !isGenerating && (
                           <button
                             onClick={() => handleRegenerate(msg.id)}
-                            className="hover:text-foreground transition-colors flex items-center gap-1"
+                            className="px-2 py-0.5 rounded-lg hover:bg-secondary/60 hover:text-foreground transition-all flex items-center gap-1"
                           >
                             <RefreshCw className="h-3 w-3" />
-                            <span>Regenerate</span>
+                            <span>Retry</span>
                           </button>
                         )}
 
                         <button
                           onClick={() => handleDeleteMessage(msg.id)}
-                          className="hover:text-rose-400 transition-colors flex items-center gap-1"
+                          className="px-2 py-0.5 rounded-lg hover:bg-rose-500/10 hover:text-rose-400 transition-all flex items-center gap-1"
                         >
                           <Trash2 className="h-3 w-3" />
                           <span>Delete</span>
@@ -1297,12 +1425,10 @@ export const AIChatPage: React.FC = () => {
                               initial={{ opacity: 0, scale: 0.9 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.9 }}
-                              className="text-[9px] text-muted-foreground/50 flex items-center gap-1.5 ml-auto"
+                              className="text-[9px] text-muted-foreground/50 flex items-center gap-1.5 ml-auto font-mono"
                             >
                               <Type className="h-2.5 w-2.5" />
-                              {countWords(msg.content)} words
-                              <Hash className="h-2.5 w-2.5 ml-0.5" />
-                              {msg.content.length} chars
+                              {countWords(msg.content)}w • {msg.content.length}c
                             </motion.span>
                           )}
                         </AnimatePresence>
@@ -1315,19 +1441,58 @@ export const AIChatPage: React.FC = () => {
             <div ref={chatBottomRef} />
           </div>
 
-          {/* ─────────── BOTTOM INPUT BAR ─────────── */}
-          <div className="p-3 sm:p-4 border-t border-border/40 bg-card/60 backdrop-blur-xl shrink-0 space-y-2">
+          {/* Floating Jump to Latest Button */}
+          <AnimatePresence>
+            {showScrollBottomBtn && (
+              <motion.button
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                onClick={() => chatBottomRef.current?.scrollIntoView({ behavior: "smooth" })}
+                className="absolute bottom-24 right-6 z-20 px-3.5 py-2 rounded-2xl bg-card/95 border border-primary/50 text-primary shadow-2xl backdrop-blur-xl flex items-center gap-1.5 text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all hover:scale-105 active:scale-95"
+              >
+                <ChevronDown className="h-4 w-4" />
+                <span>Jump to Latest</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {/* ─────────── FLOATING BOTTOM INPUT DOCK ─────────── */}
+          <div className="p-2.5 sm:p-4 border-t border-border/40 bg-card/85 backdrop-blur-2xl shrink-0 space-y-2">
             <div className="max-w-3xl mx-auto space-y-2">
+              {/* Active Voice Recording Status Bar */}
+              <AnimatePresence>
+                {isListening && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-bold"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+                      <span>🎙️ Listening to your voice... Speak clearly</span>
+                    </div>
+                    <button
+                      onClick={handleToggleVoiceInput}
+                      className="text-[10px] underline hover:text-white"
+                    >
+                      Stop
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Magic Action Tool Chips */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                <span className="text-[10px] font-bold text-muted-foreground/80 flex items-center gap-1 shrink-0 mr-1">
+                <span className="text-[10px] font-black uppercase text-muted-foreground/80 flex items-center gap-1 shrink-0 mr-1">
                   <Wand2 className="h-3 w-3 text-primary" /> Magic Tools:
                 </span>
                 {MAGIC_ACTION_CHIPS.map((chip) => (
                   <button
                     key={chip.label}
                     onClick={() => handleMagicChipClick(chip.prefix)}
-                    className="px-2.5 py-1 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/50 text-[10px] font-semibold text-foreground shrink-0 transition-all flex items-center gap-1 hover:border-primary/40 active:scale-95"
+                    className="px-2.5 py-1 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/50 text-[10px] font-bold text-foreground shrink-0 transition-all flex items-center gap-1 hover:border-primary/40 active:scale-95 shadow-xs"
                   >
                     <span>{chip.icon}</span>
                     <span>{chip.label}</span>
@@ -1335,7 +1500,7 @@ export const AIChatPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Textarea + Mic + Send controls */}
+              {/* Textarea + Mic + Send Controls */}
               <div className="relative flex items-center">
                 <Textarea
                   value={inputText}
@@ -1346,11 +1511,11 @@ export const AIChatPage: React.FC = () => {
                       handleSend();
                     }
                   }}
-                  placeholder={`Ask ${activeConv?.personality.name || "AI"} anything... (Press Enter)`}
-                  className="min-h-[50px] max-h-[140px] py-3 pl-4 pr-32 rounded-2xl bg-card border-border/80 text-xs text-foreground focus:ring-1 focus:ring-primary resize-none shadow-sm"
+                  placeholder={`Message ${activeConv?.personality.name || "AI Assistant"}... (Enter to send)`}
+                  className="min-h-[50px] max-h-[140px] py-3 pl-3.5 pr-28 sm:pr-32 rounded-2xl bg-card border-border/80 text-xs text-foreground focus:ring-1 focus:ring-primary resize-none shadow-sm font-medium"
                 />
 
-                <div className="absolute right-2 flex items-center gap-1.5">
+                <div className="absolute right-2 flex items-center gap-1 sm:gap-1.5">
                   {/* Voice Input Microphone Button */}
                   <Button
                     size="sm"
@@ -1358,7 +1523,7 @@ export const AIChatPage: React.FC = () => {
                     type="button"
                     onClick={handleToggleVoiceInput}
                     className={cn(
-                      "h-9 w-9 p-0 rounded-xl border border-border/60 transition-all",
+                      "h-8.5 w-8.5 sm:h-9 sm:w-9 p-0 rounded-xl border border-border/60 transition-all shrink-0",
                       isListening
                         ? "bg-rose-500 text-white border-rose-500 animate-pulse shadow-md shadow-rose-500/30"
                         : "hover:bg-secondary text-muted-foreground hover:text-foreground"
@@ -1373,22 +1538,22 @@ export const AIChatPage: React.FC = () => {
                     <Button
                       size="sm"
                       onClick={handleStopGeneration}
-                      className="h-9 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs gap-1 shadow-md"
+                      className="h-8.5 sm:h-9 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs gap-1 shadow-md shrink-0"
                     >
                       <Square className="h-3.5 w-3.5 fill-current" />
                       <span>Stop</span>
                     </Button>
                   ) : (
                     <motion.div
-                      animate={inputText.trim() ? { boxShadow: "0 0 12px 2px hsl(var(--primary) / 0.3)" } : { boxShadow: "0 0 0px 0px transparent" }}
+                      animate={inputText.trim() ? { scale: [1, 1.03, 1] } : {}}
                       transition={{ duration: 0.3 }}
-                      className="rounded-xl"
+                      className="rounded-xl shrink-0"
                     >
                       <Button
                         size="sm"
                         onClick={() => handleSend()}
                         disabled={!inputText.trim()}
-                        className="h-9 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs gap-1 shadow-md disabled:opacity-40 transition-all"
+                        className="h-8.5 sm:h-9 px-3.5 sm:px-4 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:opacity-95 text-white font-extrabold text-xs gap-1 shadow-md shadow-primary/20 disabled:opacity-40 transition-all"
                       >
                         <Send className="h-3.5 w-3.5" />
                         <span>Send</span>
@@ -1399,14 +1564,17 @@ export const AIChatPage: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
-                <span>
-                  Active: <strong className="text-foreground">{providerInfo.name}</strong> ({selectedModel || "Auto-Detect"})
+                <span className="flex items-center gap-1.5 truncate max-w-[65%]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="truncate">
+                    Engine: <strong className="text-foreground">{providerInfo.name}</strong> ({selectedModel || "Auto"})
+                  </span>
                 </span>
-                <span className="flex items-center gap-2">
-                  <span className={cn("transition-colors", inputText.length > 3000 ? "text-amber-400 font-bold" : "")}>
+                <span className="flex items-center gap-2 shrink-0">
+                  <span className={cn("transition-colors font-mono", inputText.length > 3000 ? "text-amber-400 font-bold" : "")}>
                     {inputText.length > 0 ? `${inputText.length} chars` : ""}
                   </span>
-                  <span>Shift + Enter for newline</span>
+                  <span className="hidden sm:inline">Shift + Enter for new line</span>
                 </span>
               </div>
             </div>

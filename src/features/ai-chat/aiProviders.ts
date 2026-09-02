@@ -225,7 +225,7 @@ export async function streamAIChat({
   if (providerId === "gemini") {
     if (!apiKey) throw new Error("Google Gemini API Key is required. Please set it in Key Settings.");
     const targetModel = resolvedModel || "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
     const contents = [
       { role: "user", parts: [{ text: `[System Instruction: ${systemPrompt}]` }] },
       ...messages.map((m) => ({
@@ -252,27 +252,46 @@ export async function streamAIChat({
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
     let fullResponseText = "";
+    let sseBuffer = "";
 
     if (reader) {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
-        try {
-          const jsonMatches = chunk.match(/\{[\s\S]*?\}/g);
-          if (jsonMatches) {
-            for (const matchStr of jsonMatches) {
-              try {
-                const parsed = JSON.parse(matchStr);
-                const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (text) {
-                  fullResponseText += text;
-                  onChunk(text);
-                }
-              } catch { /* json parse chunk */ }
+        sseBuffer += chunk;
+        const lines = sseBuffer.split("\n");
+        sseBuffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data:")) continue;
+          const jsonStr = trimmed.replace(/^data:\s*/, "").trim();
+          if (!jsonStr || jsonStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              fullResponseText += text;
+              onChunk(text);
+            }
+          } catch {
+            // Fallback for non-standard chunk segments
+            const jsonMatches = jsonStr.match(/\{[\s\S]*?\}/g);
+            if (jsonMatches) {
+              for (const matchStr of jsonMatches) {
+                try {
+                  const parsedFallback = JSON.parse(matchStr);
+                  const fallbackText = parsedFallback.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (fallbackText) {
+                    fullResponseText += fallbackText;
+                    onChunk(fallbackText);
+                  }
+                } catch { /* ignore fallback error */ }
+              }
             }
           }
-        } catch { /* decode */ }
+        }
       }
     }
 
