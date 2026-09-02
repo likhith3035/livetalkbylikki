@@ -9,6 +9,8 @@ import {
   GameReaction,
   GameChatMessage,
   SpectatorInfo,
+  SpectatorCheer,
+  SpectatorCheerType,
   TicTacToeState,
   ConnectFourState,
   RPSState,
@@ -429,6 +431,52 @@ export function subscribeToGameChat(
 
   onValue(chatRef, handler);
   return () => off(chatRef, "value", handler);
+}
+
+// ── Spectator Cheer Cannon ──
+
+export async function sendSpectatorCheer(
+  roomCode: string,
+  spectatorName: string,
+  type: SpectatorCheerType
+): Promise<void> {
+  if (!db) return;
+  const cleanCode = roomCode.toUpperCase();
+  const cheerRef = push(ref(db, `rooms/game_${cleanCode}/cheers`));
+  const cheer: SpectatorCheer = {
+    id: cheerRef.key || String(Date.now()),
+    roomCode: cleanCode,
+    spectatorName,
+    type,
+    timestamp: Date.now(),
+  };
+  await set(cheerRef, sanitizeFirebasePayload(cheer)).catch(() => {});
+}
+
+export function subscribeToSpectatorCheers(
+  roomCode: string,
+  onCheer: (cheer: SpectatorCheer) => void
+): () => void {
+  if (!db) return () => {};
+  const cleanCode = roomCode.toUpperCase();
+  const cheersRef = query(ref(db, `rooms/game_${cleanCode}/cheers`), limitToLast(10));
+  const seenIds = new Set<string>();
+
+  const handler = (snap: any) => {
+    if (snap.exists()) {
+      const data = snap.val();
+      const list = Object.values(data) as SpectatorCheer[];
+      list.forEach((c) => {
+        if (!seenIds.has(c.id) && Date.now() - c.timestamp < 8000) {
+          seenIds.add(c.id);
+          onCheer(c);
+        }
+      });
+    }
+  };
+
+  onValue(cheersRef, handler);
+  return () => off(cheersRef, "value", handler);
 }
 
 // ── Two-Way Rematch Handshake ──

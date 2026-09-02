@@ -131,6 +131,37 @@ class GameSoundSynthesizer {
     this.playTone(180, 0.05, "triangle", 0.18);
     this.playTone(140, 0.07, "sine", 0.15, 60);
   }
+
+  public playCheer() {
+    this.vibrate([20, 30, 40, 50]);
+    this.playTone(523.25, 0.1, "sine", 0.12, 0);   // C5
+    this.playTone(659.25, 0.12, "sine", 0.14, 80);  // E5
+    this.playTone(783.99, 0.15, "sine", 0.15, 160); // G5
+    this.playTone(1046.50, 0.25, "triangle", 0.18, 240); // C6
+  }
+
+  public playHorn() {
+    this.vibrate([40, 30, 60]);
+    // Dual frequency sawtooth airhorn burst
+    this.playTone(466.16, 0.22, "sawtooth", 0.2, 0); // Bb4
+    this.playTone(587.33, 0.22, "sawtooth", 0.18, 0); // D5
+  }
+
+  public playApplause() {
+    this.vibrate([15, 15, 20, 20, 25]);
+    // Rapid rhythmic bursts mimicking crowd clap
+    for (let i = 0; i < 5; i++) {
+      this.playTone(400 + Math.random() * 200, 0.04, "triangle", 0.08, i * 60);
+    }
+  }
+
+  public playRocket() {
+    this.vibrate([20, 20, 40]);
+    // Rising sweep + burst
+    this.playTone(300, 0.08, "sine", 0.1, 0);
+    this.playTone(600, 0.08, "sine", 0.12, 60);
+    this.playTone(1200, 0.15, "triangle", 0.16, 120);
+  }
 }
 
 export const gameAudio = new GameSoundSynthesizer();

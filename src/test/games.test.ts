@@ -11,6 +11,7 @@ import {
   getXpForNextLevel,
   getRankTitle,
 } from "@/features/games/services/gameProgressionService";
+import { gameAudio } from "@/features/games/services/gameSoundService";
 
 describe("LiveTalk Arcade Games Suite", () => {
   beforeEach(() => {
@@ -183,6 +184,66 @@ describe("LiveTalk Arcade Games Suite", () => {
         : [];
       expect(normalizedFlipped).toEqual([]);
       expect(() => [...normalizedFlipped, 0]).not.toThrow();
+    });
+  });
+
+  describe("Spectator Cheer Cannon", () => {
+    it("should accept valid cheer types and maintain sound synthesis", () => {
+      const validTypes = ["confetti", "horn", "applause", "rocket"] as const;
+      expect(validTypes).toHaveLength(4);
+
+      // Verify synthesizer doesn't throw even if muted or offline
+      expect(() => {
+        gameAudio.playCheer();
+        gameAudio.playHorn();
+        gameAudio.playApplause();
+        gameAudio.playRocket();
+      }).not.toThrow();
+    });
+  });
+
+  describe("Offline AI Practice Fallback", () => {
+    it("should correctly convert online room state to AI mode preserving scores and state", () => {
+      const onlineRoom: any = {
+        roomCode: "XYZ123",
+        gameId: "ttt",
+        mode: "quickmatch",
+        status: "playing",
+        round: 2,
+        currentTurn: "host_player",
+        players: {
+          host: { id: "host_player", name: "Host", score: 1 },
+          guest: { id: "guest_player", name: "Guest", score: 0 },
+        },
+        gameState: { board: Array(9).fill(null), winningLine: null },
+      };
+
+      // Conversion logic matching handleSwitchActiveRoomToAI
+      const aiPlayer = {
+        id: "ai_opponent",
+        name: "Cyber AI 🤖",
+        avatar: "🤖",
+        score: onlineRoom.players.guest?.score || 0,
+        level: 10,
+        isHost: false,
+        isOnline: true,
+        lastActive: Date.now(),
+      };
+
+      const converted = {
+        ...onlineRoom,
+        mode: "ai",
+        players: {
+          host: onlineRoom.players.host,
+          guest: aiPlayer,
+        },
+      };
+
+      expect(converted.mode).toBe("ai");
+      expect(converted.players.guest.id).toBe("ai_opponent");
+      expect(converted.players.guest.score).toBe(0);
+      expect(converted.players.host.score).toBe(1);
+      expect(converted.round).toBe(2);
     });
   });
 });

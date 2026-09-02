@@ -151,3 +151,13 @@ export interface ReactionGameState {
   guestTimeMs: number | null;
   winner: string | null;
 }
+
+export type SpectatorCheerType = "confetti" | "horn" | "applause" | "rocket";
+
+export interface SpectatorCheer {
+  id: string;
+  roomCode: string;
+  spectatorName: string;
+  type: SpectatorCheerType;
+  timestamp: number;
+}

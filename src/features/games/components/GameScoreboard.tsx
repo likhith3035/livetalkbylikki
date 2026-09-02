@@ -108,8 +108,14 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-          {!isSpectator && !isAI && !isLocal && (
-            <GameMiniPIP playerName={isHost ? hostPlayer.name : guestDisplayName} />
+          {!isSpectator && (
+            <GameMiniPIP
+              playerName={isHost ? hostPlayer.name : guestDisplayName}
+              opponentName={isHost ? guestDisplayName : hostPlayer.name}
+              roomCode={room.roomCode}
+              isHost={isHost}
+              isOnlineMode={room.mode !== "local" && room.mode !== "ai"}
+            />
           )}
 
           {/* 1-Tap Quick Invite Link Copier */}

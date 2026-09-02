@@ -6,9 +6,10 @@ import { GameModeModal } from "@/features/games/components/GameModeModal";
 import { QuickMatchSearchingOverlay } from "@/features/games/components/QuickMatchSearchingOverlay";
 import { GameScoreboard } from "@/features/games/components/GameScoreboard";
 import { QRShareModal } from "@/features/games/components/QRShareModal";
-import { ReconnectionBanner } from "@/features/games/components/ReconnectionBanner";
+import { OfflineAIFallbackBanner } from "@/features/games/components/OfflineAIFallbackBanner";
 import { VictoryModal } from "@/features/games/components/VictoryModal";
 import { GameLiveReactions } from "@/features/games/components/GameLiveReactions";
+import { SpectatorCheerCannon } from "@/features/games/components/SpectatorCheerCannon";
 import { GameInGameChat } from "@/features/games/components/GameInGameChat";
 import { GamerProfileModal } from "@/features/games/components/GamerProfileModal";
 import { GameAvatar } from "@/features/games/components/GameAvatar";
@@ -62,6 +63,7 @@ import {
   Percent,
   Sparkles,
   Edit3,
+  WifiOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -140,8 +142,27 @@ export default function GamesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const [gamerProfile, setGamerProfile] = useState<GamerProfile>(getGamerProfile);
+  const [isSelfOffline, setIsSelfOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
   const createdRoomCodeRef = useRef<string | null>(null);
   const recordedRoundRef = useRef<number>(-1);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsSelfOffline(false);
+      toast.success("Back online!");
+    };
+    const handleOffline = () => {
+      setIsSelfOffline(true);
+      toast.warning("Network connection lost. Offline AI Practice available.");
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useSEO({
     title: "LiveTalk Arcade – Play 1v1 Games Online via QR Code & AI",
@@ -251,9 +272,46 @@ export default function GamesPage() {
     return () => unsub();
   }, [activeRoom?.roomCode, activeRoom?.mode, isSearchingQuickMatch, dismissedVictoryRound]);
 
+  const handleSwitchActiveRoomToAI = useCallback(() => {
+    if (!activeRoom) return;
+    gameAudio.playClick();
+    toast.info("Switched to Cyber AI Practice Mode!");
+
+    const aiPlayer: PlayerInfo = {
+      id: "ai_opponent",
+      name: "Cyber AI 🤖",
+      avatar: "🤖",
+      score: activeRoom.players.guest?.score || 0,
+      level: 10,
+      isHost: false,
+      isOnline: true,
+      lastActive: Date.now(),
+    };
+
+    const nextTurn =
+      activeRoom.currentTurn === activeRoom.players.host.id
+        ? activeRoom.players.host.id
+        : "ai_opponent";
+
+    setActiveRoom({
+      ...activeRoom,
+      mode: "ai",
+      currentTurn: nextTurn,
+      players: {
+        host: activeRoom.players.host,
+        guest: aiPlayer,
+      },
+    });
+  }, [activeRoom]);
+
   const handleSelectMode = async (gameId: GameId, mode: GameMode, rules?: GameCustomRules) => {
     gameAudio.playClick();
     const gameMeta = GAMES_CATALOG.find((g) => g.id === gameId) || null;
+
+    if (isSelfOffline && (mode === "quickmatch" || mode === "friend")) {
+      toast.info("Offline mode active. Starting smart AI practice match!");
+      mode = "ai";
+    }
 
     if (mode === "quickmatch") {
       setIsSearchingQuickMatch(true);
@@ -519,13 +577,15 @@ export default function GamesPage() {
               onTurnTimeout={handleTurnTimeout}
             />
 
-            <ReconnectionBanner
+            <OfflineAIFallbackBanner
               isOpponentOffline={isOpponentOffline}
+              isSelfOffline={isSelfOffline}
               opponentName={
                 activeRoom.players.host.id === myPlayerId
                   ? activeRoom.players.guest?.name || "Opponent"
                   : activeRoom.players.host.name
               }
+              onSwitchToAI={handleSwitchActiveRoomToAI}
               onForfeitClaim={() => {
                 setActiveRoom({
                   ...activeRoom,
@@ -584,6 +644,13 @@ export default function GamesPage() {
               roomCode={activeRoom.roomCode}
               myPlayerId={myPlayerId}
               myPlayerName={myPlayerInfo.name}
+              isSpectator={isSpectator}
+            />
+
+            {/* Spectator Cheer Cannon & Live Cheer Storm */}
+            <SpectatorCheerCannon
+              roomCode={activeRoom.roomCode}
+              spectatorName={myPlayerInfo.name}
               isSpectator={isSpectator}
             />
 
@@ -712,14 +779,21 @@ export default function GamesPage() {
             {/* Hero Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
                     <Gamepad2 className="w-3.5 h-3.5" />
                     LiveTalk Arcade
                   </span>
-                  <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-semibold">
-                    100% Free • No Signup
-                  </span>
+                  {isSelfOffline ? (
+                    <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-bold flex items-center gap-1.5 animate-pulse">
+                      <WifiOff className="w-3.5 h-3.5" />
+                      Offline Mode • Smart AI Ready
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-semibold">
+                      100% Free • No Signup
+                    </span>
+                  )}
                 </div>
                 <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">
                   Play 1v1 Games with Anyone
