@@ -173,21 +173,21 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({ room, myPlayerId
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-2 select-none w-full max-w-md mx-auto">
-      {/* Pair counters */}
-      <div className="flex items-center justify-between w-full px-2 mb-4 text-xs font-bold text-muted-foreground">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border shadow-sm">
-          <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
-          <span>{room.players.host.name}: {state.hostPairs} Pairs</span>
+    <div className="flex flex-col items-center justify-center p-2 sm:p-4 select-none w-full max-w-[340px] xs:max-w-sm sm:max-w-md mx-auto touch-manipulation">
+      {/* Pairs Scored Tracker */}
+      <div className="flex items-center justify-between w-full text-[11px] sm:text-xs font-bold mb-2.5 sm:mb-3 gap-2">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-card border border-border shadow-sm truncate min-w-0">
+          <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-violet-500 shrink-0" />
+          <span className="truncate">{room.players.host.name}: {state.hostPairs}</span>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border shadow-sm">
-          <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
-          <span>{room.players.guest?.name || "Player 2"}: {state.guestPairs} Pairs</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-card border border-border shadow-sm truncate min-w-0">
+          <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-cyan-500 shrink-0" />
+          <span className="truncate">{room.players.guest?.name || "Player 2"}: {state.guestPairs}</span>
         </div>
       </div>
 
       {/* 4x4 Grid */}
-      <div className="grid grid-cols-4 gap-2.5 sm:gap-3 p-4 rounded-3xl bg-card border-2 border-border shadow-2xl w-full aspect-square">
+      <div className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-3 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-card border-2 border-border shadow-2xl w-full aspect-square">
         {state.cards.map((card) => {
           const isRevealed = card.isFlipped || card.isMatched;
           const isMatchedByMe = card.isMatched && card.matchedBy === myPlayerId;
@@ -198,7 +198,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({ room, myPlayerId
               whileTap={{ scale: isRevealed || (!isMyTurn && room.mode !== "local") ? 1 : 0.95 }}
               onClick={() => handleCardClick(card.id)}
               disabled={isRevealed || isProcessing || (room.mode !== "local" && !isMyTurn)}
-              className={`aspect-square rounded-2xl flex items-center justify-center text-3xl sm:text-4xl transition-all duration-300 border ${
+              className={`aspect-square rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl xs:text-3xl sm:text-4xl transition-all duration-300 border ${
                 card.isMatched
                   ? isMatchedByMe
                     ? "bg-violet-500/20 border-2 border-violet-500/60 shadow-md shadow-violet-500/20 opacity-80"
@@ -217,7 +217,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({ room, myPlayerId
                   {card.emoji}
                 </motion.span>
               ) : (
-                <span className="text-muted-foreground/40 font-bold text-lg">?</span>
+                <span className="text-muted-foreground/40 font-bold text-base sm:text-lg">?</span>
               )}
             </motion.button>
           );

@@ -55,7 +55,6 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
 
   const handleSendEmoji = async (emoji: string) => {
     gameAudio.playClick();
-    // Also trigger local animation immediately for responsive feel
     const localId = `local_${Date.now()}`;
     const xOffset = (Math.random() - 0.5) * 40;
     setActiveReactions((prev) => [
@@ -67,18 +66,23 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
         type: "emoji",
         content: emoji,
         timestamp: Date.now(),
+        isSpectator,
         xOffset,
       },
     ]);
+
     setTimeout(() => {
       setActiveReactions((prev) => prev.filter((r) => r.id !== localId));
     }, 1400);
 
     await sendGameReaction(roomCode, {
+      id: `rx_${Date.now()}`,
       senderId: myPlayerId,
-      senderName: isSpectator ? `${myPlayerName} (Spectator)` : myPlayerName,
+      senderName: myPlayerName,
       type: "emoji",
       content: emoji,
+      timestamp: Date.now(),
+      isSpectator,
     });
   };
 
@@ -87,6 +91,7 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
     setIsTauntsOpen(false);
 
     const localId = `local_${Date.now()}`;
+    const xOffset = (Math.random() - 0.5) * 30;
     setActiveReactions((prev) => [
       ...prev.slice(-3),
       {
@@ -96,25 +101,30 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
         type: "taunt",
         content: taunt,
         timestamp: Date.now(),
-        xOffset: 0,
+        isSpectator,
+        xOffset,
       },
     ]);
+
     setTimeout(() => {
       setActiveReactions((prev) => prev.filter((r) => r.id !== localId));
     }, 1800);
 
     await sendGameReaction(roomCode, {
+      id: `rx_${Date.now()}`,
       senderId: myPlayerId,
-      senderName: isSpectator ? `${myPlayerName} (Spectator)` : myPlayerName,
+      senderName: myPlayerName,
       type: "taunt",
       content: taunt,
+      timestamp: Date.now(),
+      isSpectator,
     });
   };
 
   return (
     <>
-      {/* Floating Reactions Layer - Anchored to Bottom Right Corner away from Game Board */}
-      <div className="fixed bottom-24 right-4 sm:right-8 pointer-events-none z-50 flex flex-col items-end gap-2">
+      {/* Floating Animated Reaction Sprites Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-30 flex items-center justify-center overflow-hidden">
         <AnimatePresence>
           {!isReactionsMuted &&
             activeReactions.map((reaction) => {
@@ -122,14 +132,13 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
               return (
                 <motion.div
                   key={reaction.id}
-                  initial={{ opacity: 0, y: 30, scale: 0.7, x: reaction.xOffset }}
-                  animate={{ opacity: 1, y: -40, scale: 1.1, x: reaction.xOffset }}
-                  exit={{ opacity: 0, scale: 0.4, y: -80 }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                  className="flex flex-col items-end drop-shadow-lg pointer-events-none"
+                  initial={{ opacity: 0, y: 40, scale: 0.5, x: reaction.xOffset }}
+                  animate={{ opacity: [0, 1, 1, 0], y: -160, scale: [0.5, 1.25, 1.1, 0.9], x: reaction.xOffset * 1.5 }}
+                  transition={{ duration: 1.4, ease: "easeOut" }}
+                  className="absolute flex flex-col items-center select-none"
                 >
                   {reaction.type === "emoji" ? (
-                    <span className="text-3xl filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                    <span className="text-3xl sm:text-4xl filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
                       {reaction.content}
                     </span>
                   ) : (
@@ -153,15 +162,15 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
       </div>
 
       {/* Sleek Reactions Bar at bottom of screen */}
-      <div className="w-full max-w-lg flex flex-col items-center gap-1.5 mt-2 select-none">
-        <div className="flex items-center justify-between w-full px-2 py-1 rounded-2xl bg-card border border-border shadow-sm">
+      <div className="w-full max-w-xl flex flex-col items-center gap-1.5 mt-2 px-1.5 select-none touch-manipulation">
+        <div className="flex items-center justify-between w-full px-2 py-1 rounded-2xl bg-card/95 border border-border shadow-sm gap-1">
           {/* Quick Emojis row */}
-          <div className="flex items-center gap-1 overflow-x-auto py-0.5 px-1 scrollbar-none">
+          <div className="flex items-center gap-1 overflow-x-auto py-0.5 px-0.5 no-scrollbar touch-pan-x min-w-0 flex-1">
             {EMOJI_PRESETS.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => handleSendEmoji(emoji)}
-                className="w-7 h-7 rounded-lg hover:bg-muted flex items-center justify-center text-base hover:scale-115 active:scale-95 transition-all cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg hover:bg-muted flex items-center justify-center text-sm sm:text-base hover:scale-115 active:scale-95 transition-all cursor-pointer shrink-0"
                 title={`Send ${emoji}`}
               >
                 {emoji}
@@ -175,7 +184,7 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => setIsTauntsOpen((prev) => !prev)}
-              className="h-7 rounded-lg text-xs font-semibold gap-1 px-2 text-muted-foreground hover:text-foreground border border-border/40 hover:bg-muted"
+              className="h-7 sm:h-8 rounded-lg text-[11px] sm:text-xs font-semibold gap-1 px-2 text-muted-foreground hover:text-foreground border border-border/40 hover:bg-muted cursor-pointer"
             >
               <MessageSquare className="w-3 h-3 text-primary" />
               <span>Taunts</span>
@@ -188,7 +197,7 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
                 setIsReactionsMuted((prev) => !prev);
                 setActiveReactions([]);
               }}
-              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
               title={isReactionsMuted ? "Show floating reactions" : "Hide floating reactions"}
             >
               {isReactionsMuted ? <EyeOff className="w-3.5 h-3.5 text-rose-400" /> : <Eye className="w-3.5 h-3.5" />}
@@ -212,13 +221,13 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
                 </span>
                 <button
                   onClick={() => setIsTauntsOpen(false)}
-                  className="text-muted-foreground hover:text-foreground text-xs p-1"
+                  className="text-muted-foreground hover:text-foreground text-xs p-1 cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-2 xs:grid-cols-3 gap-1">
                 {TAUNT_PRESETS.map((taunt) => (
                   <button
                     key={taunt}

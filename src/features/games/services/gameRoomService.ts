@@ -127,6 +127,7 @@ export async function createGameRoom({
   const defaultRules: GameCustomRules = {
     turnTimerSeconds: rules?.turnTimerSeconds || 0,
     maxSeriesWins: rules?.maxSeriesWins || 2,
+    aiDifficulty: rules?.aiDifficulty || "medium",
   };
 
   const initialRoom: GameRoomState = {
@@ -430,6 +431,68 @@ export function subscribeToGameChat(
   return () => off(chatRef, "value", handler);
 }
 
+// ── Two-Way Rematch Handshake ──
+
+export async function voteRematch(
+  roomCode: string,
+  playerId: string,
+  gameId: GameId,
+  nextRound: number,
+  turnTimerSeconds = 0
+): Promise<{ bothReady: boolean }> {
+  if (!db) return { bothReady: false };
+  const cleanCode = roomCode.toUpperCase();
+  const roomRef = ref(db, `rooms/game_${cleanCode}`);
+
+  const snap = await get(roomRef);
+  if (!snap.exists()) return { bothReady: false };
+
+  const room = snap.val() as GameRoomState;
+  const existingVotes = room.rematchVotes || {};
+  const newVotes = { ...existingVotes, [playerId]: true };
+
+  const hostId = room.players.host.id;
+  const guestId = room.players.guest?.id;
+
+  const bothReady = guestId ? Boolean(newVotes[hostId] && newVotes[guestId]) : true;
+
+  if (bothReady) {
+    const freshGameState = createInitialGameState(gameId);
+    const turnExpiresAt = turnTimerSeconds > 0 ? Date.now() + turnTimerSeconds * 1000 : null;
+
+    await update(
+      roomRef,
+      sanitizeFirebasePayload({
+        gameState: freshGameState,
+        winnerId: null,
+        status: "playing",
+        round: nextRound,
+        lastMoveTimestamp: Date.now(),
+        turnExpiresAt,
+        rematchVotes: null, // cleared for new round
+      })
+    ).catch(() => {});
+
+    return { bothReady: true };
+  } else {
+    await update(
+      roomRef,
+      sanitizeFirebasePayload({
+        rematchVotes: newVotes,
+      })
+    ).catch(() => {});
+
+    return { bothReady: false };
+  }
+}
+
+export async function clearRematchVotes(roomCode: string): Promise<void> {
+  if (!db) return;
+  const cleanCode = roomCode.toUpperCase();
+  const votesRef = ref(db, `rooms/game_${cleanCode}/rematchVotes`);
+  await remove(votesRef).catch(() => {});
+}
+
 // ── Game Moves & Status Updates ──
 
 export async function sendGameMove<T>(
@@ -511,6 +574,7 @@ export async function resetGameRound(
       round: nextRound,
       lastMoveTimestamp: Date.now(),
       turnExpiresAt,
+      rematchVotes: null,
     })
   ).catch((err) => {
     console.warn("Reset round notice:", err);
@@ -555,6 +619,7 @@ export async function leaveGameRoom(roomCode: string, isHost: boolean): Promise<
       sanitizeFirebasePayload({
         "players/guest": null,
         status: "waiting",
+        rematchVotes: null,
       })
     ).catch(() => {});
   }

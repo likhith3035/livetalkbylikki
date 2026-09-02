@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { checkTicTacToeWinner, getBestMinimaxMove } from "@/features/games/components/games/TicTacToeGame";
+import { checkTicTacToeWinner, getSmartAIMove } from "@/features/games/components/games/TicTacToeGame";
 import { checkConnectFourWinner, getBestConnectFourAIMove } from "@/features/games/components/games/ConnectFourGame";
 import { determineRPSWinner } from "@/features/games/components/games/RPSClashGame";
 import { generateGameRoomCode, createInitialGameState } from "@/features/games/services/gameRoomService";
@@ -7,10 +7,10 @@ import {
   getGamerProfile,
   saveGamerProfile,
   awardMatchXP,
+  recordMatchHistory,
   getXpForNextLevel,
   getRankTitle,
 } from "@/features/games/services/gameProgressionService";
-import { TicTacToeCell, ConnectFourCell } from "@/features/games/types";
 
 describe("LiveTalk Arcade Games Suite", () => {
   beforeEach(() => {
@@ -57,40 +57,75 @@ describe("LiveTalk Arcade Games Suite", () => {
       expect(result.profile.played).toBe(1);
       expect(result.newBadgeUnlocked?.id).toBe("first_win");
     });
+
+    it("should award streak multipliers for 3+ and 5+ win streaks", () => {
+      // 1st win
+      awardMatchXP({ won: true });
+      // 2nd win
+      awardMatchXP({ won: true });
+      // 3rd win: 1.25x streak multiplier
+      const r3 = awardMatchXP({ won: true });
+      expect(r3.streakMultiplier).toBe(1.25);
+      expect(r3.streakBonus).toBeGreaterThan(0);
+
+      // 4th win
+      awardMatchXP({ won: true });
+      // 5th win: 1.5x streak multiplier
+      const r5 = awardMatchXP({ won: true });
+      expect(r5.streakMultiplier).toBe(1.5);
+      expect(r5.newBadgeUnlocked?.id).toBe("streak_5");
+    });
+
+    it("should record match history and cap entries at 10 items", () => {
+      for (let i = 1; i <= 15; i++) {
+        recordMatchHistory({
+          gameId: "ttt",
+          mode: "friend",
+          outcome: i % 2 === 0 ? "won" : "lost",
+          opponentName: `Opponent_${i}`,
+          xpGained: 110,
+        });
+      }
+
+      const profile = getGamerProfile();
+      expect(profile.recentMatches).toHaveLength(10);
+      // Most recent should be Opponent_15
+      expect(profile.recentMatches?.[0].opponentName).toBe("Opponent_15");
+    });
   });
 
   describe("Tic-Tac-Toe Game Engine", () => {
     it("should detect horizontal, vertical, and diagonal wins", () => {
-      const rowWinBoard: TicTacToeCell[] = [
+      const rowWinBoard = [
         "X", "X", "X",
         "O", "O", "",
         "", "", "",
       ];
-      expect(checkTicTacToeWinner(rowWinBoard).winner).toBe("X");
+      expect(checkTicTacToeWinner(rowWinBoard as any).winner).toBe("X");
 
-      const diagWinBoard: TicTacToeCell[] = [
+      const diagWinBoard = [
         "O", "X", "",
         "X", "O", "",
         "", "", "O",
       ];
-      expect(checkTicTacToeWinner(diagWinBoard).winner).toBe("O");
+      expect(checkTicTacToeWinner(diagWinBoard as any).winner).toBe("O");
     });
 
-    it("should make optimal AI blocking and winning moves via Minimax", () => {
+    it("should make optimal AI blocking and winning moves on hard difficulty", () => {
       // AI is 'O'. Human 'X' is about to win at index 2
-      const trapBoard: TicTacToeCell[] = [
+      const trapBoard = [
         "X", "X", "",
         "O", "", "",
         "", "", "",
       ];
-      const aiMove = getBestMinimaxMove(trapBoard, "O");
+      const aiMove = getSmartAIMove(trapBoard as any, "O", "hard");
       expect(aiMove).toBe(2); // AI must block index 2
     });
   });
 
   describe("Connect 4 Engine", () => {
     it("should detect 4 in a row horizontally and vertically", () => {
-      const board: ConnectFourCell[][] = Array(6).fill("").map(() => Array(7).fill(""));
+      const board: any[][] = Array(6).fill("").map(() => Array(7).fill(""));
       board[5][0] = "red";
       board[5][1] = "red";
       board[5][2] = "red";
@@ -101,15 +136,15 @@ describe("LiveTalk Arcade Games Suite", () => {
       expect(result.cells).toHaveLength(4);
     });
 
-    it("should block opponent's winning connect 4 drop", () => {
-      const board: ConnectFourCell[][] = Array(6).fill("").map(() => Array(7).fill(""));
+    it("should block opponent's winning connect 4 drop on hard difficulty", () => {
+      const board: any[][] = Array(6).fill("").map(() => Array(7).fill(""));
       // Human (red) has 3 in bottom row
       board[5][0] = "red";
       board[5][1] = "red";
       board[5][2] = "red";
 
       // AI is yellow. It must drop in col 3 to block
-      const aiCol = getBestConnectFourAIMove(board, "yellow");
+      const aiCol = getBestConnectFourAIMove(board, "yellow", "hard");
       expect(aiCol).toBe(3);
     });
   });

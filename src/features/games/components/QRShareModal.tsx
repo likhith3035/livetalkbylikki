@@ -83,13 +83,13 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
   return (
     <>
       <Dialog open={isOpen && !showScanner} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-sm sm:max-w-md p-6 rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/50 shadow-2xl">
+        <DialogContent className="max-w-[92vw] sm:max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/50 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar touch-manipulation">
           <DialogHeader className="text-center">
             {/* Share Tab Switcher */}
             <div className="flex items-center justify-center gap-1.5 p-1 rounded-2xl bg-muted/50 border border-border/40 mx-auto mb-2 w-fit">
               <button
                 onClick={() => setTab("play")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   tab === "play" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -99,7 +99,7 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
 
               <button
                 onClick={() => setTab("spectate")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   tab === "spectate" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -108,7 +108,7 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
               </button>
             </div>
 
-            <DialogTitle className="text-xl font-bold flex items-center justify-center gap-2">
+            <DialogTitle className="text-lg sm:text-xl font-bold flex items-center justify-center gap-2">
               <QrCode className="w-5 h-5 text-primary" />
               {tab === "play" ? "Invite Opponent" : "Share Spectator Link"}
             </DialogTitle>
@@ -120,26 +120,26 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
           </DialogHeader>
 
           {/* QR Card Container */}
-          <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-muted/40 border border-border/30 my-2">
+          <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-muted/40 border border-border/30 my-2">
             <div className="p-3 bg-white rounded-2xl shadow-md">
               <QRCodeSVG
                 value={activeUrl}
-                size={170}
+                size={160}
                 level="M"
                 includeMargin={false}
               />
             </div>
 
             {/* Room Code Badge */}
-            <div className="mt-4 flex items-center gap-2">
-              <div className="px-4 py-1.5 rounded-xl bg-background/80 border border-border/40 text-lg font-black tracking-widest text-primary">
+            <div className="mt-3 sm:mt-4 flex items-center gap-2">
+              <div className="px-3.5 sm:px-4 py-1.5 rounded-xl bg-background/80 border border-border/40 text-base sm:text-lg font-black tracking-widest text-primary">
                 {roomCode}
               </div>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleCopyCode}
-                className="h-9 w-9 rounded-xl border-border/40 hover:bg-primary/10"
+                className="h-9 w-9 rounded-xl border-border/40 hover:bg-primary/10 cursor-pointer"
                 title="Copy Room Code"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -148,33 +148,33 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
           </div>
 
           {/* Quick Share Buttons */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleWhatsAppShare}
-              className="rounded-xl border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-500 text-xs font-semibold gap-1.5"
+              className="rounded-xl border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-500 text-[11px] sm:text-xs font-semibold gap-1 sm:gap-1.5 cursor-pointer px-1.5"
             >
-              <MessageCircle className="w-3.5 h-3.5" />
-              WhatsApp
+              <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">WhatsApp</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleTelegramShare}
-              className="rounded-xl border-sky-500/30 hover:bg-sky-500/10 text-sky-500 text-xs font-semibold gap-1.5"
+              className="rounded-xl border-sky-500/30 hover:bg-sky-500/10 text-sky-500 text-[11px] sm:text-xs font-semibold gap-1 sm:gap-1.5 cursor-pointer px-1.5"
             >
-              <Send className="w-3.5 h-3.5" />
-              Telegram
+              <Send className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Telegram</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleNativeShare}
-              className="rounded-xl border-primary/30 hover:bg-primary/10 text-primary text-xs font-semibold gap-1.5"
+              className="rounded-xl border-primary/30 hover:bg-primary/10 text-primary text-[11px] sm:text-xs font-semibold gap-1 sm:gap-1.5 cursor-pointer px-1.5"
             >
-              <Share2 className="w-3.5 h-3.5" />
-              Share Link
+              <Share2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Share</span>
             </Button>
           </div>
 

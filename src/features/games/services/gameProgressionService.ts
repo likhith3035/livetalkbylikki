@@ -1,4 +1,4 @@
-import { GamerProfile, GamerBadge } from "../types";
+import { GamerProfile, GamerBadge, MatchHistoryEntry } from "../types";
 import { getProfile, saveProfile } from "@/lib/identity";
 
 const STORAGE_KEY = "livetalk_gamer_profile_v2";
@@ -80,6 +80,7 @@ export function getGamerProfile(): GamerProfile {
         ...parsed,
         avatar: safeAvatar,
         title: getRankTitle(parsed.level || 1),
+        recentMatches: parsed.recentMatches || [],
       };
     }
   } catch {}
@@ -102,6 +103,7 @@ export function getGamerProfile(): GamerProfile {
     streak: 0,
     bestStreak: 0,
     unlockedBadges: [],
+    recentMatches: [],
   };
 }
 
@@ -116,6 +118,26 @@ export function saveGamerProfile(profile: GamerProfile): void {
   } catch {}
 }
 
+export function recordMatchHistory(entry: Omit<MatchHistoryEntry, "id" | "timestamp">): GamerProfile {
+  const profile = getGamerProfile();
+  const newEntry: MatchHistoryEntry = {
+    ...entry,
+    id: `match_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    timestamp: Date.now(),
+  };
+
+  const existing = profile.recentMatches || [];
+  const updatedMatches = [newEntry, ...existing].slice(0, 10);
+
+  const updatedProfile: GamerProfile = {
+    ...profile,
+    recentMatches: updatedMatches,
+  };
+
+  saveGamerProfile(updatedProfile);
+  return updatedProfile;
+}
+
 export interface MatchOutcomeReward {
   won: boolean;
   draw?: boolean;
@@ -124,24 +146,36 @@ export interface MatchOutcomeReward {
 export function awardMatchXP(outcome: MatchOutcomeReward): {
   profile: GamerProfile;
   xpGained: number;
+  streakMultiplier: number;
+  streakBonus: number;
   leveledUp: boolean;
   newBadgeUnlocked: GamerBadge | null;
 } {
   const current = getGamerProfile();
-  let xpGained = 30; // base completion XP
+  let baseXp = 30; // base completion XP
 
   if (outcome.won) {
-    xpGained += 80;
+    baseXp += 80;
   } else if (outcome.draw) {
-    xpGained += 40;
+    baseXp += 40;
   }
 
   const nextStreak = outcome.won ? current.streak + 1 : outcome.draw ? current.streak : 0;
-  if (nextStreak > 1) {
-    xpGained += Math.min(nextStreak * 10, 50); // streak bonus XP
+
+  // Streak Multiplier: 3+ wins = 1.25x, 5+ wins = 1.5x
+  let streakMultiplier = 1.0;
+  if (outcome.won) {
+    if (nextStreak >= 5) {
+      streakMultiplier = 1.5;
+    } else if (nextStreak >= 3) {
+      streakMultiplier = 1.25;
+    }
   }
 
-  let totalXP = current.xp + xpGained;
+  const calculatedXp = Math.round(baseXp * streakMultiplier);
+  const streakBonus = calculatedXp - baseXp;
+
+  let totalXP = current.xp + calculatedXp;
   let level = current.level;
   let leveledUp = false;
 
@@ -195,7 +229,9 @@ export function awardMatchXP(outcome: MatchOutcomeReward): {
 
   return {
     profile: updatedProfile,
-    xpGained,
+    xpGained: calculatedXp,
+    streakMultiplier,
+    streakBonus,
     leveledUp,
     newBadgeUnlocked: newlyUnlockedBadge,
   };

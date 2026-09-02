@@ -8,7 +8,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trophy, RotateCcw, Home, Sparkles, Frown, Meh, Crown, X, Zap } from "lucide-react";
+import { Trophy, RotateCcw, Home, Sparkles, Frown, Meh, Crown, X, Zap, Flame, Loader2, Check } from "lucide-react";
 import { GameRoomState } from "../types";
 import { GameAvatar } from "./GameAvatar";
 import { triggerConfetti } from "../services/confettiEffect";
@@ -37,10 +37,20 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   const isLocal = room.mode === "local";
   const isAI = room.mode === "ai";
   const isSeriesOver = room.status === "game_over" || !!room.seriesWinnerId;
+  const isOnline = room.mode === "friend" || room.mode === "quickmatch";
 
   const profile = getGamerProfile();
   const xpNeeded = getXpForNextLevel(profile.level);
   const xpPercent = Math.min(Math.round((profile.xp / xpNeeded) * 100), 100);
+
+  // Rematch Vote status
+  const myVote = Boolean(room.rematchVotes?.[myPlayerId]);
+  const opponentId = isHost ? room.players.guest?.id : room.players.host.id;
+  const opponentVote = opponentId ? Boolean(room.rematchVotes?.[opponentId]) : false;
+
+  // Streak Multipliers
+  const streakMultiplier = profile.streak >= 5 ? 1.5 : profile.streak >= 3 ? 1.25 : 1.0;
+  const streakBonus = isWinner && streakMultiplier > 1 ? Math.round(80 * (streakMultiplier - 1)) : 0;
 
   // Trigger confetti burst on victory or series championship
   useEffect(() => {
@@ -92,7 +102,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleDismiss()}>
-      <DialogContent className="max-w-md p-6 rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/60 shadow-2xl text-center overflow-hidden">
+      <DialogContent className="max-w-[92vw] sm:max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/60 shadow-2xl text-center max-h-[92vh] overflow-y-auto no-scrollbar touch-manipulation">
         {/* Celebration Ambient Glow */}
         {(isWinner || (isLocal && !isDraw) || isSeriesOver) && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -105,7 +115,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             initial={{ scale: 0, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 350, damping: 18 }}
-            className={`w-20 h-20 rounded-3xl flex items-center justify-center text-4xl shadow-xl mb-3 border ${
+            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-3xl sm:text-4xl shadow-xl mb-2.5 sm:mb-3 border ${
               isSeriesOver
                 ? "bg-gradient-to-tr from-amber-400 to-yellow-500 text-amber-950 border-yellow-300 shadow-amber-500/40 ring-4 ring-amber-400/30 animate-bounce"
                 : isDraw
@@ -116,17 +126,17 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             }`}
           >
             {isSeriesOver ? (
-              <Crown className="w-10 h-10 text-amber-950" />
+              <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-amber-950" />
             ) : isDraw ? (
-              <Meh className="w-10 h-10 text-amber-400" />
+              <Meh className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400" />
             ) : isWinner || (isLocal && room.winnerId) ? (
-              <Trophy className="w-10 h-10 text-amber-400 animate-pulse" />
+              <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 animate-pulse" />
             ) : (
-              <Frown className="w-10 h-10 text-muted-foreground" />
+              <Frown className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
             )}
           </motion.div>
 
-          <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight">
+          <DialogTitle className="text-xl sm:text-3xl font-black tracking-tight">
             {isSeriesOver
               ? `👑 ${seriesWinnerName} is the Champion!`
               : isDraw
@@ -152,54 +162,54 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         </DialogHeader>
 
         {/* Score Comparison Display Card */}
-        <div className="relative z-10 grid grid-cols-3 items-center p-3.5 rounded-2xl bg-muted/40 border border-border/40 my-4 shadow-inner">
+        <div className="relative z-10 grid grid-cols-3 items-center p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-muted/40 border border-border/40 my-3 sm:my-4 shadow-inner gap-1">
           {/* Host Player */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center text-lg font-bold overflow-hidden">
-              <GameAvatar avatar={hostPlayer.avatar} fallback="👤" className="text-lg" />
+          <div className="flex flex-col items-center gap-1 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center text-base sm:text-lg font-bold overflow-hidden">
+              <GameAvatar avatar={hostPlayer.avatar} fallback="👤" className="text-base sm:text-lg" />
             </div>
-            <span className="text-xs font-bold text-foreground truncate max-w-[90px]">
+            <span className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[110px]">
               {hostPlayer.name} {isHost && !isLocal && "(You)"}
             </span>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-violet-400">{hostPlayer.score}</span>
-              <span className="text-[10px] font-bold text-muted-foreground">PTS</span>
+              <span className="text-xl sm:text-2xl font-black text-violet-400">{hostPlayer.score}</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground">PTS</span>
             </div>
             {room.winnerId === hostPlayer.id && (
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">
-                ROUND WIN
+              <span className="text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">
+                WIN
               </span>
             )}
           </div>
 
           {/* Center VS & Round Info */}
-          <div className="flex flex-col items-center justify-center gap-1">
-            <span className="text-xs font-black tracking-widest text-muted-foreground/50">VS</span>
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
-              {isSeriesOver ? "FINAL" : `Round ${room.round}`}
+          <div className="flex flex-col items-center justify-center gap-0.5 sm:gap-1">
+            <span className="text-[10px] sm:text-xs font-black tracking-widest text-muted-foreground/50">VS</span>
+            <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
+              {isSeriesOver ? "FINAL" : `R${room.round}`}
             </span>
             {room.rules?.maxSeriesWins && (
-              <span className="text-[9px] text-muted-foreground">
+              <span className="text-[8px] sm:text-[9px] text-muted-foreground">
                 First to {room.rules.maxSeriesWins}
               </span>
             )}
           </div>
 
           {/* Guest Player */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-lg font-bold overflow-hidden">
-              <GameAvatar avatar={guestPlayer.avatar} fallback={isAI ? "🤖" : "👤"} className="text-lg" />
+          <div className="flex flex-col items-center gap-1 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-base sm:text-lg font-bold overflow-hidden">
+              <GameAvatar avatar={guestPlayer.avatar} fallback={isAI ? "🤖" : "👤"} className="text-base sm:text-lg" />
             </div>
-            <span className="text-xs font-bold text-foreground truncate max-w-[90px]">
+            <span className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[110px]">
               {guestDisplayName} {!isHost && !isLocal && !isAI && "(You)"}
             </span>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-cyan-400">{guestPlayer.score}</span>
-              <span className="text-[10px] font-bold text-muted-foreground">PTS</span>
+              <span className="text-xl sm:text-2xl font-black text-cyan-400">{guestPlayer.score}</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground">PTS</span>
             </div>
             {room.winnerId === guestPlayer.id && (
-              <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">
-                ROUND WIN
+              <span className="text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">
+                WIN
               </span>
             )}
           </div>
@@ -212,9 +222,17 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               <Zap className="w-3.5 h-3.5 fill-primary text-primary" />
               Level {profile.level} • {profile.title}
             </span>
-            <span className="text-[11px] text-muted-foreground">
-              {isWinner ? "+110 XP" : isDraw ? "+70 XP" : "+30 XP"} Earned
-            </span>
+            <div className="flex items-center gap-1.5">
+              {streakBonus > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-black flex items-center gap-0.5">
+                  <Flame className="w-3 h-3" />
+                  {streakMultiplier}x STREAK
+                </span>
+              )}
+              <span className="text-[11px] text-muted-foreground font-semibold">
+                {isWinner ? `+${110 + streakBonus} XP` : isDraw ? "+70 XP" : "+30 XP"} Earned
+              </span>
+            </div>
           </div>
           <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
             <div
@@ -224,21 +242,49 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons with Two-Way Handshake Rematch */}
         <div className="flex flex-col gap-2 relative z-10">
-          <Button
-            onClick={onRematch}
-            className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/25 hover:opacity-90 transition-all gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            {isSeriesOver ? "Start New Series" : "Play Next Round"}
-          </Button>
+          {isOnline ? (
+            myVote ? (
+              <Button
+                disabled
+                className="w-full h-11 rounded-xl bg-muted border border-border text-foreground font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-wait"
+              >
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span>Waiting for Opponent (1/2 Ready)...</span>
+              </Button>
+            ) : opponentVote ? (
+              <Button
+                onClick={onRematch}
+                className="w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-sm shadow-xl shadow-orange-500/30 hover:opacity-95 transition-all gap-2 animate-pulse cursor-pointer"
+              >
+                <Flame className="w-4 h-4" />
+                <span>Opponent wants a Rematch! Tap to Accept 🔥</span>
+              </Button>
+            ) : (
+              <Button
+                onClick={onRematch}
+                className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/25 hover:opacity-90 transition-all gap-2 cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>{isSeriesOver ? "Vote New Series" : "Play Next Round (0/2 Ready)"}</span>
+              </Button>
+            )
+          ) : (
+            <Button
+              onClick={onRematch}
+              className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/25 hover:opacity-90 transition-all gap-2 cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4" />
+              {isSeriesOver ? "Start New Series" : "Play Next Round"}
+            </Button>
+          )}
 
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               onClick={handleDismiss}
-              className="flex-1 h-10 rounded-xl border-border text-xs font-semibold hover:bg-muted"
+              className="flex-1 h-10 rounded-xl border-border text-xs font-semibold hover:bg-muted cursor-pointer"
             >
               <X className="w-3.5 h-3.5 mr-1" />
               Close Popup
@@ -247,7 +293,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             <Button
               variant="ghost"
               onClick={onExitToLobby}
-              className="flex-1 h-10 rounded-xl text-muted-foreground hover:text-foreground text-xs gap-1.5 hover:bg-muted/50"
+              className="flex-1 h-10 rounded-xl text-muted-foreground hover:text-foreground text-xs gap-1.5 hover:bg-muted/50 cursor-pointer"
             >
               <Home className="w-3.5 h-3.5" />
               Arcade Hub

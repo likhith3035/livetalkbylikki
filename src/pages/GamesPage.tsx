@@ -27,12 +27,14 @@ import {
   subscribeToGameRoom,
   leaveGameRoom,
   resetGameRound,
+  voteRematch,
   sendGameMove,
   createInitialGameState,
 } from "@/features/games/services/gameRoomService";
 import {
   getGamerProfile,
   awardMatchXP,
+  recordMatchHistory,
   getXpForNextLevel,
 } from "@/features/games/services/gameProgressionService";
 import { gameAudio } from "@/features/games/services/gameSoundService";
@@ -60,7 +62,6 @@ import {
   Percent,
   Sparkles,
   Edit3,
-  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -166,7 +167,7 @@ export default function GamesPage() {
     [myPlayerId, gamerProfile]
   );
 
-  // Track victory in local stats and award XP
+  // Track victory in local stats, award XP, and record match history
   useEffect(() => {
     if (activeRoom && (activeRoom.status === "round_over" || activeRoom.status === "game_over") && !isSpectator) {
       if (recordedRoundRef.current !== activeRoom.round && activeRoom.winnerId) {
@@ -176,6 +177,18 @@ export default function GamesPage() {
 
         const reward = awardMatchXP({ won, draw });
         setGamerProfile(reward.profile);
+
+        const opponentName = activeRoom.players.host.id === myPlayerId
+          ? activeRoom.players.guest?.name || "Opponent"
+          : activeRoom.players.host.name;
+
+        recordMatchHistory({
+          gameId: activeRoom.gameId,
+          mode: activeRoom.mode,
+          outcome: won ? "won" : draw ? "draw" : "lost",
+          opponentName,
+          xpGained: reward.xpGained,
+        });
 
         if (reward.leveledUp) {
           toast.success(`🎉 LEVEL UP! You reached Level ${reward.profile.level} (${reward.profile.title})!`);
@@ -221,6 +234,11 @@ export default function GamesPage() {
           gameAudio.playWin();
           toast.success("Opponent connected! Game starting...");
         }
+
+        // If both players accepted rematch, dismiss victory modal
+        if (updated.status === "playing" && dismissedVictoryRound !== -1) {
+          setDismissedVictoryRound(-1);
+        }
       } else {
         toast.info("Room closed by host.");
         setActiveRoom(null);
@@ -231,7 +249,7 @@ export default function GamesPage() {
     });
 
     return () => unsub();
-  }, [activeRoom?.roomCode, activeRoom?.mode, isSearchingQuickMatch]);
+  }, [activeRoom?.roomCode, activeRoom?.mode, isSearchingQuickMatch, dismissedVictoryRound]);
 
   const handleSelectMode = async (gameId: GameId, mode: GameMode, rules?: GameCustomRules) => {
     gameAudio.playClick();
@@ -358,11 +376,11 @@ export default function GamesPage() {
   const handleRematch = async () => {
     if (!activeRoom) return;
     gameAudio.playClick();
-    setDismissedVictoryRound(-1);
-    const freshGameState = createInitialGameState(activeRoom.gameId);
     const timerSec = activeRoom.rules?.turnTimerSeconds || 0;
 
     if (activeRoom.mode === "local" || activeRoom.mode === "ai") {
+      setDismissedVictoryRound(-1);
+      const freshGameState = createInitialGameState(activeRoom.gameId);
       setActiveRoom({
         ...activeRoom,
         gameState: freshGameState,
@@ -374,7 +392,25 @@ export default function GamesPage() {
       return;
     }
 
-    await resetGameRound(activeRoom.roomCode, activeRoom.gameId, activeRoom.round + 1, timerSec);
+    // Two-Way Rematch Handshake for Online Multiplayer
+    try {
+      const { bothReady } = await voteRematch(
+        activeRoom.roomCode,
+        myPlayerId,
+        activeRoom.gameId,
+        activeRoom.round + 1,
+        timerSec
+      );
+
+      if (bothReady) {
+        setDismissedVictoryRound(-1);
+        toast.success("Both players ready! New round starting...");
+      } else {
+        toast.info("Rematch requested! Waiting for opponent to accept...");
+      }
+    } catch {
+      toast.error("Failed to register rematch vote.");
+    }
   };
 
   const handleTurnTimeout = useCallback(async () => {
@@ -571,7 +607,7 @@ export default function GamesPage() {
               onScanJoin={handleJoinByCode}
             />
 
-            {/* Victory / Next Round Modal */}
+            {/* Victory / Next Round Modal with Two-Way Handshake */}
             <VictoryModal
               isOpen={
                 (activeRoom.status === "round_over" || activeRoom.status === "game_over") &&
@@ -588,30 +624,30 @@ export default function GamesPage() {
           /* VIEW 3: GAMES LOBBY & ARCADE HUB */
           <div className="flex flex-col w-full">
             {/* Live Interactive Gamer Profile Banner */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5 rounded-3xl bg-card border border-border shadow-lg mb-8 relative overflow-hidden">
-              <div className="flex items-center gap-3.5">
-                <div className="w-13 h-13 rounded-2xl bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-3xl shadow-inner relative overflow-hidden shrink-0">
-                  <GameAvatar avatar={gamerProfile.avatar} fallback="👾" className="text-3xl" />
-                  <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-primary text-primary-foreground text-[9px] font-black shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-card border border-border shadow-lg mb-6 sm:mb-8 relative overflow-hidden">
+              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-2xl sm:text-3xl shadow-inner relative overflow-hidden shrink-0">
+                  <GameAvatar avatar={gamerProfile.avatar} fallback="👾" className="text-2xl sm:text-3xl" />
+                  <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-primary text-primary-foreground text-[8px] sm:text-[9px] font-black shadow-md">
                     Lv.{gamerProfile.level}
                   </span>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-base sm:text-lg font-black text-foreground">
+                    <span className="text-base sm:text-lg font-black text-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-none">
                       {gamerProfile.nickname}
                     </span>
                     <button
                       onClick={() => setIsProfileModalOpen(true)}
-                      className="text-xs text-primary hover:text-primary/80 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                      className="text-xs text-primary hover:text-primary/80 font-bold flex items-center gap-1 hover:underline cursor-pointer shrink-0"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       <span>Edit</span>
                     </button>
                   </div>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
-                    {gamerProfile.title} • {gamerProfile.xp} / {xpNeeded} XP
+                  <span className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
+                    <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span className="truncate">{gamerProfile.title}</span> • {gamerProfile.xp} / {xpNeeded} XP
                   </span>
                   {/* Mini XP progress bar */}
                   <div className="w-36 sm:w-48 h-1.5 rounded-full bg-muted mt-1 overflow-hidden">
@@ -623,50 +659,50 @@ export default function GamesPage() {
                 </div>
               </div>
 
-              {/* Stats Counters */}
-              <div className="flex items-center gap-3 sm:gap-6">
+              {/* Stats Counters - 4 Column grid on mobile, flex row on tablet/desktop */}
+              <div className="grid grid-cols-4 gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/40 w-full sm:w-auto sm:flex sm:items-center sm:gap-6 shrink-0">
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-amber-500 font-black text-sm sm:text-base">
-                    <Trophy className="w-4 h-4" />
+                  <div className="flex items-center gap-1 text-amber-500 font-black text-xs sm:text-base">
+                    <Trophy className="w-3.5 h-3.5" />
                     <span>{gamerProfile.wins}</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase">
                     Wins
                   </span>
                 </div>
 
-                <div className="h-7 w-[1px] bg-border" />
+                <div className="hidden sm:block h-7 w-[1px] bg-border" />
 
                 <div className="flex flex-col items-center">
-                  <div className={`flex items-center gap-1 font-black text-sm sm:text-base ${gamerProfile.streak >= 3 ? "text-rose-500 animate-pulse" : "text-orange-500"}`}>
-                    <Flame className="w-4 h-4" />
+                  <div className={`flex items-center gap-1 font-black text-xs sm:text-base ${gamerProfile.streak >= 3 ? "text-rose-500 animate-pulse" : "text-orange-500"}`}>
+                    <Flame className="w-3.5 h-3.5" />
                     <span>{gamerProfile.streak}</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase">
                     Streak
                   </span>
                 </div>
 
-                <div className="h-7 w-[1px] bg-border" />
+                <div className="hidden sm:block h-7 w-[1px] bg-border" />
 
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-primary font-black text-sm sm:text-base">
-                    <Percent className="w-4 h-4" />
+                  <div className="flex items-center gap-1 text-primary font-black text-xs sm:text-base">
+                    <Percent className="w-3.5 h-3.5" />
                     <span>{winRate}%</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase">
                     Win Rate
                   </span>
                 </div>
 
-                <div className="h-7 w-[1px] bg-border" />
+                <div className="hidden sm:block h-7 w-[1px] bg-border" />
 
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-foreground/80 font-black text-sm sm:text-base">
-                    <Swords className="w-4 h-4" />
+                  <div className="flex items-center gap-1 text-foreground/80 font-black text-xs sm:text-base">
+                    <Swords className="w-3.5 h-3.5" />
                     <span>{gamerProfile.played}</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase">
                     Matches
                   </span>
                 </div>
@@ -674,7 +710,7 @@ export default function GamesPage() {
             </div>
 
             {/* Hero Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
@@ -685,38 +721,38 @@ export default function GamesPage() {
                     100% Free • No Signup
                   </span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+                <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">
                   Play 1v1 Games with Anyone
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1 max-w-xl">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xl">
                   Challenge friends via instant QR code, chat live during matches, watch as a spectator, or test your wits against smart AI bots.
                 </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2.5 shrink-0">
+              {/* Action Buttons: 2-column grid on mobile, flex on desktop */}
+              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-2.5 shrink-0">
                 <Button
                   onClick={() => setIsJoinModalOpen(true)}
-                  className="rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-xs font-bold gap-2 h-11 px-4 shadow-md"
+                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-xs font-bold gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-4 shadow-md cursor-pointer"
                 >
                   <QrCode className="w-4 h-4 text-primary" />
-                  Join / Spectate
+                  <span>Join / Spectate</span>
                 </Button>
 
                 <Button
                   onClick={() => setIsScannerOpen(true)}
-                  className="rounded-2xl bg-primary text-primary-foreground text-xs font-bold gap-2 h-11 px-4 shadow-lg shadow-primary/25 hover:opacity-90"
+                  className="rounded-xl sm:rounded-2xl bg-primary text-primary-foreground text-xs font-bold gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-4 shadow-lg shadow-primary/25 hover:opacity-90 cursor-pointer"
                 >
                   <ScanLine className="w-4 h-4" />
-                  Scan QR Code
+                  <span>Scan QR Code</span>
                 </Button>
               </div>
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6">
-              {/* Category Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+              {/* Category Pills with smooth horizontal scrolling */}
+              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar touch-pan-x">
                 {["All", "Classic", "Strategy", "Reflex", "Casual"].map((cat) => (
                   <button
                     key={cat}
@@ -724,7 +760,7 @@ export default function GamesPage() {
                       gameAudio.playClick();
                       setSelectedCategory(cat);
                     }}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                       selectedCategory === cat
                         ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                         : "bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50"
@@ -805,7 +841,7 @@ export default function GamesPage() {
             <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={() => handleJoinByCode(manualCode)}
-                className="h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-lg shadow-primary/25 gap-1.5"
+                className="h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-lg shadow-primary/25 gap-1.5 cursor-pointer"
               >
                 <Swords className="w-3.5 h-3.5" />
                 Join to Play
@@ -814,7 +850,7 @@ export default function GamesPage() {
               <Button
                 variant="outline"
                 onClick={() => handleJoinSpectate(manualCode)}
-                className="h-11 rounded-xl border-amber-500/40 text-amber-500 hover:bg-amber-500/10 font-bold text-xs gap-1.5"
+                className="h-11 rounded-xl border-amber-500/40 text-amber-500 hover:bg-amber-500/10 font-bold text-xs gap-1.5 cursor-pointer"
               >
                 <Eye className="w-3.5 h-3.5" />
                 Spectate Live

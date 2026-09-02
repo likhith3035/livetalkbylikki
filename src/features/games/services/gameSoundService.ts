@@ -122,6 +122,12 @@ class GameSoundSynthesizer {
   public playTick() {
     this.playTone(1000, 0.02, "sine", 0.04);
   }
+
+  public playHeartbeatTick() {
+    this.vibrate(20);
+    this.playTone(180, 0.05, "triangle", 0.18);
+    this.playTone(140, 0.07, "sine", 0.15, 60);
+  }
 }
 
 export const gameAudio = new GameSoundSynthesizer();

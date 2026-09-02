@@ -231,12 +231,12 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-2 w-full max-w-md select-none mx-auto">
+    <div className="flex flex-col items-center justify-center p-2 sm:p-4 w-full max-w-sm sm:max-w-md select-none touch-manipulation">
       {room.mode === "local" ? (
-        <div className="grid grid-cols-2 gap-4 w-full h-80">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full h-60 xs:h-64 sm:h-80">
           <button
             onClick={() => handlePadTap("host")}
-            className={`rounded-3xl flex flex-col items-center justify-center p-4 transition-all font-black text-lg ${
+            className={`rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-3 sm:p-4 transition-all font-black text-base sm:text-lg cursor-pointer active:scale-95 touch-manipulation ${
               state.gameState === "go"
                 ? "bg-emerald-500 text-white animate-pulse"
                 : state.gameState === "false_start"
@@ -244,15 +244,15 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
                 : "bg-rose-950/40 border border-rose-500/30 text-rose-300"
             }`}
           >
-            <span>{room.players.host.name}</span>
-            <span className="text-xs font-normal opacity-80 mt-1">
+            <span className="truncate max-w-[90px] xs:max-w-[120px]">{room.players.host.name}</span>
+            <span className="text-[11px] sm:text-xs font-normal opacity-80 mt-1">
               {state.gameState === "go" ? "TAP NOW!" : "WAIT..."}
             </span>
           </button>
 
           <button
             onClick={() => handlePadTap("guest")}
-            className={`rounded-3xl flex flex-col items-center justify-center p-4 transition-all font-black text-lg ${
+            className={`rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-3 sm:p-4 transition-all font-black text-base sm:text-lg cursor-pointer active:scale-95 touch-manipulation ${
               state.gameState === "go"
                 ? "bg-emerald-500 text-white animate-pulse"
                 : state.gameState === "false_start"
@@ -260,8 +260,8 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
                 : "bg-rose-950/40 border border-rose-500/30 text-rose-300"
             }`}
           >
-            <span>{room.players.guest?.name || "Player 2"}</span>
-            <span className="text-xs font-normal opacity-80 mt-1">
+            <span className="truncate max-w-[90px] xs:max-w-[120px]">{room.players.guest?.name || "Player 2"}</span>
+            <span className="text-[11px] sm:text-xs font-normal opacity-80 mt-1">
               {state.gameState === "go" ? "TAP NOW!" : "WAIT..."}
             </span>
           </button>
@@ -270,7 +270,7 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => handlePadTap()}
-          className={`w-full h-72 sm:h-80 rounded-3xl flex flex-col items-center justify-center gap-3 p-6 transition-all duration-200 shadow-2xl cursor-pointer ${
+          className={`w-full h-60 xs:h-64 sm:h-80 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center gap-2.5 sm:gap-3 p-4 sm:p-6 transition-all duration-200 shadow-2xl cursor-pointer touch-manipulation ${
             state.gameState === "go"
               ? "bg-emerald-500 text-emerald-950 shadow-emerald-500/40"
               : state.gameState === "false_start"

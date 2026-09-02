@@ -52,7 +52,7 @@ const MODES: {
   {
     id: "ai",
     title: "Play vs Smart AI Bot",
-    desc: "Instant solo match with zero lag. Practice against heuristic & Minimax engines.",
+    desc: "Instant solo match with zero lag. Practice against novice or unbeatable Minimax engines.",
     icon: Bot,
     iconColor: "text-cyan-400",
     badge: "Offline Ready",
@@ -79,12 +79,14 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
   const [showRules, setShowRules] = useState(false);
   const [turnTimer, setTurnTimer] = useState<number>(0); // 0 = unlimited, 10, 15, 30
   const [maxWins, setMaxWins] = useState<number>(2);     // 1 = single, 2 = Best of 3, 3 = Best of 5
+  const [aiDifficulty, setAiDifficulty] = useState<"easy" | "medium" | "hard">("medium");
 
   if (!game) return null;
 
   const currentRules: GameCustomRules = {
     turnTimerSeconds: turnTimer,
     maxSeriesWins: maxWins,
+    aiDifficulty,
   };
 
   const handleLaunchMode = (mode: GameMode) => {
@@ -94,7 +96,7 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md p-6 rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/50 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[92vw] sm:max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/50 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar touch-manipulation">
         <DialogHeader className="text-left">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 mb-1">
@@ -106,7 +108,7 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
 
             <button
               onClick={() => setShowRules((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                 showRules
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/40"
@@ -138,48 +140,75 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
                 </span>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
-                    { label: "No Limit", val: 0 },
-                    { label: "10s Blitz", val: 10 },
-                    { label: "15s Fast", val: 15 },
-                    { label: "30s Standard", val: 30 },
-                  ].map((t) => (
+                    { sec: 0, label: "No Limit" },
+                    { sec: 10, label: "10s Fast" },
+                    { sec: 15, label: "15s Normal" },
+                    { sec: 30, label: "30s Chill" },
+                  ].map((item) => (
                     <button
-                      key={t.val}
-                      onClick={() => setTurnTimer(t.val)}
-                      className={`p-1.5 rounded-xl font-semibold border transition-all text-center ${
-                        turnTimer === t.val
+                      key={item.sec}
+                      onClick={() => setTurnTimer(item.sec)}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                        turnTimer === item.sec
                           ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                          : "bg-card hover:bg-muted border-border/40 text-muted-foreground"
+                          : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/40"
                       }`}
                     >
-                      {t.label}
+                      {item.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Series Format Selector */}
+              {/* Series Length Selector */}
               <div className="flex flex-col gap-1.5">
                 <span className="font-bold text-foreground flex items-center gap-1.5">
-                  <Trophy className="w-3.5 h-3.5 text-violet-500" />
+                  <Trophy className="w-3.5 h-3.5 text-primary" />
                   Match Series Length:
                 </span>
                 <div className="grid grid-cols-3 gap-1.5">
                   {[
-                    { label: "1 Round", val: 1 },
-                    { label: "Best of 3", val: 2 },
-                    { label: "Best of 5", val: 3 },
-                  ].map((s) => (
+                    { wins: 1, label: "Single Round" },
+                    { wins: 2, label: "Best of 3 (2 Wins)" },
+                    { wins: 3, label: "Best of 5 (3 Wins)" },
+                  ].map((item) => (
                     <button
-                      key={s.val}
-                      onClick={() => setMaxWins(s.val)}
-                      className={`p-1.5 rounded-xl font-semibold border transition-all text-center ${
-                        maxWins === s.val
+                      key={item.wins}
+                      onClick={() => setMaxWins(item.wins)}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                        maxWins === item.wins
                           ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                          : "bg-card hover:bg-muted border-border/40 text-muted-foreground"
+                          : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/40"
                       }`}
                     >
-                      {s.label}
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI Difficulty Selector */}
+              <div className="flex flex-col gap-1.5">
+                <span className="font-bold text-foreground flex items-center gap-1.5">
+                  <Bot className="w-3.5 h-3.5 text-cyan-400" />
+                  AI Bot Skill Level:
+                </span>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { id: "easy", label: "Novice 🟢", desc: "Casual" },
+                    { id: "medium", label: "Challenger 🟡", desc: "Smart" },
+                    { id: "hard", label: "Grandmaster 🔴", desc: "Minimax" },
+                  ].map((diff) => (
+                    <button
+                      key={diff.id}
+                      onClick={() => setAiDifficulty(diff.id as any)}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                        aiDifficulty === diff.id
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/40"
+                      }`}
+                    >
+                      {diff.label}
                     </button>
                   ))}
                 </div>
@@ -188,7 +217,7 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Mode Selector Cards */}
+        {/* Modes List */}
         <div className="flex flex-col gap-2.5 my-2">
           {MODES.map((mode) => {
             const Icon = mode.icon;
@@ -198,33 +227,44 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleLaunchMode(mode.id)}
-                className={`flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r ${mode.bgGradient} border border-border/40 ${mode.borderHover} transition-all text-left group cursor-pointer`}
+                className={`flex items-center justify-between p-3.5 rounded-2xl border border-border/50 bg-gradient-to-r ${mode.bgGradient} ${mode.borderHover} hover:shadow-md transition-all text-left group cursor-pointer`}
               >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center shrink-0 shadow-sm">
-                    <Icon className={`w-5 h-5 ${mode.iconColor}`} />
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-10 h-10 rounded-xl bg-card border border-border/40 flex items-center justify-center shrink-0 shadow-sm ${mode.iconColor}`}>
+                    <Icon className="w-5 h-5" />
                   </div>
-                  <div className="flex flex-col min-w-0 flex-1 pr-2">
+
+                  <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                      <span className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
                         {mode.title}
                       </span>
                       {mode.badge && (
-                        <span className="text-[9px] px-2 py-0.2 rounded-full bg-primary/15 text-primary font-bold">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-primary/20 text-primary font-black uppercase tracking-wider">
                           {mode.badge}
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-                      {mode.desc}
+                    <span className="text-xs text-muted-foreground line-clamp-1">
+                      {mode.id === "ai" ? `Bot Level: ${aiDifficulty.toUpperCase()} • ${mode.desc}` : mode.desc}
                     </span>
                   </div>
                 </div>
 
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
               </motion.button>
             );
           })}
+        </div>
+
+        <div className="mt-2 text-center">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="text-xs text-muted-foreground hover:text-foreground h-9"
+          >
+            Cancel
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -203,43 +203,43 @@ export const RPSClashGame: React.FC<RPSClashGameProps> = ({ room, myPlayerId, on
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 w-full max-w-md select-none">
+    <div className="flex flex-col items-center justify-center p-2 sm:p-4 w-full max-w-sm sm:max-w-md select-none touch-manipulation">
       {/* Choice Reveal Stage */}
       {state.revealed ? (
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="flex items-center justify-around w-full p-6 rounded-3xl bg-card border border-border shadow-2xl mb-6"
+          className="flex items-center justify-around w-full p-3 xs:p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card border border-border shadow-2xl mb-4 sm:mb-6"
         >
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-semibold uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
               {room.players.host.name}
             </span>
-            <div className="w-20 h-20 rounded-2xl bg-muted/60 border border-border flex items-center justify-center text-4xl shadow-inner">
+            <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted/60 border border-border flex items-center justify-center text-3xl sm:text-4xl shadow-inner">
               {CHOICES.find((c) => c.id === state.hostChoice)?.emoji}
             </div>
-            <span className="text-sm font-bold capitalize text-primary">
+            <span className="text-xs sm:text-sm font-bold capitalize text-primary">
               {state.hostChoice}
             </span>
           </div>
 
-          <div className="text-2xl font-black text-muted-foreground/40 italic">VS</div>
+          <div className="text-lg sm:text-2xl font-black text-muted-foreground/40 italic">VS</div>
 
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-semibold uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
               {room.players.guest?.name || "Player 2"}
             </span>
-            <div className="w-20 h-20 rounded-2xl bg-muted/60 border border-border flex items-center justify-center text-4xl shadow-inner">
+            <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted/60 border border-border flex items-center justify-center text-3xl sm:text-4xl shadow-inner">
               {CHOICES.find((c) => c.id === state.guestChoice)?.emoji}
             </div>
-            <span className="text-sm font-bold capitalize text-cyan-400">
+            <span className="text-xs sm:text-sm font-bold capitalize text-cyan-400">
               {state.guestChoice}
             </span>
           </div>
         </motion.div>
       ) : (
-        <div className="flex items-center justify-center gap-4 mb-6">
-          <div className="px-4 py-2 rounded-xl bg-card border border-border text-xs font-semibold flex items-center gap-2 shadow-sm">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+          <div className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-card border border-border text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-sm">
             <span>You:</span>
             {hasMyChoice ? (
               <span className="text-emerald-500 flex items-center gap-1 font-bold">✓ Ready</span>
@@ -247,7 +247,7 @@ export const RPSClashGame: React.FC<RPSClashGameProps> = ({ room, myPlayerId, on
               <span className="text-amber-500 animate-pulse font-bold">Picking...</span>
             )}
           </div>
-          <div className="px-4 py-2 rounded-xl bg-card border border-border text-xs font-semibold flex items-center gap-2 shadow-sm">
+          <div className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-card border border-border text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-sm">
             <span>Opponent:</span>
             {hasOpponentChoice ? (
               <span className="text-emerald-500 flex items-center gap-1 font-bold">✓ Ready</span>
@@ -259,7 +259,7 @@ export const RPSClashGame: React.FC<RPSClashGameProps> = ({ room, myPlayerId, on
       )}
 
       {/* Choice Buttons */}
-      <div className="grid grid-cols-3 gap-3 w-full">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full">
         {CHOICES.map((choice) => {
           const isSelected = localChoice === choice.id || (isHost ? state.hostChoice === choice.id : state.guestChoice === choice.id);
           return (
@@ -269,12 +269,12 @@ export const RPSClashGame: React.FC<RPSClashGameProps> = ({ room, myPlayerId, on
               whileTap={{ scale: state.revealed ? 1 : 0.95 }}
               onClick={() => handleSelectChoice(choice.id)}
               disabled={hasMyChoice || state.revealed}
-              className={`flex flex-col items-center justify-center gap-2 p-4 sm:p-5 rounded-2xl bg-gradient-to-b ${choice.color} border transition-all cursor-pointer ${
+              className={`flex flex-col items-center justify-center gap-1 sm:gap-2 p-2.5 xs:p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-b ${choice.color} border transition-all cursor-pointer ${
                 isSelected ? "ring-2 ring-primary shadow-lg shadow-primary/20 scale-105" : "hover:border-primary/50"
               }`}
             >
-              <span className="text-4xl sm:text-5xl">{choice.emoji}</span>
-              <span className="text-sm font-bold text-foreground">{choice.label}</span>
+              <span className="text-3xl sm:text-5xl">{choice.emoji}</span>
+              <span className="text-xs sm:text-sm font-bold text-foreground">{choice.label}</span>
             </motion.button>
           );
         })}

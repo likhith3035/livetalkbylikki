@@ -19,6 +19,7 @@ export interface PlayerInfo {
 export interface GameCustomRules {
   turnTimerSeconds: number; // 0 = unlimited, 10, 15, 30
   maxSeriesWins: number;    // 1 (Single Round), 2 (Best of 3), 3 (Best of 5), 4 (Best of 7)
+  aiDifficulty?: "easy" | "medium" | "hard";
 }
 
 export interface GameReaction {
@@ -47,6 +48,16 @@ export interface SpectatorInfo {
   joinedAt: number;
 }
 
+export interface MatchHistoryEntry {
+  id: string;
+  gameId: GameId;
+  mode: GameMode;
+  outcome: "won" | "lost" | "draw";
+  opponentName: string;
+  xpGained: number;
+  timestamp: number;
+}
+
 export interface GamerProfile {
   nickname: string;
   avatar: string;
@@ -60,6 +71,7 @@ export interface GamerProfile {
   streak: number;
   bestStreak: number;
   unlockedBadges: string[];
+  recentMatches?: MatchHistoryEntry[];
 }
 
 export interface GamerBadge {
@@ -85,6 +97,7 @@ export interface GameRoomState<TState = any> {
   rules?: GameCustomRules;
   spectators?: Record<string, SpectatorInfo>;
   messages?: Record<string, GameChatMessage>;
+  rematchVotes?: Record<string, boolean>; // playerId -> true for 1/2 ready state
   players: {
     host: PlayerInfo;
     guest: PlayerInfo | null;
@@ -98,23 +111,20 @@ export interface GameRoomState<TState = any> {
 
 // ── Game-Specific States (Using "" for empty cells to prevent Firebase null stripping) ──
 
-export type TicTacToeCell = "X" | "O" | "";
 export interface TicTacToeState {
-  board: TicTacToeCell[];
+  board: string[]; // 9 items: "" | "X" | "O"
   winningLine: number[] | null;
 }
 
-export type ConnectFourCell = "red" | "yellow" | "";
 export interface ConnectFourState {
-  board: ConnectFourCell[][]; // 6 rows x 7 cols (board[row][col])
+  board: string[][]; // 6 rows x 7 cols: "" | "red" | "yellow"
   winningCells: [number, number][] | null;
   lastDroppedCol: number | null;
 }
 
-export type RPSChoice = "rock" | "paper" | "scissors" | "";
 export interface RPSState {
-  hostChoice: RPSChoice;
-  guestChoice: RPSChoice;
+  hostChoice: string; // "" | "rock" | "paper" | "scissors"
+  guestChoice: string;
   roundWinner: string | null; // playerId | "draw" | null
   revealed: boolean;
 }
@@ -124,8 +134,8 @@ export interface MemoryCard {
   emoji: string;
   isFlipped: boolean;
   isMatched: boolean;
-  matchedBy?: string; // playerId
 }
+
 export interface MemoryGameState {
   cards: MemoryCard[];
   flippedCardIds: number[];
@@ -134,9 +144,8 @@ export interface MemoryGameState {
   totalPairs: number;
 }
 
-export type ReactionStatus = "waiting" | "go" | "clicked" | "false_start";
 export interface ReactionGameState {
-  gameState: ReactionStatus;
+  gameState: "waiting" | "go" | "clicked" | "false_start";
   greenAt: number | null;
   hostTimeMs: number | null;
   guestTimeMs: number | null;
