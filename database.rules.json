@@ -1,61 +1,61 @@
 {
   "rules": {
-    ".read": true,
+    ".read": false,
     ".write": false,
     
     "settings": {
       ".read": true,
-      ".write": true,
+      ".write": "auth != null && auth.token.admin === true",
       "global_announcement": {
         ".read": true,
-        ".write": true
+        ".write": "auth != null && auth.token.admin === true"
       },
       "maintenance_mode": {
         ".read": true,
-        ".write": true
+        ".write": "auth != null && auth.token.admin === true"
       },
       "safety": {
         "profanity_list": {
           ".read": true,
-          ".write": true
+          ".write": "auth != null && auth.token.admin === true"
         }
       }
     },
     
     "admin": {
-      ".read": true,
-      ".write": true,
+      ".read": "auth != null && auth.token.admin === true",
+      ".write": "auth != null && auth.token.admin === true",
       "reports": {
-        ".read": true,
+        ".read": "auth != null && auth.token.admin === true",
         "$reportId": {
-          ".write": true
+          ".write": "!data.exists() && newData.exists() && newData.hasChildren(['reportedId', 'reason', 'timestamp'])"
         }
       },
       "blacklist": {
-        ".read": true,
         "$uid": {
-          ".write": true
+          ".read": true,
+          ".write": "auth != null && auth.token.admin === true"
         }
       },
       "appeals": {
-        ".read": true,
         "$uid": {
-          ".write": true
+          ".read": "auth != null && auth.token.admin === true",
+          ".write": "!data.exists() && newData.exists() && newData.hasChildren(['reason', 'timestamp'])"
         }
       },
       "violations": {
-        ".read": true,
         "$uid": {
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         }
       }
     },
     
     "lobby": {
       ".read": true,
-      ".write": true,
       "$sessionId": {
-        ".write": true
+        ".write": true,
+        ".validate": "!newData.exists() || newData.hasChildren(['timestamp']) || newData.hasChild('signal') || newData.hasChild('code')"
       }
     },
     
@@ -75,13 +75,12 @@
     },
     
     "analytics": {
-      ".read": true,
+      ".read": "auth != null && auth.token.admin === true",
       ".write": true
     },
 
     "presence": {
       ".read": true,
-      ".write": true,
       "$uid": {
         ".write": true,
         ".validate": "!newData.exists() || newData.hasChildren(['online_at'])"

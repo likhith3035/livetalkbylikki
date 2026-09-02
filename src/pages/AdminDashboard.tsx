@@ -35,7 +35,7 @@ const AdminDashboard = () => {
   const [passcodeError, setPasscodeError] = useState(false);
 
   useEffect(() => {
-    const isAuth = sessionStorage.getItem("echo_admin_authenticated") === "true" || sessionStorage.getItem("echo_admin_token") === "5f064930eee39bdc7dd4c2b651b159cf83782a11b543";
+    const isAuth = sessionStorage.getItem("echo_admin_authenticated") === "true";
     if (isAuth) {
       setAuthorized(true);
     }
@@ -44,7 +44,8 @@ const AdminDashboard = () => {
   const handleAdminLogin = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const expectedPasscode = import.meta.env.VITE_ADMIN_PASSCODE || "admin123";
-    if (passcode.trim() === expectedPasscode) {
+    const entered = passcode.trim();
+    if (entered && entered === expectedPasscode) {
       sessionStorage.setItem("echo_admin_authenticated", "true");
       setAuthorized(true);
       setPasscodeError(false);
