@@ -13,7 +13,13 @@ interface ReactionDashGameProps {
 }
 
 export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlayerId, onLocalMove }) => {
-  const state = room.gameState || { gameState: "waiting", greenAt: null, hostTimeMs: null, guestTimeMs: null, winner: null };
+  const state: ReactionGameState = room.gameState || {
+    gameState: "waiting",
+    greenAt: null,
+    hostTimeMs: null,
+    guestTimeMs: null,
+    winner: null,
+  };
   const isHost = room.players.host.id === myPlayerId;
   const timerRef = useRef<any>(null);
   const [localClicked, setLocalClicked] = useState(false);
@@ -66,8 +72,10 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
       else nextGuestScore += 1;
 
       const updatedState: ReactionGameState = {
-        ...state,
         gameState: "false_start",
+        greenAt: state.greenAt ?? null,
+        hostTimeMs: state.hostTimeMs ?? null,
+        guestTimeMs: state.guestTimeMs ?? null,
         winner: winnerId,
       };
 
@@ -115,8 +123,8 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
         else nextGuestScore += 1;
 
         const updatedState: ReactionGameState = {
-          ...state,
           gameState: "clicked",
+          greenAt: state.greenAt,
           hostTimeMs: isHostTap ? reactionTime : null,
           guestTimeMs: !isHostTap ? reactionTime : null,
           winner: winnerId,
@@ -154,8 +162,8 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
         }
 
         const updatedState: ReactionGameState = {
-          ...state,
           gameState: "clicked",
+          greenAt: state.greenAt,
           hostTimeMs: reactionTime,
           guestTimeMs: aiTime,
           winner: winnerId,
@@ -177,8 +185,8 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
       }
 
       // Multiplayer
-      const newHostTime = isHost ? reactionTime : state.hostTimeMs;
-      const newGuestTime = !isHost ? reactionTime : state.guestTimeMs;
+      const newHostTime = isHost ? reactionTime : (state.hostTimeMs ?? null);
+      const newGuestTime = !isHost ? reactionTime : (state.guestTimeMs ?? null);
 
       let winnerId: string | null = null;
       let isOver = false;
@@ -196,8 +204,8 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({ room, myPlay
       }
 
       const updatedState: ReactionGameState = {
-        ...state,
         gameState: "clicked",
+        greenAt: state.greenAt,
         hostTimeMs: newHostTime,
         guestTimeMs: newGuestTime,
         winner: winnerId,

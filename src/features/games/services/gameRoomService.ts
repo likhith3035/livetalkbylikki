@@ -18,6 +18,26 @@ import {
 
 const ROOM_CODE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
+/**
+ * Recursively removes/converts any `undefined` value to `null` to prevent Firebase `update failed: values argument contains undefined` crashes.
+ */
+export function sanitizeFirebasePayload<T>(obj: T): T {
+  if (obj === undefined) return null as any;
+  if (obj === null || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeFirebasePayload) as any;
+  }
+  const result: Record<string, any> = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (val === undefined) {
+      result[key] = null;
+    } else {
+      result[key] = sanitizeFirebasePayload(val);
+    }
+  }
+  return result as T;
+}
+
 export function generateGameRoomCode(): string {
   const values = new Uint32Array(6);
   window.crypto.getRandomValues(values);
@@ -162,7 +182,7 @@ export async function createGameRoom({
   }
 
   const roomRef = ref(db, `rooms/game_${roomCode}`);
-  await set(roomRef, initialRoom);
+  await set(roomRef, sanitizeFirebasePayload(initialRoom));
 
   const hostStatusRef = ref(db, `rooms/game_${roomCode}/players/host/isOnline`);
   onDisconnect(hostStatusRef).set(false);
@@ -207,11 +227,14 @@ export async function joinGameRoom({
     lastActive: Date.now(),
   };
 
-  await update(roomRef, {
-    "players/guest": guestPayload,
-    status: "playing",
-    turnExpiresAt,
-  });
+  await update(
+    roomRef,
+    sanitizeFirebasePayload({
+      "players/guest": guestPayload,
+      status: "playing",
+      turnExpiresAt,
+    })
+  );
 
   const guestStatusRef = ref(db, `rooms/game_${cleanCode}/players/guest/isOnline`);
   onDisconnect(guestStatusRef).set(false);
@@ -244,7 +267,7 @@ export async function joinAsSpectator(
   }
 
   const specRef = ref(db, `rooms/game_${cleanCode}/spectators/${spectator.id}`);
-  await set(specRef, spectator);
+  await set(specRef, sanitizeFirebasePayload(spectator));
   onDisconnect(specRef).remove();
 
   return snap.val() as GameRoomState;
@@ -327,11 +350,14 @@ export async function sendGameReaction(roomCode: string, reaction: Omit<GameReac
   const cleanCode = roomCode.toUpperCase();
   const reactionsRef = ref(db, `rooms/game_${cleanCode}/reactions`);
   const newReactionRef = push(reactionsRef);
-  await set(newReactionRef, {
-    ...reaction,
-    id: newReactionRef.key,
-    timestamp: Date.now(),
-  }).catch((err) => {
+  await set(
+    newReactionRef,
+    sanitizeFirebasePayload({
+      ...reaction,
+      id: newReactionRef.key,
+      timestamp: Date.now(),
+    })
+  ).catch((err) => {
     console.warn("Reaction sync notice:", err);
   });
 }
@@ -369,11 +395,14 @@ export async function sendGameChatMessage(
   const cleanCode = roomCode.toUpperCase();
   const chatRef = ref(db, `rooms/game_${cleanCode}/chat`);
   const newMsgRef = push(chatRef);
-  await set(newMsgRef, {
-    ...message,
-    id: newMsgRef.key,
-    timestamp: Date.now(),
-  }).catch((err) => {
+  await set(
+    newMsgRef,
+    sanitizeFirebasePayload({
+      ...message,
+      id: newMsgRef.key,
+      timestamp: Date.now(),
+    })
+  ).catch((err) => {
     console.warn("Chat sync notice:", err);
   });
 }
@@ -453,7 +482,7 @@ export async function sendGameMove<T>(
     }
   }
 
-  await update(roomRef, updates).catch((err) => {
+  await update(roomRef, sanitizeFirebasePayload(updates)).catch((err) => {
     console.warn("Game move notice:", err);
   });
 }
@@ -473,14 +502,17 @@ export async function resetGameRound(
     ? Date.now() + turnTimerSeconds * 1000
     : null;
 
-  await update(roomRef, {
-    gameState: freshGameState,
-    winnerId: null,
-    status: "playing",
-    round: nextRound,
-    lastMoveTimestamp: Date.now(),
-    turnExpiresAt,
-  }).catch((err) => {
+  await update(
+    roomRef,
+    sanitizeFirebasePayload({
+      gameState: freshGameState,
+      winnerId: null,
+      status: "playing",
+      round: nextRound,
+      lastMoveTimestamp: Date.now(),
+      turnExpiresAt,
+    })
+  ).catch((err) => {
     console.warn("Reset round notice:", err);
   });
 }
@@ -518,9 +550,12 @@ export async function leaveGameRoom(roomCode: string, isHost: boolean): Promise<
   if (isHost) {
     await remove(roomRef).catch(() => {});
   } else {
-    await update(roomRef, {
-      "players/guest": null,
-      status: "waiting",
-    }).catch(() => {});
+    await update(
+      roomRef,
+      sanitizeFirebasePayload({
+        "players/guest": null,
+        status: "waiting",
+      })
+    ).catch(() => {});
   }
 }

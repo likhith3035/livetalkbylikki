@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Camera, CameraOff, Video, VideoOff, Mic, MicOff, Maximize2, Minimize2 } from "lucide-react";
+import { Video, VideoOff, Mic, MicOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 interface GameMiniPIPProps {
   playerName: string;
@@ -37,6 +38,12 @@ export const GameMiniPIP: React.FC<GameMiniPIPProps> = ({ playerName }) => {
   };
 
   useEffect(() => {
+    if (isActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [isActive]);
+
+  useEffect(() => {
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -54,50 +61,66 @@ export const GameMiniPIP: React.FC<GameMiniPIPProps> = ({ playerName }) => {
     }
   };
 
-  if (!isActive) {
-    return (
+  return (
+    <>
       <Button
         variant="ghost"
-        size="sm"
-        onClick={startCamera}
-        className="h-8 rounded-xl text-xs gap-1.5 text-muted-foreground hover:text-foreground border border-border/40 hover:bg-muted/40"
-        title="Turn on Mini Cam Reaction"
+        size="icon"
+        onClick={isActive ? stopCamera : startCamera}
+        className={`h-8 w-8 rounded-lg transition-all ${
+          isActive
+            ? "bg-primary/20 text-primary border border-primary/40 shadow-sm"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+        }`}
+        title={isActive ? "Turn off Face Cam" : "Turn on Face Cam"}
       >
-        <Video className="w-3.5 h-3.5 text-primary" />
-        <span>Face Cam</span>
+        {isActive ? <Video className="w-4 h-4 text-primary animate-pulse" /> : <Video className="w-4 h-4" />}
       </Button>
-    );
-  }
 
-  return (
-    <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-primary/50 shadow-xl bg-black flex items-center justify-center shrink-0 group">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-full object-cover transform -scale-x-100"
-      />
-
-      <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={toggleMic}
-          className="p-1 rounded-lg bg-black/60 text-white hover:text-primary transition-colors text-[10px]"
+      {/* Floating Floating Mini Video Pip Window */}
+      {isActive && (
+        <motion.div
+          drag
+          dragConstraints={{ top: 10, left: 10, right: window.innerWidth - 120, bottom: window.innerHeight - 120 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="fixed top-24 right-6 z-50 w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-primary shadow-2xl bg-black flex items-center justify-center group cursor-grab active:cursor-grabbing"
         >
-          {hasMic ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3 text-rose-400" />}
-        </button>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover transform -scale-x-100"
+          />
 
-        <button
-          onClick={stopCamera}
-          className="p-1 rounded-lg bg-black/60 text-white hover:text-rose-400 transition-colors text-[10px]"
-        >
-          <VideoOff className="w-3 h-3" />
-        </button>
-      </div>
+          <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMic();
+              }}
+              className="p-1 rounded-md bg-black/70 text-white hover:text-primary transition-colors text-[10px]"
+            >
+              {hasMic ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3 text-rose-400" />}
+            </button>
 
-      <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[9px] font-bold text-white/90 truncate max-w-[70px]">
-        {playerName}
-      </span>
-    </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                stopCamera();
+              }}
+              className="p-1 rounded-md bg-black/70 text-white hover:text-rose-400 transition-colors text-[10px]"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+
+          <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-bold text-white/90 truncate max-w-[70px]">
+            {playerName}
+          </span>
+        </motion.div>
+      )}
+    </>
   );
 };
