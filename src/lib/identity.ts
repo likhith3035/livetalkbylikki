@@ -23,6 +23,16 @@ export function getProfile(): UserProfile {
   return { nickname: "", avatar: "😀", mood: "" };
 }
 
+export function saveProfile(profile: Partial<UserProfile>): void {
+  try {
+    const current = getProfile();
+    const updated = { ...current, ...profile };
+    localStorage.setItem("lchat.profile", JSON.stringify(updated));
+  } catch {
+    /* ignore write error */
+  }
+}
+
 export function getBlockedIds(): string[] {
   try {
     return JSON.parse(localStorage.getItem("echo.blocked") || "[]");
