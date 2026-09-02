@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { GameId, GameMode, GameRoomState, PlayerInfo, GameCustomRules } from "@/features/games/types";
+import { GameId, GameMode, GameRoomState, PlayerInfo, GameCustomRules, GamerProfile } from "@/features/games/types";
 import { GameCard, GameMetadata } from "@/features/games/components/GameCard";
 import { GameModeModal } from "@/features/games/components/GameModeModal";
 import { QuickMatchSearchingOverlay } from "@/features/games/components/QuickMatchSearchingOverlay";
@@ -9,6 +9,9 @@ import { QRShareModal } from "@/features/games/components/QRShareModal";
 import { ReconnectionBanner } from "@/features/games/components/ReconnectionBanner";
 import { VictoryModal } from "@/features/games/components/VictoryModal";
 import { GameLiveReactions } from "@/features/games/components/GameLiveReactions";
+import { GameInGameChat } from "@/features/games/components/GameInGameChat";
+import { GamerProfileModal } from "@/features/games/components/GamerProfileModal";
+import { GameAvatar } from "@/features/games/components/GameAvatar";
 import { TicTacToeGame } from "@/features/games/components/games/TicTacToeGame";
 import { ConnectFourGame } from "@/features/games/components/games/ConnectFourGame";
 import { RPSClashGame } from "@/features/games/components/games/RPSClashGame";
@@ -27,11 +30,15 @@ import {
   sendGameMove,
   createInitialGameState,
 } from "@/features/games/services/gameRoomService";
+import {
+  getGamerProfile,
+  awardMatchXP,
+  getXpForNextLevel,
+} from "@/features/games/services/gameProgressionService";
 import { gameAudio } from "@/features/games/services/gameSoundService";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSEO } from "@/hooks/use-seo";
 import { getCurrentUserId } from "@/lib/auth";
-import { getProfile } from "@/lib/identity";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +57,9 @@ import {
   Flame,
   Swords,
   Eye,
+  User,
+  Sparkles,
+  Edit3,
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -108,26 +118,6 @@ const GAMES_CATALOG: GameMetadata[] = [
   },
 ];
 
-interface ArcadeStats {
-  wins: number;
-  played: number;
-  streak: number;
-}
-
-function getStoredArcadeStats(): ArcadeStats {
-  try {
-    const raw = localStorage.getItem("livetalk_arcade_stats");
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return { wins: 0, played: 0, streak: 0 };
-}
-
-function saveArcadeStats(stats: ArcadeStats) {
-  try {
-    localStorage.setItem("livetalk_arcade_stats", JSON.stringify(stats));
-  } catch {}
-}
-
 export default function GamesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const onlineCount = useOnlineCount();
@@ -142,11 +132,12 @@ export default function GamesPage() {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
-  const [arcadeStats, setArcadeStats] = useState<ArcadeStats>(getStoredArcadeStats);
+  const [gamerProfile, setGamerProfile] = useState<GamerProfile>(getGamerProfile);
   const createdRoomCodeRef = useRef<string | null>(null);
   const recordedRoundRef = useRef<number>(-1);
 
@@ -159,22 +150,22 @@ export default function GamesPage() {
   });
 
   const myPlayerId = useMemo(() => getCurrentUserId(), []);
-  const myProfile = useMemo(() => getProfile(), []);
 
   const myPlayerInfo: PlayerInfo = useMemo(
     () => ({
       id: myPlayerId,
-      name: myProfile.nickname?.trim() || "You",
-      avatar: myProfile.avatar || "😀",
+      name: gamerProfile.nickname?.trim() || "RetroGamer",
+      avatar: gamerProfile.avatar || "👾",
       score: 0,
+      level: gamerProfile.level || 1,
       isHost: true,
       isOnline: true,
       lastActive: Date.now(),
     }),
-    [myPlayerId, myProfile]
+    [myPlayerId, gamerProfile]
   );
 
-  // Track victory in local stats
+  // Track victory in local stats and award XP
   useEffect(() => {
     if (activeRoom && (activeRoom.status === "round_over" || activeRoom.status === "game_over") && !isSpectator) {
       if (recordedRoundRef.current !== activeRoom.round && activeRoom.winnerId) {
@@ -182,15 +173,18 @@ export default function GamesPage() {
         const won = activeRoom.winnerId === myPlayerId;
         const draw = activeRoom.winnerId === "draw";
 
-        setArcadeStats((prev) => {
-          const next = {
-            played: prev.played + 1,
-            wins: won ? prev.wins + 1 : prev.wins,
-            streak: won ? prev.streak + 1 : draw ? prev.streak : 0,
-          };
-          saveArcadeStats(next);
-          return next;
-        });
+        const reward = awardMatchXP({ won, draw });
+        setGamerProfile(reward.profile);
+
+        if (reward.leveledUp) {
+          toast.success(`🎉 LEVEL UP! You reached Level ${reward.profile.level} (${reward.profile.title})!`);
+        } else if (won) {
+          toast.success(`+${reward.xpGained} XP Awarded!`);
+        }
+
+        if (reward.newBadgeUnlocked) {
+          toast.success(`🏆 Achievement Unlocked: ${reward.newBadgeUnlocked.title}!`);
+        }
       }
     }
   }, [activeRoom?.status, activeRoom?.round, activeRoom?.winnerId, myPlayerId, isSpectator]);
@@ -459,6 +453,9 @@ export default function GamesPage() {
     return opponent ? !opponent.isOnline : false;
   }, [activeRoom, myPlayerId, isSpectator]);
 
+  const xpNeeded = getXpForNextLevel(gamerProfile.level);
+  const xpPercent = Math.min(Math.round((gamerProfile.xp / xpNeeded) * 100), 100);
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground antialiased select-none">
       <Header onlineCount={onlineCount} />
@@ -552,6 +549,17 @@ export default function GamesPage() {
               isSpectator={isSpectator}
             />
 
+            {/* In-Game Live Messenger Chat */}
+            {activeRoom.mode !== "local" && (
+              <GameInGameChat
+                roomCode={activeRoom.roomCode}
+                myPlayerId={myPlayerId}
+                myPlayerName={myPlayerInfo.name}
+                myPlayerAvatar={myPlayerInfo.avatar}
+                isSpectator={isSpectator}
+              />
+            )}
+
             {/* QR Invite & Spectate Modal */}
             <QRShareModal
               isOpen={isQRModalOpen}
@@ -577,24 +585,39 @@ export default function GamesPage() {
         ) : (
           /* VIEW 3: GAMES LOBBY & ARCADE HUB */
           <div className="flex flex-col w-full">
-            {/* Live Player Stats & Profile Banner */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5 rounded-3xl bg-card border border-border shadow-lg mb-8">
+            {/* Live Interactive Gamer Profile Banner */}
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5 rounded-3xl bg-card border border-border shadow-lg mb-8 relative overflow-hidden">
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-primary/20 border border-primary/40 flex items-center justify-center text-2xl shadow-inner">
-                  {myPlayerInfo.avatar}
+                <div className="w-13 h-13 rounded-2xl bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-3xl shadow-inner relative overflow-hidden shrink-0">
+                  <GameAvatar avatar={gamerProfile.avatar} fallback="👾" className="text-3xl" />
+                  <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-primary text-primary-foreground text-[9px] font-black shadow-md">
+                    Lv.{gamerProfile.level}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm sm:text-base font-bold text-foreground">
-                      {myPlayerInfo.name}
+                    <span className="text-base sm:text-lg font-black text-foreground">
+                      {gamerProfile.nickname}
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 font-bold">
-                      Online
-                    </span>
+                    <button
+                      onClick={() => setIsProfileModalOpen(true)}
+                      className="text-xs text-primary hover:text-primary/80 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    Arcade Gamer Profile
+                  <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    {gamerProfile.title} • {gamerProfile.xp} / {xpNeeded} XP
                   </span>
+                  {/* Mini XP progress bar */}
+                  <div className="w-36 sm:w-48 h-1.5 rounded-full bg-muted mt-1 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-primary to-violet-500 rounded-full"
+                      style={{ width: `${xpPercent}%` }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -603,7 +626,7 @@ export default function GamesPage() {
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-1 text-amber-500 font-black text-sm sm:text-base">
                     <Trophy className="w-4 h-4" />
-                    <span>{arcadeStats.wins}</span>
+                    <span>{gamerProfile.wins}</span>
                   </div>
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase">
                     Wins
@@ -615,7 +638,7 @@ export default function GamesPage() {
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-1 text-orange-500 font-black text-sm sm:text-base">
                     <Flame className="w-4 h-4" />
-                    <span>{arcadeStats.streak}</span>
+                    <span>{gamerProfile.streak}</span>
                   </div>
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase">
                     Streak
@@ -627,7 +650,7 @@ export default function GamesPage() {
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-1 text-primary font-black text-sm sm:text-base">
                     <Swords className="w-4 h-4" />
-                    <span>{arcadeStats.played}</span>
+                    <span>{gamerProfile.played}</span>
                   </div>
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase">
                     Matches
@@ -652,7 +675,7 @@ export default function GamesPage() {
                   Play 1v1 Games with Anyone
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-                  Challenge friends via instant QR code, watch matches live as a spectator, or test your wits against smart AI bots.
+                  Challenge friends via instant QR code, chat live during matches, watch as a spectator, or test your wits against smart AI bots.
                 </p>
               </div>
 
@@ -723,6 +746,14 @@ export default function GamesPage() {
           </div>
         )}
       </main>
+
+      {/* Gamer Profile Customizer Modal */}
+      <GamerProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        profile={gamerProfile}
+        onProfileUpdated={(updated) => setGamerProfile(updated)}
+      />
 
       {/* Game Mode Selection Modal */}
       <GameModeModal
