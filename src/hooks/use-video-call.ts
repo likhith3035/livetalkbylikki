@@ -130,7 +130,9 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     setRemoteCameraOff(false);
     setRemoteBlurred(false);
     pendingCandidatesRef.current = [];
+    sounds.stopRingtone();
   }, [setIsAudioOnlySynced]);
+
 
 
 
@@ -140,6 +142,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     const candidates = [...pendingCandidatesRef.current];
     pendingCandidatesRef.current = [];
     for (const c of candidates) {
+      if (!c || typeof c !== "object") continue;
       try {
         await pc.addIceCandidate(new RTCIceCandidate(c));
       } catch (err) {
@@ -301,10 +304,28 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
   const supportsScreenShare = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 
   const startCall = useCallback(async (audioOnly = false) => {
-    setCallStatusSynced("requesting");
-    setIsAudioOnlySynced(audioOnly);
-    sendSignalingEventRef.current("webrtc:request", { senderId: sessionId, audioOnly });
-  }, [sessionId, setCallStatusSynced, setIsAudioOnlySynced]);
+    try {
+      setIsAudioOnlySynced(audioOnly);
+      // Pre-acquire media stream to verify microphone/camera permission before notifying remote stranger
+      await getMedia("user", audioOnly);
+      setCallStatusSynced("requesting");
+      sendSignalingEventRef.current("webrtc:request", { senderId: sessionId, audioOnly });
+    } catch (err: any) {
+      console.error("WebRTC: startCall media access failed:", err);
+      setCallStatusSynced("idle");
+      cleanup();
+      toast({
+        variant: "destructive",
+        title: "Call Access Denied",
+        description:
+          err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError"
+            ? "Microphone or Camera permission was denied in your browser settings."
+            : typeof window !== "undefined" && !window.isSecureContext
+            ? "Calls require HTTPS. Please access the site over HTTPS."
+            : err?.message || "Could not access microphone or camera. Check if another app is using it.",
+      });
+    }
+  }, [sessionId, getMedia, cleanup, toast, setCallStatusSynced, setIsAudioOnlySynced]);
 
   const acceptCall = useCallback(async () => {
     try {
@@ -331,7 +352,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
           : err?.message || "Could not access microphone or camera. Check if another app is using it.",
       });
     }
-  }, [sessionId, getMedia, createPeerConnection, cleanup, setCallStatusSynced]);
+  }, [sessionId, getMedia, createPeerConnection, cleanup, setCallStatusSynced, toast]);
 
   const declineCall = useCallback(() => {
     sendSignalingEventRef.current("webrtc:decline", { senderId: sessionId });
@@ -757,7 +778,6 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
               pcRef.current.addTrack(videoTrack, localStreamRef.current);
               localStreamRef.current.addTrack(videoTrack);
               setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
-              await handleRenegotiateOffer(pcRef.current, sendSignalingEventRef.current, sessionId);
             }
           } catch { /* camera not available */ }
           break;

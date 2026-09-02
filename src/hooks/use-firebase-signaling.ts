@@ -35,8 +35,9 @@ export function useFirebaseSignaling({ sessionId, roomId, onEvent }: SignalingOp
       if (eventId) processedIds.add(eventId);
 
       if (data.payload?.senderId !== sessionId) {
-        // Ignore stale signaling events older than 15 seconds from previous room sessions
-        if (data.timestamp && Date.now() - data.timestamp > 15000) {
+        // Ignore stale signaling events older than 60 seconds from previous room sessions (handling clock skew)
+        const age = Date.now() - data.timestamp;
+        if (data.timestamp && age > 60000) {
           remove(snapshot.ref).catch(() => {});
           return;
         }

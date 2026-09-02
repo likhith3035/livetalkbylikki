@@ -13,6 +13,8 @@ import { useChatContext } from "@/contexts/ChatContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { CameraFilterSelector, VIDEO_FILTERS, type VideoFilter } from "@/components/video/CameraFilterSelector";
 import { useSpeechSubtitles, SPOKEN_LANGUAGES, TARGET_LANGUAGES } from "@/hooks/use-speech-subtitles";
+import { sounds } from "@/lib/sounds";
+import { useScreenWakeLock } from "@/hooks/use-screen-wake-lock";
 
 interface InCallMessage {
   id: string;
@@ -162,7 +164,12 @@ const VideoCallOverlay = ({
     remoteVideoElRef.current = node;
     if (node && remoteStream && node.srcObject !== remoteStream) {
       node.srcObject = remoteStream;
-      node.play().catch(() => { });
+      node.play()
+        .then(() => setAudioAutoplayBlocked(false))
+        .catch((err) => {
+          console.warn("WebRTC: remote video play error", err);
+          if (err?.name === "NotAllowedError") setAudioAutoplayBlocked(true);
+        });
     }
   }, [remoteStream]);
 
@@ -179,9 +186,32 @@ const VideoCallOverlay = ({
     const el = remoteVideoElRef.current;
     if (el && remoteStream && el.srcObject !== remoteStream) {
       el.srcObject = remoteStream;
-      el.play().catch(() => { });
+      el.play()
+        .then(() => setAudioAutoplayBlocked(false))
+        .catch((err) => {
+          console.warn("WebRTC: remote video play error", err);
+          if (err?.name === "NotAllowedError") setAudioAutoplayBlocked(true);
+        });
     }
   }, [remoteStream]);
+
+  // Keep screen awake during active video or audio calls
+  useScreenWakeLock(callStatus === "active");
+
+  // Play continuous telephone ringtone & haptic vibration for incoming/outgoing call states
+  useEffect(() => {
+    if (callStatus === "incoming") {
+      sounds.startRingtone("incoming");
+    } else if (callStatus === "requesting") {
+      sounds.startRingtone("outgoing");
+    } else {
+      sounds.stopRingtone();
+    }
+
+    return () => {
+      sounds.stopRingtone();
+    };
+  }, [callStatus]);
 
   // Call duration timer
   useEffect(() => {
@@ -201,6 +231,7 @@ const VideoCallOverlay = ({
       if (durationTimerRef.current) clearInterval(durationTimerRef.current);
     };
   }, [callStatus]);
+
 
   // Auto-hide controls after 4s — cleanup on unmount too
   useEffect(() => {
@@ -492,7 +523,42 @@ const VideoCallOverlay = ({
               )}
             </div>
           ) : (
-            <div className="h-full w-full">
+            <div className="h-full w-full relative">
+              {remoteStream && (
+                <audio
+                  ref={(el) => {
+                    audioElRef.current = el;
+                    if (el && remoteStream && el.srcObject !== remoteStream) {
+                      el.srcObject = remoteStream;
+                      el.play()
+                        .then(() => setAudioAutoplayBlocked(false))
+                        .catch(() => setAudioAutoplayBlocked(true));
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                />
+              )}
+              {audioAutoplayBlocked && (
+                <div className="absolute top-4 left-4 z-30">
+                  <Button
+                    size="sm"
+                    variant="glow"
+                    onClick={() => {
+                      if (audioElRef.current) {
+                        audioElRef.current.play().then(() => setAudioAutoplayBlocked(false)).catch(() => {});
+                      }
+                      if (remoteVideoElRef.current) {
+                        remoteVideoElRef.current.play().then(() => setAudioAutoplayBlocked(false)).catch(() => {});
+                      }
+                    }}
+                    className="gap-2 text-xs font-bold rounded-full bg-primary text-primary-foreground shadow-lg animate-bounce"
+                  >
+                    <Volume2 className="h-4 w-4" />
+                    Tap to Unmute Audio
+                  </Button>
+                </div>
+              )}
               {isLocalMain ? (
                 localStream && !isCameraOff ? (
                   <video
