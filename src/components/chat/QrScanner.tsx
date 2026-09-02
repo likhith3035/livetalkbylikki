@@ -1,17 +1,25 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import { Camera, CameraOff, SwitchCamera, Upload, FileImage } from "lucide-react";
+import { Camera, CameraOff, SwitchCamera, Upload, FileImage, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface QrScannerProps {
   onScanSuccess: (decodedText: string) => void;
   onClose?: () => void;
+  isOpen?: boolean;
 }
 
-const QrScanner = ({ onScanSuccess, onClose }: QrScannerProps) => {
+const QrScannerContent = ({ onScanSuccess, onClose }: { onScanSuccess: (decodedText: string) => void; onClose?: () => void }) => {
   const regionIdRef = useRef(`qr-region-${Math.random().toString(36).substring(2, 9)}`);
   const regionId = regionIdRef.current;
 
@@ -104,7 +112,6 @@ const QrScanner = ({ onScanSuccess, onClose }: QrScannerProps) => {
     }
   };
 
-  // Auto-start scanner on mount or camera switch
   useEffect(() => {
     const timer = setTimeout(() => {
       startScanner();
@@ -125,12 +132,7 @@ const QrScanner = ({ onScanSuccess, onClose }: QrScannerProps) => {
   }, [facingMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      className="flex flex-col items-center gap-3 overflow-hidden w-full max-w-sm mx-auto"
-    >
+    <div className="flex flex-col items-center gap-3 overflow-hidden w-full max-w-sm mx-auto select-none">
       <style>{`
         #${regionId} video {
           object-fit: cover !important;
@@ -255,8 +257,39 @@ const QrScanner = ({ onScanSuccess, onClose }: QrScannerProps) => {
       <p className="text-[10px] text-muted-foreground text-center max-w-[240px]">
         Scan a QR code with your camera or upload a QR screenshot
       </p>
-    </motion.div>
+    </div>
   );
+};
+
+const QrScanner = ({ onScanSuccess, onClose, isOpen }: QrScannerProps) => {
+  // If isOpen is explicitly false, do not render or activate camera
+  if (isOpen === false) return null;
+
+  // If isOpen is a boolean, wrap in a Dialog modal
+  if (isOpen === true) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose?.()}>
+        <DialogContent className="max-w-sm p-6 rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/50 shadow-2xl">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-lg font-bold flex items-center justify-center gap-2">
+              <Camera className="w-5 h-5 text-primary" />
+              Scan QR Code
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Point your camera at a friend's game QR code or upload a screenshot.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="my-2">
+            <QrScannerContent onScanSuccess={onScanSuccess} onClose={onClose} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // If isOpen is not provided (standalone usage inside another modal), render content directly
+  return <QrScannerContent onScanSuccess={onScanSuccess} onClose={onClose} />;
 };
 
 export default QrScanner;

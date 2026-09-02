@@ -550,6 +550,16 @@ const ChatGames = ({ onSendMessage, isConnected, roomChannel, sessionId, activeG
                 <p className="text-[10px] text-primary/80">Play mini-games against AI opponent!</p>
               </button>
             )}
+            <div className="pt-1">
+              <a
+                href="/games"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full block text-center rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-3 py-2 text-xs font-bold text-amber-400 transition-colors"
+              >
+                🎮 Explore All Games in Arcade Hub →
+              </a>
+            </div>
           </div>
         );
       case "ttt":
