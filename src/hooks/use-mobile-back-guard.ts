@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
+import { App, PluginListenerHandle } from "@capacitor/app";
 
 interface UseMobileBackGuardProps {
   enabled: boolean;
@@ -21,15 +23,19 @@ export function useMobileBackGuard({ enabled, onRequestGuard }: UseMobileBackGua
       try {
         window.history.pushState({ inChatGuard: true }, "", window.location.href);
         isPushedRef.current = true;
-      } catch {}
+      } catch {
+        // ignore history error
+      }
     }
 
-    const handlePopState = (e: PopStateEvent) => {
+    const handlePopState = () => {
       if (enabled && isPushedRef.current) {
         // Maintain history state so subsequent back attempts are also guarded
         try {
           window.history.pushState({ inChatGuard: true }, "", window.location.href);
-        } catch {}
+        } catch {
+          // ignore history error
+        }
         onRequestGuardRef.current();
       }
     };
@@ -37,27 +43,23 @@ export function useMobileBackGuard({ enabled, onRequestGuard }: UseMobileBackGua
     window.addEventListener("popstate", handlePopState);
 
     // Support native Capacitor Back Button if running inside mobile app container
-    let capacitorListener: any = null;
-    const windowWithCapacitor = window as any;
-    if (windowWithCapacitor.Capacitor && windowWithCapacitor.Capacitor.isPluginAvailable("App")) {
+    let capacitorListenerPromise: Promise<PluginListenerHandle> | null = null;
+    if (Capacitor.isNativePlatform()) {
       try {
-        const { App } = windowWithCapacitor.Capacitor.Plugins;
-        if (App && typeof App.addListener === "function") {
-          capacitorListener = App.addListener("backButton", () => {
-            if (enabled) {
-              onRequestGuardRef.current();
-            }
-          });
-        }
-      } catch (err) {
+        capacitorListenerPromise = App.addListener("backButton", () => {
+          if (enabled) {
+            onRequestGuardRef.current();
+          }
+        });
+      } catch {
         // Fallback gracefully
       }
     }
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      if (capacitorListener && typeof capacitorListener.remove === "function") {
-        capacitorListener.remove();
+      if (capacitorListenerPromise) {
+        capacitorListenerPromise.then((handle) => handle.remove()).catch(() => {});
       }
     };
   }, [enabled]);

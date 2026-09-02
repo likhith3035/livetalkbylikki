@@ -28,6 +28,10 @@ export default defineConfig(({ mode }) => ({
             if (id.includes("firebase")) return "firebase-vendor";
             if (id.includes("@supabase")) return "supabase-vendor";
             if (id.includes("recharts")) return "charts-vendor";
+            if (id.includes("framer-motion")) return "framer-vendor";
+            if (id.includes("lucide-react")) return "icons-vendor";
+            if (id.includes("@radix-ui")) return "radix-vendor";
+            if (id.includes("jszip") || id.includes("html-to-image") || id.includes("qrcode") || id.includes("html5-qrcode")) return "utils-vendor";
             return "vendor";
           }
         },

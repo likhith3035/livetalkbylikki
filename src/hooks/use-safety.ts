@@ -6,9 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_BANNED_WORDS } from "@/lib/safetyConstants";
 
 
+import { getCurrentUserId } from "@/lib/auth";
+
 export function useSafety() {
   const [bannedWords, setBannedWords] = useState<string[]>([]);
-  const [blacklist, setBlacklist] = useState<Record<string, boolean>>({});
+  const [isCurrentUserBanned, setIsCurrentUserBanned] = useState<boolean>(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -21,24 +23,18 @@ export function useSafety() {
         setBannedWords(snapshot.val());
       } else {
         setBannedWords(DEFAULT_BANNED_WORDS);
-        set(wordsRef, DEFAULT_BANNED_WORDS).catch(err => {
-          console.warn("[Safety] Failed to initialize profanity list:", err.message);
-        });
       }
     }, (error) => {
-      console.error("[Safety] Profanity List Sync Error:", error);
+      console.warn("[Safety] Profanity List Sync Error:", error);
     });
 
-    // Sync Global Blacklist
-    const blacklistRef = ref(db, "admin/blacklist");
-    const unsubBlacklist = onValue(blacklistRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setBlacklist(snapshot.val());
-      } else {
-        setBlacklist({});
-      }
+    // Check Current User Blacklist Status
+    const uid = getCurrentUserId();
+    const userBlacklistRef = ref(db, `admin/blacklist/${uid}`);
+    const unsubBlacklist = onValue(userBlacklistRef, (snapshot) => {
+      setIsCurrentUserBanned(snapshot.exists() && snapshot.val() === true);
     }, (error) => {
-      console.error("[Safety] Blacklist Sync Error:", error);
+      console.warn("[Safety] Blacklist Status Check:", error);
     });
 
     return () => { unsubWords(); unsubBlacklist(); };
@@ -80,9 +76,12 @@ export function useSafety() {
     });
   }, [toast]);
 
-  const isBanned = useCallback((id: string) => {
-    return !!blacklist[id];
-  }, [blacklist]);
+  const isBanned = useCallback((id?: string) => {
+    if (!id || id === getCurrentUserId()) {
+      return isCurrentUserBanned;
+    }
+    return false;
+  }, [isCurrentUserBanned]);
 
   const submitAppeal = useCallback(async (uid: string, reason: string) => {
     if (!db) return;
