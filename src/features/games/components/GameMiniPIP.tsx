@@ -143,10 +143,15 @@ export const GameMiniPIP: React.FC<GameMiniPIPProps> = ({
         <motion.div
           drag
           dragMomentum={false}
+          data-no-pull-refresh="true"
+          data-pip-container="true"
+          onTouchStartCapture={(e) => e.stopPropagation()}
+          onTouchMoveCapture={(e) => e.stopPropagation()}
+          onTouchEndCapture={(e) => e.stopPropagation()}
           onClick={() => setShowMobileControls((prev) => !prev)}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`fixed z-50 rounded-2xl overflow-hidden border-2 shadow-2xl bg-black flex items-center justify-center group cursor-grab active:cursor-grabbing touch-manipulation transition-all duration-300 ${
+          className={`fixed z-50 rounded-2xl overflow-hidden border-2 shadow-2xl bg-black flex items-center justify-center group cursor-grab active:cursor-grabbing touch-none overscroll-none select-none transition-all duration-300 ${
             remoteStream
               ? "border-emerald-500 shadow-emerald-500/20"
               : "border-primary shadow-primary/20"

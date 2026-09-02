@@ -382,6 +382,14 @@
     overscroll-behavior-y: contain;
   }
 
+  /* Prevent browser pull-to-refresh and viewport bounce during active calls */
+  body.in-video-call,
+  [data-video-call-active="true"],
+  [data-pip-container="true"] {
+    overscroll-behavior: none !important;
+    overscroll-behavior-y: none !important;
+  }
+
   /* Prevent text selection flicker on long-press */
   [data-msg-menu], .select-none {
     -webkit-user-select: none;

@@ -392,7 +392,12 @@ const VideoCallOverlay = ({
   // Incoming call prompt
   if (callStatus === "incoming") {
     return (
-      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/80 backdrop-blur-lg animate-fade-in">
+      <div
+        className="fixed inset-0 z-[90] flex items-center justify-center bg-background/80 backdrop-blur-lg animate-fade-in overscroll-none"
+        data-video-call-active="true"
+        data-no-pull-refresh="true"
+        style={{ overscrollBehavior: "none" }}
+      >
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-card border border-border p-8 shadow-2xl max-w-xs w-full mx-4">
           <div className="relative">
             <div className="h-20 w-20 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center animate-pulse">
@@ -433,7 +438,12 @@ const VideoCallOverlay = ({
   // Requesting call
   if (callStatus === "requesting") {
     return (
-      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/80 backdrop-blur-lg animate-fade-in">
+      <div
+        className="fixed inset-0 z-[90] flex items-center justify-center bg-background/80 backdrop-blur-lg animate-fade-in overscroll-none"
+        data-video-call-active="true"
+        data-no-pull-refresh="true"
+        style={{ overscrollBehavior: "none" }}
+      >
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-card border border-border p-8 shadow-2xl max-w-xs w-full mx-4">
           <div className="h-20 w-20 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center animate-pulse">
             {isAudioOnly ? <Phone className="h-8 w-8 text-primary" /> : <Video className="h-8 w-8 text-primary" />}
@@ -454,7 +464,12 @@ const VideoCallOverlay = ({
   // Connecting
   if (callStatus === "connecting") {
     return (
-      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/90 backdrop-blur-lg animate-fade-in">
+      <div
+        className="fixed inset-0 z-[90] flex items-center justify-center bg-background/90 backdrop-blur-lg animate-fade-in overscroll-none"
+        data-video-call-active="true"
+        data-no-pull-refresh="true"
+        style={{ overscrollBehavior: "none" }}
+      >
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-card border border-border p-8 shadow-2xl max-w-xs w-full mx-4">
           <div className="h-16 w-16 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin flex items-center justify-center">
             {isAudioOnly ? <Phone className="h-6 w-6 text-primary animate-pulse" /> : <Video className="h-6 w-6 text-primary animate-pulse" />}
@@ -476,8 +491,10 @@ const VideoCallOverlay = ({
   if (callStatus === "active") {
     return (
       <div
-        className="fixed inset-0 lg:left-[220px] z-[90] bg-background flex flex-col animate-fade-in"
-        style={{ height: "100dvh" }}
+        className="fixed inset-0 lg:left-[220px] z-[90] bg-background flex flex-col animate-fade-in overscroll-none select-none"
+        style={{ height: "100dvh", touchAction: "manipulation", overscrollBehavior: "none" }}
+        data-video-call-active="true"
+        data-no-pull-refresh="true"
         onClick={handleTapScreen}
       >
         {/* Remote video/audio area */}
@@ -665,7 +682,12 @@ const VideoCallOverlay = ({
                 right: 0,
                 bottom: typeof window !== "undefined" ? window.innerHeight - 200 : 400,
               }}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-20 h-28 xs:w-24 xs:h-32 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none ring-1 ring-white/10"
+              data-no-pull-refresh="true"
+              data-pip-container="true"
+              onTouchStartCapture={(e) => e.stopPropagation()}
+              onTouchMoveCapture={(e) => e.stopPropagation()}
+              onTouchEndCapture={(e) => e.stopPropagation()}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-20 h-28 xs:w-24 xs:h-32 sm:w-36 sm:h-48 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-2xl bg-muted z-20 cursor-grab active:cursor-grabbing touch-none ring-1 ring-white/10 overscroll-none select-none"
               onClick={(e) => { e.stopPropagation(); setIsLocalMain(!isLocalMain); }}
               whileDrag={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

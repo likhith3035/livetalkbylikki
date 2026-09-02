@@ -382,6 +382,25 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     onCallUpgraded 
   });
 
+  // Synchronize in-call body class and global window flag to prevent accidental browser refreshes on mobile
+  useEffect(() => {
+    const isCallActive = callStatus === "active" || callStatus === "connecting" || callStatus === "requesting" || callStatus === "incoming";
+    if (typeof window !== "undefined") {
+      (window as any).__LIVETALK_CALL_ACTIVE__ = isCallActive;
+      if (isCallActive) {
+        document.body.classList.add("in-video-call");
+      } else {
+        document.body.classList.remove("in-video-call");
+      }
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        (window as any).__LIVETALK_CALL_ACTIVE__ = false;
+        document.body.classList.remove("in-video-call");
+      }
+    };
+  }, [callStatus]);
+
   // Cross-device sync signaling handler — set from ChatPage via ref
   const crossDeviceSignalingRef = useRef<((event: string, payload: Record<string, unknown>) => void) | null>(null);
 
