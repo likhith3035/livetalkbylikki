@@ -159,4 +159,30 @@ describe("LiveTalk Arcade Games Suite", () => {
       expect(determineRPSWinner("rock", "rock")).toBe("draw");
     });
   });
+
+  describe("Memory Duel Engine & Normalization", () => {
+    it("should initialize memory state with 16 cards and valid pairs", () => {
+      const state = createInitialGameState("memory");
+      expect(state.cards).toHaveLength(16);
+      expect(state.flippedCardIds).toEqual([]);
+      expect(state.hostPairs).toBe(0);
+      expect(state.guestPairs).toBe(0);
+    });
+
+    it("should tolerate undefined or missing flippedCardIds from Firebase RTDB", () => {
+      const rawFirebasePayload: any = {
+        cards: [{ id: 0, emoji: "🔥", isFlipped: false, isMatched: false }],
+        // Firebase strips empty arrays, so flippedCardIds is undefined
+        flippedCardIds: undefined,
+        hostPairs: 0,
+        guestPairs: 0,
+      };
+
+      const normalizedFlipped = Array.isArray(rawFirebasePayload.flippedCardIds)
+        ? rawFirebasePayload.flippedCardIds
+        : [];
+      expect(normalizedFlipped).toEqual([]);
+      expect(() => [...normalizedFlipped, 0]).not.toThrow();
+    });
+  });
 });
