@@ -10,6 +10,7 @@ export interface PlayerInfo {
   avatar: string;
   symbol?: string; // "X" | "O" | "red" | "yellow" etc.
   score: number;
+  level?: number;
   isHost: boolean;
   isOnline: boolean;
   lastActive: number;
@@ -29,11 +30,45 @@ export interface GameReaction {
   timestamp: number;
 }
 
+export interface GameChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar: string;
+  text: string;
+  timestamp: number;
+  isSpectator?: boolean;
+}
+
 export interface SpectatorInfo {
   id: string;
   name: string;
   avatar: string;
   joinedAt: number;
+}
+
+export interface GamerProfile {
+  nickname: string;
+  avatar: string;
+  level: number;
+  xp: number;
+  title: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  played: number;
+  streak: number;
+  bestStreak: number;
+  unlockedBadges: string[];
+}
+
+export interface GamerBadge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+  requirement: string;
 }
 
 export interface GameRoomState<TState = any> {
@@ -49,6 +84,7 @@ export interface GameRoomState<TState = any> {
   maxRounds: number;
   rules?: GameCustomRules;
   spectators?: Record<string, SpectatorInfo>;
+  messages?: Record<string, GameChatMessage>;
   players: {
     host: PlayerInfo;
     guest: PlayerInfo | null;
@@ -98,8 +134,9 @@ export interface MemoryGameState {
   totalPairs: number;
 }
 
+export type ReactionStatus = "waiting" | "go" | "clicked" | "false_start";
 export interface ReactionGameState {
-  gameState: "waiting" | "ready" | "go" | "clicked" | "false_start";
+  gameState: ReactionStatus;
   greenAt: number | null;
   hostTimeMs: number | null;
   guestTimeMs: number | null;

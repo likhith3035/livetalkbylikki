@@ -1,11 +1,22 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { checkTicTacToeWinner, getBestMinimaxMove } from "@/features/games/components/games/TicTacToeGame";
 import { checkConnectFourWinner, getBestConnectFourAIMove } from "@/features/games/components/games/ConnectFourGame";
 import { determineRPSWinner } from "@/features/games/components/games/RPSClashGame";
 import { generateGameRoomCode, createInitialGameState } from "@/features/games/services/gameRoomService";
+import {
+  getGamerProfile,
+  saveGamerProfile,
+  awardMatchXP,
+  getXpForNextLevel,
+  getRankTitle,
+} from "@/features/games/services/gameProgressionService";
 import { TicTacToeCell, ConnectFourCell } from "@/features/games/types";
 
 describe("LiveTalk Arcade Games Suite", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   describe("Room Service & Code Generator", () => {
     it("should generate a 6-character uppercase alphanumeric room code", () => {
       const code = generateGameRoomCode();
@@ -27,6 +38,24 @@ describe("LiveTalk Arcade Games Suite", () => {
 
       const memState = createInitialGameState("memory");
       expect(memState.cards).toHaveLength(16);
+    });
+  });
+
+  describe("Gamer Progression & Leveling Service", () => {
+    it("should calculate correct XP thresholds and titles", () => {
+      expect(getXpForNextLevel(1)).toBe(175);
+      expect(getXpForNextLevel(2)).toBe(250);
+      expect(getRankTitle(1)).toBe("Arcade Rookie");
+      expect(getRankTitle(5)).toBe("Tactical Strategist");
+      expect(getRankTitle(10)).toBe("Minimax Slayer");
+    });
+
+    it("should award XP on match victory and handle level up", () => {
+      const result = awardMatchXP({ won: true });
+      expect(result.xpGained).toBeGreaterThanOrEqual(110);
+      expect(result.profile.wins).toBe(1);
+      expect(result.profile.played).toBe(1);
+      expect(result.newBadgeUnlocked?.id).toBe("first_win");
     });
   });
 
