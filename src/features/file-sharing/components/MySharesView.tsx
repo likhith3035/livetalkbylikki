@@ -226,7 +226,7 @@ export const MySharesView: React.FC = () => {
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/40 pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="px-3 py-1.5 rounded-xl bg-primary/15 border border-primary/30 text-primary font-mono font-extrabold text-base tracking-widest shrink-0 shadow-inner">
+                    <div className="px-3 py-1.5 rounded-xl bg-secondary/80 border border-border/70 text-foreground font-mono font-bold text-base tracking-widest shrink-0">
                       {item.code}
                     </div>
 

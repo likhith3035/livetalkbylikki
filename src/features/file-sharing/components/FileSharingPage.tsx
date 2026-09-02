@@ -21,10 +21,12 @@ import {
 } from "lucide-react";
 import { getSavedFiles, purgeExpiredShares } from "../services/fileSharingService";
 import { toast } from "sonner";
+import { useOnlineCount } from "@/hooks/use-online-count";
 
 export const FileSharingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const onlineCount = useOnlineCount();
 
   const codeFromUrl = searchParams.get("code");
   const [activeTab, setActiveTab] = useState<"home" | "upload" | "share_text" | "share_password" | "enter_code" | "scan_qr" | "files" | "shares">(
@@ -92,7 +94,7 @@ export const FileSharingPage: React.FC = () => {
     <div className="flex-1 w-full min-h-screen bg-background text-foreground pb-12">
       {/* Mobile Top Header with Logo, Theme Toggle & Back Button */}
       <div className="lg:hidden sticky top-0 z-40">
-        <Header onlineCount={3} onBack={() => navigate("/")} />
+        <Header onlineCount={onlineCount} onBack={() => navigate("/")} />
       </div>
 
       <div className="py-4 sm:py-6 px-3 sm:px-6 max-w-5xl mx-auto space-y-6 animate-fade-in">

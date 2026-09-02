@@ -480,11 +480,11 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
 
   // Standard File List View
   return (
-    <div className="bg-card border border-primary/30 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 animate-fade-in">
+    <div className="bg-card border border-border/80 rounded-3xl p-6 sm:p-8 space-y-6 animate-fade-in">
       {/* Header Info */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 flex items-center justify-center font-bold text-xl shrink-0">
+          <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center font-bold text-xl shrink-0">
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div>
@@ -492,16 +492,16 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
               <h3 className="text-lg font-display font-bold text-foreground">
                 Shared Files Received ✓
               </h3>
-              <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary">
+              <Badge variant="outline" className="text-[10px] font-mono border-border/60 text-foreground">
                 Code: {share.code}
               </Badge>
               {share.isBurnAfterReading && (
-                <Badge variant="destructive" className="text-[10px] font-bold gap-1 bg-amber-600 text-white animate-pulse">
+                <Badge variant="destructive" className="text-[10px] font-bold gap-1 bg-amber-600 text-white">
                   🔥 Burn After Reading
                 </Badge>
               )}
               <Badge variant="secondary" className="text-[10px] font-semibold gap-1 text-muted-foreground border border-border/50">
-                <Clock className="h-3 w-3 text-primary" />
+                <Clock className="h-3 w-3 text-muted-foreground" />
                 {formatRemainingTime(share.expiresAt)}
               </Badge>
             </div>
@@ -516,7 +516,7 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
             <Button
               type="button"
               onClick={handleDownloadAll}
-              className="w-full sm:w-auto text-xs font-bold rounded-xl gap-2 bg-gradient-to-r from-primary to-purple-600 text-white shadow-md"
+              className="w-full sm:w-auto text-xs font-bold rounded-xl gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
             >
               <FolderArchive className="h-4 w-4" /> Download All ZIP ({share.files.length} Files)
             </Button>

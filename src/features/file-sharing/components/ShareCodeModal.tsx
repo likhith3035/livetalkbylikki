@@ -245,7 +245,7 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
               type="button"
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="w-full h-11 rounded-2xl bg-gradient-to-r from-primary to-purple-600 font-extrabold text-white text-xs shadow-md shadow-primary/20 gap-2 mt-2"
+              className="w-full h-10 rounded-xl bg-primary hover:bg-primary/90 font-semibold text-primary-foreground text-xs transition-colors gap-2 mt-2"
             >
               <Sparkles className="h-4 w-4" /> Generate Share Code
             </Button>
@@ -254,7 +254,7 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
           /* Result Card with Code & QR */
           <div className="space-y-4 pt-1 animate-fade-in">
             {/* Share Code Box */}
-            <div className="bg-gradient-to-r from-primary/15 via-purple-500/10 to-card border border-primary/30 rounded-2xl p-5 text-center space-y-2 shadow-inner">
+            <div className="bg-secondary/40 border border-border/70 rounded-2xl p-5 text-center space-y-2">
               <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest block">
                 Your Share Code
               </span>

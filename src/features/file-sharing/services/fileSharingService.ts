@@ -6,7 +6,7 @@ import {
   ExpirationOption, DownloadLimitOption, SortOption, FileCategory, StorageUsageStats,
   ShareType, PasswordCredentialPayload
 } from "../types";
-import { generateShareCode, hashPassword, detectFileCategory, isExecutableFile, sanitizeFileName, formatBytes } from "../utils/cryptoCode";
+import { generateShareCode, hashPassword, detectFileCategory, isExecutableFile, sanitizeFileName, formatBytes, encryptData, decryptData } from "../utils/cryptoCode";
 
 export { formatBytes };
 
@@ -326,7 +326,22 @@ export async function createShareRecord({
 
   const cleanRecord = JSON.parse(JSON.stringify(shareRecord));
 
-  // 2. Sync to Firebase Realtime Database (using permitted /rooms path)
+  // 2. Encrypt sensitive credentialData / textContent before syncing to Firebase if protected
+  if (password.trim()) {
+    try {
+      if (cleanRecord.credentialData) {
+        const encryptedCred = await encryptData(JSON.stringify(cleanRecord.credentialData), password.trim());
+        cleanRecord.credentialData = { encryptedPayload: encryptedCred } as any;
+      }
+      if (cleanRecord.textContent) {
+        cleanRecord.textContent = await encryptData(cleanRecord.textContent, password.trim());
+      }
+    } catch (encErr) {
+      console.warn("[FileShare] Pre-sync encryption warning:", encErr);
+    }
+  }
+
+  // 3. Sync to Firebase Realtime Database (using permitted /rooms path)
   try {
     await set(ref(db, `rooms/share_${code}`), cleanRecord);
   } catch (err) {
