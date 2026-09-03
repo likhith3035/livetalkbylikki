@@ -117,6 +117,12 @@ class GameSoundSynthesizer {
     this.playTone(261.63, 0.3, "sawtooth", 0.12, 240); // C4
   }
 
+  public playDraw() {
+    this.vibrate([20, 20]);
+    this.playTone(440, 0.1, "triangle", 0.12);
+    this.playTone(440, 0.15, "sine", 0.12, 100);
+  }
+
   public playGo() {
     this.vibrate(30);
     this.playTone(880, 0.12, "sine", 0.2);
@@ -251,6 +257,57 @@ class GameSoundSynthesizer {
     this.playTone(783.99, 0.15, "sine", 0.22, 200); // G5
     this.playTone(1046.50, 0.35, "triangle", 0.25, 300); // C6
     this.playTone(1318.51, 0.45, "sine", 0.25, 450); // E6
+  }
+
+  // ── Hand Cricket Sound Effects ──
+
+  public playTossCoin() {
+    this.vibrate(15);
+    // Metallic ping of spinning coin
+    this.playTone(1200, 0.05, "sine", 0.15, 0);
+    this.playTone(1800, 0.08, "triangle", 0.12, 40);
+    this.playTone(2400, 0.12, "sine", 0.1, 90);
+  }
+
+  public playBatHit(run = 1) {
+    this.vibrate(run >= 4 ? [20, 25] : 15);
+    // Solid willow bat-on-ball crack
+    const pitch = 350 + run * 40;
+    this.playTone(pitch, 0.06, "triangle", 0.2, 0);
+    this.playTone(pitch * 1.5, 0.08, "sine", 0.15, 20);
+  }
+
+  public playBoundaryFour() {
+    this.vibrate([20, 30, 40]);
+    // Energetic double-chime for FOUR
+    this.playTone(587.33, 0.08, "sine", 0.16, 0);   // D5
+    this.playTone(783.99, 0.08, "sine", 0.18, 80);  // G5
+    this.playTone(987.77, 0.18, "triangle", 0.2, 160); // B5
+  }
+
+  public playBoundarySix() {
+    this.vibrate([30, 40, 50, 60]);
+    // Stadium maximum SIX stadium fanfare
+    this.playTone(523.25, 0.09, "sine", 0.18, 0);   // C5
+    this.playTone(659.25, 0.09, "sine", 0.2, 70);   // E5
+    this.playTone(783.99, 0.1, "sine", 0.22, 140);  // G5
+    this.playTone(1046.50, 0.25, "triangle", 0.25, 210); // C6
+    this.playTone(1318.51, 0.35, "sine", 0.22, 320); // E6
+  }
+
+  public playWicket() {
+    this.vibrate([50, 40, 80]);
+    // Stumps shattered: low crunch + descending slide
+    this.playTone(250, 0.12, "sawtooth", 0.25, 0);
+    this.playTone(160, 0.18, "triangle", 0.25, 60);
+    this.playTone(90, 0.3, "sine", 0.3, 140);
+  }
+
+  public playUmpireWhistle() {
+    this.vibrate(20);
+    // Two quick high whistle bursts
+    this.playTone(2200, 0.06, "sine", 0.14, 0);
+    this.playTone(2600, 0.1, "sine", 0.16, 80);
   }
 }
 

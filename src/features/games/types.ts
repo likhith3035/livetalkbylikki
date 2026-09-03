@@ -1,4 +1,4 @@
-export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo";
+export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo" | "cricket";
 
 export type GameMode = "friend" | "quickmatch" | "ai" | "local";
 
@@ -19,6 +19,8 @@ export interface PlayerInfo {
 export interface GameCustomRules {
   turnTimerSeconds: number; // 0 = unlimited, 10, 15, 30
   maxSeriesWins: number;    // 1 (Single Round), 2 (Best of 3), 3 (Best of 5), 4 (Best of 7)
+  maxWickets?: number;      // 1 (Sudden Death), 3 (Standard), 5 (Grand Match)
+  maxOvers?: number;        // 0 = unlimited, 1, 2, 3 overs
   aiDifficulty?: "easy" | "medium" | "hard";
   botName?: string;
   botAvatar?: string;
@@ -199,6 +201,76 @@ export interface BingoGameState {
   guestCompletedLines: string[];
   lastCalledNumber: number | null;
   isCardLocked?: boolean;
+}
+
+export interface CricketDelivery {
+  ballNumber: number;
+  batsmanRun: number; // 0..6
+  bowlerRun: number; // 0..6
+  isWicket: boolean;
+  runsScored: number;
+  commentary: string; // e.g. "Clean Bowled!", "Smashed for SIX over long-on!", "Quick single"
+  timestamp: number;
+}
+
+export interface HandCricketState {
+  phase: "toss" | "toss_decision" | "innings_1" | "innings_break" | "innings_2" | "match_over";
+  
+  // Toss details
+  toss: {
+    callerId: string; // Player who called odd/even
+    choice: "odd" | "even";
+    hostPick: number | null; // 1-6
+    guestPick: number | null; // 1-6
+    winnerId: string | null;
+    elected: "bat" | "bowl" | null;
+  };
+
+  // Batting / Bowling assignments
+  currentInnings: 1 | 2;
+  batsmanId: string; // playerId currently batting
+  bowlerId: string; // playerId currently bowling
+  
+  // Match constraints
+  maxWickets: number; // 1, 3, 5
+  maxOvers: number; // 0 = unlimited, 1, 2, 3 overs
+  
+  // Innings 1 statistics
+  innings1: {
+    battingPlayerId: string;
+    runs: number;
+    wickets: number;
+    balls: number;
+    deliveries: CricketDelivery[];
+  };
+
+  // Innings 2 statistics
+  innings2: {
+    battingPlayerId: string;
+    runs: number;
+    wickets: number;
+    balls: number;
+    target: number; // innings1.runs + 1
+    deliveries: CricketDelivery[];
+  };
+
+  // Current delivery in-progress
+  currentDelivery: {
+    hostPick: number | null; // 0-6
+    guestPick: number | null; // 0-6
+    revealed: boolean;
+    lastResult?: {
+      batsmanPick: number;
+      bowlerPick: number;
+      isWicket: boolean;
+      runsAdded: number;
+      commentary: string;
+    } | null;
+  };
+
+  // Bot persona details
+  aiPersona?: "gully" | "spin_king" | "captain_cool";
+  aiSpeech?: string;
 }
 
 export type SpectatorCheerType = "confetti" | "horn" | "applause" | "rocket";

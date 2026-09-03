@@ -44,6 +44,22 @@ export const GAMER_BADGES: GamerBadge[] = [
     color: "from-emerald-400 to-teal-600",
     requirement: "Reach 1,000 XP",
   },
+  {
+    id: "sixer_king",
+    title: "Sixer King",
+    description: "Smashed maximum boundaries in Hand Cricket.",
+    icon: "🚀",
+    color: "from-pink-500 to-rose-600",
+    requirement: "Score Sixes in Cricket",
+  },
+  {
+    id: "cricket_champion",
+    title: "Cricket Champion",
+    description: "Mastered the pitch with supreme hand cricket duels.",
+    icon: "🏏",
+    color: "from-emerald-500 to-green-600",
+    requirement: "Win Cricket Matches",
+  },
 ];
 
 export const GAMER_AVATARS = [
@@ -66,19 +82,33 @@ export function getXpForNextLevel(level: number): number {
   return 100 + level * 75;
 }
 
+function sanitizeAvatar(avatar?: string | null): string {
+  if (!avatar) return "👾";
+  const trimmed = avatar.trim();
+  if (
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("/9j/") ||
+    trimmed.startsWith("iVBORw")
+  ) {
+    return trimmed;
+  }
+  if (trimmed.length <= 8) {
+    return trimmed;
+  }
+  return "👾";
+}
+
 export function getGamerProfile(): GamerProfile {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Clean avatar if base64 leaked
-      const safeAvatar = parsed.avatar && (parsed.avatar.startsWith("data:image/") || parsed.avatar.startsWith("http") || parsed.avatar.length <= 8)
-        ? parsed.avatar
-        : "👾";
-
       return {
         ...parsed,
-        avatar: safeAvatar,
+        avatar: sanitizeAvatar(parsed.avatar),
         title: getRankTitle(parsed.level || 1),
         recentMatches: parsed.recentMatches || [],
       };
@@ -86,13 +116,10 @@ export function getGamerProfile(): GamerProfile {
   } catch {}
 
   const baseProfile = getProfile();
-  const safeBaseAvatar = baseProfile.avatar && (baseProfile.avatar.startsWith("data:image/") || baseProfile.avatar.startsWith("http") || baseProfile.avatar.length <= 8)
-    ? baseProfile.avatar
-    : "👾";
 
   return {
     nickname: baseProfile.nickname || "RetroGamer",
-    avatar: safeBaseAvatar,
+    avatar: sanitizeAvatar(baseProfile.avatar),
     level: 1,
     xp: 0,
     title: "Arcade Rookie",

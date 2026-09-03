@@ -18,6 +18,7 @@ import {
   ReactionGameState,
   SOSGameState,
   BingoGameState,
+  HandCricketState,
 } from "../types";
 
 const ROOM_CODE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -144,6 +145,46 @@ export function createInitialGameState(gameId: GameId) {
         guestCompletedLines: [],
         lastCalledNumber: null,
         isCardLocked: false,
+      };
+      return state;
+    }
+    case "cricket": {
+      const state: HandCricketState = {
+        phase: "toss",
+        toss: {
+          callerId: "",
+          choice: "odd",
+          hostPick: null,
+          guestPick: null,
+          winnerId: null,
+          elected: null,
+        },
+        currentInnings: 1,
+        batsmanId: "",
+        bowlerId: "",
+        maxWickets: 1,
+        maxOvers: 2, // 2 overs = 12 balls default
+        innings1: {
+          battingPlayerId: "",
+          runs: 0,
+          wickets: 0,
+          balls: 0,
+          deliveries: [],
+        },
+        innings2: {
+          battingPlayerId: "",
+          runs: 0,
+          wickets: 0,
+          balls: 0,
+          target: 0,
+          deliveries: [],
+        },
+        currentDelivery: {
+          hostPick: null,
+          guestPick: null,
+          revealed: false,
+          lastResult: null,
+        },
       };
       return state;
     }
