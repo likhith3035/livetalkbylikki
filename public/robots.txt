@@ -1,14 +1,23 @@
 User-agent: *
 Allow: /
+Allow: /games
+Allow: /file-sharing
+Allow: /ai-chat
+Allow: /prompt-analyzer
+Allow: /info
+Allow: /safety
+Allow: /guidelines
+Allow: /privacy
+Allow: /terms
+
+# Private, Session & Admin Endpoints
 Disallow: /admin/
-Disallow: /chat
-Disallow: /ai-chat
 Disallow: /profile
 Disallow: /settings
 Disallow: /room/
 Disallow: /handoff
 
-# LiveTalk by Likhith Kami (Likki) — Free Anonymous Chat & Video
+# LiveTalk by Likhith Kami (Likki) — Free Anonymous Chat, Video Calls, Games & Encrypted File Sharing
 # Website: https://livetalkbylikki.netlify.app/
 # Developer: Likhith Kami (Likki)
 # Contact: kamilikhith@gmail.com
