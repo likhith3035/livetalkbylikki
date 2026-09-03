@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { GameId, GameMode, GameRoomState, PlayerInfo, GameCustomRules, GamerProfile } from "@/features/games/types";
 import { GameCard, GameMetadata } from "@/features/games/components/GameCard";
 import { GameModeModal } from "@/features/games/components/GameModeModal";
@@ -18,6 +19,9 @@ import { ConnectFourGame } from "@/features/games/components/games/ConnectFourGa
 import { RPSClashGame } from "@/features/games/components/games/RPSClashGame";
 import { MemoryDuelGame } from "@/features/games/components/games/MemoryDuelGame";
 import { ReactionDashGame } from "@/features/games/components/games/ReactionDashGame";
+import { SOSGame } from "@/features/games/components/games/SOSGame";
+import { BingoGame } from "@/features/games/components/games/BingoGame";
+import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
 import {
   createGameRoom,
   joinGameRoom,
@@ -64,6 +68,8 @@ import {
   Sparkles,
   Edit3,
   WifiOff,
+  ArrowLeft,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -120,6 +126,26 @@ const GAMES_CATALOG: GameMetadata[] = [
     accentColor: "#10b981",
     badge: "Reflex",
   },
+  {
+    id: "sos",
+    title: "SOS Neon Duel",
+    tagline: "Place S or O on the 6x6 grid. Form S-O-S in any direction to earn points and extra turns!",
+    category: "Classic",
+    icon: "✨",
+    gradient: "from-cyan-500 to-blue-600",
+    accentColor: "#06b6d4",
+    badge: "Hot 🔥",
+  },
+  {
+    id: "bingo",
+    title: "Bingo Blitz Duel",
+    tagline: "1v1 Number Bingo. Call numbers, stamp tiles, and be first to complete 5 lines to shout BINGO!",
+    category: "Classic",
+    icon: "🎱",
+    gradient: "from-amber-500 to-yellow-600",
+    accentColor: "#f59e0b",
+    badge: "New 🔥",
+  },
 ];
 
 export default function GamesPage() {
@@ -137,6 +163,7 @@ export default function GamesPage() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isDinoGameOpen, setIsDinoGameOpen] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -165,11 +192,11 @@ export default function GamesPage() {
   }, []);
 
   useSEO({
-    title: "LiveTalk Arcade – Play 1v1 Games Online via QR Code & AI",
+    title: "LiveTalk Arcade – Play 1v1 Games Online (SOS, Bingo, Connect 4, Tic-Tac-Toe, Reaction Dash)",
     description:
-      "Play interactive multiplayer games with friends via QR code or vs smart AI bots. Tic-Tac-Toe, Connect 4, Rock Paper Scissors, Memory Duel & Reaction Dash on LiveTalk.",
+      "Play 1v1 multiplayer games online with friends via instant QR code or duel smart AI bots. Super SOS Neon Duel, Bingo Blitz Duel, Connect Four, Tic-Tac-Toe, RPS Clash, Memory Duel & Reaction Dash on LiveTalk Arcade by Likhith Kami.",
     keywords:
-      "online games, play games with friends, qr code games, 1v1 games, tic tac toe online, connect 4 online, rock paper scissors, memory game, reflex test, livetalk arcade",
+      "bingo online, 1v1 bingo, sos game online, sos duel, tic tac toe online, connect 4 online, 1v1 multiplayer games, play games with friends, qr code games, reaction game, reflex test, memory duel, rock paper scissors online, livetalk arcade, likhith kami games",
   });
 
   const myPlayerId = useMemo(() => getCurrentUserId(), []);
@@ -177,7 +204,7 @@ export default function GamesPage() {
   const myPlayerInfo: PlayerInfo = useMemo(
     () => ({
       id: myPlayerId,
-      name: gamerProfile.nickname?.trim() || "RetroGamer",
+      name: gamerProfile.nickname?.trim() || "Player 1",
       avatar: gamerProfile.avatar || "👾",
       score: 0,
       level: gamerProfile.level || 1,
@@ -313,13 +340,26 @@ export default function GamesPage() {
       mode = "ai";
     }
 
+    const latestProfile = getGamerProfile();
+    setGamerProfile(latestProfile);
+    const hostPlayerInfo: PlayerInfo = {
+      id: myPlayerId,
+      name: latestProfile.nickname?.trim() || "Player 1",
+      avatar: latestProfile.avatar || "👾",
+      score: 0,
+      level: latestProfile.level || 1,
+      isHost: true,
+      isOnline: true,
+      lastActive: Date.now(),
+    };
+
     if (mode === "quickmatch") {
       setIsSearchingQuickMatch(true);
       setSearchingGameMeta(gameMeta);
       try {
         const result = await findOrJoinQuickMatch({
           gameId,
-          player: myPlayerInfo,
+          player: hostPlayerInfo,
         });
 
         createdRoomCodeRef.current = result.room.roomCode;
@@ -332,7 +372,8 @@ export default function GamesPage() {
         }
       } catch (err: any) {
         setIsSearchingQuickMatch(false);
-        toast.error("Failed to enter matchmaking queue.");
+        toast.info("Online queue unavailable. Launching Cyber AI Bot match!");
+        await handleSelectMode(gameId, "ai", rules);
       }
       return;
     }
@@ -342,7 +383,7 @@ export default function GamesPage() {
       const newRoom = await createGameRoom({
         gameId,
         mode,
-        hostPlayer: myPlayerInfo,
+        hostPlayer: hostPlayerInfo,
         rules,
       });
 
@@ -444,6 +485,7 @@ export default function GamesPage() {
         gameState: freshGameState,
         status: "playing",
         winnerId: null,
+        currentTurn: activeRoom.players.host.id,
         round: activeRoom.round + 1,
         turnExpiresAt: timerSec > 0 ? Date.now() + timerSec * 1000 : null,
       });
@@ -637,7 +679,86 @@ export default function GamesPage() {
                   onLocalMove={(updated) => setActiveRoom(updated)}
                 />
               )}
+              {activeRoom.gameId === "sos" && (
+                <SOSGame
+                  room={activeRoom}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator && activeRoom.currentTurn === myPlayerId}
+                  onLocalMove={(updated) => setActiveRoom(updated)}
+                />
+              )}
+              {activeRoom.gameId === "bingo" && (
+                <BingoGame
+                  room={activeRoom}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator && activeRoom.currentTurn === myPlayerId}
+                  onLocalMove={(updated) => setActiveRoom(updated)}
+                />
+              )}
             </div>
+
+            {/* Persistent On-Screen Match Action Bar (Visible when round or series ends) */}
+            {(activeRoom.status === "round_over" || activeRoom.status === "game_over") && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="w-full max-w-md my-3 p-3.5 rounded-2xl bg-card/95 backdrop-blur-xl border-2 border-primary/40 shadow-2xl flex flex-col gap-2.5 z-20"
+              >
+                <div className="flex items-center justify-between text-xs font-bold px-1">
+                  <span className="text-amber-400 flex items-center gap-1.5 font-black">
+                    <Trophy className="w-4 h-4" />
+                    {activeRoom.winnerId === "draw"
+                      ? "Match Ended in Draw"
+                      : activeRoom.winnerId === myPlayerId
+                      ? "🎉 You Won the Round!"
+                      : activeRoom.mode === "local"
+                      ? `${activeRoom.players.host.score > (activeRoom.players.guest?.score || 0) ? activeRoom.players.host.name : (activeRoom.players.guest?.name || "Player 2")} Won!`
+                      : "Round Complete"}
+                  </span>
+                  {dismissedVictoryRound === activeRoom.round && (
+                    <button
+                      type="button"
+                      onClick={() => setDismissedVictoryRound(-1)}
+                      className="text-[11px] text-primary hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trophy className="w-3.5 h-3.5" />
+                      <span>View Scorecard</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="default"
+                    onClick={handleRematch}
+                    className="flex-1 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-500 text-primary-foreground font-black shadow-lg shadow-primary/25 rounded-xl h-11 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>
+                      {activeRoom.mode === "friend" || activeRoom.mode === "quickmatch"
+                        ? activeRoom.rematchVotes?.[myPlayerId]
+                          ? "Rematch Ready ⏳"
+                          : "Vote Rematch"
+                        : "Play Again"}
+                    </span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="default"
+                    onClick={handleExitGame}
+                    className="flex-1 border-border/80 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 font-bold rounded-xl h-11 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back to Arcade</span>
+                  </Button>
+                </div>
+              </motion.div>
+            )}
 
             {/* Live In-Game Floating Reactions & Quick Chat Drawer */}
             <GameLiveReactions
@@ -803,14 +924,22 @@ export default function GamesPage() {
                 </p>
               </div>
 
-              {/* Action Buttons: 2-column grid on mobile, flex on desktop */}
-              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-2.5 shrink-0">
+              {/* Action Buttons: Responsive grid */}
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto shrink-0">
+                <Button
+                  onClick={() => setIsDinoGameOpen(true)}
+                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-xs font-bold gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-4 shadow-sm cursor-pointer"
+                >
+                  <span className="text-sm">🦖</span>
+                  <span>Dino Runner</span>
+                </Button>
+
                 <Button
                   onClick={() => setIsJoinModalOpen(true)}
                   className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-xs font-bold gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-4 shadow-md cursor-pointer"
                 >
                   <QrCode className="w-4 h-4 text-primary" />
-                  <span>Join / Spectate</span>
+                  <span>Join Room</span>
                 </Button>
 
                 <Button
@@ -818,7 +947,7 @@ export default function GamesPage() {
                   className="rounded-xl sm:rounded-2xl bg-primary text-primary-foreground text-xs font-bold gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-4 shadow-lg shadow-primary/25 hover:opacity-90 cursor-pointer"
                 >
                   <ScanLine className="w-4 h-4" />
-                  <span>Scan QR Code</span>
+                  <span>Scan QR</span>
                 </Button>
               </div>
             </div>
@@ -951,6 +1080,13 @@ export default function GamesPage() {
           }
         }}
       />
+
+      {/* Classic Chrome Dino Mini-Game Modal */}
+      <Dialog open={isDinoGameOpen} onOpenChange={setIsDinoGameOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-2 sm:p-4 rounded-3xl bg-transparent border-0 shadow-none">
+          <ChromeDinoGame onClose={() => setIsDinoGameOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

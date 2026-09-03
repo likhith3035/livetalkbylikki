@@ -15,6 +15,8 @@ import { ref as firebaseRef, onValue } from "firebase/database";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose
 } from "@/components/ui/sheet";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
 
 const drawerNavItems = [
   { icon: Home,          path: "/",                 label: "Home Page",       accent: "#10b981" },
@@ -53,6 +55,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
   const location = useLocation();
   const [announcement, setAnnouncement] = useState<string>("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showMiniGame, setShowMiniGame] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("echo_global_announcement") || "";
@@ -300,8 +303,19 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         </div>
       </div>
 
-      {/* Right: Theme + Online */}
-      <div className="flex items-center gap-2 sm:gap-2.5">
+      {/* Right: Dino Mini-Game + Theme + Online */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5">
+        {/* Quick Minimal Dino Runner Launch Button */}
+        <button
+          type="button"
+          onClick={() => setShowMiniGame(true)}
+          className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/60 text-foreground font-medium text-xs flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-sm hover:scale-105 active:scale-95 transition-all"
+          title="Play Dino Runner Mini-Game"
+        >
+          <span className="text-sm">🦖</span>
+          <span className="hidden xs:inline text-[11px] font-semibold">Dino</span>
+        </button>
+
         {/* Theme toggle */}
         <button
           onClick={() => updateSetting("darkMode", !settings.darkMode)}
@@ -328,6 +342,13 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         <OnlineBadge count={onlineCount} />
       </div>
     </header>
+
+    {/* Classic Chrome Dino Mini-Game Modal */}
+    <Dialog open={showMiniGame} onOpenChange={setShowMiniGame}>
+      <DialogContent className="max-w-[95vw] sm:max-w-lg p-2 sm:p-4 rounded-3xl bg-transparent border-0 shadow-none">
+        <ChromeDinoGame onClose={() => setShowMiniGame(false)} />
+      </DialogContent>
+    </Dialog>
     </>
   );
 });
