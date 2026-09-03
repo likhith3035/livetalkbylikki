@@ -1,6 +1,6 @@
 import React from "react";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { RefreshCw, ArrowDown } from "lucide-react";
+import { RefreshCw, Sparkles, ArrowDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PullToRefreshIndicatorProps {
@@ -18,36 +18,38 @@ export const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = ({ 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -40 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -40 }}
-        className="fixed top-2 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center"
+        initial={{ opacity: 0, y: -20, scale: 0.85 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.85 }}
+        transition={{ type: "spring", stiffness: 450, damping: 25 }}
+        className="fixed top-3 left-1/2 -translate-x-1/2 z-[250] pointer-events-none flex flex-col items-center select-none"
       >
         <div
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/90 backdrop-blur-md border shadow-lg transition-all duration-150 ${
+          className={`flex items-center gap-2.5 px-4 py-2 rounded-full bg-card/95 backdrop-blur-2xl border shadow-xl transition-all duration-200 ${
             isReady
-              ? "border-primary/80 bg-primary/10 text-primary shadow-primary/20 scale-105"
-              : "border-border/60 text-muted-foreground"
+              ? "border-primary bg-primary/15 text-primary shadow-[0_0_20px_rgba(124,58,237,0.35)] scale-105"
+              : "border-border/60 text-muted-foreground shadow-black/20"
           }`}
           style={{
-            transform: `translateY(${Math.min(pullDistance * 0.4, 40)}px)`,
+            transform: `translateY(${Math.min(pullDistance * 0.35, 32)}px)`,
           }}
         >
-          <RefreshCw
-            className={`h-4 w-4 transition-transform ${
-              isRefreshing ? "animate-spin text-primary" : ""
-            }`}
-            style={{
-              transform: isRefreshing ? undefined : `rotate(${progress * 360}deg)`,
-            }}
-          />
+          {isRefreshing ? (
+            <RefreshCw className="h-4 w-4 animate-spin text-primary shrink-0" />
+          ) : isReady ? (
+            <Sparkles className="h-4 w-4 text-primary animate-pulse shrink-0" />
+          ) : (
+            <motion.div style={{ rotate: progress * 180 }}>
+              <ArrowDown className="h-4 w-4 text-muted-foreground shrink-0" />
+            </motion.div>
+          )}
 
-          <span className="text-[11px] font-bold tracking-tight">
+          <span className="text-xs font-black tracking-wide">
             {isRefreshing
-              ? "Refreshing..."
+              ? "Syncing LiveTalk..."
               : isReady
-              ? "Release to Refresh"
-              : "Pull to Refresh"}
+              ? "Release to Sync"
+              : "Pull down to sync"}
           </span>
         </div>
       </motion.div>
