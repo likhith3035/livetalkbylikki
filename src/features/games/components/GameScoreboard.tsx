@@ -185,9 +185,21 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
                 </span>
               )}
             </div>
-            <span className="text-xs sm:text-sm font-black text-violet-400">
-              {hostPlayer.score} <span className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">PTS</span>
-            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs sm:text-sm font-black text-violet-400">
+                {hostPlayer.score} <span className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">WINS</span>
+              </span>
+              {room.gameId === "sos" && (
+                <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-md bg-cyan-500/20 text-cyan-400 font-bold border border-cyan-500/40">
+                  {((room.gameState as any)?.hostScore ?? 0)} SOS
+                </span>
+              )}
+              {room.gameId === "bingo" && (
+                <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40">
+                  {((room.gameState as any)?.hostLines ?? 0)}/5 Lines
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -257,9 +269,21 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
                 {guestDisplayName}
               </span>
             </div>
-            <span className="text-xs sm:text-sm font-black text-cyan-400">
-              {guestPlayer.score} <span className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">PTS</span>
-            </span>
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              {room.gameId === "sos" && (
+                <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-md bg-rose-500/20 text-rose-400 font-bold border border-rose-500/40">
+                  {((room.gameState as any)?.guestScore ?? 0)} SOS
+                </span>
+              )}
+              {room.gameId === "bingo" && (
+                <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40">
+                  {((room.gameState as any)?.guestLines ?? 0)}/5 Lines
+                </span>
+              )}
+              <span className="text-xs sm:text-sm font-black text-cyan-400">
+                {guestPlayer.score} <span className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">WINS</span>
+              </span>
+            </div>
           </div>
 
           <div className="relative shrink-0">

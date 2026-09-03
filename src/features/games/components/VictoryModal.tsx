@@ -173,11 +173,11 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             </span>
             <div className="flex items-baseline gap-1">
               <span className="text-xl sm:text-2xl font-black text-violet-400">{hostPlayer.score}</span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground">PTS</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground">WINS</span>
             </div>
             {room.winnerId === hostPlayer.id && (
               <span className="text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">
-                WIN
+                WINNER
               </span>
             )}
           </div>
@@ -186,7 +186,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           <div className="flex flex-col items-center justify-center gap-0.5 sm:gap-1">
             <span className="text-[10px] sm:text-xs font-black tracking-widest text-muted-foreground/50">VS</span>
             <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
-              {isSeriesOver ? "FINAL" : `R${room.round}`}
+              {isSeriesOver ? "SERIES OVER" : `ROUND ${room.round}`}
             </span>
             {room.rules?.maxSeriesWins && (
               <span className="text-[8px] sm:text-[9px] text-muted-foreground">
@@ -205,15 +205,38 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             </span>
             <div className="flex items-baseline gap-1">
               <span className="text-xl sm:text-2xl font-black text-cyan-400">{guestPlayer.score}</span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground">PTS</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground">WINS</span>
             </div>
             {room.winnerId === guestPlayer.id && (
               <span className="text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">
-                WIN
+                WINNER
               </span>
             )}
           </div>
         </div>
+
+        {/* Dynamic Game-Specific Round Highlights */}
+        {room.gameId === "sos" && (
+          <div className="p-2.5 rounded-xl bg-muted/30 border border-border/40 text-xs font-bold flex items-center justify-between mb-3 text-muted-foreground">
+            <span>SOS Formed This Round:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-violet-400 font-black">{hostPlayer.name}: {((room.gameState as any)?.hostScore ?? 0)}</span>
+              <span>-</span>
+              <span className="text-cyan-400 font-black">{guestDisplayName}: {((room.gameState as any)?.guestScore ?? 0)}</span>
+            </div>
+          </div>
+        )}
+
+        {room.gameId === "bingo" && (
+          <div className="p-2.5 rounded-xl bg-muted/30 border border-border/40 text-xs font-bold flex items-center justify-between mb-3 text-muted-foreground">
+            <span>Completed Lines:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-violet-400 font-black">{hostPlayer.name}: {((room.gameState as any)?.hostLines ?? 0)}/5</span>
+              <span>-</span>
+              <span className="text-cyan-400 font-black">{guestDisplayName}: {((room.gameState as any)?.guestLines ?? 0)}/5</span>
+            </div>
+          </div>
+        )}
 
         {/* Live Progression XP Breakdown Banner */}
         <div className="p-3 rounded-2xl bg-card border border-border/60 relative z-10 mb-4 text-left">

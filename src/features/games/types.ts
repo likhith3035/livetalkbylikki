@@ -1,4 +1,4 @@
-export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction";
+export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo";
 
 export type GameMode = "friend" | "quickmatch" | "ai" | "local";
 
@@ -20,6 +20,10 @@ export interface GameCustomRules {
   turnTimerSeconds: number; // 0 = unlimited, 10, 15, 30
   maxSeriesWins: number;    // 1 (Single Round), 2 (Best of 3), 3 (Best of 5), 4 (Best of 7)
   aiDifficulty?: "easy" | "medium" | "hard";
+  botName?: string;
+  botAvatar?: string;
+  player2Name?: string;
+  player2Avatar?: string;
 }
 
 export interface GameReaction {
@@ -150,6 +154,51 @@ export interface ReactionGameState {
   hostTimeMs: number | null;
   guestTimeMs: number | null;
   winner: string | null;
+}
+
+export interface SOSLine {
+  id: string;
+  startRow: number;
+  startCol: number;
+  endRow: number;
+  endCol: number;
+  direction: "h" | "v" | "d_main" | "d_anti";
+  ownerPlayerId: string;
+  color: string;
+}
+
+export interface SOSGameState {
+  gridSize: number; // 5 | 6 | 7 | 8
+  board: string[][]; // cells: "" | "S" | "O" | "?" (wildcard)
+  lines: SOSLine[];
+  hostScore: number;
+  guestScore: number;
+  powerUpsEnabled?: boolean;
+  activePowerUp?: "2x" | "bomb" | "wildcard" | null;
+  hostPowerUps?: { double: number; bomb: number; wildcard: number };
+  guestPowerUps?: { double: number; bomb: number; wildcard: number };
+  streakCount?: number;
+  aiPersona?: "rookie" | "viper" | "overlord";
+  lastMove: {
+    row: number;
+    col: number;
+    letter: "S" | "O" | "?";
+    playerId: string;
+    newLinesCount: number;
+  } | null;
+}
+
+export interface BingoGameState {
+  hostCard: number[][]; // 5x5 matrix with numbers 1-25
+  guestCard: number[][]; // 5x5 matrix with numbers 1-25
+  stampedNumbers: number[]; // Array of called numbers
+  calledHistory: Array<{ number: number; calledBy: string; timestamp: number }>;
+  hostLines: number; // Count of completed lines (0-5+)
+  guestLines: number;
+  hostCompletedLines: string[]; // IDs of completed lines (e.g., "row-0", "col-2", "diag-main")
+  guestCompletedLines: string[];
+  lastCalledNumber: number | null;
+  isCardLocked?: boolean;
 }
 
 export type SpectatorCheerType = "confetti" | "horn" | "applause" | "rocket";

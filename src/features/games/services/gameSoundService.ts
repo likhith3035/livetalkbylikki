@@ -162,6 +162,96 @@ class GameSoundSynthesizer {
     this.playTone(600, 0.08, "sine", 0.12, 60);
     this.playTone(1200, 0.15, "triangle", 0.16, 120);
   }
+
+  public playLetterPlace(letter: "S" | "O" = "S") {
+    this.vibrate(12);
+    if (letter === "S") {
+      this.playTone(580, 0.06, "triangle", 0.1, 0);
+      this.playTone(870, 0.04, "sine", 0.08, 25);
+    } else {
+      this.playTone(440, 0.07, "sine", 0.12, 0);
+      this.playTone(660, 0.05, "triangle", 0.09, 30);
+    }
+  }
+
+  public playSOSStreak() {
+    this.vibrate([25, 30, 45]);
+    // Energetic ascending triad fanfare
+    this.playTone(523.25, 0.08, "triangle", 0.16, 0);   // C5
+    this.playTone(659.25, 0.08, "triangle", 0.16, 70);  // E5
+    this.playTone(783.99, 0.12, "sine", 0.18, 140);     // G5
+    this.playTone(1046.50, 0.22, "sine", 0.2, 210);     // C6
+  }
+
+  public playBonusTurn() {
+    this.vibrate(20);
+    this.playTone(880, 0.07, "sine", 0.14, 0);
+    this.playTone(1320, 0.12, "triangle", 0.15, 60);
+  }
+
+  public playComboAscend(streakCount = 1) {
+    this.vibrate([20, 25, 30, 40]);
+    // Pitches up dynamically based on streak count (C5 -> E5 -> G5 -> C6 -> E6 -> G6)
+    const baseFreqs = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
+    const pitchOffset = Math.min(streakCount - 1, baseFreqs.length - 2);
+    const f1 = baseFreqs[Math.max(0, pitchOffset)];
+    const f2 = baseFreqs[Math.min(baseFreqs.length - 1, pitchOffset + 1)];
+    const f3 = baseFreqs[Math.min(baseFreqs.length - 1, pitchOffset + 2)];
+
+    this.playTone(f1, 0.09, "triangle", 0.18, 0);
+    this.playTone(f2, 0.09, "triangle", 0.18, 60);
+    this.playTone(f3, 0.18, "sine", 0.22, 120);
+  }
+
+  public playPowerUpTrigger() {
+    this.vibrate([15, 20, 35]);
+    // Sci-Fi Power charge sweep
+    this.playTone(400, 0.08, "sine", 0.15, 0);
+    this.playTone(800, 0.08, "sine", 0.18, 50);
+    this.playTone(1600, 0.15, "triangle", 0.22, 100);
+  }
+
+  public playBombExplosion() {
+    this.vibrate([40, 50, 80, 60]);
+    // Low frequency sub-bass pulse + crunch
+    this.playTone(120, 0.25, "sawtooth", 0.3, 0);
+    this.playTone(80, 0.35, "triangle", 0.35, 40);
+    this.playTone(50, 0.45, "sine", 0.4, 90);
+  }
+
+  public playBingoCall() {
+    this.vibrate(15);
+    // Hollow wooden ball drop & roll
+    this.playTone(600, 0.05, "triangle", 0.12, 0);
+    this.playTone(450, 0.07, "sine", 0.14, 30);
+    this.playTone(300, 0.09, "sine", 0.16, 70);
+  }
+
+  public playBingoStamp() {
+    this.vibrate(20);
+    // Satisfying tactile stamp punch
+    this.playTone(750, 0.04, "triangle", 0.14, 0);
+    this.playTone(900, 0.06, "sine", 0.12, 20);
+  }
+
+  public playBingoLetterUnlock(lineIndex = 1) {
+    this.vibrate([25, 30, 40]);
+    // Ascending celebratory bell chime for B-I-N-G-O letters
+    const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
+    const f = freqs[Math.min(lineIndex - 1, freqs.length - 1)];
+    this.playTone(f, 0.1, "sine", 0.18, 0);
+    this.playTone(f * 1.5, 0.15, "triangle", 0.16, 80);
+  }
+
+  public playBingoWinFanfare() {
+    this.vibrate([40, 40, 60, 60, 100]);
+    // Glorious triumphant BINGO brass fanfare
+    this.playTone(523.25, 0.12, "sine", 0.2, 0);    // C5
+    this.playTone(659.25, 0.12, "sine", 0.2, 100);  // E5
+    this.playTone(783.99, 0.15, "sine", 0.22, 200); // G5
+    this.playTone(1046.50, 0.35, "triangle", 0.25, 300); // C6
+    this.playTone(1318.51, 0.45, "sine", 0.25, 450); // E6
+  }
 }
 
 export const gameAudio = new GameSoundSynthesizer();

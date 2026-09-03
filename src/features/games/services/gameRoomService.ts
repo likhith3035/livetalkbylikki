@@ -16,6 +16,8 @@ import {
   RPSState,
   MemoryGameState,
   ReactionGameState,
+  SOSGameState,
+  BingoGameState,
 } from "../types";
 
 const ROOM_CODE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -105,6 +107,46 @@ export function createInitialGameState(gameId: GameId) {
       };
       return state;
     }
+    case "sos": {
+      const GRID_SIZE = 6;
+      const state: SOSGameState = {
+        gridSize: GRID_SIZE,
+        board: Array(GRID_SIZE).fill("").map(() => Array(GRID_SIZE).fill("")),
+        lines: [],
+        hostScore: 0,
+        guestScore: 0,
+        lastMove: null,
+      };
+      return state;
+    }
+    case "bingo": {
+      const generateCard = () => {
+        const numbers = Array.from({ length: 25 }, (_, i) => i + 1);
+        for (let i = numbers.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        const card: number[][] = [];
+        for (let r = 0; r < 5; r++) {
+          card.push(numbers.slice(r * 5, (r + 1) * 5));
+        }
+        return card;
+      };
+
+      const state: BingoGameState = {
+        hostCard: generateCard(),
+        guestCard: generateCard(),
+        stampedNumbers: [],
+        calledHistory: [],
+        hostLines: 0,
+        guestLines: 0,
+        hostCompletedLines: [],
+        guestCompletedLines: [],
+        lastCalledNumber: null,
+        isCardLocked: false,
+      };
+      return state;
+    }
   }
 }
 
@@ -154,16 +196,16 @@ export async function createGameRoom({
       },
       guest: mode === "ai" ? {
         id: "ai_opponent",
-        name: "Cyber AI 🤖",
-        avatar: "🤖",
+        name: rules?.botName || "Cyber AI 🤖",
+        avatar: rules?.botAvatar || "🤖",
         score: 0,
         isHost: false,
         isOnline: true,
         lastActive: Date.now(),
       } : mode === "local" ? {
         id: "local_player_2",
-        name: "Player 2",
-        avatar: "👤",
+        name: rules?.player2Name || "Player 2",
+        avatar: rules?.player2Avatar || "👤",
         score: 0,
         isHost: false,
         isOnline: true,
@@ -296,44 +338,54 @@ export async function findOrJoinQuickMatch({
 }: QuickMatchParams): Promise<{ room: GameRoomState; isMatched: boolean }> {
   if (!db) throw new Error("Realtime database unavailable.");
 
-  const lobbyRef = ref(db, `game_lobby/${gameId}`);
-  const snap = await get(lobbyRef);
+  // 1. Attempt to find waiting player in lobby
+  try {
+    const lobbyRef = ref(db, `game_lobby/${gameId}`);
+    const snap = await get(lobbyRef);
 
-  if (snap.exists()) {
-    const queue = snap.val();
-    const waitingPlayerIds = Object.keys(queue);
+    if (snap.exists()) {
+      const queue = snap.val();
+      const waitingPlayerIds = Object.keys(queue);
 
-    for (const waitingId of waitingPlayerIds) {
-      if (waitingId !== player.id) {
-        const item = queue[waitingId];
-        if (item && item.roomCode && Date.now() - item.createdAt < 30000) {
-          await remove(ref(db, `game_lobby/${gameId}/${waitingId}`)).catch(() => {});
-          const joinedRoom = await joinGameRoom({
-            roomCode: item.roomCode,
-            guestPlayer: player,
-          });
-          if (joinedRoom) {
-            return { room: joinedRoom, isMatched: true };
+      for (const waitingId of waitingPlayerIds) {
+        if (waitingId !== player.id) {
+          const item = queue[waitingId];
+          if (item && item.roomCode && Date.now() - item.createdAt < 30000) {
+            await remove(ref(db, `game_lobby/${gameId}/${waitingId}`)).catch(() => {});
+            const joinedRoom = await joinGameRoom({
+              roomCode: item.roomCode,
+              guestPlayer: player,
+            });
+            if (joinedRoom) {
+              return { room: joinedRoom, isMatched: true };
+            }
           }
         }
       }
     }
+  } catch (lobbyErr) {
+    console.warn("Lobby queue read notice:", lobbyErr);
   }
 
-  // No waiting player found, create a room and wait in queue
+  // 2. Create room under /rooms/game_XXXX
   const newRoom = await createGameRoom({
     gameId,
     mode: "quickmatch",
     hostPlayer: player,
   });
 
-  const myQueueRef = ref(db, `game_lobby/${gameId}/${player.id}`);
-  await set(myQueueRef, {
-    playerId: player.id,
-    roomCode: newRoom.roomCode,
-    createdAt: Date.now(),
-  });
-  onDisconnect(myQueueRef).remove();
+  // 3. Register in lobby queue (catch if permissions restricted)
+  try {
+    const myQueueRef = ref(db, `game_lobby/${gameId}/${player.id}`);
+    await set(myQueueRef, {
+      playerId: player.id,
+      roomCode: newRoom.roomCode,
+      createdAt: Date.now(),
+    });
+    onDisconnect(myQueueRef).remove();
+  } catch (queueErr) {
+    console.warn("Lobby queue register notice:", queueErr);
+  }
 
   return { room: newRoom, isMatched: false };
 }
@@ -514,6 +566,7 @@ export async function voteRematch(
         gameState: freshGameState,
         winnerId: null,
         status: "playing",
+        currentTurn: hostId,
         round: nextRound,
         lastMoveTimestamp: Date.now(),
         turnExpiresAt,
@@ -613,12 +666,16 @@ export async function resetGameRound(
     ? Date.now() + turnTimerSeconds * 1000
     : null;
 
+  const snap = await get(roomRef);
+  const hostId = snap.exists() ? snap.val().players?.host?.id : undefined;
+
   await update(
     roomRef,
     sanitizeFirebasePayload({
       gameState: freshGameState,
       winnerId: null,
       status: "playing",
+      ...(hostId ? { currentTurn: hostId } : {}),
       round: nextRound,
       lastMoveTimestamp: Date.now(),
       turnExpiresAt,
