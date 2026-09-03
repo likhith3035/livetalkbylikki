@@ -976,8 +976,8 @@ const VideoCallOverlay = ({
               className="bg-card border-t border-border safe-area-bottom px-4"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Top row: extra controls */}
-              <div className="flex items-center justify-center gap-2.5 sm:gap-3 pt-3 pb-1 flex-wrap">
+              {/* Top row: extra controls (single horizontal swipe bar on mobile) */}
+              <div className="flex items-center justify-start sm:justify-center gap-2 sm:gap-3 pt-2.5 pb-1 overflow-x-auto no-scrollbar touch-pan-x flex-nowrap px-1">
                 {onToggleAudioOutput && (
                   <ControlButton
                     onClick={onToggleAudioOutput}
@@ -1141,14 +1141,14 @@ const VideoCallOverlay = ({
                         initial={{ opacity: 0, y: 8, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.9 }}
-                        className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-2 bg-card border border-border rounded-2xl p-2 shadow-2xl z-50"
+                        className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 bg-card border border-border rounded-2xl p-2 shadow-2xl z-50 max-w-[92vw] overflow-x-auto no-scrollbar"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {["👍", "❤️", "😂", "😮", "🔥", "👏", "🥳", "💯"].map((emoji) => (
                           <button
                             key={emoji}
                             onClick={() => handleSendReaction(emoji)}
-                            className="text-xl hover:scale-125 active:scale-95 transition-transform w-9 h-9 flex items-center justify-center rounded-xl hover:bg-secondary"
+                            className="text-lg sm:text-xl hover:scale-125 active:scale-95 transition-transform w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl hover:bg-secondary shrink-0"
                           >
                             {emoji}
                           </button>

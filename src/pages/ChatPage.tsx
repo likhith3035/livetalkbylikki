@@ -756,18 +756,18 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         />
       </div>
       {status === "idle" ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 z-10 overflow-hidden pointer-events-none">
-          <div className="pointer-events-auto w-full max-w-sm flex flex-col items-center justify-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-4 sm:px-6 py-4 z-10 overflow-y-auto pointer-events-none touch-scroll">
+          <div className="pointer-events-auto w-full max-w-sm flex flex-col items-center justify-center my-auto">
             {!userName ? (
               <div className="w-full relative">
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="w-full space-y-8 text-center bg-card/80 backdrop-blur-2xl border border-black/[0.08] dark:border-white/10 p-8 sm:p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative ring-1 ring-black/[0.05] dark:ring-white/[0.05]"
+                  className="w-full space-y-6 sm:space-y-8 text-center bg-card/80 backdrop-blur-2xl border border-black/[0.08] dark:border-white/10 p-5 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative ring-1 ring-black/[0.05] dark:ring-white/[0.05]"
                 >
-                  <div className="space-y-3">
-                    <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 rotate-3 ring-1 ring-primary/20">
-                      <Zap className="h-8 w-8 text-primary fill-primary/20" />
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="mx-auto h-12 w-12 sm:h-16 sm:w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-3 sm:mb-6 rotate-3 ring-1 ring-primary/20">
+                      <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-primary fill-primary/20" />
                     </div>
                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground leading-none">Your Identity</h2>
                     <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">Choose a name to enter the lobby</p>

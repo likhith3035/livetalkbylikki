@@ -1050,12 +1050,12 @@ export const AIChatPage: React.FC = () => {
         {/* ─────────── MAIN CHAT CANVAS ─────────── */}
         <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-background/50 relative">
           {/* Top Bar Header */}
-          <div className="h-14 px-3 sm:px-4 border-b border-border/40 flex items-center justify-between bg-card/70 backdrop-blur-xl shrink-0 z-10 shadow-xs gap-1.5 sm:gap-2">
+          <div className="h-11 sm:h-14 px-2.5 sm:px-4 border-b border-border/40 flex items-center justify-between bg-card/70 backdrop-blur-xl shrink-0 z-10 shadow-xs gap-1.5 sm:gap-2">
             <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
               {/* Mobile Sidebar Toggle */}
               <button
                 onClick={() => setShowSidebarMobile(!showSidebarMobile)}
-                className="lg:hidden p-2 rounded-xl bg-secondary border border-border/60 text-foreground shrink-0"
+                className="lg:hidden p-1.5 sm:p-2 rounded-xl bg-secondary border border-border/60 text-foreground shrink-0"
                 title="Toggle menu"
               >
                 <Menu className="h-4 w-4" />
@@ -1089,7 +1089,7 @@ export const AIChatPage: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/")}
-                className="h-8 w-8 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 flex items-center justify-center shrink-0 p-0"
+                className="hidden sm:flex h-8 w-8 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 items-center justify-center shrink-0 p-0"
                 title="Go to Home"
               >
                 <Home className="h-3.5 w-3.5" />
@@ -1099,7 +1099,7 @@ export const AIChatPage: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/chat")}
-                className="h-8 px-2 sm:px-3 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 gap-1 shrink-0"
+                className="hidden sm:flex h-8 px-2 sm:px-3 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 gap-1 shrink-0"
                 title="Return to Live Chat"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />

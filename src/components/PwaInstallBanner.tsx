@@ -1,12 +1,17 @@
 import { X, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 const PwaInstallBanner = () => {
   const { showBanner, canInstall, install, dismissBanner } = usePwaInstall();
+  const location = useLocation();
 
-  if (!showBanner || !canInstall) return null;
+  // Suppress banner on /chat to avoid blocking the message input & keyboard
+  const isChatRoute = location.pathname.startsWith("/chat");
+
+  if (!showBanner || !canInstall || isChatRoute) return null;
 
   return (
     <AnimatePresence>
@@ -16,7 +21,7 @@ const PwaInstallBanner = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 80 }}
           transition={{ type: "spring", stiffness: 300, damping: 28 }}
-          className="fixed bottom-20 left-3 right-3 sm:left-auto sm:right-4 sm:bottom-6 z-[150] sm:max-w-xs"
+          className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-4 sm:bottom-6 z-40 sm:max-w-xs pb-[env(safe-area-inset-bottom,0px)]"
         >
           <div className="relative flex items-center gap-3 rounded-2xl border border-primary/30 bg-card/98 backdrop-blur-xl p-3.5 shadow-2xl shadow-primary/15 overflow-hidden">
             {/* Accent line */}

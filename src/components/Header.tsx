@@ -204,23 +204,35 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
           <span className="truncate">{announcement}</span>
         </div>
       )}
-      <header ref={ref} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 glass sticky top-0 z-40 lg:hidden" style={{ willChange: "transform", contain: "layout style" }}>
-      {/* Left: Hamburger Drawer + Logo */}
-      <div className="flex items-center gap-2.5">
+      <header ref={ref} className="flex items-center justify-between px-2.5 sm:px-5 py-2 sm:py-3 glass sticky top-0 z-40 lg:hidden safe-area-top" style={{ willChange: "transform", contain: "layout style" }}>
+      {/* Left: Hamburger Drawer + Optional Back + Logo */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="h-8.5 w-8.5 sm:h-9 sm:w-9 rounded-xl border border-border/80 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
+            aria-label="Go Back"
+            title="Back"
+          >
+            <ChevronLeft className="h-4.5 w-4.5 text-foreground" />
+          </button>
+        )}
+
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
           <SheetTrigger asChild>
             <button
               type="button"
-              className="h-9 w-9 rounded-xl border border-border/80 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
+              className="h-8.5 w-8.5 sm:h-9 sm:w-9 rounded-xl border border-border/80 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0"
               aria-label="Open Navigation Menu"
               title="Menu"
             >
-              <Menu className="h-5 w-5 text-foreground" />
+              <Menu className="h-4.5 w-4.5 text-foreground" />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[82vw] max-w-xs p-5 bg-card/95 backdrop-blur-2xl border-r border-border/50 flex flex-col justify-between">
-            <div className="space-y-6">
-              <SheetHeader className="text-left pb-4 border-b border-border/40">
+          <SheetContent side="left" className="w-[85vw] max-w-xs p-4 sm:p-5 bg-card/95 backdrop-blur-2xl border-r border-border/50 flex flex-col justify-between z-50 pt-[max(env(safe-area-inset-top,0px),1rem)] pb-[max(env(safe-area-inset-bottom,0px),1rem)]">
+            <div className="flex flex-col flex-1 min-h-0 space-y-4">
+              <SheetHeader className="text-left pb-3 border-b border-border/40 shrink-0">
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setDrawerOpen(false); navigate("/"); }}>
                   <BrandLogo className="h-8 w-8 drop-shadow-md" aria-label="LiveTalk" />
                   <div>
@@ -233,7 +245,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
               </SheetHeader>
 
               {/* Navigation Items */}
-              <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[65vh]">
+              <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-1 touch-scroll">
                 {drawerNavItems.map((item) => {
                   const isActive = location.pathname === item.path;
                   return (
@@ -304,23 +316,23 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
       </div>
 
       {/* Right: Dino Mini-Game + Theme + Online */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         {/* Quick Minimal Dino Runner Launch Button */}
         <button
           type="button"
           onClick={() => setShowMiniGame(true)}
-          className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/60 text-foreground font-medium text-xs flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-sm hover:scale-105 active:scale-95 transition-all"
+          className="h-7 sm:h-8 px-1.5 sm:px-2.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/60 text-foreground font-medium text-xs flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-sm hover:scale-105 active:scale-95 transition-all shrink-0"
           title="Play Dino Runner Mini-Game"
         >
           <span className="text-sm">🦖</span>
-          <span className="hidden xs:inline text-[11px] font-semibold">Dino</span>
+          <span className="hidden sm:inline text-[11px] font-semibold">Dino</span>
         </button>
 
         {/* Theme toggle */}
         <button
           onClick={() => updateSetting("darkMode", !settings.darkMode)}
           className={cn(
-            "relative flex h-7 w-12 sm:h-8 sm:w-14 items-center rounded-full p-1 transition-colors duration-300 shrink-0",
+            "relative flex h-7 w-11 sm:h-8 sm:w-14 items-center rounded-full p-0.5 sm:p-1 transition-colors duration-300 shrink-0",
             settings.darkMode
               ? "bg-primary/20 border border-primary/30"
               : "bg-secondary border border-border"
@@ -330,7 +342,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
           <div
             className={cn(
               "flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-card shadow-md transition-transform duration-300",
-              settings.darkMode ? "translate-x-5 sm:translate-x-6" : "translate-x-0"
+              settings.darkMode ? "translate-x-4 sm:translate-x-6" : "translate-x-0"
             )}
           >
             {settings.darkMode

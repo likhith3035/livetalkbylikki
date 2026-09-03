@@ -469,15 +469,15 @@ const Index = () => {
           <HomeLiveTicker />
 
           {/* 3-STEP HOW IT WORKS */}
-          <div className="grid grid-cols-3 gap-2.5 w-full max-w-lg mx-auto pt-2">
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full max-w-lg mx-auto pt-2">
             {STEPS.map((s, idx) => (
               <div
                 key={idx}
-                className="flex flex-col items-center text-center p-3 rounded-2xl bg-card/50 border border-border/40 backdrop-blur-md transition-all hover:border-primary/40 group"
+                className="flex flex-col items-center text-center p-2 sm:p-3 rounded-2xl bg-card/50 border border-border/40 backdrop-blur-md transition-all hover:border-primary/40 group"
               >
-                <span className="text-xs font-black text-primary mb-0.5">{s.num}</span>
-                <span className="text-xs font-bold text-foreground">{s.title}</span>
-                <span className="text-[10px] text-muted-foreground hidden sm:block">{s.desc}</span>
+                <span className="text-[11px] sm:text-xs font-black text-primary mb-0.5">{s.num}</span>
+                <span className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">{s.title}</span>
+                <span className="text-[10px] text-muted-foreground hidden sm:block mt-0.5">{s.desc}</span>
               </div>
             ))}
           </div>
@@ -686,13 +686,13 @@ const Index = () => {
           </div>
 
           <div className="overflow-hidden rounded-3xl border border-primary/25 bg-card/60 backdrop-blur-xl shadow-2xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm border-collapse">
+            <div className="overflow-x-auto touch-scroll">
+              <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[480px]">
                 <thead>
                   <tr className="border-b border-border/60 bg-muted/50">
-                    <th className="py-4 px-5 font-bold text-foreground">Capability</th>
-                    <th className="py-4 px-5 font-bold text-foreground">Web Version</th>
-                    <th className="py-4 px-5 font-bold text-primary">
+                    <th className="py-3 sm:py-4 px-3.5 sm:px-5 font-bold text-foreground">Capability</th>
+                    <th className="py-3 sm:py-4 px-3.5 sm:px-5 font-bold text-foreground">Web Version</th>
+                    <th className="py-3 sm:py-4 px-3.5 sm:px-5 font-bold text-primary">
                       <div className="flex items-center gap-2">
                         <span>Android APK</span>
                         <span className="rounded bg-primary/20 px-2 py-0.5 text-[9px] font-black text-primary">RECOMMENDED</span>
@@ -703,9 +703,9 @@ const Index = () => {
                 <tbody className="divide-y divide-border/30">
                   {COMPARISON_ITEMS.map((item, index) => (
                     <tr key={index} className="hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-5 font-semibold text-foreground">{item.feature}</td>
-                      <td className="py-3 px-5 text-muted-foreground text-xs">{item.web}</td>
-                      <td className="py-3 px-5 text-xs font-semibold">
+                      <td className="py-3 px-3.5 sm:px-5 font-semibold text-foreground">{item.feature}</td>
+                      <td className="py-3 px-3.5 sm:px-5 text-muted-foreground text-xs">{item.web}</td>
+                      <td className="py-3 px-3.5 sm:px-5 text-xs font-semibold">
                         <span className={item.isApkBest ? "text-emerald-400 font-bold" : "text-foreground"}>
                           {item.apk}
                         </span>
@@ -755,8 +755,8 @@ const Index = () => {
       </section>
 
       {/* ══════════ FOOTER ══════════ */}
-      <footer className="border-t border-border/40 px-6 py-12 pb-24 lg:pb-12 bg-card/20 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <footer className="border-t border-border/40 px-4 sm:px-6 py-10 sm:py-12 pb-[max(env(safe-area-inset-bottom,0px),5rem)] lg:pb-12 bg-card/20 backdrop-blur-md">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
           <div className="flex items-center gap-2.5">
             <BrandLogo className="h-9 w-9 drop-shadow-md" />
             <div>
@@ -765,7 +765,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-muted-foreground font-semibold">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-muted-foreground font-semibold">
             <Link to="/info" className="hover:text-foreground transition-colors">About</Link>
             <Link to="/safety" className="hover:text-foreground transition-colors">Safety</Link>
             <Link to="/guidelines" className="hover:text-foreground transition-colors">Guidelines</Link>

@@ -112,6 +112,8 @@
     margin: 0;
     padding: 0;
     width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   body {
@@ -138,8 +140,17 @@
 }
 
 @layer utilities {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-area-pb {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
+  }
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
   }
 
   .glass {

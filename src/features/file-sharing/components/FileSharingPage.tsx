@@ -119,7 +119,7 @@ export const FileSharingPage: React.FC = () => {
           </div>
 
           {/* Tab Navigation Buttons */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-card border border-border/80 shadow-sm overflow-x-auto w-full sm:w-auto">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-card border border-border/80 shadow-sm overflow-x-auto w-full sm:w-auto no-scrollbar touch-pan-x">
           <button
             type="button"
             onClick={() => { setActiveTab("home"); setActiveAccessCode(null); setSearchParams({}); }}

@@ -9,12 +9,12 @@ interface AppShellProps {
 
 const AppShell = ({ children }: AppShellProps) => {
   return (
-    <div className="w-full h-svh h-screen overflow-hidden flex flex-col">
+    <div className="w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex flex-col">
       <div className="flex w-full h-full min-h-0 overflow-hidden flex-1">
         <DesktopSidebar />
 
         {/* Content area — scrollable for landing pages, fits 100% height for chat app */}
-        <div className="flex min-w-0 flex-1 flex-col h-full min-h-0 overflow-y-auto relative">
+        <div className="flex min-w-0 flex-1 flex-col h-full min-h-0 overflow-y-auto overflow-x-hidden relative overscroll-y-contain">
           {children}
         </div>
       </div>
