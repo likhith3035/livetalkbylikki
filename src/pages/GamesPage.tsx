@@ -21,7 +21,9 @@ import { MemoryDuelGame } from "@/features/games/components/games/MemoryDuelGame
 import { ReactionDashGame } from "@/features/games/components/games/ReactionDashGame";
 import { SOSGame } from "@/features/games/components/games/SOSGame";
 import { BingoGame } from "@/features/games/components/games/BingoGame";
+import { HandCricketGame } from "@/features/games/components/games/HandCricketGame";
 import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
+import { GameHowToPlayModal } from "@/features/games/components/GameHowToPlayModal";
 import {
   createGameRoom,
   joinGameRoom,
@@ -70,6 +72,7 @@ import {
   WifiOff,
   ArrowLeft,
   RotateCcw,
+  BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -146,6 +149,16 @@ const GAMES_CATALOG: GameMetadata[] = [
     accentColor: "#f59e0b",
     badge: "New 🔥",
   },
+  {
+    id: "cricket",
+    title: "Hand Cricket 1v1",
+    tagline: "Odd-or-even toss, real batting vs bowling mind-games, boundary sixes, and wicket clashes!",
+    category: "Strategy",
+    icon: "🏏",
+    gradient: "from-emerald-500 to-teal-600",
+    accentColor: "#10b981",
+    badge: "Hot 🔥",
+  },
 ];
 
 export default function GamesPage() {
@@ -167,6 +180,8 @@ export default function GamesPage() {
   const [manualCode, setManualCode] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
+  const [howToPlayGameId, setHowToPlayGameId] = useState<GameId>("cricket");
 
   const [gamerProfile, setGamerProfile] = useState<GamerProfile>(getGamerProfile);
   const [isSelfOffline, setIsSelfOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
@@ -619,6 +634,22 @@ export default function GamesPage() {
               onTurnTimeout={handleTurnTimeout}
             />
 
+            {/* Quick In-Game Rules Access */}
+            <div className="w-full flex items-center justify-end px-1 -mt-1 mb-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setHowToPlayGameId(activeRoom.gameId);
+                  setIsHowToPlayOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-card/60 hover:bg-card border border-border/60 text-[11px] font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-sm"
+                title="View rules and instructions for this game"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                <span>How to Play</span>
+              </button>
+            </div>
+
             <OfflineAIFallbackBanner
               isOpponentOffline={isOpponentOffline}
               isSelfOffline={isSelfOffline}
@@ -689,6 +720,14 @@ export default function GamesPage() {
               )}
               {activeRoom.gameId === "bingo" && (
                 <BingoGame
+                  room={activeRoom}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator && activeRoom.currentTurn === myPlayerId}
+                  onLocalMove={(updated) => setActiveRoom(updated)}
+                />
+              )}
+              {activeRoom.gameId === "cricket" && (
+                <HandCricketGame
                   room={activeRoom}
                   myPlayerId={myPlayerId}
                   isMyTurn={!isSpectator && activeRoom.currentTurn === myPlayerId}
@@ -924,30 +963,41 @@ export default function GamesPage() {
                 </p>
               </div>
 
-              {/* Action Buttons: Responsive grid */}
-              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto shrink-0">
+              {/* Action Buttons: Responsive 4-column grid on mobile, flex row on sm+ */}
+              <div className="grid grid-cols-4 sm:flex sm:items-center gap-1.5 sm:gap-2.5 w-full sm:w-auto shrink-0">
+                <Button
+                  onClick={() => {
+                    setHowToPlayGameId("cricket");
+                    setIsHowToPlayOpen(true);
+                  }}
+                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-[11px] sm:text-xs font-bold gap-1 sm:gap-2 h-9 sm:h-11 px-1.5 sm:px-4 shadow-sm cursor-pointer"
+                >
+                  <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
+                  <span className="truncate">Rules</span>
+                </Button>
+
                 <Button
                   onClick={() => setIsDinoGameOpen(true)}
-                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-xs font-bold gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-4 shadow-sm cursor-pointer"
+                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-[11px] sm:text-xs font-bold gap-1 sm:gap-2 h-9 sm:h-11 px-1.5 sm:px-4 shadow-sm cursor-pointer"
                 >
                   <span className="text-sm">🦖</span>
-                  <span>Dino Runner</span>
+                  <span className="truncate">Dino</span>
                 </Button>
 
                 <Button
                   onClick={() => setIsJoinModalOpen(true)}
-                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-xs font-bold gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-4 shadow-md cursor-pointer"
+                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-[11px] sm:text-xs font-bold gap-1 sm:gap-2 h-9 sm:h-11 px-1.5 sm:px-4 shadow-md cursor-pointer"
                 >
-                  <QrCode className="w-4 h-4 text-primary" />
-                  <span>Join Room</span>
+                  <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
+                  <span className="truncate">Join</span>
                 </Button>
 
                 <Button
                   onClick={() => setIsScannerOpen(true)}
-                  className="rounded-xl sm:rounded-2xl bg-primary text-primary-foreground text-xs font-bold gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-4 shadow-lg shadow-primary/25 hover:opacity-90 cursor-pointer"
+                  className="rounded-xl sm:rounded-2xl bg-primary text-primary-foreground text-[11px] sm:text-xs font-bold gap-1 sm:gap-2 h-9 sm:h-11 px-1.5 sm:px-4 shadow-lg shadow-primary/25 hover:opacity-90 cursor-pointer"
                 >
-                  <ScanLine className="w-4 h-4" />
-                  <span>Scan QR</span>
+                  <ScanLine className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span className="truncate">Scan</span>
                 </Button>
               </div>
             </div>
@@ -993,6 +1043,10 @@ export default function GamesPage() {
                   key={game.id}
                   game={game}
                   onOpenModeSelect={(g) => setSelectedGameForModal(g)}
+                  onOpenHowToPlay={(g) => {
+                    setHowToPlayGameId(g.id);
+                    setIsHowToPlayOpen(true);
+                  }}
                 />
               ))}
             </div>
@@ -1014,6 +1068,21 @@ export default function GamesPage() {
         onClose={() => setSelectedGameForModal(null)}
         game={selectedGameForModal}
         onSelectMode={handleSelectMode}
+        onOpenHowToPlay={(id) => {
+          setHowToPlayGameId(id);
+          setIsHowToPlayOpen(true);
+        }}
+      />
+
+      {/* Interactive How to Play Academy Modal */}
+      <GameHowToPlayModal
+        isOpen={isHowToPlayOpen}
+        onClose={() => setIsHowToPlayOpen(false)}
+        initialGameId={howToPlayGameId}
+        onSelectGameToPlay={(id) => {
+          const matched = GAMES_CATALOG.find((g) => g.id === id) || null;
+          setSelectedGameForModal(matched);
+        }}
       />
 
       {/* Manual Join / Spectate Room Dialog */}

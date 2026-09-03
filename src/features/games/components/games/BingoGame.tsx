@@ -694,7 +694,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
       </AnimatePresence>
 
       {/* ── 5x5 Bingo Card Board with SVG Lasers ── */}
-      <div className="relative w-full aspect-square max-w-[380px] bg-card/75 backdrop-blur-2xl p-3 rounded-3xl border-2 border-border/80 shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center justify-center">
+      <div className="relative w-full aspect-square max-w-[min(380px,calc(100vw-2rem))] bg-card/75 backdrop-blur-2xl p-2 sm:p-3 rounded-2xl sm:rounded-3xl border-2 border-border/80 shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center justify-center">
         {/* Dynamic Golden Laser Lines Layer */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none z-20"
@@ -705,7 +705,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
         </svg>
 
         {/* 5x5 Grid Cells */}
-        <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-2">
+        <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-1.5 sm:gap-2">
           {myCard.map((row, r) =>
             row.map((num, c) => {
               const isStamped = stampedSet.has(num);

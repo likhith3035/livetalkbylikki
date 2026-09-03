@@ -920,9 +920,9 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
       )}
 
       {/* ── S / O & Power-Up Action Bar ── */}
-      <div className="w-full flex items-center justify-between gap-2 mb-3">
+      <div className="w-full flex items-center justify-between gap-1.5 sm:gap-2 mb-3">
         {/* Letter Selector */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={() => {
@@ -930,7 +930,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
               setActivePowerUp(null);
               gameAudio.playClick();
             }}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-3.5 rounded-xl font-black text-base transition-all border ${
+            className={`flex items-center justify-center gap-1 sm:gap-1.5 py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-xl font-black text-sm sm:text-base transition-all border ${
               selectedLetter === "S" && !activePowerUp
                 ? "bg-cyan-500/20 border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-105"
                 : "bg-card/40 border-border/60 text-muted-foreground hover:text-foreground"
@@ -947,7 +947,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
               setActivePowerUp(null);
               gameAudio.playClick();
             }}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-3.5 rounded-xl font-black text-base transition-all border ${
+            className={`flex items-center justify-center gap-1 sm:gap-1.5 py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-xl font-black text-sm sm:text-base transition-all border ${
               selectedLetter === "O" && !activePowerUp
                 ? "bg-rose-500/20 border-rose-400 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.4)] scale-105"
                 : "bg-card/40 border-border/60 text-muted-foreground hover:text-foreground"
@@ -959,7 +959,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
         </div>
 
         {/* Arcade Power-Ups */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <button
             type="button"
             title="2X Score Overcharge (Next SOS gives +2 points)"
@@ -968,7 +968,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
               setActivePowerUp(next);
               if (next) gameAudio.playPowerUpTrigger();
             }}
-            className={`flex items-center gap-1 py-1.5 px-2.5 rounded-xl text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1 py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold border transition-all ${
               activePowerUp === "2x"
                 ? "bg-amber-500/30 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.5)] scale-105 animate-pulse"
                 : "bg-card/40 border-border/60 text-amber-400/80 hover:bg-amber-500/10"
@@ -987,7 +987,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
               setSelectedLetter("?");
               if (next) gameAudio.playPowerUpTrigger();
             }}
-            className={`flex items-center gap-1 py-1.5 px-2.5 rounded-xl text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1 py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold border transition-all ${
               activePowerUp === "wildcard"
                 ? "bg-purple-500/30 border-purple-400 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.5)] scale-105 animate-pulse"
                 : "bg-card/40 border-border/60 text-purple-400/80 hover:bg-purple-500/10"
@@ -1005,7 +1005,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
               setActivePowerUp(next);
               if (next) gameAudio.playPowerUpTrigger();
             }}
-            className={`flex items-center gap-1 py-1.5 px-2.5 rounded-xl text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1 py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold border transition-all ${
               activePowerUp === "bomb"
                 ? "bg-red-500/30 border-red-400 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.5)] scale-105 animate-pulse"
                 : "bg-card/40 border-border/60 text-red-400/80 hover:bg-red-500/10"
@@ -1043,7 +1043,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
       {/* ── Main SOS Board Canvas & Grid Container ── */}
       <div
         ref={gridContainerRef}
-        className="relative w-full aspect-square max-w-[390px] bg-card/75 backdrop-blur-2xl p-2.5 rounded-3xl border-2 border-border/80 shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden flex items-center justify-center"
+        className="relative w-full aspect-square max-w-[min(390px,calc(100vw-2rem))] bg-card/75 backdrop-blur-2xl p-2 sm:p-2.5 rounded-2xl sm:rounded-3xl border-2 border-border/80 shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden flex items-center justify-center"
       >
         {/* Canvas for Particle Sparks Layer */}
         <canvas

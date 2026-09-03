@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { GameId } from "../types";
 import { Button } from "@/components/ui/button";
-import { Play, Sparkles } from "lucide-react";
+import { Play, Sparkles, BookOpen } from "lucide-react";
 
 export interface GameMetadata {
   id: GameId;
@@ -18,9 +18,10 @@ export interface GameMetadata {
 interface GameCardProps {
   game: GameMetadata;
   onOpenModeSelect: (game: GameMetadata) => void;
+  onOpenHowToPlay?: (game: GameMetadata) => void;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect }) => {
+export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect, onOpenHowToPlay }) => {
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -52,14 +53,27 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect }) =>
         </p>
       </div>
 
-      {/* Play Action Button */}
-      <div className="mt-6 flex items-center justify-between pt-3 border-t border-border/30">
-        <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-          QR Code • AI • 1v1
-        </span>
+      {/* Play & How to Play Action Bar */}
+      <div className="mt-6 flex items-center justify-between pt-3 border-t border-border/30 gap-2">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenHowToPlay?.(game);
+          }}
+          className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-primary transition-colors py-1.5 px-2 rounded-xl hover:bg-primary/10 border border-transparent hover:border-primary/20 cursor-pointer"
+          title="Learn how to play this game"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-primary" />
+          <span>Rules</span>
+        </button>
 
         <Button
           size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenModeSelect(game);
+          }}
           className="rounded-xl bg-primary text-primary-foreground font-bold text-xs gap-1.5 h-9 px-4 shadow-md shadow-primary/20 group-hover:scale-105 transition-transform"
         >
           <Play className="w-3.5 h-3.5 fill-current" />

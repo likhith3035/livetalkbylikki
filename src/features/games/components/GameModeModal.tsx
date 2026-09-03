@@ -22,9 +22,11 @@ import {
   Sparkles,
   Edit2,
   Check,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GameAvatar } from "./GameAvatar";
 import {
   getGamerProfile,
   saveGamerProfile,
@@ -36,6 +38,7 @@ interface GameModeModalProps {
   onClose: () => void;
   game: GameMetadata | null;
   onSelectMode: (gameId: GameId, mode: GameMode, rules?: GameCustomRules) => void;
+  onOpenHowToPlay?: (gameId: GameId) => void;
 }
 
 const BOT_PERSONAS = [
@@ -70,6 +73,7 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
   onClose,
   game,
   onSelectMode,
+  onOpenHowToPlay,
 }) => {
   const [gamerProfile, setGamerProfileState] = useState(() => getGamerProfile());
   const [userName, setUserName] = useState(gamerProfile.nickname || "Player 1");
@@ -151,11 +155,11 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-[94vw] sm:max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/50 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar touch-manipulation">
         <DialogHeader className="text-left pb-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="text-2xl sm:text-3xl">{game.icon}</span>
-              <div>
-                <DialogTitle className="text-lg sm:text-xl font-black text-foreground">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-2xl sm:text-3xl shrink-0">{game.icon}</span>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg sm:text-xl font-black text-foreground truncate">
                   {game.title}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground line-clamp-1">
@@ -163,6 +167,18 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
                 </DialogDescription>
               </div>
             </div>
+
+            {onOpenHowToPlay && (
+              <button
+                type="button"
+                onClick={() => onOpenHowToPlay(game.id)}
+                className="px-2.5 py-1 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                title="View rules and how to play"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Rules</span>
+              </button>
+            )}
           </div>
         </DialogHeader>
 
@@ -183,11 +199,11 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
             <button
               type="button"
               onClick={() => setShowAvatarPicker((p) => !p)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-card border border-primary/40 flex items-center justify-center text-xl shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0 relative group"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-card border border-primary/40 flex items-center justify-center text-xl shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0 relative group overflow-hidden p-0.5"
               title="Click to change avatar"
             >
-              <span>{userAvatar}</span>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+              <GameAvatar avatar={userAvatar} fallback="👾" className="w-full h-full text-xl" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md">
                 <Edit2 className="w-2.5 h-2.5" />
               </div>
             </button>
@@ -447,7 +463,10 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
                       {/* Player 1 Name */}
                       <div className="space-y-1">
                         <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
-                          <span>{userAvatar}</span> Player 1:
+                          <span className="w-4 h-4 inline-flex items-center justify-center shrink-0 overflow-hidden rounded">
+                            <GameAvatar avatar={userAvatar} fallback="👾" className="text-xs" />
+                          </span>
+                          Player 1:
                         </span>
                         <Input
                           value={player1Name}
@@ -468,10 +487,10 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
                             <button
                               type="button"
                               onClick={() => setShowP2AvatarPicker((p) => !p)}
-                              className="hover:scale-110 cursor-pointer"
+                              className="w-4 h-4 inline-flex items-center justify-center shrink-0 hover:scale-110 cursor-pointer overflow-hidden rounded"
                               title="Change Player 2 avatar"
                             >
-                              {player2Avatar}
+                              <GameAvatar avatar={player2Avatar} fallback="👤" className="text-xs" />
                             </button>
                             Player 2:
                           </span>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface GameAvatarProps {
   avatar?: string | null;
@@ -13,28 +13,45 @@ export const GameAvatar: React.FC<GameAvatarProps> = ({
   className = "",
   sizeClassName = "w-full h-full",
 }) => {
+  const [imgFailed, setImgFailed] = useState(false);
   const current = (avatar || fallback).trim();
-  const isImage = current.startsWith("data:image/") || current.startsWith("http://") || current.startsWith("https://");
+
+  // Normalize raw base64 strings if missing data: URI prefix
+  let imageSrc = current;
+  if (
+    current.startsWith("/9j/") ||
+    current.startsWith("iVBORw") ||
+    current.startsWith("R0lGOD") ||
+    current.startsWith("UklGR")
+  ) {
+    imageSrc = `data:image/jpeg;base64,${current}`;
+  }
+
+  const isImage =
+    !imgFailed &&
+    (imageSrc.startsWith("data:") ||
+      imageSrc.startsWith("http://") ||
+      imageSrc.startsWith("https://") ||
+      imageSrc.startsWith("blob:"));
 
   if (isImage) {
     return (
       <img
-        src={current}
+        src={imageSrc}
         alt="Avatar"
         className={`${sizeClassName} object-cover rounded-xl ${className}`}
-        onError={(e) => {
-          // If image fails to load, fallback to emoji
-          (e.currentTarget as HTMLElement).style.display = "none";
-        }}
+        onError={() => setImgFailed(true)}
       />
     );
   }
 
-  // Safe emoji or short string rendering (limit to 4 characters so long corrupted strings never explode)
+  // Safe emoji or short string rendering (limit to 8 characters so corrupted/base64 strings never explode into text)
   const safeText = current.length > 8 ? fallback : current;
 
   return (
-    <span className={`select-none flex items-center justify-center leading-none ${className}`}>
+    <span
+      className={`select-none flex items-center justify-center leading-none overflow-hidden max-w-full ${className}`}
+    >
       {safeText}
     </span>
   );
