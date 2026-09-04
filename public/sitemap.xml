@@ -2,80 +2,96 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Homepage -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- LiveTalk Arcade & Multiplayer 1v1 Games -->
+  <!-- Anonymous Video & Text Chat -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/games</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/chat</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.98</priority>
+  </url>
+
+  <!-- IncogTalk Arcade & Multiplayer 1v1 Games -->
+  <url>
+    <loc>https://incogtalkk.netlify.app/games</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
 
   <!-- Encrypted File Sharing & 1-Click ZIP Downloads -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/file-sharing</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/file-sharing</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
 
-  <!-- AI Chat Companions -->
+  <!-- AI Chat Studio & Companions -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/ai-chat</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/ai-chat</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
 
-  <!-- AI Prompt Analyzer -->
+  <!-- AI Prompt Quality Analyzer -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/prompt-analyzer</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/prompt-analyzer</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
+  </url>
+
+  <!-- Anonymous Profile & Customizer -->
+  <url>
+    <loc>https://incogtalkk.netlify.app/profile</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
   </url>
 
   <!-- About & Platform Info -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/info</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/info</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
 
   <!-- Safety Center -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/safety</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/safety</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
 
   <!-- Community Guidelines -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/guidelines</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/guidelines</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
 
   <!-- Privacy Policy -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/privacy</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/privacy</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
 
   <!-- Terms of Service -->
   <url>
-    <loc>https://livetalkbylikki.netlify.app/terms</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://incogtalkk.netlify.app/terms</loc>
+    <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>

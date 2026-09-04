@@ -31,9 +31,21 @@ const ProfilePage = () => {
   const { settings, updateSetting } = useSettings();
 
   useSEO({ 
-    title: "My Profile – LiveTalk", 
-    description: "Manage your LiveTalk profile — set your nickname and choose a fun avatar for your anonymous chats.",
-    keywords: "chat profile, anonymous nickname, chat avatar, personalize chat, LiveTalk profile"
+    title: "Anonymous Profile & Persona Studio – IncogTalk", 
+    description: "Manage your anonymous IncogTalk persona — generate unique cyberpunk handles, choose custom avatars, set mood badges, and monitor private session stats with zero tracking.",
+    keywords: "incogtalk profile, incogtalkk profile, anonymous handle, chat persona, avatar cropper, anonymous profile, incogtalk",
+    breadcrumbTitle: "Anonymous Profile",
+    schema: {
+      "@type": "ProfilePage",
+      "name": "IncogTalk Anonymous Profile Studio",
+      "url": "https://incogtalkk.netlify.app/profile",
+      "description": "Customize your anonymous IncogTalk identity with randomized cyberpunk personas, custom avatars, mood badges, and local privacy stats.",
+      "mainEntity": {
+        "@type": "Person",
+        "name": "Anonymous IncogTalk Explorer",
+        "description": "Ephemeral encrypted persona for private peer-to-peer conversations."
+      }
+    }
   });
 
   const [editingName, setEditingName] = useState(false);
@@ -322,7 +334,7 @@ const ProfilePage = () => {
   };
 
   const copyStatsSummary = () => {
-    const summary = `🚀 LiveTalk Chat Stats:\n👤 Nickname: ${displayName}\n🏆 Rank: ${rankData.rank}\n💬 Chats: ${todayConversations}\n⏱️ Time: ${todayTotalTime || "0s"}\n🔥 Streak: ${currentStreak}d\nJoin: ${window.location.origin}`;
+    const summary = `🚀 IncogTalk Chat Stats:\n👤 Nickname: ${displayName}\n🏆 Rank: ${rankData.rank}\n💬 Chats: ${todayConversations}\n⏱️ Time: ${todayTotalTime || "0s"}\n🔥 Streak: ${currentStreak}d\nJoin: ${window.location.origin}`;
     navigator.clipboard.writeText(summary);
     setStatsCopied(true);
     setTimeout(() => setStatsCopied(false), 2000);

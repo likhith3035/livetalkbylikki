@@ -47,9 +47,16 @@ const GUIDELINES = [
 const GuidelinesPage = () => {
   const onlineCount = useOnlineCount();
   useSEO({
-    title: "Community Guidelines – LiveTalk",
-    description: "Read our rules for a safe and respectful chatting experience on LiveTalk.",
-    keywords: "chat rules, community safety, LiveTalk guidelines, safe chatting"
+    title: "Community Guidelines – IncogTalk",
+    description: "Read our rules for a safe and respectful chatting experience on IncogTalk. Speak freely. Stay incognito.",
+    keywords: "chat rules, community safety, incogtalk guidelines, incogtalkk rules, safe chatting, anonymous guidelines, incogtalk",
+    breadcrumbTitle: "Community Guidelines",
+    schema: {
+      "@type": "WebPage",
+      "name": "IncogTalk Community Guidelines",
+      "url": "https://incogtalkk.netlify.app/guidelines",
+      "description": "Rules and conduct guidelines for ensuring a safe, respectful, and zero-abuse anonymous communication space."
+    }
   });
 
   return (
@@ -73,7 +80,7 @@ const GuidelinesPage = () => {
             Community <span className="text-gradient">Guidelines</span>
           </h1>
           <p className="text-muted-foreground text-lg font-medium max-w-xl mx-auto leading-relaxed">
-            LiveTalk is built on freedom and anonymity, but safety and respect are our highest priorities.
+            IncogTalk is built on freedom and anonymity, but safety and respect are our highest priorities.
           </p>
         </motion.div>
 
@@ -110,7 +117,7 @@ const GuidelinesPage = () => {
                 <h2 className="text-2xl font-bold text-foreground tracking-tight">Zero Tolerance Policy</h2>
               </div>
               <p className="text-muted-foreground font-medium leading-relaxed">
-                Breaking these rules results in an instant ban. We use automated filters and human reports to keep LiveTalk a safe space for everyone to connect.
+                Breaking these rules results in an instant ban. We use automated filters and human reports to keep IncogTalk a safe space for everyone to connect.
               </p>
               <div className="flex flex-wrap gap-3 justify-center sm:justify-start pt-2">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background border border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -146,7 +153,7 @@ const GuidelinesPage = () => {
             I Understand, Let's Chat
           </Link>
           <p className="mt-6 text-xs text-muted-foreground/60 font-medium">
-             By using LiveTalk, you agree to follow these guidelines.
+             By using IncogTalk, you agree to follow these guidelines. Speak freely. Stay incognito.
           </p>
         </motion.div>
       </main>

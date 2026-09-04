@@ -10,9 +10,16 @@ const TermsPage = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
   useSEO({ 
-    title: "Terms of Service", 
-    description: "Read the Terms of Service for LiveTalk by Likki. User rules, age requirements, and community guidelines for anonymous chatting.",
-    keywords: "terms of service, user agreement, community guidelines, chat rules, 18+ chat terms"
+    title: "Terms of Service – IncogTalk", 
+    description: "Read the Terms of Service for IncogTalk by Likhith Kami (Likki). Speak freely. Stay incognito. User rules, age requirements, and community guidelines for anonymous chatting.",
+    keywords: "terms of service, incogtalk terms, incogtalkk terms, user agreement, community guidelines, chat rules, 18+ chat terms, incogtalk",
+    breadcrumbTitle: "Terms of Service",
+    schema: {
+      "@type": "WebPage",
+      "name": "IncogTalk Terms of Service",
+      "url": "https://incogtalkk.netlify.app/terms",
+      "description": "User agreement, terms, and conditions governing the use of IncogTalk anonymous chat and tools."
+    }
   });
 
   const fadeUp = {
@@ -51,7 +58,7 @@ const TermsPage = () => {
             Terms of <span className="text-gradient">Service</span>
           </h1>
           <p className="text-muted-foreground text-lg sm:text-xl leading-relaxed max-w-2xl font-medium">
-            By using LiveTalk by Likki, you agree to these simple rules designed to keep our community safe, anonymous, and fun.
+            By using IncogTalk by Likki, you agree to these simple rules designed to keep our community safe, anonymous, and fun. Speak freely. Stay incognito.
           </p>
         </motion.section>
 
@@ -59,25 +66,25 @@ const TermsPage = () => {
           <TermsCard 
             icon={<Scale className="h-6 w-6" />}
             title="1. Age Requirement"
-            desc="You must be at least 18 years old to use LiveTalk. By accessing this service, you represent and warrant that you meet this age requirement."
+            desc="You must be at least 18 years old to use IncogTalk. By accessing this service, you represent and warrant that you meet this age requirement."
           />
 
           <TermsCard 
             icon={<Ban className="h-6 w-6" />}
             title="2. Prohibited Conduct"
-            desc="You agree not to use LiveTalk for any illegal activity, harassment, hate speech, or the distribution of explicit content without consent. We reserve the right to ban users who violate these guidelines."
+            desc="You agree not to use IncogTalk for any illegal activity, harassment, hate speech, or the distribution of explicit content without consent. We reserve the right to ban users who violate these guidelines."
           />
 
           <TermsCard 
             icon={<Users className="h-6 w-6" />}
             title="3. User Responsibility"
-            desc="You are solely responsible for your interactions with other users. LiveTalk is an anonymous platform, and you should exercise caution when sharing any information with strangers."
+            desc="You are solely responsible for your interactions with other users. IncogTalk is an anonymous platform, and you should exercise caution when sharing any information with strangers."
           />
 
           <TermsCard 
             icon={<AlertTriangle className="h-6 w-6" />}
             title="4. Disclaimer of Liability"
-            desc='LiveTalk by Likki is provided "as is" without any warranties. We are not responsible for the behavior of our users or for any consequences arising from your use of the platform.'
+            desc='IncogTalk by Likki is provided "as is" without any warranties. We are not responsible for the behavior of our users or for any consequences arising from your use of the platform.'
           />
         </section>
 
@@ -87,7 +94,7 @@ const TermsPage = () => {
           className="text-center pt-16 border-t border-border/50"
         >
           <p className="text-xs font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">
-            Last updated: March 14, 2026 · LiveTalk by Likki
+            Last updated: September 2026 · IncogTalk by Likki
           </p>
           <div className="flex justify-center gap-6 mt-4 text-xs font-bold text-muted-foreground/40 tracking-widest uppercase">
             <a href="/info" className="hover:text-primary transition-colors">About</a>

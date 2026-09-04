@@ -29,22 +29,22 @@ import { cn } from "@/lib/utils";
 
 const WHAT_IS = [
   { icon: Bot, title: "AI Chat & AI Wingman 🤖", desc: "Prefer talking to AI or need conversation practice? Switch to the dedicated AI Chat tab to converse with AI Companions (Luna, Nova, Titan, Zen, Cyber) powered by Sarvam AI, Gemini, Claude, OpenAI, and 100% Free Local LLMs (Ollama & LM Studio)." },
-  { icon: MessageSquare, title: "Chat with strangers", desc: "Talk to random people from around the world. No account, no signup — just open and chat. LiveTalk connects you with real humans instantly for genuine conversations." },
+  { icon: MessageSquare, title: "Chat with strangers", desc: "Talk to random people from around the world. No account, no signup — just open and chat. IncogTalk connects you with real humans instantly for genuine conversations." },
   { icon: EyeOff, title: "100% Anonymous", desc: "We never ask for your name, email, phone number, or anything. Nobody knows who you are. Your identity is completely hidden — even from us. Chat freely without any trace." },
   { icon: Trash2, title: "Chats disappear forever", desc: "The moment you leave a chat, all messages are gone permanently. We don't save anything on any server. No logs, no backups, no archives — your conversations exist only in the moment." },
   { icon: Shield, title: "Safe & encrypted", desc: "Your messages are protected with encryption. Only you and the stranger can read them. We use modern security protocols to ensure your privacy at every step." },
   { icon: Globe, title: "Works everywhere", desc: "Use it on your phone, tablet, laptop, or computer. No app to download — just a website. Works on Chrome, Safari, Firefox, Edge, and any modern browser." },
   { icon: Wifi, title: "Real-time connection", desc: "Messages appear instantly. No delays, no refreshing needed. Our real-time infrastructure ensures sub-second message delivery worldwide." },
-  { icon: UserCheck, title: "No registration required", desc: "Unlike most platforms, LiveTalk requires zero registration. No email verification, no phone number, no social login. Just open and start chatting immediately." },
-  { icon: Fingerprint, title: "Zero digital footprint", desc: "LiveTalk doesn't use cookies for tracking, doesn't store IP addresses, and doesn't create user profiles. Your visit leaves absolutely no digital footprint." },
+  { icon: UserCheck, title: "No registration required", desc: "Unlike most platforms, IncogTalk requires zero registration. No email verification, no phone number, no social login. Just open and start chatting immediately." },
+  { icon: Fingerprint, title: "Zero digital footprint", desc: "IncogTalk doesn't use cookies for tracking, doesn't store IP addresses, and doesn't create user profiles. Your visit leaves absolutely no digital footprint." },
 ];
 
 const HOW_TO = [
-  { step: "1", title: "Open LiveTalk", desc: "Just visit LiveTalkbylikki.netlify.app on any device. That's all — nothing to install, download, or configure! Works on any browser." },
+  { step: "1", title: "Open IncogTalk", desc: "Just visit incogtalkk.netlify.app on any device. That's all — nothing to install, download, or configure! Works on any browser." },
   { step: "2", title: 'Tap "Start Chatting"', desc: "Hit the big glowing button on the home page. Our matching system immediately starts looking for someone to connect you with." },
   { step: "3", title: "Wait a moment", desc: "Usually takes just 2-5 seconds. You'll see a \"Searching...\" animation while we find the perfect match. Add interests to get matched with like-minded people!" },
   { step: "4", title: "Say hello! 👋", desc: "Once connected, you'll see a celebration popup. Type your message in the box at the bottom and tap Send. The stranger sees it instantly!" },
-  { step: "5", title: "Use all the features", desc: "Send images, GIFs, react with emojis, play games, start video calls, share location, and more. LiveTalk is packed with features to make every conversation fun." },
+  { step: "5", title: "Use all the features", desc: "Send images, GIFs, react with emojis, play games, start video calls, share location, and more. IncogTalk is packed with features to make every conversation fun." },
   { step: "6", title: "Keep chatting or move on", desc: "Enjoying the conversation? Great! Want someone new? Tap \"Next\" anytime to instantly connect with a different stranger." },
   { step: "7", title: "Create private rooms", desc: "Want to chat with a specific friend? Create a private room, share the 6-letter code, and chat securely without random matching." },
   { step: "8", title: "Done? Just leave", desc: "Close the page or tap Stop. Everything disappears automatically. No cleanup needed — your chat history is gone forever." },
@@ -77,7 +77,7 @@ const FEATURES_DETAILED = [
   },
   {
     icon: Globe, title: "Interest Matching 🎯", category: "Matching",
-    desc: "Before starting a chat, add topics you like — music, gaming, movies, coding, sports, anime, and more. LiveTalk tries to match you with someone who shares your interests. Matched interests are highlighted when you connect!",
+    desc: "Before starting a chat, add topics you like — music, gaming, movies, coding, sports, anime, and more. IncogTalk tries to match you with someone who shares your interests. Matched interests are highlighted when you connect!",
     tech: "Interests are stored as tags and sent during the matchmaking handshake via Supabase Realtime broadcast. The matching algorithm compares arrays to find common interests and prioritizes users with the most overlap.",
     details: "The system scores each potential match based on shared interest count. Users with the most matching interests get connected first. If no interest matches are found, you're connected to a random user instead.",
   },
@@ -85,7 +85,7 @@ const FEATURES_DETAILED = [
     icon: Users, title: "Private Rooms 🔒", category: "Matching",
     desc: "Create a private room with a unique 6-letter code. Share the code with your friend via WhatsApp, Instagram, or any app. They enter the code and join your room directly — no random matching involved.",
     tech: "Generates a random 6-character alphanumeric code (excluding ambiguous characters like 0/O/1/I). Uses a dedicated Supabase Realtime channel per room code. Both users subscribe to the same channel for direct messaging.",
-    details: "Room codes are case-insensitive and designed to be easy to read aloud or type. The room URL can be shared directly (LiveTalkbylikki.netlify.app/room/ABCDEF) for one-tap joining.",
+    details: "Room codes are case-insensitive and designed to be easy to read aloud or type. The room URL can be shared directly (incogtalkk.netlify.app/room/ABCDEF) for one-tap joining.",
   },
   {
     icon: Image, title: "Send Images 📷", category: "Media",
@@ -113,7 +113,7 @@ const FEATURES_DETAILED = [
   },
   {
     icon: Globe, title: "Live Video Subtitles & Auto Translation 🌐", category: "Communication",
-    desc: "Turn on CC Subtitles during any video call! LiveTalk uses Web Speech Recognition to display real-time speech captions and automatically translates Telugu (తెలుగు), Hindi, Spanish, French, German, Japanese, and 120+ languages into English live.",
+    desc: "Turn on CC Subtitles during any video call! IncogTalk uses Web Speech Recognition to display real-time speech captions and automatically translates Telugu (తెలుగు), Hindi, Spanish, French, German, Japanese, and 120+ languages into English live.",
     tech: "Powered by browser Web Speech API (SpeechRecognition) combined with client-side async translation API. Features auto-hiding caption pills with pointer-events-none to prevent touch gesture interference.",
     details: "Speech recognition runs in a separate OS background worker thread for 0% CPU frame lag. Subtitles automatically fade out 5 seconds after silence.",
   },
@@ -198,7 +198,7 @@ const FEATURES_DETAILED = [
   },
   {
     icon: Wifi, title: "WebRTC Auto-Reconnect & TURN Fallback 🔄", category: "Communication",
-    desc: "If your network switches between Wi-Fi and mobile data or drops momentarily during a video call, LiveTalk automatically renegotiates P2P TURN connections without dropping your call.",
+    desc: "If your network switches between Wi-Fi and mobile data or drops momentarily during a video call, IncogTalk automatically renegotiates P2P TURN connections without dropping your call.",
     tech: "Monitors WebRTC RTCPeerConnection ICE states, automatically invoking pc.restartIce() and broadcasting renegotiation offers over Firebase signaling.",
     details: "Displays an inline '⚡ Reconnecting P2P Stream...' status badge so users stay informed during network transitions.",
   },
@@ -228,7 +228,7 @@ const FEATURES_DETAILED = [
   },
   {
     icon: Cpu, title: "Android Native APK & Full PWA 📱", category: "Platform",
-    desc: "Download the native LiveTalk Android APK or install LiveTalk directly as a Progressive Web App (PWA) on iOS, Android, and Desktop with offline capability.",
+    desc: "Download the native IncogTalk Android APK or install IncogTalk directly as a Progressive Web App (PWA) on iOS, Android, and Desktop with offline capability.",
     tech: "Built with Capacitor native Android bridge and Vite PWA Workbox service workers.",
     details: "Provides home screen app icons, fast launch speeds, and push notification readiness.",
   },
@@ -250,7 +250,7 @@ const FEATURES_DETAILED = [
     icon: Download, title: "1-Click ZIP Bundle Download 📦", category: "File Sharing",
     desc: "Recipients can download all shared files as a single ZIP archive with one click. No more downloading files one by one — the entire share is bundled into a compact ZIP file named after the share code.",
     tech: "Powered by JSZip library. Files are fetched as blobs, added to a JSZip instance, and generated as a downloadable ZIP blob via zip.generateAsync(). Falls back to individual downloads on failure.",
-    details: "ZIP files are named LiveTalk_Share_CODE.zip. The download process shows a toast notification for progress. Works with any number of files in the share.",
+    details: "ZIP files are named IncogTalk_Share_CODE.zip. The download process shows a toast notification for progress. Works with any number of files in the share.",
   },
   {
     icon: Flame, title: "Burn After Reading 🔥", category: "File Sharing",
@@ -320,8 +320,8 @@ const TECH_STACK = [
 const SETTINGS_INFO = [
   { icon: Moon, title: "Dark Mode 🌙", desc: "Switch between light and dark mode. Dark mode is easier on your eyes at night, saves battery on OLED screens, and looks sleek! The theme persists across sessions." },
   { icon: Volume2, title: "Sound Effects 🔊", desc: "Toggle sounds for sending/receiving messages, connecting with strangers, and call notifications. Each event has a unique, subtle sound effect." },
-  { icon: Bell, title: "Browser Notifications 🔔", desc: "Get a desktop/mobile notification when someone messages you, even if LiveTalk is in another tab or minimized. Never miss a message!" },
-  { icon: Zap, title: "Auto-Reconnect ⚡", desc: "When a stranger disconnects, LiveTalk automatically finds you a new person within 5 seconds. No need to tap anything — seamless continuous chatting!" },
+  { icon: Bell, title: "Browser Notifications 🔔", desc: "Get a desktop/mobile notification when someone messages you, even if IncogTalk is in another tab or minimized. Never miss a message!" },
+  { icon: Zap, title: "Auto-Reconnect ⚡", desc: "When a stranger disconnects, IncogTalk automatically finds you a new person within 5 seconds. No need to tap anything — seamless continuous chatting!" },
 ];
 
 const SAFETY = [
@@ -341,31 +341,31 @@ const KEYBOARD_SHORTCUTS = [
 ];
 
 const FAQ = [
-  { q: "Is LiveTalk really free?", a: "Yes! 100% free, forever. No hidden fees, no premium plans, no subscriptions, no in-app purchases. Every feature is available to everyone." },
+  { q: "Is IncogTalk really free?", a: "Yes! 100% free, forever. No hidden fees, no premium plans, no subscriptions, no in-app purchases. Every feature is available to everyone." },
   { q: "What is the AI Chat tab?", a: "The AI Chat tab lets you converse with customizable AI Companions (Luna, Nova, Titan, Zen, Cyber). You can connect your own API keys (Sarvam AI, Gemini, Claude, OpenAI, Groq, OpenRouter, Together) or run 100% Free Local AI models (Ollama & LM Studio) with zero key requirements!" },
   { q: "How do I get free AI credits?", a: "You can sign up on Sarvam AI to receive ₹100 worth of free API credits using any email or temp mail. Alternatively, you can use Local LLMs (Ollama / LM Studio) for completely free offline AI chat." },
-  { q: "How does real-time translation work?", a: "LiveTalk includes a real-time chat translator hook. When a stranger sends a message in a foreign language, LiveTalk automatically detects the language and translates it into your preferred target language." },
+  { q: "How does real-time translation work?", a: "IncogTalk includes a real-time chat translator hook. When a stranger sends a message in a foreign language, IncogTalk automatically detects the language and translates it into your preferred target language." },
   { q: "What is Local Privacy Mode?", a: "Local Privacy Mode encrypts on-screen chat text and obscures message bubbles during window switches or screen capture attempts, automatically sending warning alerts to your chat partner to protect your privacy." },
-  { q: "Do I need to create an account?", a: "Nope! No email, no password, no phone number, no social login. Just open LiveTalk and start chatting. It literally takes 3 seconds." },
+  { q: "Do I need to create an account?", a: "Nope! No email, no password, no phone number, no social login. Just open IncogTalk and start chatting. It literally takes 3 seconds." },
   { q: "Can people see who I am?", a: "Absolutely not. You are completely anonymous. We don't collect any personal information, and there's no way for the stranger to find out your identity." },
   { q: "Are my messages saved anywhere?", a: "Never. Messages exist only in your browser while you're in the chat. When either person leaves, everything is permanently and irreversibly deleted. No server logs, no backups." },
-  { q: "Is LiveTalk safe for minors?", a: "LiveTalk is designed for users 18 and older. We strongly recommend parental guidance for younger users. Parents should be aware that users chat with random strangers." },
-  { q: "Can I use it on my phone?", a: "Yes! LiveTalk works perfectly on any phone, tablet, or computer. Just open your browser and visit the website. You can even install it as an app on your home screen!" },
+  { q: "Is IncogTalk safe for minors?", a: "IncogTalk is designed for users 18 and older. We strongly recommend parental guidance for younger users. Parents should be aware that users chat with random strangers." },
+  { q: "Can I use it on my phone?", a: "Yes! IncogTalk works perfectly on any phone, tablet, or computer. Just open your browser and visit the website. You can even install it as an app on your home screen!" },
   { q: "What if someone is being mean or inappropriate?", a: "You have several options: tap \"Next\" to skip to a new person, use \"Block\" to prevent rematching, or tap \"Report\" in the menu to flag their behavior." },
-  { q: "How does interest matching work?", a: "Before chatting, add topics you're interested in (like music, gaming, movies). LiveTalk's algorithm tries to connect you with someone who shares the most interests. If no match is found, you'll be connected randomly." },
+  { q: "How does interest matching work?", a: "Before chatting, add topics you're interested in (like music, gaming, movies). IncogTalk's algorithm tries to connect you with someone who shares the most interests. If no match is found, you'll be connected randomly." },
   { q: "What's a private room?", a: "A private room lets you chat with a specific person using a unique 6-letter code. Create a room, share the code with your friend, and they join directly. No random strangers — just you two!" },
   { q: "How do video calls work?", a: "Once connected with a stranger, tap the video or audio call button. The other person receives a request and can accept or decline. Calls are peer-to-peer (direct between browsers) for maximum privacy." },
   { q: "Why did the stranger disconnect?", a: "People can leave anytime — that's the nature of anonymous chatting. Don't take it personally! Tap \"Next\" for a new match, or enable auto-reconnect in settings to be matched automatically." },
-  { q: "What does the 'online' counter show?", a: "It shows how many people are currently on LiveTalk. More people online = faster matching! The count updates in real-time." },
-  { q: "Can I use LiveTalk on multiple devices?", a: "Yes! Since there's no account, you can open LiveTalk on any device independently. Each device gets its own separate chat sessions." },
-  { q: "Is LiveTalk better than Omegle?", a: "LiveTalk is built as a modern alternative to Omegle with better features, a beautiful UI, no ads, built-in games, reactions, GIFs, video calls, and a focus on privacy. It's what Omegle should have been!" },
-  { q: "Who built LiveTalk?", a: "LiveTalk was designed and developed by Likhith Kami (Likki) as a passion project. He is a Full Stack Developer, and you can explore his other projects and official websites on the Kami Likhith Portfolio (https://devlikhith.vercel.app/)." },
-  { q: "What is the tech stack of LiveTalk?", a: "LiveTalk uses a professional 'Pro-Level' stack: TypeScript for reliable code, React 18 for the user interface, Vite for lightning-fast speeds, Tailwind CSS for the premium design, and Supabase / WebRTC for instant real-time messaging and video calls. This ensures a seamless, secure experience on any device." },
-  { q: "Does LiveTalk support file sharing?", a: "Yes! LiveTalk includes a full 100% client-side encrypted file sharing platform. Upload files, generate a unique 6-character share code, set passwords, expiration timers, and download limits. Recipients enter the code to download files. Everything stays in your browser — zero server uploads." },
-  { q: "Is LiveTalk file sharing encrypted?", a: "Yes! LiveTalk uses military-grade AES-256-GCM encryption via the browser's Web Crypto API. You can lock any file with a secret passcode. Encryption and decryption happen entirely in your browser — your passcode never leaves your device." },
-  { q: "What is burn-after-reading?", a: "Burn-after-reading is LiveTalk's self-destruct file sharing mode. When enabled, shared files automatically delete after being viewed once. The share code becomes permanently invalid after a single use — perfect for sending sensitive documents that should not be stored." },
-  { q: "Can I download multiple shared files at once?", a: "Yes! LiveTalk's 1-click ZIP bundle download packages all shared files into a single ZIP archive that downloads instantly. Powered by JSZip, it works entirely in your browser with a fallback to individual downloads if needed." },
-  { q: "Are my shared files stored on a server?", a: "No! LiveTalk's file sharing is 100% client-side. Files are converted to Data URLs and stored exclusively in your browser's localStorage. Nothing is uploaded to any external server. Your files never leave your device." },
+  { q: "What does the 'online' counter show?", a: "It shows how many people are currently on IncogTalk. More people online = faster matching! The count updates in real-time." },
+  { q: "Can I use IncogTalk on multiple devices?", a: "Yes! Since there's no account, you can open IncogTalk on any device independently. Each device gets its own separate chat sessions." },
+  { q: "Is IncogTalk better than Omegle?", a: "IncogTalk is built as a modern alternative to Omegle with better features, a beautiful UI, no ads, built-in games, reactions, GIFs, video calls, and a focus on privacy. It's what Omegle should have been!" },
+  { q: "Who built IncogTalk?", a: "IncogTalk was designed and developed by Likhith Kami (Likki) as a passion project. He is a Full Stack Developer, and you can explore his other projects and official websites on the Kami Likhith Portfolio (https://devlikhith.vercel.app/)." },
+  { q: "What is the tech stack of IncogTalk?", a: "IncogTalk uses a professional 'Pro-Level' stack: TypeScript for reliable code, React 18 for the user interface, Vite for lightning-fast speeds, Tailwind CSS for the premium design, and Supabase / WebRTC for instant real-time messaging and video calls. This ensures a seamless, secure experience on any device." },
+  { q: "Does IncogTalk support file sharing?", a: "Yes! IncogTalk includes a full 100% client-side encrypted file sharing platform. Upload files, generate a unique 6-character share code, set passwords, expiration timers, and download limits. Recipients enter the code to download files. Everything stays in your browser — zero server uploads." },
+  { q: "Is IncogTalk file sharing encrypted?", a: "Yes! IncogTalk uses military-grade AES-256-GCM encryption via the browser's Web Crypto API. You can lock any file with a secret passcode. Encryption and decryption happen entirely in your browser — your passcode never leaves your device." },
+  { q: "What is burn-after-reading?", a: "Burn-after-reading is IncogTalk's self-destruct file sharing mode. When enabled, shared files automatically delete after being viewed once. The share code becomes permanently invalid after a single use — perfect for sending sensitive documents that should not be stored." },
+  { q: "Can I download multiple shared files at once?", a: "Yes! IncogTalk's 1-click ZIP bundle download packages all shared files into a single ZIP archive that downloads instantly. Powered by JSZip, it works entirely in your browser with a fallback to individual downloads if needed." },
+  { q: "Are my shared files stored on a server?", a: "No! IncogTalk's file sharing is 100% client-side. Files are converted to Data URLs and stored exclusively in your browser's localStorage. Nothing is uploaded to any external server. Your files never leave your device." },
 ];
 
 const CHALLENGES = [
@@ -388,41 +388,41 @@ const CHALLENGES = [
 ];
 
 const COMPARISON = [
-  { feature: "Anonymous Chat 💬", LiveTalk: true, others: true },
-  { feature: "No Registration 🔓", LiveTalk: true, others: false },
-  { feature: "Live Video Subtitles 🌐", LiveTalk: true, others: false },
-  { feature: "Voice Memo Messages 🎤", LiveTalk: true, others: false },
-  { feature: "Telugu to English Translation 🇮🇳", LiveTalk: true, others: false },
-  { feature: "Live WebRTC Diagnostic Stats 📊", LiveTalk: true, others: false },
-  { feature: "AI Chat Companion 🤖", LiveTalk: true, others: false },
-  { feature: "Free Local LLM & Sarvam AI ⚡", LiveTalk: true, others: false },
-  { feature: "Real-Time Message Translation 🌍", LiveTalk: true, others: false },
-  { feature: "Instant AI Icebreakers 🧊", LiveTalk: true, others: false },
-  { feature: "WebRTC Auto-Reconnect 🔄", LiveTalk: true, others: false },
-  { feature: "Screen Capture Protection 🛡️", LiveTalk: true, others: false },
-  { feature: "Session Streak Tracking 📊", LiveTalk: true, others: false },
-  { feature: "Cross-Device QR Handoff 📲", LiveTalk: true, others: false },
-  { feature: "Video Calls 📹", LiveTalk: true, others: true },
-  { feature: "Voice Calls 📞", LiveTalk: true, others: true },
-  { feature: "Text Formatting ✍️", LiveTalk: true, others: false },
-  { feature: "Message Reactions ❤️", LiveTalk: true, others: false },
-  { feature: "GIF Support 🎬", LiveTalk: true, others: false },
-  { feature: "Built-in Games 🎮", LiveTalk: true, others: false },
-  { feature: "Disappearing Messages ⏳", LiveTalk: true, others: false },
-  { feature: "Interest Matching 🎯", LiveTalk: true, others: true },
-  { feature: "Private Rooms 🔒", LiveTalk: true, others: false },
-  { feature: "Chat Themes 🎨", LiveTalk: true, others: false },
-  { feature: "No Ads 🚫", LiveTalk: true, others: false },
-  { feature: "PWA & Native APK 📱", LiveTalk: true, others: false },
-  { feature: "Dark Mode 🌙", LiveTalk: true, others: false },
-  { feature: "AES-256 Encrypted File Sharing 🔐", LiveTalk: true, others: false },
-  { feature: "1-Click ZIP Bundle Download 📦", LiveTalk: true, others: false },
-  { feature: "Burn After Reading Shares 🔥", LiveTalk: true, others: false },
-  { feature: "Client-Side File Encryption 🛡️", LiveTalk: true, others: false },
-  { feature: "In-Browser File Previewer 👁️", LiveTalk: true, others: false },
-  { feature: "Custom Folders & Tagging 🏷️", LiveTalk: true, others: false },
-  { feature: "Storage Dashboard & Cleaner 🧹", LiveTalk: true, others: false },
-  { feature: "Offline Network Detection 📡", LiveTalk: true, others: false },
+  { feature: "Anonymous Chat 💬", IncogTalk: true, others: true },
+  { feature: "No Registration 🔓", IncogTalk: true, others: false },
+  { feature: "Live Video Subtitles 🌐", IncogTalk: true, others: false },
+  { feature: "Voice Memo Messages 🎤", IncogTalk: true, others: false },
+  { feature: "Telugu to English Translation 🇮🇳", IncogTalk: true, others: false },
+  { feature: "Live WebRTC Diagnostic Stats 📊", IncogTalk: true, others: false },
+  { feature: "AI Chat Companion 🤖", IncogTalk: true, others: false },
+  { feature: "Free Local LLM & Sarvam AI ⚡", IncogTalk: true, others: false },
+  { feature: "Real-Time Message Translation 🌍", IncogTalk: true, others: false },
+  { feature: "Instant AI Icebreakers 🧊", IncogTalk: true, others: false },
+  { feature: "WebRTC Auto-Reconnect 🔄", IncogTalk: true, others: false },
+  { feature: "Screen Capture Protection 🛡️", IncogTalk: true, others: false },
+  { feature: "Session Streak Tracking 📊", IncogTalk: true, others: false },
+  { feature: "Cross-Device QR Handoff 📲", IncogTalk: true, others: false },
+  { feature: "Video Calls 📹", IncogTalk: true, others: true },
+  { feature: "Voice Calls 📞", IncogTalk: true, others: true },
+  { feature: "Text Formatting ✍️", IncogTalk: true, others: false },
+  { feature: "Message Reactions ❤️", IncogTalk: true, others: false },
+  { feature: "GIF Support 🎬", IncogTalk: true, others: false },
+  { feature: "Built-in Games 🎮", IncogTalk: true, others: false },
+  { feature: "Disappearing Messages ⏳", IncogTalk: true, others: false },
+  { feature: "Interest Matching 🎯", IncogTalk: true, others: true },
+  { feature: "Private Rooms 🔒", IncogTalk: true, others: false },
+  { feature: "Chat Themes 🎨", IncogTalk: true, others: false },
+  { feature: "No Ads 🚫", IncogTalk: true, others: false },
+  { feature: "PWA & Native APK 📱", IncogTalk: true, others: false },
+  { feature: "Dark Mode 🌙", IncogTalk: true, others: false },
+  { feature: "AES-256 Encrypted File Sharing 🔐", IncogTalk: true, others: false },
+  { feature: "1-Click ZIP Bundle Download 📦", IncogTalk: true, others: false },
+  { feature: "Burn After Reading Shares 🔥", IncogTalk: true, others: false },
+  { feature: "Client-Side File Encryption 🛡️", IncogTalk: true, others: false },
+  { feature: "In-Browser File Previewer 👁️", IncogTalk: true, others: false },
+  { feature: "Custom Folders & Tagging 🏷️", IncogTalk: true, others: false },
+  { feature: "Storage Dashboard & Cleaner 🧹", IncogTalk: true, others: false },
+  { feature: "Offline Network Detection 📡", IncogTalk: true, others: false },
 ];
 
 const RELEASES = [
@@ -543,35 +543,34 @@ const InfoPage = () => {
   const onlineCount = useOnlineCount();
   
   useSEO({ 
-    title: "About LiveTalk – Built by Likhith Kami (Likki) | Features, Encrypted File Sharing & FAQ", 
-    description: "Learn about LiveTalk — the free anonymous chat app built by Likhith Kami (Likki / Kami Likhith). Explore 40+ features including AES-256 encrypted file sharing, burn-after-reading, 1-click ZIP downloads, AI chat companions, HD video calls, and more.",
-    keywords: "likhith kami, kami likhith, likki developer, likhith kami portfolio, likhith kami website, likhith kami project, likhith livetalk, likki livetalk, LiveTalk FAQ, LiveTalk features, anonymous chat tech stack, who made livetalk, livetalk developer, encrypted file sharing, AES-256 encryption, burn after reading, zip download, client-side encryption"
+    title: "About IncogTalk – Built by Likhith Kami (Likki) | Features, Encrypted File Sharing & FAQ", 
+    description: "Learn about IncogTalk — the free anonymous chat app built by Likhith Kami (Likki / Kami Likhith). Explore 40+ features including AES-256 encrypted file sharing, burn-after-reading, 1-click ZIP downloads, AI chat companions, HD video calls, and more.",
+    keywords: "likhith kami, kami likhith, likki developer, likhith kami portfolio, likhith kami website, likhith kami project, incogtalk, incogtalkk, incog talk, incog talkk, IncogTalk FAQ, IncogTalk features, anonymous chat tech stack, who made incogtalk, incogtalk developer, encrypted file sharing, AES-256 encryption, burn after reading, zip download, client-side encryption",
+    breadcrumbTitle: "About & Tech Specs",
+    schema: {
+      "@type": "AboutPage",
+      "name": "About IncogTalk & Tech Architecture",
+      "url": "https://incogtalkk.netlify.app/info",
+      "description": "The mission, architecture, and technology behind IncogTalk by Likhith Kami.",
+      "mainEntity": {
+        "@type": "Person",
+        "name": "Likhith Kami",
+        "alternateName": "Likki",
+        "jobTitle": "Full Stack Developer & Founder",
+        "url": "https://devlikhith.vercel.app/",
+        "sameAs": [
+          "https://github.com/likhith3035",
+          "https://www.linkedin.com/in/likhith-kami",
+          "https://devlikhith.vercel.app/"
+        ]
+      }
+    }
   });
-
 
   const categories = [...new Set(FEATURES_DETAILED.map((f) => f.category))];
 
   return (
     <div className="flex min-h-screen flex-col bg-background relative overflow-x-hidden">
-      {/* Structured Data for AI/Search Engines */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "AboutPage",
-            "name": "About LiveTalk",
-            "description": "The story, technology, and mission behind LiveTalk by Likhith Kami.",
-            "mainEntity": {
-              "@type": "Person",
-              "name": "Likhith Kami",
-              "url": "https://livetalkbylikki.netlify.app/",
-              "jobTitle": "Full Stack Developer",
-              "description": "The creator and lead developer of LiveTalk."
-            }
-          })
-        }}
-      />
       {/* Background Orbs — hidden on mobile to avoid GPU overload */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block" aria-hidden="true">
         <div className="absolute top-[5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-primary/8 blur-[120px]" style={{ willChange: "auto" }} />
@@ -599,14 +598,14 @@ const InfoPage = () => {
         <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="space-y-6">
           <h1 className="text-4xl sm:text-7xl font-bold font-display text-foreground leading-[1.1]">
             Everything about <br />
-            <span className="text-gradient">LiveTalk</span>
+            <span className="text-gradient">IncogTalk</span>
           </h1>
           <p className="text-muted-foreground text-lg sm:text-xl font-medium max-w-xl">
             The complete guide to every feature, how it works, and the technology behind it 🔧
           </p>
           <div className="p-6 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50">
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium">
-              LiveTalk by Likki is a modern, feature-rich anonymous chat platform built for genuine human connections.
+              IncogTalk by Likki is a modern, feature-rich anonymous chat platform built for genuine human connections.
               Whether you want quick text chats, video calls, or fun games with strangers — this guide covers everything you need to know.
             </p>
           </div>
@@ -626,10 +625,10 @@ const InfoPage = () => {
             {[
               { id: "updates", label: "🚀 Release & Deploy History" },
               { id: "advanced", label: "🤖 AI Games & Cross-device" },
-              { id: "what", label: "What is LiveTalk?" },
+              { id: "what", label: "What is IncogTalk?" },
               { id: "howto", label: "How to use it" },
               { id: "features", label: "All features (detailed)" },
-              { id: "comparison", label: "LiveTalk vs Others" },
+              { id: "comparison", label: "IncogTalk vs Others" },
               { id: "apk-vs-web", label: "📲 Website vs Mobile APK" },
               { id: "tech", label: "Technology stack" },
               { id: "settings", label: "Settings & preferences" },
@@ -707,15 +706,15 @@ const InfoPage = () => {
           </div>
         </motion.section>
 
-        {/* ─── Section: What is LiveTalk ─── */}
+        {/* ─── Section: What is IncogTalk ─── */}
         <motion.section id="what" {...fadeUp} transition={{ delay: 0.1 }} className="space-y-8 scroll-mt-24">
           <div className="space-y-4">
             <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <HelpCircle className="h-8 w-8 text-primary" />
-              What is LiveTalk?
+              What is IncogTalk?
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed font-medium">
-              LiveTalk is a free, open website where you can chat with random strangers from all over the world.
+              IncogTalk is a free, open website where you can chat with random strangers from all over the world.
               No sign up, no account, no download — just open the page, tap a button, and you're instantly connected
               with a real person.
             </p>
@@ -741,7 +740,7 @@ const InfoPage = () => {
         {/* ─── Section: How to use ─── */}
         <motion.section id="howto" {...fadeUp} transition={{ delay: 0.15 }} className="space-y-8 scroll-mt-24">
           <div className="space-y-4">
-            <h2 className="text-3xl font-bold text-foreground">📱 How to use LiveTalk</h2>
+            <h2 className="text-3xl font-bold text-foreground">📱 How to use IncogTalk</h2>
             <p className="text-base text-muted-foreground leading-relaxed font-medium">
               Follow these simple steps. It takes less than 10 seconds to start chatting!
             </p>
@@ -769,7 +768,7 @@ const InfoPage = () => {
           <div className="space-y-4">
             <h2 className="text-3xl font-bold text-foreground">✨ All features explained</h2>
             <p className="text-base text-muted-foreground leading-relaxed font-medium">
-              Every feature in LiveTalk explained in detail — how it works for you and the technology powering it.
+              Every feature in IncogTalk explained in detail — how it works for you and the technology powering it.
             </p>
           </div>
 
@@ -813,10 +812,10 @@ const InfoPage = () => {
           <div className="space-y-4">
             <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <Star className="h-8 w-8 text-primary" />
-              LiveTalk vs Others
+              IncogTalk vs Others
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed font-medium">
-              See how LiveTalk compares to other platforms. We built every feature you wished Omegle had.
+              See how IncogTalk compares to other platforms. We built every feature you wished Omegle had.
             </p>
           </div>
           <div className="pb-4 sm:-mx-2 px-0 sm:px-2">
@@ -824,7 +823,7 @@ const InfoPage = () => {
             {/* Header */}
             <div className="grid grid-cols-[1.5fr_1fr_1fr] gap-0 text-center border-b border-border/30 bg-primary/5 px-4 sm:px-6 py-3 sm:py-4">
               <span className="text-[10px] sm:text-sm font-bold text-foreground text-left uppercase tracking-widest self-center">Feature</span>
-              <span className="text-[10px] sm:text-sm font-bold text-primary uppercase tracking-widest self-center">LiveTalk</span>
+              <span className="text-[10px] sm:text-sm font-bold text-primary uppercase tracking-widest self-center">IncogTalk</span>
               <span className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-widest self-center">Others</span>
             </div>
             {/* Rows */}
@@ -837,7 +836,7 @@ const InfoPage = () => {
                   {row.feature}
                 </span>
                 <span className="flex justify-center items-center">
-                  {row.LiveTalk ? (
+                  {row.IncogTalk ? (
                     <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
                       <Check className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                     </div>
@@ -877,7 +876,7 @@ const InfoPage = () => {
             Website vs Mobile APK Differences
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed font-medium">
-            LiveTalk is available as an instant web application and a full-featured native Android APK app. Here is a detailed side-by-side comparison of features between both versions.
+            IncogTalk is available as an instant web application and a full-featured native Android APK app. Here is a detailed side-by-side comparison of features between both versions.
           </p>
         </div>
 
@@ -890,7 +889,7 @@ const InfoPage = () => {
                   <th className="py-4 px-5 font-semibold text-foreground min-w-[200px]">
                     <div className="flex items-center gap-2">
                       <Globe className="h-4 w-4 text-blue-400" />
-                      <span>LiveTalk Web</span>
+                      <span>IncogTalk Web</span>
                     </div>
                   </th>
                   <th className="py-4 px-5 font-semibold text-primary min-w-[240px]">
@@ -945,7 +944,7 @@ const InfoPage = () => {
           <div className="p-6 border-t border-border/40 bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center sm:text-left">
               <p className="text-sm font-semibold text-foreground">Ready for the ultimate Android calling experience?</p>
-              <p className="text-xs text-muted-foreground">Download the official LiveTalk Android APK directly from GitHub.</p>
+              <p className="text-xs text-muted-foreground">Download the official IncogTalk Android APK directly from GitHub.</p>
             </div>
             <div className="shrink-0 w-full sm:w-auto">
               <ApkDownloadButton variant="compact" />
@@ -962,7 +961,7 @@ const InfoPage = () => {
               Technology Stack
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed font-medium">
-              The cutting-edge technologies used to build LiveTalk. Everything runs in your browser.
+              The cutting-edge technologies used to build IncogTalk. Everything runs in your browser.
             </p>
           </div>
           <div className="grid gap-4">
@@ -1065,7 +1064,7 @@ const InfoPage = () => {
                 { n: "2", t: "Look for the QR panel (desktop)", d: "On desktop/laptop, a compact panel appears in the top-right corner showing a QR code and a handoff code like 'ABCD1234'." },
                 { n: "3", t: "On mobile — private room waiting screen", d: "When waiting in a private room, the handoff panel is visible inside the waiting screen. It shows both a QR and the code." },
                 { n: "4", t: "Scan the QR on your other device", d: "Open your phone camera (or a QR scanner app) and scan the code. It opens a link like /handoff?room=...&token=..." },
-                { n: "5", t: "Or type the code manually", d: "On your second device, open LiveTalk and go to the /handoff page. Enter the 8-character code. Tap 'Copy' on the first device to copy it." },
+                { n: "5", t: "Or type the code manually", d: "On your second device, open IncogTalk and go to the /handoff page. Enter the 8-character code. Tap 'Copy' on the first device to copy it." },
                 { n: "6", t: "The handoff completes automatically", d: "The second device claims the session token, registers as a participant, and navigates you straight back into the same chat room." },
                 { n: "7", t: "Codes expire in 15 minutes", d: "The progress bar under the code shows time remaining. Tap 'New handoff code' to refresh it if it expires before you can use it." },
               ].map((s) => (
@@ -1200,7 +1199,7 @@ const InfoPage = () => {
             </div>
 
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium relative z-10 text-pretty">
-              LiveTalk was built by me, <strong>Likhith Kami</strong>, because I wanted to fix what was broken about chatting online. I saw too many sites asking for logins and tracking their users. You can explore my other projects and official websites at <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Kami Likhith Portfolio</a>.
+              IncogTalk was built by me, <strong>Likhith Kami</strong>, because I wanted to fix what was broken about chatting online. I saw too many sites asking for logins and tracking their users. You can explore my other projects and official websites at <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Kami Likhith Portfolio</a>.
             </p>
 
             <div className="flex flex-wrap gap-4 pt-4 relative z-10">
@@ -1221,14 +1220,14 @@ const InfoPage = () => {
         <motion.section id="story" {...fadeUp} transition={{ delay: 0.52 }} className="space-y-8 scroll-mt-24">
           <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <Heart className="h-8 w-8 text-primary" />
-            The Story Behind LiveTalk
+            The Story Behind IncogTalk
           </h2>
           <div className="rounded-[2.5rem] bg-secondary/30 backdrop-blur-sm border border-border/50 p-8 sm:p-10 space-y-6">
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium text-pretty">
-              I first got the idea for LiveTalk while using sites like Omegle. I just wanted to meet new people and have a chat, but I was annoyed by all the login popups and worried about my privacy. It felt like those sites cared more about collecting my data than helping me talk to people.
+              I first got the idea for IncogTalk while using sites like Omegle. I just wanted to meet new people and have a chat, but I was annoyed by all the login popups and worried about my privacy. It felt like those sites cared more about collecting my data than helping me talk to people.
             </p>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium text-pretty">
-              So, I decided to build my own version. I wanted a site that was easy to use, had way more cool features, and most importantly, kept you 100% private. No tracking, no logins, and no data saved. LiveTalk is my way of making the internet a bit more fun and a lot more secure for everyone. You can learn more about my coding philosophy and other websites at my portfolio: <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">devlikhith.vercel.app</a>.
+              So, I decided to build my own version. I wanted a site that was easy to use, had way more cool features, and most importantly, kept you 100% private. No tracking, no logins, and no data saved. IncogTalk is my way of making the internet a bit more fun and a lot more secure for everyone. You can learn more about my coding philosophy and other websites at my portfolio: <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">devlikhith.vercel.app</a>.
             </p>
           </div>
         </motion.section>
@@ -1275,7 +1274,7 @@ const InfoPage = () => {
             Optimized for Privacy
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed font-medium">
-            LiveTalk is specifically engineered to work flawlessly on privacy-focused environments like <strong>Brave Browser</strong>, Firefox with strict protection, and Tor.
+            IncogTalk is specifically engineered to work flawlessly on privacy-focused environments like <strong>Brave Browser</strong>, Firefox with strict protection, and Tor.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-8 rounded-[2rem] bg-card/30 backdrop-blur-sm border border-border/50 text-center space-y-4 hover:border-primary/30 transition-colors group">
@@ -1347,7 +1346,7 @@ const InfoPage = () => {
             <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors text-primary/70" title="Kami Likhith Portfolio & Websites">Developer Portfolio</a>
           </div>
           <p className="text-xs text-muted-foreground/60 font-medium mt-4">
-            Developed by <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-foreground font-bold hover:text-primary transition-colors">Likhith Kami (Likki)</a> · © 2026 LiveTalk by Likki
+            Developed by <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-foreground font-bold hover:text-primary transition-colors">Likhith Kami (Likki)</a> · © 2026 IncogTalk by Likki
           </p>
         </div>
       </main>

@@ -10,9 +10,16 @@ const PrivacyPage = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
   useSEO({ 
-    title: "Privacy Policy", 
-    description: "Learn how LiveTalk by Likki protects your privacy. We store zero data, use no tracking, and ensure 100% anonymous conversations.",
-    keywords: "privacy policy, data privacy, anonymous chat privacy, zero data collection, encrypted chat policy"
+    title: "Privacy Policy – IncogTalk", 
+    description: "Learn how IncogTalk by Likhith Kami (Likki) protects your privacy. Speak freely. Stay incognito. We store zero logs, require no registration, and ensure 100% ephemeral conversations.",
+    keywords: "privacy policy, incogtalk privacy, incogtalkk privacy, data privacy, anonymous chat privacy, zero data collection, encrypted chat policy, incogtalk",
+    breadcrumbTitle: "Privacy Policy",
+    schema: {
+      "@type": "WebPage",
+      "name": "IncogTalk Privacy Policy",
+      "url": "https://incogtalkk.netlify.app/privacy",
+      "description": "Privacy policy outlining zero data retention, client-side encryption, and ephemeral communication architecture."
+    }
   });
 
   const fadeUp = {
@@ -51,7 +58,7 @@ const PrivacyPage = () => {
             Privacy <span className="text-gradient">Policy</span>
           </h1>
           <p className="text-muted-foreground text-lg sm:text-xl leading-relaxed max-w-2xl font-medium">
-            At LiveTalk by Likki, privacy isn't just a feature—it's our entire foundation. Here is how we protect your digital footprint.
+            At IncogTalk by Likki, privacy isn't just a feature—it's our entire foundation. Speak freely. Stay incognito. Here is how we protect your digital footprint.
           </p>
         </motion.section>
 
@@ -89,7 +96,7 @@ const PrivacyPage = () => {
           className="text-center pt-16 border-t border-border/50"
         >
           <p className="text-xs font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">
-            Last updated: March 14, 2026 · LiveTalk by Likki
+            Last updated: September 2026 · IncogTalk by Likki
           </p>
           <div className="flex justify-center gap-6 mt-4 text-xs font-bold text-muted-foreground/40 tracking-widest uppercase">
             <a href="/info" className="hover:text-primary transition-colors">About</a>

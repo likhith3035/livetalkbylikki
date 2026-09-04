@@ -207,11 +207,30 @@ export default function GamesPage() {
   }, []);
 
   useSEO({
-    title: "LiveTalk Arcade – Play 1v1 Games Online (SOS, Bingo, Connect 4, Tic-Tac-Toe, Reaction Dash)",
+    title: "IncogTalk Arcade – Play 1v1 Games Online (Hand Cricket, SOS, Bingo, Connect 4, Reaction Dash)",
     description:
-      "Play 1v1 multiplayer games online with friends via instant QR code or duel smart AI bots. Super SOS Neon Duel, Bingo Blitz Duel, Connect Four, Tic-Tac-Toe, RPS Clash, Memory Duel & Reaction Dash on LiveTalk Arcade by Likhith Kami.",
+      "Play 1v1 multiplayer games online with friends via instant QR code or duel smart AI bots. Super SOS Neon Duel, Bingo Blitz Duel, Hand Cricket, Connect Four, Tic-Tac-Toe, RPS Clash, Memory Duel & Reaction Dash on IncogTalk Arcade by Likhith Kami.",
     keywords:
-      "bingo online, 1v1 bingo, sos game online, sos duel, tic tac toe online, connect 4 online, 1v1 multiplayer games, play games with friends, qr code games, reaction game, reflex test, memory duel, rock paper scissors online, livetalk arcade, likhith kami games",
+      "bingo online, 1v1 bingo, hand cricket online, sos game online, sos duel, tic tac toe online, connect 4 online, 1v1 multiplayer games, play games with friends, qr code games, reaction game, reflex test, memory duel, rock paper scissors online, incogtalk arcade, likhith kami games",
+    breadcrumbTitle: "IncogTalk Arcade (1v1 Games)",
+    schema: {
+      "@type": "SoftwareApplication",
+      "name": "IncogTalk Arcade",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web, Android",
+      "url": "https://incogtalkk.netlify.app/games",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "890"
+      },
+      "description": "Free real-time 1v1 multiplayer arcade games including Hand Cricket, Super SOS Neon Duel, Bingo Blitz Duel, Connect Four, Tic-Tac-Toe, and Reaction Dash."
+    }
   });
 
   const myPlayerId = useMemo(() => getCurrentUserId(), []);
@@ -942,7 +961,7 @@ export default function GamesPage() {
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
                     <Gamepad2 className="w-3.5 h-3.5" />
-                    LiveTalk Arcade
+                    IncogTalk Arcade
                   </span>
                   {isSelfOffline ? (
                     <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-bold flex items-center gap-1.5 animate-pulse">

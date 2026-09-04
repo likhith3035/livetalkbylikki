@@ -22,11 +22,38 @@ import {
 import { getSavedFiles, purgeExpiredShares } from "../services/fileSharingService";
 import { toast } from "sonner";
 import { useOnlineCount } from "@/hooks/use-online-count";
+import { useSEO } from "@/hooks/use-seo";
 
 export const FileSharingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
+
+  useSEO({
+    title: "Encrypted File Sharing & 1-Click ZIP Download | IncogTalk",
+    description: "Military-grade AES-256 client-side encrypted file sharing by IncogTalk. Upload, set burn-after-reading or passcode protection, and share via 6-character code with instant 1-click ZIP downloads.",
+    keywords: "encrypted file sharing, aes-256 file drop, burn after reading file transfer, zip bundle download, secure file share, incogtalk file share",
+    breadcrumbTitle: "Encrypted File Sharing",
+    schema: {
+      "@type": "WebApplication",
+      "name": "IncogTalk Encrypted File Share",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web, Android",
+      "url": "https://incogtalkk.netlify.app/file-sharing",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Client-side AES-256 Web Crypto encryption",
+        "Burn after reading self-destruct shares",
+        "1-click ZIP bundle downloads",
+        "Passcode protected files",
+        "Share via 6-character code or QR"
+      ]
+    }
+  });
 
   const codeFromUrl = searchParams.get("code");
   const [activeTab, setActiveTab] = useState<"home" | "upload" | "share_text" | "share_password" | "enter_code" | "scan_qr" | "files" | "shares">(
@@ -45,13 +72,13 @@ export const FileSharingPage: React.FC = () => {
     if (codeFromUrl) {
       const upper = codeFromUrl.toUpperCase();
       setActiveAccessCode(upper);
-      document.title = `LiveTalk Shared Files (${upper}) – Access Code`;
+      document.title = `IncogTalk Shared Files (${upper}) – Access Code`;
       const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute("content", `Shared Files Received (Code: ${upper}) - LiveTalk File Share`);
+      if (ogTitle) ogTitle.setAttribute("content", `Shared Files Received (Code: ${upper}) - IncogTalk File Share`);
       const ogDesc = document.querySelector('meta[property="og:description"]');
-      if (ogDesc) ogDesc.setAttribute("content", `Access shared files securely on LiveTalk with code ${upper}. Encrypted, fast & 100% free.`);
+      if (ogDesc) ogDesc.setAttribute("content", `Access shared files securely on IncogTalk with code ${upper}. Speak freely. Stay incognito.`);
     } else {
-      document.title = "LiveTalk by Likhith Kami – Free Anonymous Chat, Video Calls & Encrypted File Sharing";
+      document.title = "IncogTalk – Speak Freely. Stay Incognito | Encrypted File Sharing";
     }
   }, [codeFromUrl]);
 
@@ -356,7 +383,7 @@ export const FileSharingPage: React.FC = () => {
                     <Camera className="h-5 w-5 text-primary" /> Camera QR Scanner
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Point your camera at a LiveTalk File Share QR code or upload a QR image.
+                    Point your camera at an IncogTalk File Share QR code or upload a QR image.
                   </p>
                 </div>
 

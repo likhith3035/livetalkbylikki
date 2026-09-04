@@ -159,8 +159,30 @@ function exportConversationAsMarkdown(conv: Conversation) {
 export const AIChatPage: React.FC = () => {
   const navigate = useNavigate();
   useSEO({
-    title: "AI Chat Studio - Multi-Provider Intelligent Companion",
-    description: "Chat with OpenAI, Gemini, Claude, Groq, Ollama, LM Studio with rich personalities, local privacy, and speech synthesis.",
+    title: "AI Chat Studio – Multi-Provider Private AI Companion | IncogTalk",
+    description: "Chat with OpenAI, Gemini, Claude, Groq, Ollama, and LM Studio with rich customizable personalities, local zero-knowledge privacy, voice input, and speech synthesis on IncogTalk.",
+    keywords: "incogtalk ai chat, incogtalkk ai, ai chat companion, local ollama web chat, lm studio web, anonymous ai chat, free private ai, incogtalk",
+    breadcrumbTitle: "AI Chat Studio",
+    schema: {
+      "@type": "WebApplication",
+      "name": "IncogTalk AI Chat Studio",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "All modern browsers",
+      "url": "https://incogtalkk.netlify.app/ai-chat",
+      "description": "Multi-model private AI studio supporting OpenAI, Claude, Gemini, Groq, and local Ollama models with custom personalities and zero server storage.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Multi-provider LLM support (OpenAI, Gemini, Anthropic Claude, Groq, Ollama, LM Studio)",
+        "Custom AI personalities and system prompts",
+        "Client-side zero-knowledge API key encryption",
+        "Real-time voice input and speech synthesis",
+        "Export chats to Markdown"
+      ]
+    }
   });
 
   const onlineCount = useOnlineCount();

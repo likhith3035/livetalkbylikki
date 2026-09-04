@@ -125,11 +125,11 @@ const Index = () => {
   const { toast } = useToast();
 
   useSEO({
-    title: "LiveTalk by Likhith Kami – Talk to Anyone Instantly",
+    title: "IncogTalk (IncogTalkk) – Speak Freely. Stay Incognito | Free Anonymous Video Chat & 1v1 Games",
     description:
-      "LiveTalk by Likhith Kami (Likki) — free anonymous chat with strangers. No signup, no tracking. HD WebRTC video calls, 1v1 arcade games, private QR rooms & P2P file drop. The #1 modern Omegle alternative.",
+      "IncogTalk (incogtalkk.netlify.app) by Likhith Kami (Likki) — #1 free anonymous chat with strangers. Speak freely. Stay incognito. No signup, no tracking. HD WebRTC video calls, 1v1 arcade games, private QR rooms & P2P encrypted file drop.",
     keywords:
-      "likhith livetalk, likki livetalk, livetalk by likki, omegle alternative, omegle 2, anonymous chat, chat with strangers, random chat, video chat, talk to strangers, free chat app, anonymous video chat, 1v1 games, connect 4 online, tic tac toe with friends",
+      "incogtalk, incogtalkk, incog talk, incog talkk, incogtalkk netlify, incogtalk netlify, incogchat, speak freely stay incognito, likhith kami, likki, omegle alternative, anonymous chat, chat with strangers, random chat, video chat, talk to strangers, free chat app, anonymous video chat, 1v1 games",
   });
 
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -220,7 +220,7 @@ const Index = () => {
             <span className="text-emerald-400 font-extrabold">{onlineCount.toLocaleString()} Online Now</span>
             <span className="text-muted-foreground/40">•</span>
             <span className="text-muted-foreground font-medium flex items-center gap-1">
-              <Shield className="h-3 w-3 text-primary shrink-0" /> 100% Anonymous & Free
+              <Shield className="h-3 w-3 text-primary shrink-0" /> Speak Freely. Stay Incognito
             </span>
           </motion.div>
 
@@ -231,7 +231,7 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-3xl sm:text-5xl lg:text-6xl font-black font-display leading-[1.08] tracking-tight max-w-full px-1"
           >
-            Talk to anyone, <br />
+            IncogTalk — Talk to anyone, <br />
             <span className="bg-gradient-to-r from-primary via-purple-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-[0_10px_25px_rgba(168,85,247,0.35)]">
               completely anonymously
             </span>
@@ -244,7 +244,7 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xs sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed font-medium px-2"
           >
-            Zero accounts. Zero tracking. Instant encrypted video calls, 1v1 multiplayer games, and private rooms with real people worldwide.
+            Speak freely. Stay incognito. The #1 free Omegle alternative with zero accounts, zero tracking, HD WebRTC video calls, 1v1 arcade games, and client-side encrypted file sharing.
           </motion.p>
 
           {/* Developer Credit Tag */}
@@ -502,7 +502,7 @@ const Index = () => {
               Designed for <span className="bg-gradient-to-r from-primary via-purple-400 to-indigo-400 bg-clip-text text-transparent">speed, privacy & fun</span>
             </h2>
             <p className="text-muted-foreground text-xs sm:text-sm max-w-md mx-auto">
-              Test out real LiveTalk capabilities right now before jumping into a conversation.
+              Test out real IncogTalk capabilities right now before jumping into a conversation.
             </p>
           </div>
 
@@ -760,7 +760,7 @@ const Index = () => {
           <div className="flex items-center gap-2.5">
             <BrandLogo className="h-9 w-9 drop-shadow-md" />
             <div>
-              <span className="font-display text-base font-bold text-foreground block leading-none">LiveTalk by Likki</span>
+              <span className="font-display text-base font-bold text-foreground block leading-none">IncogTalk by Likki</span>
               <span className="text-[10px] text-muted-foreground">Anonymous Text, Video & Arcade Social Platform</span>
             </div>
           </div>
@@ -803,7 +803,7 @@ const Index = () => {
 
         <div className="text-center text-xs text-muted-foreground/60 mt-8 max-w-2xl mx-auto space-y-2">
           <p>
-            © 2026 LiveTalk by Likki. Developed with 💜 by{" "}
+            © 2026 IncogTalk by Likki. Developed with 💜 by{" "}
             <a href="https://devlikhith.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:underline">
               Likhith Kami (Likki)
             </a>

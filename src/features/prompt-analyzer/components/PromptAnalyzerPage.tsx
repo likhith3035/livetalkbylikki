@@ -18,11 +18,40 @@ import { Input } from "@/components/ui/input";
 import { Wand2, History, Trash2, ArrowLeft, Sparkles, SplitSquareVertical, Search, TrendingUp, Cpu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useOnlineCount } from "@/hooks/use-online-count";
+import { useSEO } from "@/hooks/use-seo";
 import Header from "@/components/Header";
 
 export const PromptAnalyzerPage: React.FC = () => {
   const navigate = useNavigate();
   const onlineCount = useOnlineCount();
+
+  useSEO({
+    title: "AI Prompt Quality Analyzer – Score & Optimize AI Prompts | IncogTalk",
+    description: "Analyze, score, and optimize your AI prompts instantly. Get detailed clarity scores, ambiguity detection, before-after diffs, and improved prompts on IncogTalk.",
+    keywords: "incogtalk prompt analyzer, incogtalkk ai, ai prompt optimizer, prompt engineering tool, improve ai prompts, prompt quality score, incogtalk",
+    breadcrumbTitle: "AI Prompt Analyzer",
+    schema: {
+      "@type": "WebApplication",
+      "name": "IncogTalk AI Prompt Quality Analyzer",
+      "url": "https://incogtalkk.netlify.app/prompt-analyzer",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "All modern browsers",
+      "description": "Analyze, score, and optimize AI prompts with real-time feedback on clarity, ambiguity, constraint enforcement, and before-after diff previews.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Multi-dimensional prompt scoring (Clarity, Specificity, Context, Structure)",
+        "Ambiguity & redundancy detection",
+        "Automated one-click prompt enhancement",
+        "Visual side-by-side diff comparison",
+        "Local history storage with zero cloud telemetry"
+      ]
+    }
+  });
+
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [historySearch, setHistorySearch] = useState("");
 
@@ -75,7 +104,7 @@ export const PromptAnalyzerPage: React.FC = () => {
         <div className="bg-gradient-to-r from-primary/10 via-purple-500/5 to-card border border-primary/20 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/15 text-primary text-xs font-semibold mb-1">
-              <Wand2 className="h-3.5 w-3.5" /> LiveTalk Add-on Feature
+              <Wand2 className="h-3.5 w-3.5" /> IncogTalk Add-on Feature
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold text-foreground tracking-tight">
               AI Prompt Quality Analyzer

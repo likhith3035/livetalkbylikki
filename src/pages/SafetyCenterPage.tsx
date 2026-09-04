@@ -15,8 +15,22 @@ const SafetyCenterPage = () => {
     const onlineCount = useOnlineCount();
 
     useSEO({
-        title: "Safety Center & Privacy Guide",
-        description: "Your comprehensive guide to staying safe on LiveTalk by Likki. Learn about anonymous chat safety, data privacy, and community protection."
+        title: "Safety Center & Privacy Guide – IncogTalk",
+        description: "Your comprehensive guide to staying safe on IncogTalk by Likhith Kami (Likki). Speak freely. Stay incognito. Learn about anonymous chat safety, zero logs, encrypted media, and community protection.",
+        keywords: "incogtalk safety, incogtalkk safety, anonymous chat safety, chat protection, online safety guide, zero logs privacy, incogtalk",
+        breadcrumbTitle: "Safety Center",
+        schema: {
+          "@type": "WebPage",
+          "name": "IncogTalk Safety Center & Privacy Guide",
+          "url": "https://incogtalkk.netlify.app/safety",
+          "description": "Comprehensive guide to staying safe while chatting anonymously on IncogTalk. Features privacy tips, community guidelines, and reporting standards.",
+          "inLanguage": "en-US",
+          "publisher": {
+            "@type": "Organization",
+            "name": "IncogTalk",
+            "url": "https://incogtalkk.netlify.app/"
+          }
+        }
     });
 
     const fadeUp = {
@@ -61,7 +75,7 @@ const SafetyCenterPage = () => {
             <span className="text-gradient">& Privacy Guide</span>
           </h1>
           <p className="text-muted-foreground text-lg sm:text-xl leading-relaxed max-w-2xl font-medium">
-            At LiveTalk by Likki, your security is our foundation. This center provides the tools and knowledge you need to chat anonymously while staying 100% protected.
+            At IncogTalk by Likki, your security is our foundation. Speak freely. Stay incognito. This center provides the tools and knowledge you need to chat anonymously while staying 100% protected.
           </p>
         </motion.section>
 
@@ -129,7 +143,7 @@ const SafetyCenterPage = () => {
             </div>
             <div className="space-y-6 text-base text-muted-foreground leading-relaxed relative z-10 font-medium">
               <p>
-                LiveTalk is a platform for <strong>users 18 years and older</strong>. We encourage parents to talk openly with their teenagers about online risks.
+                IncogTalk is a platform for <strong>users 18 years and older</strong>. We encourage parents to talk openly with their teenagers about online risks.
               </p>
               <div className="space-y-4">
                 <div className="flex gap-4 p-4 rounded-2xl bg-background/50 border border-border/30">
@@ -181,7 +195,7 @@ const SafetyCenterPage = () => {
           <div className="space-y-2">
             <h2 className="text-2xl font-bold">Stay Safe, Have Fun</h2>
             <p className="text-muted-foreground max-w-sm mx-auto font-medium">
-              LiveTalk is a global community. Let's keep it respectful, secure, and fun for everyone.
+              IncogTalk is a global community. Speak freely. Stay incognito. Let's keep it respectful, secure, and fun for everyone.
             </p>
           </div>
           <button

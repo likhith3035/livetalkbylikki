@@ -102,9 +102,30 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   const [connectedAt, setConnectedAt] = useState<number | null>(null);
 
   useSEO({
-    title: "Anonymous Text & Video Chat",
-    description: "Start chatting anonymously with strangers on LiveTalk by Likki. No registration, no tracking. Text, video, games and more. Connect instantly with random people for text, image, or video conversations.",
-    keywords: "random chat, video chat, chat with strangers, anonymous video chat, talk to strangers online, Omegle alternative chat, free online chat, instant chat, stranger chat, live talk, likki chat"
+    title: "Anonymous Text & WebRTC Video Chat – IncogTalk",
+    description: "Start chatting anonymously with strangers on IncogTalk by Likhith Kami (Likki). Speak freely, stay incognito. No registration, no tracking. Encrypted HD video, audio memos, instant translations, and multiplayer games.",
+    keywords: "incogtalk chat, incogtalkk chat, random chat, video chat, chat with strangers, anonymous video chat, omegle alternative, free online chat, instant chat, stranger chat, incognito chat, likki chat",
+    breadcrumbTitle: "Live Chat & Video",
+    schema: {
+      "@type": "CommunicationApplication",
+      "name": "IncogTalk Live Stranger Chat & Video",
+      "url": "https://incogtalkk.netlify.app/chat",
+      "applicationCategory": "CommunicationApplication",
+      "operatingSystem": "All modern browsers",
+      "description": "Connect instantly and anonymously with strangers worldwide via WebRTC encrypted video and real-time text chat with zero logs.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Instant WebRTC 1-on-1 Video & Audio",
+        "Real-time encrypted text messaging",
+        "Interest-based topic matching",
+        "Ephemeral media sharing",
+        "No registration or personal information required"
+      ]
+    }
   });
 
   const prevStatusRef = useRef(status);
