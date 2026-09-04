@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.livetalk.likki',
-  appName: 'LiveTalk by Likki',
+  appId: 'com.incogtalk.likki',
+  appName: 'IncogTalk',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

@@ -5,7 +5,7 @@ Instagram: https://instagram.com/likhith_kami/
 Location: Hyderabad, India
 
 /* THANKS */
-Users: For making LiveTalk a better place for connection.
+Users: For making IncogTalk a better place for connection.
 Open Source: For providing the tools to build privacy-first apps.
 
 /* SITE */

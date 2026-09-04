@@ -1,7 +1,7 @@
 {
-  "name": "LiveTalk – The Premium Anonymous Chat",
-  "short_name": "LiveTalk",
-  "description": "Experience pure privacy and instant human connection. LiveTalk by Likki is the world's most premium anonymous chat platform — no signups, no tracking, just genuine conversations.",
+  "name": "IncogTalk – Speak Freely. Stay Incognito",
+  "short_name": "IncogTalk",
+  "description": "Experience pure privacy and instant human connection. IncogTalk by Likki is the private anonymous chat, 1v1 multiplayer games arcade, and encrypted file sharing platform. Speak freely. Stay incognito.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
@@ -31,14 +31,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "LiveTalk Desktop Interface"
+      "label": "IncogTalk Desktop Interface"
     },
     {
       "src": "/screenshot-mobile.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "LiveTalk Mobile Interface"
+      "label": "IncogTalk Mobile Interface"
     }
   ],
   "shortcuts": [

@@ -37,13 +37,13 @@ for folder, size in sizes.items():
 
     # Resize for ic_launcher.png
     resized = img.resize((size, size), Image.LANCZOS)
-    # Convert to RGB with white background for non-round
-    bg = Image.new("RGB", (size, size), (255, 255, 255))
+    # Convert to RGB with sleek dark background (#0a0a0f) for legacy launcher
+    bg = Image.new("RGB", (size, size), (10, 10, 15))
     bg.paste(resized, mask=resized.split()[3] if resized.mode == 'RGBA' else None)
     bg.save(os.path.join(folder_path, "ic_launcher.png"), "PNG")
     
-    # Round version (same image, Android handles the mask)
-    bg_round = Image.new("RGB", (size, size), (255, 255, 255))
+    # Round version
+    bg_round = Image.new("RGB", (size, size), (10, 10, 15))
     bg_round.paste(resized, mask=resized.split()[3] if resized.mode == 'RGBA' else None)
     bg_round.save(os.path.join(folder_path, "ic_launcher_round.png"), "PNG")
     

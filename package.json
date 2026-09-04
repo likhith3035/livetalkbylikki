@@ -1,5 +1,6 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "incogtalk",
+  "description": "IncogTalk – Speak Freely. Stay Incognito. Free anonymous chat, video calls, games & encrypted file sharing",
   "private": true,
   "version": "0.0.0",
   "type": "module",
