@@ -68,7 +68,7 @@ export function usePushNotifications() {
   const sendStreakReminderNotification = useCallback((streakDays: number) => {
     sendLocalNotification(
       "🔥 Keep Your Chat Streak Alive!",
-      `You're on a ${streakDays}-day streak on LiveTalk! Log in now to chat and save your progress.`
+      `You're on a ${streakDays}-day streak on IncogTalk! Log in now to chat and save your progress.`
     );
   }, [sendLocalNotification]);
 

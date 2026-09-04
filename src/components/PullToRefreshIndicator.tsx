@@ -46,7 +46,7 @@ export const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = ({ 
 
           <span className="text-xs font-black tracking-wide">
             {isRefreshing
-              ? "Syncing LiveTalk..."
+              ? "Syncing IncogTalk..."
               : isReady
               ? "Release to Sync"
               : "Pull down to sync"}

@@ -90,8 +90,8 @@ export const ShareCodeModal: React.FC<ShareCodeModalProps> = ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `LiveTalk File Share - Code ${createdShare.code}`,
-          text: `Access ${selectedFiles.length} shared file(s) via LiveTalk with code: ${createdShare.code}`,
+          title: `IncogTalk File Share - Code ${createdShare.code}`,
+          text: `Access ${selectedFiles.length} shared file(s) via IncogTalk with code: ${createdShare.code}`,
           url: shareUrl,
         });
         toast.success("Share menu opened!");

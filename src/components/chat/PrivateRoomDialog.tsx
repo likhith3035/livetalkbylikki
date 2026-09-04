@@ -46,7 +46,7 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
     // Extract room code from URL or use raw text
     let code = decodedText.trim().toUpperCase();
 
-    // If it's a URL like https://livetalkbylikki.netlify.app/room/ABCDEF
+    // If it's a URL like https://incogtalkk.netlify.app/room/ABCDEF
     const urlMatch = decodedText.match(/\/room\/([A-Za-z0-9]+)/i);
     if (urlMatch) {
       code = urlMatch[1].toUpperCase();

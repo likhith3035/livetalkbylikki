@@ -62,7 +62,7 @@ export const MockChatSimulator = () => {
       // You reply
       setMessages(prev => [
         ...prev,
-        { id: "msg-2", sender: "you", text: "Just exploring this new LiveTalk website. It looks amazing! 🔥" }
+        { id: "msg-2", sender: "you", text: "Just exploring this new IncogTalk website. It looks amazing! 🔥" }
       ]);
       await new Promise(r => { if (active) timer = setTimeout(r, 2000); });
       if (!active) return;

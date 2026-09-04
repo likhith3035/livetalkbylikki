@@ -47,11 +47,11 @@ export default function ApkDownloadButton({ variant = "compact", className }: Ap
             {/* App info row */}
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-background border border-border/50 flex items-center justify-center overflow-hidden shadow-sm">
-                <img src="/logo.png" alt="LiveTalk" className="h-9 w-9 object-contain" />
+                <img src="/logo.png" alt="IncogTalk" className="h-9 w-9 object-contain" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-black text-foreground">LiveTalk</p>
+                  <p className="text-sm font-black text-foreground">IncogTalk</p>
                   {apkInfo.isNew && (
                     <span className="px-1.5 py-0.5 rounded-md bg-green-500/15 border border-green-500/25 text-[9px] font-black text-green-400 uppercase tracking-wider">
                       New

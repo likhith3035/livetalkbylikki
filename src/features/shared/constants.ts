@@ -4,7 +4,7 @@ export const ROOM_LOBBY_TTL_MS = 5 * 60 * 1000; // 5 minutes waiting lobby
 export const SESSION_TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes for device handoff
 export const HANDOFF_CODE_LENGTH = 8;
 export const AI_BOT_SESSION_ID = "ai-bot";
-export const AI_BOT_NAME = "LiveTalk AI";
+export const AI_BOT_NAME = "IncogTalk AI";
 
 export const generateShortCode = (length: number, alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789") => {
   let code = "";

@@ -273,7 +273,7 @@ const SettingsPage = () => {
     if (!hasUpdate) {
       toast({
         title: "✨ You're on the latest version!",
-        description: `LiveTalk v${appUpdateState.currentVersion} is up to date.`,
+        description: `IncogTalk v${appUpdateState.currentVersion} is up to date.`,
       });
     } else {
       setManualModalOpen(true);
@@ -296,9 +296,9 @@ const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState<PresetCategory>("space");
 
   useSEO({ 
-    title: "Settings – LiveTalk", 
-    description: "Customize your LiveTalk experience — themes, wallpapers, sound, notifications and more.",
-    keywords: "chat settings, dark mode chat, chat themes, message notifications, customize LiveTalk"
+    title: "Settings – IncogTalk", 
+    description: "Customize your IncogTalk experience — themes, wallpapers, sound, notifications and more. Speak freely. Stay incognito.",
+    keywords: "chat settings, dark mode chat, chat themes, message notifications, customize IncogTalk"
   });
 
   const handleToggle = async (
@@ -1011,7 +1011,7 @@ const SettingsPage = () => {
                     <Lock className="h-4 w-4 text-primary" /> Biometric Lock ({biometrics.biometricType})
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Require Fingerprint / Face ID to access LiveTalk chats & settings.
+                    Require Fingerprint / Face ID to access IncogTalk chats & settings.
                   </p>
                 </div>
                 <Switch
@@ -1112,7 +1112,7 @@ const SettingsPage = () => {
 
             <button
               type="button"
-              onClick={() => toast({ title: "LiveTalk v1.0.0", description: "The #1 premium anonymous chat experience by Likhith Kami (Likki)." })}
+              onClick={() => toast({ title: "IncogTalk v1.0.0", description: "The #1 premium anonymous chat experience by Likhith Kami (Likki). Speak freely. Stay incognito." })}
               className="flex w-full items-center justify-between rounded-3xl border border-border/40 bg-secondary/20 hover:bg-secondary/40 px-5 py-5 text-left transition-all group"
             >
               <div className="flex items-center gap-4">

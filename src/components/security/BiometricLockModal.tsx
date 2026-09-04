@@ -45,7 +45,7 @@ export const BiometricLockModal: React.FC<BiometricLockModalProps> = ({
             <Lock className="h-5 w-5 text-primary" /> App Locked
           </h2>
           <p className="text-sm text-muted-foreground">
-            Unlock LiveTalk using {biometricType} to access your chats and room.
+            Unlock IncogTalk using {biometricType} to access your chats and room.
           </p>
         </div>
 

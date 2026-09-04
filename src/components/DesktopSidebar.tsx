@@ -81,7 +81,7 @@ const DesktopSidebar = () => {
             <Link to="/" className="flex items-center gap-3 group min-w-0">
               <BrandLogo className="h-9 w-9 drop-shadow-md group-hover:scale-105 transition-transform shrink-0" />
               <span className="font-display text-base font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                LiveTalk
+                IncogTalk
               </span>
             </Link>
 
@@ -95,7 +95,7 @@ const DesktopSidebar = () => {
           </>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <Link to="/" title="LiveTalk Home">
+            <Link to="/" title="IncogTalk Home">
               <BrandLogo className="h-8 w-8 drop-shadow-md hover:scale-105 transition-transform" />
             </Link>
             <button
@@ -192,7 +192,7 @@ const DesktopSidebar = () => {
             >
               Kami Likhith Portfolio
             </a>
-            <p className="text-muted-foreground/40">© 2026 LiveTalk</p>
+            <p className="text-muted-foreground/40">© 2026 IncogTalk</p>
           </div>
         )}
       </div>

@@ -234,12 +234,12 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
             <div className="flex flex-col flex-1 min-h-0 space-y-4">
               <SheetHeader className="text-left pb-3 border-b border-border/40 shrink-0">
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setDrawerOpen(false); navigate("/"); }}>
-                  <BrandLogo className="h-8 w-8 drop-shadow-md" aria-label="LiveTalk" />
+                  <BrandLogo className="h-8 w-8 drop-shadow-md" aria-label="IncogTalk" />
                   <div>
                     <SheetTitle className="text-base font-display font-bold text-foreground">
-                      LiveTalk
+                      IncogTalk
                     </SheetTitle>
-                    <p className="text-[10px] text-muted-foreground font-mono">By Likhith Kami (Likki)</p>
+                    <p className="text-[10px] text-muted-foreground font-mono">Speak Freely. Stay Incognito.</p>
                   </div>
                 </div>
               </SheetHeader>
@@ -299,7 +299,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
             {/* Bottom Footer inside Drawer */}
             <div className="pt-4 border-t border-border/40 text-center space-y-2">
               <ApkDownloadButton className="w-full h-9 text-xs" />
-              <p className="text-[10px] text-muted-foreground">100% Free & Anonymous</p>
+              <p className="text-[10px] text-muted-foreground">Speak Freely. Stay Incognito.</p>
             </div>
           </SheetContent>
         </Sheet>
@@ -307,10 +307,10 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate("/")}>
           <BrandLogo
             className="h-8 w-8 sm:h-9 sm:w-9 drop-shadow-md hover:scale-105 transition-transform"
-            aria-label="LiveTalk Home"
+            aria-label="IncogTalk Home"
           />
           <span className="font-display text-sm sm:text-base font-bold text-foreground hover:text-primary transition-colors select-none">
-            LiveTalk
+            IncogTalk
           </span>
         </div>
       </div>

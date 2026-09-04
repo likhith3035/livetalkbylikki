@@ -56,7 +56,7 @@ export function useAppUpdate() {
 
       // Fetch remote version payload directly from GitHub raw (with Netlify fallback)
       const primaryUrl = "https://raw.githubusercontent.com/likhith3035/livetalkbylikki/main/public/version.json";
-      const fallbackUrl = "https://livetalkbylikki.netlify.app/version.json";
+      const fallbackUrl = "https://incogtalkk.netlify.app/version.json";
       
       let response: Response;
       try {

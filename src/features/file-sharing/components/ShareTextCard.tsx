@@ -89,8 +89,8 @@ export const ShareTextCard: React.FC<ShareTextCardProps> = ({ onShareCreated }) 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `LiveTalk Text Share - Code ${createdShare.code}`,
-          text: `Access shared text note via LiveTalk with code: ${createdShare.code}`,
+          title: `IncogTalk Text Share - Code ${createdShare.code}`,
+          text: `Access shared text note via IncogTalk with code: ${createdShare.code}`,
           url: shareUrl,
         });
         toast.success("Share menu opened!");

@@ -11,7 +11,7 @@ export const GamificationWidget: React.FC = () => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = typeof window !== "undefined" ? window.location.origin : "https://livetalkbylikki.netlify.app";
+  const shareUrl = typeof window !== "undefined" ? window.location.origin : "https://incogtalkk.netlify.app";
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -97,10 +97,10 @@ export const GamificationWidget: React.FC = () => {
         <DialogContent className="max-w-sm rounded-3xl p-6 text-center space-y-4">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center justify-center gap-2">
-              <QrCode className="h-5 w-5 text-primary" /> Share LiveTalk
+              <QrCode className="h-5 w-5 text-primary" /> Share IncogTalk
             </DialogTitle>
             <DialogDescription>
-              Scan with any phone camera to launch LiveTalk instantly!
+              Scan with any phone camera to launch IncogTalk instantly! Speak freely. Stay incognito.
             </DialogDescription>
           </DialogHeader>
 

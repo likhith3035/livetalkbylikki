@@ -13,7 +13,7 @@ import {
 } from "@/features/games/services/gameProgressionService";
 import { gameAudio } from "@/features/games/services/gameSoundService";
 
-describe("LiveTalk Arcade Games Suite", () => {
+describe("IncogTalk Arcade Games Suite", () => {
   beforeEach(() => {
     localStorage.clear();
   });

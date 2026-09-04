@@ -35,7 +35,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
     if (updateInfo?.downloadUrl) {
       const link = document.createElement("a");
       link.href = updateInfo.downloadUrl;
-      link.download = `LiveTalk-v${updateInfo.latestVersion}.apk`;
+      link.download = `IncogTalk-v${updateInfo.latestVersion}.apk`;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       document.body.appendChild(link);
@@ -129,7 +129,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                A new version of LiveTalk is ready to install!
+                A new version of IncogTalk is ready to install!
               </p>
             </div>
           </div>

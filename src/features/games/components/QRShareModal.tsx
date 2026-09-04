@@ -54,8 +54,8 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: tab === "play" ? `Duel me in ${gameTitle} on LiveTalk!` : `Watch live ${gameTitle} match on LiveTalk!`,
-          text: tab === "play" ? `Join my game room on LiveTalk! Room Code: ${roomCode}` : `Watch live match! Room: ${roomCode}`,
+          title: tab === "play" ? `Duel me in ${gameTitle} on IncogTalk!` : `Watch live ${gameTitle} match on IncogTalk!`,
+          text: tab === "play" ? `Join my game room on IncogTalk! Room Code: ${roomCode}` : `Watch live match! Room: ${roomCode}`,
           url: activeUrl,
         });
       } catch {}
@@ -67,15 +67,15 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
   const handleWhatsAppShare = () => {
     const text = encodeURIComponent(
       tab === "play"
-        ? `🎮 Duel me in ${gameTitle} on LiveTalk Arcade!\n\nTap to join: ${inviteUrl}\nRoom Code: ${roomCode}`
-        : `👁️ Watch our live ${gameTitle} match on LiveTalk Arcade!\n\nTap to spectate: ${spectatorUrl}`
+        ? `🎮 Duel me in ${gameTitle} on IncogTalk Arcade!\n\nTap to join: ${inviteUrl}\nRoom Code: ${roomCode}`
+        : `👁️ Watch our live ${gameTitle} match on IncogTalk Arcade!\n\nTap to spectate: ${spectatorUrl}`
     );
     window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
   };
 
   const handleTelegramShare = () => {
     const text = encodeURIComponent(
-      tab === "play" ? `🎮 Play ${gameTitle} with me on LiveTalk Arcade!` : `👁️ Watch our live ${gameTitle} match!`
+      tab === "play" ? `🎮 Play ${gameTitle} with me on IncogTalk Arcade!` : `👁️ Watch our live ${gameTitle} match!`
     );
     window.open(`https://t.me/share/url?url=${encodeURIComponent(activeUrl)}&text=${text}`, "_blank");
   };

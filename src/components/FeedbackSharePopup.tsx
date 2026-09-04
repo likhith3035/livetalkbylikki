@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-const STORAGE_KEY = "LiveTalk_popup_state";
+const STORAGE_KEY = "incogtalk_popup_state";
 
 // Show after certain intervals (in page visits)
 const SHARE_INTERVAL = 5; // every 5 visits
@@ -48,12 +48,12 @@ const FeedbackSharePopup = () => {
   };
 
   const shareApp = async () => {
-    const url = "https://LiveTalkbylikki.netlify.app";
-    const text = "Check out LiveTalk — anonymous chat with strangers! 🔥";
+    const url = "https://incogtalkk.netlify.app";
+    const text = "Check out IncogTalk — speak freely, stay incognito! 🔥";
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: "LiveTalk by Likki", text, url });
+        await navigator.share({ title: "IncogTalk by Likki", text, url });
         toast({ title: "Thanks for sharing! 🙌" });
       } catch (err) {
         // Ignore user cancel or Web Share API errors
@@ -88,7 +88,7 @@ const FeedbackSharePopup = () => {
                 <Share2 className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">Love LiveTalk?</p>
+                <p className="text-sm font-semibold text-foreground">Love IncogTalk?</p>
                 <p className="text-xs text-muted-foreground">Share it with friends!</p>
               </div>
             </div>

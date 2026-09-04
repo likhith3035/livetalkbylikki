@@ -28,11 +28,11 @@ const PwaInstallBanner = () => {
             <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-violet-500 via-primary to-blue-500" />
 
             <div className="h-10 w-10 shrink-0 rounded-xl overflow-hidden border border-border/50 bg-background flex items-center justify-center">
-              <img src="/logo.png" alt="LiveTalk" className="h-7 w-7 object-contain" />
+              <img src="/logo.png" alt="IncogTalk" className="h-7 w-7 object-contain" />
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground leading-tight">Install LiveTalk</p>
+              <p className="text-sm font-bold text-foreground leading-tight">Install IncogTalk</p>
               <p className="text-[11px] text-muted-foreground leading-snug">
                 Add to home screen for the best experience
               </p>

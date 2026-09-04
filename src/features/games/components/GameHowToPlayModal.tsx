@@ -234,7 +234,7 @@ export const GameHowToPlayModal: React.FC<GameHowToPlayModalProps> = ({
             >
               <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 shrink-0" />
-                <span>Secret Strategies Used by Top Ranked LiveTalk Duelists</span>
+                <span>Secret Strategies Used by Top Ranked IncogTalk Duelists</span>
               </div>
 
               {rule.proTips.map((tip, idx) => (

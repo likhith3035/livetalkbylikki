@@ -117,7 +117,7 @@ export const PageErrorFallback: React.FC<PageErrorFallbackProps> = ({ error, onR
   };
 
   const handleCopyDiagnostics = () => {
-    const info = `LiveTalk Error Report:\nMessage: ${error?.message || "Unknown error"}\nURL: ${window.location.href}\nUserAgent: ${navigator.userAgent}\nTimestamp: ${new Date().toISOString()}`;
+    const info = `IncogTalk Error Report:\nMessage: ${error?.message || "Unknown error"}\nURL: ${window.location.href}\nUserAgent: ${navigator.userAgent}\nTimestamp: ${new Date().toISOString()}`;
     navigator.clipboard.writeText(info).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -212,8 +212,8 @@ export const PageErrorFallback: React.FC<PageErrorFallbackProps> = ({ error, onR
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
                 {isOffline
-                  ? "Your connection is temporarily offline. LiveTalk will auto-reconnect as soon as you are back online."
-                  : "LiveTalk just updated or encountered a brief connection sync. Your session data remains safe."}
+                  ? "Your connection is temporarily offline. IncogTalk will auto-reconnect as soon as you are back online."
+                  : "IncogTalk just updated or encountered a brief connection sync. Your session data remains safe."}
               </p>
             </div>
 

@@ -47,7 +47,7 @@ export const ShareRoomCard = forwardRef<HTMLDivElement, ShareRoomCardProps>(({ r
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <BrandLogo style={{ width: "80px", height: "80px" }} />
-          <h1 style={{ fontSize: "64px", fontWeight: 900, margin: 0, fontStyle: "italic", textTransform: "uppercase", tracking: "tighter" }}>LiveTalk</h1>
+          <h1 style={{ fontSize: "64px", fontWeight: 900, margin: 0, fontStyle: "italic", textTransform: "uppercase", tracking: "tighter" }}>IncogTalk</h1>
         </div>
 
         {/* Info Text */}
@@ -76,7 +76,7 @@ export const ShareRoomCard = forwardRef<HTMLDivElement, ShareRoomCardProps>(({ r
 
         {/* Footer */}
         <div style={{ marginTop: "20px", fontSize: "20px", color: "rgba(255, 255, 255, 0.4)", fontWeight: "bold" }}>
-          livetalkbylikki.netlify.app
+          incogtalkk.netlify.app
         </div>
       </div>
     </div>

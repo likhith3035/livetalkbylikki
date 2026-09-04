@@ -24,9 +24,9 @@ const STATUS_MESSAGES = [
 ];
 
 const FUN_TRIVIA = [
-  "Over 3 million random conversations happen every day on LiveTalk!",
+  "Over 3 million random conversations happen every day on IncogTalk!",
   "Common interests increase chat duration by over 300%.",
-  "Pro Tip: You can play Tic-Tac-Toe or draw on the live canvas during calls!",
+  "Pro Tip: You can play Tic-Tac-Toe, SOS, or Hand Cricket during calls!",
   "Zero-Log Privacy: Transient signaling data is wiped immediately upon connecting.",
 ];
 
@@ -86,8 +86,8 @@ export const FindingAnimation = ({
 
     if (navigator.share) {
       navigator.share({
-        title: "Join me on LiveTalk",
-        text: "Hey! Come chat with me on LiveTalk!",
+        title: "Join me on IncogTalk",
+        text: "Hey! Come chat with me on IncogTalk — speak freely, stay incognito!",
         url: shareUrl,
       }).catch(() => {});
     }

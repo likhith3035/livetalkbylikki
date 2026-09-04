@@ -53,8 +53,8 @@ const HandoffPage = () => {
   const urlToken = params.get("token") ?? "";
 
   useSEO({
-    title: "Join Session – LiveTalk",
-    description: "Continue your LiveTalk session on this device.",
+    title: "Join Session – IncogTalk",
+    description: "Continue your IncogTalk session on this device.",
   });
 
   // ── Auto-claim when URL has room + token (QR scan path) ─────────────────────

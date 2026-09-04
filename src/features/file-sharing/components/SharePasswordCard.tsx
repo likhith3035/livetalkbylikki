@@ -108,8 +108,8 @@ export const SharePasswordCard: React.FC<SharePasswordCardProps> = ({ onShareCre
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `LiveTalk Secure Password Share - Code ${createdShare.code}`,
-          text: `Access shared credentials securely via LiveTalk with code: ${createdShare.code}`,
+          title: `IncogTalk Secure Password Share - Code ${createdShare.code}`,
+          text: `Access shared credentials securely via IncogTalk with code: ${createdShare.code}`,
           url: shareUrl,
         });
         toast.success("Share menu opened!");

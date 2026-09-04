@@ -377,7 +377,7 @@ export function useChat(callbacks?: ChatCallbacks) {
               setStatus("disconnected");
               addMessage("system", "Stranger has disconnected.");
               playSoundIfEnabled("disconnected");
-              notifyIfEnabled("LiveTalk", "Stranger has disconnected.", "disconnected");
+              notifyIfEnabled("IncogTalk", "Stranger has disconnected.", "disconnected");
               leaveRoom();
             }
             strangerDisconnectTimerRef.current = null;

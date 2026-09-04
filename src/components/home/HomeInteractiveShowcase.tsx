@@ -350,7 +350,7 @@ export const HomeInteractiveShowcase: React.FC = () => {
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-foreground truncate">LiveTalk_HD_Project_Render.mp4</p>
+                  <p className="text-xs font-bold text-foreground truncate">IncogTalk_HD_Project_Render.mp4</p>
                   <p className="text-[10px] text-muted-foreground">34.8 MB • Direct Device-to-Device WebRTC</p>
                 </div>
               </div>

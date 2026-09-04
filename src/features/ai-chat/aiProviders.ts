@@ -326,7 +326,7 @@ export async function streamAIChat({
   }
   if (providerId === "openrouter") {
     headers["HTTP-Referer"] = window.location.origin;
-    headers["X-Title"] = "LiveTalk AI Chat";
+    headers["X-Title"] = "IncogTalk AI Chat";
   }
 
   // For LM Studio / Auto-detect: if resolvedModel is empty, omit model property
@@ -488,7 +488,7 @@ export async function testAIProviderKey({
     }
     if (providerId === "openrouter") {
       headers["HTTP-Referer"] = window.location.origin;
-      headers["X-Title"] = "LiveTalk AI Chat";
+      headers["X-Title"] = "IncogTalk AI Chat";
     }
 
     const testModel = provider.defaultModel || undefined;

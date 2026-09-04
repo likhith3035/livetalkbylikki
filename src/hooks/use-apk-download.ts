@@ -56,7 +56,7 @@ export function useApkDownload() {
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = blobUrl;
-        a.download = `LiveTalk-v${APK_INFO.version}.apk`;
+        a.download = `IncogTalk-v${APK_INFO.version}.apk`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

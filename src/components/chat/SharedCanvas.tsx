@@ -268,16 +268,16 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.90)";
       ctx.font = `700 ${textFontSize}px Inter, sans-serif`;
-      ctx.fillText("LiveTalk by Likki", textX, textY + textFontSize);
+      ctx.fillText("IncogTalk by Likki", textX, textY + textFontSize);
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
       ctx.font = `500 ${subFontSize}px Inter, sans-serif`;
-      ctx.fillText("livetalkbylikki.netlify.app", textX, textY + textFontSize + subFontSize + 4 * dpr);
+      ctx.fillText("incogtalkk.netlify.app", textX, textY + textFontSize + subFontSize + 4 * dpr);
 
       const url = tempCanvas.toDataURL("image/png");
       const a = document.createElement("a");
       a.href = url;
-      a.download = `LiveTalk-Doodle-${Date.now()}.png`;
+      a.download = `IncogTalk-Doodle-${Date.now()}.png`;
       a.click();
     };
 
@@ -285,16 +285,16 @@ const SharedCanvas = ({ roomChannel, sessionId, onClose }: SharedCanvasProps) =>
       // Fallback if logo can't load — download without watermark branding image
       ctx.fillStyle = "rgba(255, 255, 255, 0.90)";
       ctx.font = `700 ${textFontSize}px Inter, sans-serif`;
-      ctx.fillText("LiveTalk by Likki", textX, textY + textFontSize);
+      ctx.fillText("IncogTalk by Likki", textX, textY + textFontSize);
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
       ctx.font = `500 ${subFontSize}px Inter, sans-serif`;
-      ctx.fillText("livetalkbylikki.netlify.app", textX, textY + textFontSize + subFontSize + 4 * dpr);
+      ctx.fillText("incogtalkk.netlify.app", textX, textY + textFontSize + subFontSize + 4 * dpr);
 
       const url = tempCanvas.toDataURL("image/png");
       const a = document.createElement("a");
       a.href = url;
-      a.download = `LiveTalk-Doodle-${Date.now()}.png`;
+      a.download = `IncogTalk-Doodle-${Date.now()}.png`;
       a.click();
     };
   };

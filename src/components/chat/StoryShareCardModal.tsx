@@ -18,7 +18,7 @@ export function StoryShareCardModal({ roomCode, isOpen, onClose }: StoryShareCar
   const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const roomUrl = `https://livetalkbylikki.netlify.app/room/${roomCode}`;
+  const roomUrl = typeof window !== "undefined" ? `${window.location.origin}/room/${roomCode}` : `https://incogtalk.netlify.app/room/${roomCode}`;
 
   useEffect(() => {
     if (!roomCode || !isOpen) return;
@@ -90,7 +90,7 @@ export function StoryShareCardModal({ roomCode, isOpen, onClose }: StoryShareCar
     ctx.textAlign = "center";
     ctx.fillStyle = "#a855f7";
     ctx.font = "900 48px system-ui, sans-serif";
-    ctx.fillText("LIVETALK PRIVATE ROOM", 540, 440);
+    ctx.fillText("INCOGTALK PRIVATE ROOM", 540, 440);
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "800 64px system-ui, sans-serif";
@@ -137,11 +137,11 @@ export function StoryShareCardModal({ roomCode, isOpen, onClose }: StoryShareCar
     // 7. Footer Branding
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
     ctx.font = "700 36px system-ui, sans-serif";
-    ctx.fillText("https://livetalkbylikki.netlify.app", 540, 1720);
+    ctx.fillText("https://incogtalkk.netlify.app", 540, 1720);
 
     ctx.fillStyle = "#10b981";
     ctx.font = "600 28px system-ui, sans-serif";
-    ctx.fillText("100% Free • No Signup • Encrypted P2P", 540, 1780);
+    ctx.fillText("Speak Freely • Stay Incognito • Encrypted P2P", 540, 1780);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/png");
@@ -157,7 +157,7 @@ export function StoryShareCardModal({ roomCode, isOpen, onClose }: StoryShareCar
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `LiveTalk-Room-${roomCode}.png`;
+      link.download = `IncogTalk-Room-${roomCode}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -176,12 +176,12 @@ export function StoryShareCardModal({ roomCode, isOpen, onClose }: StoryShareCar
     try {
       const blob = await generateCanvasImage();
       if (blob && navigator.share && navigator.canShare) {
-        const file = new File([blob], `LiveTalk-Room-${roomCode}.png`, { type: "image/png" });
+        const file = new File([blob], `IncogTalk-Room-${roomCode}.png`, { type: "image/png" });
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
-            title: "Join my LiveTalk Private Room",
-            text: `Join my private room on LiveTalk! Code: ${roomCode}`,
+            title: "Join my IncogTalk Private Room",
+            text: `Join my private room on IncogTalk! Code: ${roomCode}`,
           });
           return;
         }
@@ -223,7 +223,7 @@ export function StoryShareCardModal({ roomCode, isOpen, onClose }: StoryShareCar
             <div className="space-y-1 pt-2">
               <span className="text-[10px] font-black uppercase tracking-widest text-primary">Private Room Invite</span>
               <h4 className="text-xl font-black text-white italic tracking-tight">YOU'RE INVITED!</h4>
-              <p className="text-[11px] text-muted-foreground">Scan QR or enter code on LiveTalk</p>
+              <p className="text-[11px] text-muted-foreground">Scan QR or enter code on IncogTalk</p>
             </div>
 
             {/* QR Code Container */}
@@ -244,7 +244,7 @@ export function StoryShareCardModal({ roomCode, isOpen, onClose }: StoryShareCar
 
             {/* Sub copy */}
             <div className="space-y-0.5 pb-1">
-              <p className="text-[10px] font-bold text-white/80">https://livetalkbylikki.netlify.app</p>
+              <p className="text-[10px] font-bold text-white/80">incogtalk.netlify.app</p>
               <p className="text-[9px] text-emerald-400 font-bold">100% Free • Anonymous • Encrypted</p>
             </div>
           </div>

@@ -42,7 +42,7 @@ ${result.improvedPrompts.expert || result.improvedPrompts.better}
 \`\`\`
 
 ---
-Evaluated via LiveTalk AI Prompt Quality Analyzer`;
+Evaluated via IncogTalk AI Prompt Quality Analyzer`;
 
     try {
       await navigator.clipboard.writeText(reportText);

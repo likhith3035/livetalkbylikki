@@ -57,7 +57,7 @@ export default function PrivacyWatermark({ userName = "You", strangerName = "Str
           <div className="flex items-center gap-1.5 text-white/60">
             <Shield className="h-3 w-3 text-primary animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-[0.18em] italic font-display">
-              LiveTalk Anti-Record Shield
+              IncogTalk Anti-Record Shield
             </span>
             <Lock className="h-2.5 w-2.5 text-amber-400/80" />
           </div>

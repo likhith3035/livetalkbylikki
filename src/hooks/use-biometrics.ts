@@ -61,7 +61,7 @@ export function useBiometrics() {
       if (Capacitor.isNativePlatform()) {
         await NativeBiometric.verifyIdentity({
           reason: "Verify your identity to enable biometric lock",
-          title: "LiveTalk Security",
+          title: "IncogTalk Security",
           subtitle: "Authenticate to enable app lock",
           description: "Place your finger on the sensor or use face unlock",
         });
@@ -92,8 +92,8 @@ export function useBiometrics() {
       if (Capacitor.isNativePlatform()) {
         // Trigger the real Android fingerprint / face unlock dialog
         await NativeBiometric.verifyIdentity({
-          reason: "Unlock LiveTalk",
-          title: "LiveTalk Locked",
+          reason: "Unlock IncogTalk",
+          title: "IncogTalk Locked",
           subtitle: "Authenticate to continue",
           description: "Use your fingerprint or face to unlock the app",
         });

@@ -183,13 +183,13 @@ export const SharedAccessView: React.FC<SharedAccessViewProps> = ({
 
       const a = document.createElement("a");
       a.href = zipUrl;
-      a.download = `LiveTalk_Share_${share.code}.zip`;
+      a.download = `IncogTalk_Share_${share.code}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(zipUrl);
 
-      toast.success(`ZIP Archive LiveTalk_Share_${share.code}.zip downloaded!`);
+      toast.success(`ZIP Archive IncogTalk_Share_${share.code}.zip downloaded!`);
     } catch {
       toast.error("Failed to generate ZIP bundle. Falling back to individual downloads.");
       share.files.forEach((f, idx) => {

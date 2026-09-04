@@ -26,7 +26,7 @@ const IOS_STEPS = [
   {
     icon: <Check className="h-5 w-5 text-green-400" />,
     label: 'Tap "Add" to confirm',
-    sub: "LiveTalk appears on your home screen",
+    sub: "IncogTalk appears on your home screen",
   },
 ];
 
@@ -85,11 +85,11 @@ export default function PwaInstallModal() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-14 w-14 rounded-2xl overflow-hidden border border-border/50 shadow-lg bg-background flex items-center justify-center">
-                      <img src="/logo.png" alt="LiveTalk" className="h-10 w-10 object-contain" />
+                      <img src="/logo.png" alt="IncogTalk" className="h-10 w-10 object-contain" />
                     </div>
                     <div>
-                      <h2 className="text-base font-black text-foreground">LiveTalk</h2>
-                      <p className="text-xs text-muted-foreground">livetalkbylikki.netlify.app</p>
+                      <h2 className="text-base font-black text-foreground">IncogTalk</h2>
+                      <p className="text-xs text-muted-foreground">Speak Freely. Stay Incognito.</p>
                       <div className="flex items-center gap-1 mt-0.5">
                         {[1,2,3,4,5].map(i => (
                           <svg key={i} className="h-3 w-3 text-yellow-400 fill-yellow-400" viewBox="0 0 20 20">

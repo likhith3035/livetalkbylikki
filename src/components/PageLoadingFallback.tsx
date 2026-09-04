@@ -9,8 +9,8 @@ interface PageLoadingFallbackProps {
 }
 
 export const PageLoadingFallback: React.FC<PageLoadingFallbackProps> = ({
-  message = "Loading LiveTalk...",
-  subMessage = "Connecting to secure network",
+  message = "Loading IncogTalk...",
+  subMessage = "Speak Freely. Stay Incognito.",
 }) => {
   return (
     <div className="flex-1 min-h-[75vh] w-full flex flex-col items-center justify-center p-6 select-none relative overflow-hidden">

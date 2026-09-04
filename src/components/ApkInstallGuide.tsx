@@ -34,7 +34,7 @@ const STEPS = [
     icon: Package,
     color: "text-violet-400",
     bg: "bg-violet-500/10 border-violet-500/20",
-    title: "Install LiveTalk",
+    title: "Install IncogTalk",
     desc: "Follow the on-screen installer steps",
   },
   {
@@ -42,7 +42,7 @@ const STEPS = [
     color: "text-green-400",
     bg: "bg-green-500/10 border-green-500/20",
     title: "Open the app",
-    desc: "LiveTalk is ready — start chatting!",
+    desc: "IncogTalk is ready — speak freely, stay incognito!",
   },
 ];
 
@@ -120,7 +120,7 @@ export default function ApkInstallGuide({ show, onClose }: ApkInstallGuideProps)
                     <ArrowDown className="h-5 w-5 text-primary rotate-0" />
                   </motion.div>
                   <p className="text-xs font-semibold text-foreground relative z-10">
-                    Tap the downloaded APK to install the LiveTalk app
+                    Tap the downloaded APK to install the IncogTalk app
                   </p>
                 </div>
 

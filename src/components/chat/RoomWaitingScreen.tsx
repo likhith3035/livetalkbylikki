@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 import { StoryShareCardModal } from "./StoryShareCardModal";
 
-const APP_URL = typeof window !== "undefined" ? window.location.origin : "https://LiveTalkbylikki.netlify.app";
+const APP_URL = typeof window !== "undefined" ? window.location.origin : "https://incogtalk.netlify.app";
 const ROOM_EXPIRY_SECONDS = 300; // 5 minutes
 
 interface RoomWaitingScreenProps {
@@ -149,7 +149,7 @@ function QRDisplay({ value, isDark }: { value: string; isDark: boolean }) {
         >
           <img
             src="/logo.png"
-            alt="LiveTalk"
+            alt="IncogTalk"
             style={{ width: 34, height: 34, objectFit: "contain", display: "block" }}
           />
         </div>
@@ -269,8 +269,8 @@ export default function RoomWaitingScreen({ roomCode, onCancel, onPartnerJoined,
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "LiveTalk Private Room",
-          text: `Join my private room on LiveTalk! Code: ${roomCode}`,
+          title: "IncogTalk Private Room",
+          text: `Join my private room on IncogTalk! Code: ${roomCode}`,
           url: joinUrl,
         });
         return;

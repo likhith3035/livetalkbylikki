@@ -923,7 +923,7 @@ const AdminDashboard = () => {
             </Button>
             <div>
               <h1 className="text-lg sm:text-xl font-black tracking-tight leading-none flex items-center gap-2">
-                LiveTalk Super Admin Command Center
+                IncogTalk Super Admin Command Center
                 <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
                   PRO V2.5
                 </span>
@@ -949,7 +949,7 @@ const AdminDashboard = () => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = `LiveTalk-Audit-Log-${new Date().toISOString().split("T")[0]}.json`;
+                a.download = `IncogTalk-Audit-Log-${new Date().toISOString().split("T")[0]}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -1410,7 +1410,7 @@ const AdminDashboard = () => {
                               const url = URL.createObjectURL(blob);
                               const a = document.createElement("a");
                               a.href = url;
-                              a.download = `LiveTalk-System-Logs-${new Date().toISOString().split("T")[0]}.txt`;
+                              a.download = `IncogTalk-System-Logs-${new Date().toISOString().split("T")[0]}.txt`;
                               document.body.appendChild(a);
                               a.click();
                               document.body.removeChild(a);
@@ -1844,7 +1844,7 @@ const AdminDashboard = () => {
         <footer className="shrink-0 flex items-center justify-between text-[10px] text-muted-foreground font-semibold pt-2 border-t border-border/20">
           <p className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-            LiveTalk Admin Console v2.0
+            IncogTalk Admin Console v2.0
           </p>
           <p className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
