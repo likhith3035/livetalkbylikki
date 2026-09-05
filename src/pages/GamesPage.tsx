@@ -73,6 +73,12 @@ import {
   ArrowLeft,
   RotateCcw,
   BookOpen,
+  Bell,
+  ChevronDown,
+  ArrowRight,
+  Play,
+  ArrowUpDown,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -113,7 +119,7 @@ const GAMES_CATALOG: GameMetadata[] = [
     id: "memory",
     title: "Memory Card Duel",
     tagline: "Flip and match pairs in a turn-based memory showdown. Most pairs wins!",
-    category: "Strategy",
+    category: "Brain",
     icon: "🧠",
     gradient: "from-amber-500 to-orange-600",
     accentColor: "#f59e0b",
@@ -185,8 +191,22 @@ export default function GamesPage() {
 
   const [gamerProfile, setGamerProfile] = useState<GamerProfile>(getGamerProfile);
   const [isSelfOffline, setIsSelfOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+  const [sortBy, setSortBy] = useState<"popular" | "fast" | "name">("popular");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const createdRoomCodeRef = useRef<string | null>(null);
   const recordedRoundRef = useRef<number>(-1);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -603,13 +623,25 @@ export default function GamesPage() {
   }, [activeRoom, myPlayerId, isSpectator, setSearchParams]);
 
   const filteredGames = useMemo(() => {
-    return GAMES_CATALOG.filter((g) => {
-      const matchSearch = g.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.tagline.toLowerCase().includes(searchQuery.toLowerCase());
+    let list = GAMES_CATALOG.filter((g) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        g.title.toLowerCase().includes(q) ||
+        g.tagline.toLowerCase().includes(q) ||
+        (g.tags && g.tags.some((t) => t.toLowerCase().includes(q)));
       const matchCat = selectedCategory === "All" || g.category === selectedCategory;
       return matchSearch && matchCat;
     });
-  }, [searchQuery, selectedCategory]);
+
+    if (sortBy === "name") {
+      list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === "fast") {
+      const fastOrder = ["rps", "reaction", "ttt", "connect4", "sos", "cricket", "bingo", "memory"];
+      list = [...list].sort((a, b) => fastOrder.indexOf(a.id) - fastOrder.indexOf(b.id));
+    }
+    return list;
+  }, [searchQuery, selectedCategory, sortBy]);
 
   const activeGameMeta = useMemo(() => {
     return GAMES_CATALOG.find((g) => g.id === activeRoom?.gameId);
@@ -867,208 +899,314 @@ export default function GamesPage() {
             />
           </div>
         ) : (
-          /* VIEW 3: GAMES LOBBY & ARCADE HUB */
-          <div className="flex flex-col w-full">
-            {/* Live Interactive Gamer Profile Banner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-card border border-border shadow-lg mb-6 sm:mb-8 relative overflow-hidden">
-              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
-                <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-2xl sm:text-3xl shadow-inner relative overflow-hidden shrink-0">
-                  <GameAvatar avatar={gamerProfile.avatar} fallback="👾" className="text-2xl sm:text-3xl" />
-                  <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-primary text-primary-foreground text-[8px] sm:text-[9px] font-black shadow-md">
-                    Lv.{gamerProfile.level}
-                  </span>
+          /* VIEW 3: GAMES LOBBY & ARCADE HUB (EXACT DASHBOARD UI) */
+          <div className="flex flex-col w-full max-w-7xl mx-auto">
+            {/* 1. TOP BAR: Search with Ctrl+K, Notifications & Gamer Profile Chip */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6 sm:mb-8">
+              {/* Left: Search Box with Ctrl K */}
+              <div className="relative flex-1 max-w-md">
+                <div className="flex items-center w-full h-11 px-4 rounded-full bg-card dark:bg-[#12131e] border border-border dark:border-white/[0.08] focus-within:border-indigo-500/50 shadow-sm transition-colors">
+                  <Search className="w-4 h-4 text-muted-foreground dark:text-gray-400 shrink-0 mr-3" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search arcade games..."
+                    className="w-full bg-transparent text-xs sm:text-sm text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-500 outline-none"
+                  />
+                  <div className="hidden xs:flex items-center gap-1 shrink-0 ml-2">
+                    <kbd className="text-[10px] font-semibold text-muted-foreground dark:text-gray-400 bg-secondary dark:bg-white/[0.06] border border-border dark:border-white/10 px-1.5 py-0.5 rounded">
+                      Ctrl
+                    </kbd>
+                    <kbd className="text-[10px] font-semibold text-muted-foreground dark:text-gray-400 bg-secondary dark:bg-white/[0.06] border border-border dark:border-white/10 px-1.5 py-0.5 rounded">
+                      K
+                    </kbd>
+                  </div>
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base sm:text-lg font-black text-foreground truncate max-w-[140px] xs:max-w-[180px] sm:max-w-none">
-                      {gamerProfile.nickname}
+              </div>
+
+              {/* Right: Notification Bell & Gamer Profile Card */}
+              <div className="flex items-center justify-end gap-3 shrink-0">
+                {/* Notification Bell */}
+                <button
+                  type="button"
+                  onClick={() => toast.info("No unread notifications right now.")}
+                  className="relative w-10 h-10 rounded-full bg-card dark:bg-[#12131e] border border-border dark:border-white/[0.08] hover:border-border/80 dark:hover:border-white/20 flex items-center justify-center text-muted-foreground dark:text-gray-300 hover:text-foreground dark:hover:text-white transition-all cursor-pointer shadow-sm"
+                  title="Arcade Notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-indigo-600 border-2 border-card dark:border-[#12131e] text-[9px] font-bold text-white flex items-center justify-center">
+                    0
+                  </span>
+                </button>
+
+                {/* Profile Chip */}
+                <div
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-card dark:bg-[#12131e] border border-border dark:border-white/[0.08] hover:border-indigo-500/30 transition-all cursor-pointer group shadow-sm"
+                  title="Click to customize gamer profile"
+                >
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-gradient-to-br dark:from-indigo-500/30 dark:to-purple-600/40 border border-indigo-200 dark:border-indigo-400/40 flex items-center justify-center text-xs font-black text-indigo-700 dark:text-indigo-200 shrink-0 shadow-inner">
+                    {gamerProfile.avatar || (gamerProfile.nickname ? gamerProfile.nickname.charAt(0).toUpperCase() : "R")}
+                  </div>
+                  <div className="flex flex-col text-left min-w-0 pr-1">
+                    <span className="text-xs sm:text-sm font-bold text-foreground dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors truncate max-w-[120px] sm:max-w-[150px]">
+                      {gamerProfile.nickname || "RetroSpark50"}
                     </span>
-                    <button
-                      onClick={() => setIsProfileModalOpen(true)}
-                      className="text-xs text-primary hover:text-primary/80 font-bold flex items-center gap-1 hover:underline cursor-pointer shrink-0"
+                    <span className="text-[10px] text-muted-foreground dark:text-gray-400 truncate">
+                      {gamerProfile.title || "Arcade Rookie"} • Lv.{gamerProfile.level || 1}
+                    </span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground dark:text-gray-400 group-hover:text-foreground dark:group-hover:text-white transition-colors shrink-0" />
+                </div>
+              </div>
+            </div>
+
+            {/* 2. HERO BANNER: Play 1v1 Games with Anyone (Compact & Sleek) */}
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50/90 via-purple-50/70 to-pink-50/80 dark:bg-gradient-to-br dark:from-[#121324] dark:via-[#10111d] dark:to-[#0d0e17] border border-indigo-100/80 dark:border-white/[0.08] p-4 sm:p-5 md:p-6 mb-5 relative overflow-hidden shadow-sm dark:shadow-xl text-foreground dark:text-white transition-colors">
+              {/* Ambient radial glow */}
+              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-indigo-600/10 dark:bg-indigo-600/15 blur-[80px] pointer-events-none" />
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-center relative z-10">
+                {/* Left Column: Heading, Subtitle, CTA */}
+                <div className="md:col-span-8 flex flex-col items-start text-left">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-[#818cf8] mb-1.5">
+                    INCOGTALK ARCADE
+                  </span>
+
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground dark:text-white tracking-tight leading-tight">
+                    Play 1v1 Games with{" "}
+                    <span className="bg-gradient-to-r from-[#6366f1] via-[#7c3aed] to-[#a855f7] dark:from-[#818cf8] dark:via-[#a78bfa] dark:to-[#c084fc] bg-clip-text text-transparent drop-shadow-sm dark:drop-shadow-[0_2px_12px_rgba(99,102,241,0.4)]">
+                      Anyone
+                    </span>
+                  </h1>
+
+                  <p className="text-xs text-muted-foreground dark:text-gray-400 mt-1 max-w-lg leading-relaxed font-normal">
+                    Challenge friends via QR code, chat live during matches, or test your skills against smart AI bots.
+                  </p>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 sm:gap-2.5 mt-3.5 flex-wrap">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        const defaultGame = GAMES_CATALOG[0];
+                        setSelectedGameForModal(defaultGame);
+                      }}
+                      className="rounded-full bg-[#6366f1] hover:bg-[#5254e0] text-white font-bold text-xs px-4 h-8 sm:h-9 shadow-md shadow-indigo-500/25 flex items-center gap-1.5 group transition-all cursor-pointer"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Edit</span>
+                      <span>Play Now</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setHowToPlayGameId("cricket");
+                        setIsHowToPlayOpen(true);
+                      }}
+                      className="rounded-full bg-white/80 hover:bg-white text-foreground border-border/80 shadow-sm dark:bg-white/10 dark:hover:bg-white/20 dark:text-white dark:border-white/20 text-xs px-3.5 h-8 sm:h-9 flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Play className="w-3 h-3 fill-current text-foreground/80 dark:text-white/90" />
+                      <span>How It Works</span>
+                    </Button>
+
+                    {/* Quick Action Pills for Join Code & Scan QR */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsJoinModalOpen(true)}
+                        className="text-[11px] text-muted-foreground hover:text-foreground dark:text-white/80 dark:hover:text-white px-2.5 py-1 rounded-full bg-white/80 hover:bg-white dark:bg-white/10 dark:hover:bg-white/20 border border-border/80 dark:border-white/15 transition-colors flex items-center gap-1 cursor-pointer shadow-sm"
+                        title="Enter a 6-letter room code to join friend"
+                      >
+                        <QrCode className="w-3 h-3 text-indigo-500 dark:text-indigo-300" />
+                        <span>Join</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsScannerOpen(true)}
+                        className="text-[11px] text-muted-foreground hover:text-foreground dark:text-white/80 dark:hover:text-white px-2.5 py-1 rounded-full bg-white/80 hover:bg-white dark:bg-white/10 dark:hover:bg-white/20 border border-border/80 dark:border-white/15 transition-colors flex items-center gap-1 cursor-pointer shadow-sm"
+                        title="Scan friend's QR code camera"
+                      >
+                        <ScanLine className="w-3 h-3 text-indigo-500 dark:text-indigo-300" />
+                        <span>Scan</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsDinoGameOpen(true)}
+                        className="text-[11px] text-muted-foreground hover:text-foreground dark:text-white/80 dark:hover:text-white px-2.5 py-1 rounded-full bg-white/80 hover:bg-white dark:bg-white/10 dark:hover:bg-white/20 border border-border/80 dark:border-white/15 transition-colors flex items-center gap-1 cursor-pointer shadow-sm"
+                        title="Play Chrome Dino Runner"
+                      >
+                        <span>🦖 Dino</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Compact 3D Floating Isometric Game Tiles & Handwritten Script */}
+                <div className="md:col-span-4 hidden md:flex items-center justify-center relative min-h-[120px] select-none">
+                  {/* Glowing Orbits */}
+                  <div className="absolute w-44 h-24 border border-indigo-300/40 dark:border-indigo-400/30 rounded-full -rotate-12 pointer-events-none" />
+                  <div className="absolute w-52 h-28 border border-purple-300/30 dark:border-purple-400/20 rounded-full rotate-6 pointer-events-none" />
+
+                  {/* Compact 3D Tile Pair */}
+                  <div className="relative flex items-center justify-center perspective-[600px] w-44 h-28">
+                    {/* Dark/Light Tile (X) */}
+                    <motion.div
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="w-16 h-20 rounded-xl bg-gradient-to-br from-white to-indigo-100/90 border border-indigo-200/80 shadow-[0_12px_24px_rgba(99,102,241,0.15)] dark:from-[#1e202f] dark:to-[#121320] dark:border-white/10 dark:shadow-[0_12px_24px_rgba(0,0,0,0.6)] flex items-center justify-center transform -rotate-12 -translate-x-3 translate-y-1 z-10"
+                      style={{ transformStyle: "preserve-3d" }}
+                    >
+                      <span className="text-xl font-black text-indigo-900 dark:text-white drop-shadow-[0_0_6px_rgba(99,102,241,0.3)] dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]">✕</span>
+                    </motion.div>
+
+                    {/* Neon Purple Tile (O) */}
+                    <motion.div
+                      animate={{ y: [0, 4, 0] }}
+                      transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
+                      className="w-16 h-20 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#6366f1] border border-indigo-300/30 shadow-[0_12px_24px_rgba(99,102,241,0.35)] flex items-center justify-center transform rotate-6 translate-x-2 -translate-y-1 z-20"
+                      style={{ transformStyle: "preserve-3d" }}
+                    >
+                      <span className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]">◯</span>
+                    </motion.div>
+                  </div>
+
+                  {/* Compact Script Callout Text */}
+                  <div className="absolute -right-1 top-2 transform rotate-6 text-right pointer-events-none">
+                    <span className="block text-[9px] font-serif italic text-purple-700/80 dark:text-purple-300/80 leading-tight">Same Games</span>
+                    <span className="block text-[9px] font-serif italic text-purple-700/70 dark:text-purple-300/70 leading-tight">Different People</span>
+                    <span className="block text-[11px] font-serif italic font-bold text-purple-800 dark:text-purple-200 leading-tight">More Fun!</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. FILTER & SORT NAVIGATION BAR */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+              {/* Category Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar touch-pan-x">
+                {["All", "Classic", "Strategy", "Reflex", "Casual", "Brain"].map((cat) => {
+                  const isActive = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        gameAudio.playClick();
+                        setSelectedCategory(cat);
+                      }}
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                        isActive
+                          ? "bg-[#6366f1] text-white shadow-md shadow-indigo-500/25"
+                          : "bg-card dark:bg-[#12131e] hover:bg-secondary dark:hover:bg-[#1a1b2b] text-muted-foreground dark:text-gray-300 border border-border dark:border-white/[0.06]"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="relative self-end sm:self-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsSortOpen((prev) => !prev)}
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-card dark:bg-[#12131e] hover:bg-secondary dark:hover:bg-[#1a1b2b] text-muted-foreground dark:text-gray-300 border border-border dark:border-white/[0.08] text-xs font-medium cursor-pointer shadow-sm transition-colors"
+                >
+                  <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground dark:text-gray-400" />
+                  <span>
+                    {sortBy === "popular" ? "Most Popular" : sortBy === "fast" ? "Fastest Match" : "Alphabetical"}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground dark:text-gray-400" />
+                </button>
+
+                {/* Sort Options Menu */}
+                {isSortOpen && (
+                  <div className="absolute right-0 mt-2 w-44 rounded-2xl bg-popover dark:bg-[#12131e] border border-border dark:border-white/10 shadow-2xl p-1.5 z-30">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSortBy("popular");
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center justify-between ${
+                        sortBy === "popular" ? "bg-indigo-600/15 text-indigo-600 dark:text-indigo-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <span>Most Popular</span>
+                      {sortBy === "popular" && <Check className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSortBy("fast");
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center justify-between ${
+                        sortBy === "fast" ? "bg-indigo-600/15 text-indigo-600 dark:text-indigo-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <span>Fastest Match</span>
+                      {sortBy === "fast" && <Check className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSortBy("name");
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center justify-between ${
+                        sortBy === "name" ? "bg-indigo-600/15 text-indigo-600 dark:text-indigo-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <span>Alphabetical</span>
+                      {sortBy === "name" && <Check className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />}
                     </button>
                   </div>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
-                    <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
-                    <span className="truncate">{gamerProfile.title}</span> • {gamerProfile.xp} / {xpNeeded} XP
-                  </span>
-                  {/* Mini XP progress bar */}
-                  <div className="w-36 sm:w-48 h-1.5 rounded-full bg-muted mt-1 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-violet-500 rounded-full"
-                      style={{ width: `${xpPercent}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats Counters - 4 Column grid on mobile, flex row on tablet/desktop */}
-              <div className="grid grid-cols-4 gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/40 w-full sm:w-auto sm:flex sm:items-center sm:gap-6 shrink-0">
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-amber-500 font-black text-xs sm:text-base">
-                    <Trophy className="w-3.5 h-3.5" />
-                    <span>{gamerProfile.wins}</span>
-                  </div>
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase">
-                    Wins
-                  </span>
-                </div>
-
-                <div className="hidden sm:block h-7 w-[1px] bg-border" />
-
-                <div className="flex flex-col items-center">
-                  <div className={`flex items-center gap-1 font-black text-xs sm:text-base ${gamerProfile.streak >= 3 ? "text-rose-500 animate-pulse" : "text-orange-500"}`}>
-                    <Flame className="w-3.5 h-3.5" />
-                    <span>{gamerProfile.streak}</span>
-                  </div>
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase">
-                    Streak
-                  </span>
-                </div>
-
-                <div className="hidden sm:block h-7 w-[1px] bg-border" />
-
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-primary font-black text-xs sm:text-base">
-                    <Percent className="w-3.5 h-3.5" />
-                    <span>{winRate}%</span>
-                  </div>
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase">
-                    Win Rate
-                  </span>
-                </div>
-
-                <div className="hidden sm:block h-7 w-[1px] bg-border" />
-
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-foreground/80 font-black text-xs sm:text-base">
-                    <Swords className="w-3.5 h-3.5" />
-                    <span>{gamerProfile.played}</span>
-                  </div>
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase">
-                    Matches
-                  </span>
-                </div>
+                )}
               </div>
             </div>
 
-            {/* Hero Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
-              <div>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                    <Gamepad2 className="w-3.5 h-3.5" />
-                    IncogTalk Arcade
-                  </span>
-                  {isSelfOffline ? (
-                    <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-bold flex items-center gap-1.5 animate-pulse">
-                      <WifiOff className="w-3.5 h-3.5" />
-                      Offline Mode • Smart AI Ready
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-semibold">
-                      100% Free • No Signup
-                    </span>
-                  )}
-                </div>
-                <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">
-                  Play 1v1 Games with Anyone
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xl">
-                  Challenge friends via instant QR code, chat live during matches, watch as a spectator, or test your wits against smart AI bots.
+            {/* 4. GAMES GRID */}
+            {filteredGames.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center rounded-3xl bg-card dark:bg-[#12131e] border border-border dark:border-white/[0.06]">
+                <span className="text-3xl mb-2">🔍</span>
+                <h3 className="text-base font-bold text-foreground dark:text-white">No arcade games found</h3>
+                <p className="text-xs text-muted-foreground dark:text-gray-400 mt-1 max-w-sm">
+                  Try adjusting your search query or selecting a different category filter.
                 </p>
-              </div>
-
-              {/* Action Buttons: Responsive 4-column grid on mobile, flex row on sm+ */}
-              <div className="grid grid-cols-4 sm:flex sm:items-center gap-1.5 sm:gap-2.5 w-full sm:w-auto shrink-0">
                 <Button
                   onClick={() => {
-                    setHowToPlayGameId("cricket");
-                    setIsHowToPlayOpen(true);
+                    setSearchQuery("");
+                    setSelectedCategory("All");
                   }}
-                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-[11px] sm:text-xs font-bold gap-1 sm:gap-2 h-9 sm:h-11 px-1.5 sm:px-4 shadow-sm cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 rounded-full border-border dark:border-white/10 text-xs"
                 >
-                  <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
-                  <span className="truncate">Rules</span>
-                </Button>
-
-                <Button
-                  onClick={() => setIsDinoGameOpen(true)}
-                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-[11px] sm:text-xs font-bold gap-1 sm:gap-2 h-9 sm:h-11 px-1.5 sm:px-4 shadow-sm cursor-pointer"
-                >
-                  <span className="text-sm">🦖</span>
-                  <span className="truncate">Dino</span>
-                </Button>
-
-                <Button
-                  onClick={() => setIsJoinModalOpen(true)}
-                  className="rounded-xl sm:rounded-2xl bg-card hover:bg-muted text-foreground border border-border text-[11px] sm:text-xs font-bold gap-1 sm:gap-2 h-9 sm:h-11 px-1.5 sm:px-4 shadow-md cursor-pointer"
-                >
-                  <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
-                  <span className="truncate">Join</span>
-                </Button>
-
-                <Button
-                  onClick={() => setIsScannerOpen(true)}
-                  className="rounded-xl sm:rounded-2xl bg-primary text-primary-foreground text-[11px] sm:text-xs font-bold gap-1 sm:gap-2 h-9 sm:h-11 px-1.5 sm:px-4 shadow-lg shadow-primary/25 hover:opacity-90 cursor-pointer"
-                >
-                  <ScanLine className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Scan</span>
+                  Reset Filters
                 </Button>
               </div>
-            </div>
-
-            {/* Filter & Search Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
-              {/* Category Pills with smooth horizontal scrolling */}
-              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar touch-pan-x">
-                {["All", "Classic", "Strategy", "Reflex", "Casual"].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => {
-                      gameAudio.playClick();
-                      setSelectedCategory(cat);
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                {filteredGames.map((game) => (
+                  <GameCard
+                    key={game.id}
+                    game={game}
+                    onOpenModeSelect={(g) => setSelectedGameForModal(g)}
+                    onOpenHowToPlay={(g) => {
+                      setHowToPlayGameId(g.id);
+                      setIsHowToPlayOpen(true);
                     }}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                      selectedCategory === cat
-                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                        : "bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50"
-                    }`}
-                  >
-                    {cat}
-                  </button>
+                  />
                 ))}
               </div>
-
-              {/* Search Box */}
-              <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search arcade games..."
-                  className="pl-9 h-9 rounded-xl bg-card border-border text-xs focus-visible:ring-primary/30"
-                />
-              </div>
-            </div>
-
-            {/* Games Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredGames.map((game) => (
-                <GameCard
-                  key={game.id}
-                  game={game}
-                  onOpenModeSelect={(g) => setSelectedGameForModal(g)}
-                  onOpenHowToPlay={(g) => {
-                    setHowToPlayGameId(g.id);
-                    setIsHowToPlayOpen(true);
-                  }}
-                />
-              ))}
-            </div>
+            )}
           </div>
         )}
       </main>

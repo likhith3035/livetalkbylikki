@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Home, MessageSquare, User, Settings, Info, Moon, Sun, Shield, ShieldAlert, Smartphone, Bot, Wand2,
-  PanelLeftClose, PanelLeftOpen, Share2
+  PanelLeftClose, PanelLeftOpen, Share2, Gamepad2
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 const navItems = [
   { icon: Home, path: "/", label: "Home" },
   { icon: MessageSquare, path: "/chat", label: "Chat" },
+  { icon: Gamepad2, path: "/games", label: "Arcade Games" },
   { icon: Bot, path: "/ai-chat", label: "AI Chat" },
   { icon: Wand2, path: "/prompt-analyzer", label: "Prompt Analyzer" },
   { icon: Share2, path: "/file-sharing", label: "File Sharing" },
