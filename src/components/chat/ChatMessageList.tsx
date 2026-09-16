@@ -8,7 +8,7 @@ import ChatImage from "@/components/chat/ChatImage";
 import FormattedText from "@/components/chat/FormattedText";
 import SwipeableMessage from "@/components/chat/SwipeableMessage";
 import LinkPreview from "@/components/chat/LinkPreview";
-import { cn } from "@/lib/utils";
+import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Message } from "@/hooks/use-chat";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -501,11 +501,11 @@ const ChatMessageList = ({
                   {/* Stranger Avatar on the left */}
                   <div className="shrink-0 mb-1">
                     {msg.senderAvatar ? (
-                      msg.senderAvatar.startsWith("data:image/") ? (
-                        <img src={msg.senderAvatar} alt="Avatar" className="h-9 w-9 rounded-full object-cover border border-border/50 shadow-sm" />
+                      isAvatarImage(msg.senderAvatar) ? (
+                        <img src={normalizeAvatarSrc(msg.senderAvatar)} alt="Avatar" className="h-9 w-9 rounded-full object-cover border border-border/50 shadow-sm" />
                       ) : (
-                        <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-lg border border-border/50 shadow-sm">
-                          {msg.senderAvatar}
+                        <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-lg border border-border/50 shadow-sm overflow-hidden select-none">
+                          {msg.senderAvatar.length > 8 ? "👤" : msg.senderAvatar}
                         </div>
                       )
                     ) : (

@@ -775,7 +775,7 @@ export const AIChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col bg-background relative z-0 h-dvh overflow-hidden select-none">
+    <div className="flex flex-col bg-background relative z-0 h-full flex-1 min-h-0 overflow-hidden select-none">
       <LiquidBackground />
 
       <Header onlineCount={onlineCount} />

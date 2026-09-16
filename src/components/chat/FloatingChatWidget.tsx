@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MessageSquare, Maximize2, PhoneOff, Phone, Video, Mic, MicOff, GripVertical } from "lucide-react";
 import { useChatContext } from "@/contexts/ChatContext";
-import { cn } from "@/lib/utils";
+import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 
 interface FloatingChatWidgetProps {
   isMinimized?: boolean;
@@ -98,10 +98,10 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
         <div className="relative shrink-0 cursor-pointer" onClick={handleExpand}>
           <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-secondary border border-primary/30 flex items-center justify-center text-xs font-bold overflow-hidden shadow-inner">
             {strangerAvatar ? (
-              strangerAvatar.startsWith("data:image/") ? (
-                <img src={strangerAvatar} alt={strangerName} className="h-full w-full object-cover" />
+              isAvatarImage(strangerAvatar) ? (
+                <img src={normalizeAvatarSrc(strangerAvatar)} alt={strangerName} className="h-full w-full object-cover" />
               ) : (
-                <span>{strangerAvatar}</span>
+                <span>{strangerAvatar.length > 8 ? "👤" : strangerAvatar}</span>
               )
             ) : (
               <MessageSquare className="h-4 w-4 text-primary" />

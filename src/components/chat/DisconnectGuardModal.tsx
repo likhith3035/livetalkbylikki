@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Minimize2, LogOut, Heart, Phone, Video, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 
 interface DisconnectGuardModalProps {
   isOpen: boolean;
@@ -81,10 +81,10 @@ export const DisconnectGuardModal: React.FC<DisconnectGuardModalProps> = ({
               <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-75 blur-md" />
               <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-secondary border-2 border-primary/40 flex items-center justify-center text-2xl font-bold shadow-lg overflow-hidden shrink-0">
                 {strangerAvatar ? (
-                  strangerAvatar.startsWith("data:image/") ? (
-                    <img src={strangerAvatar} alt={strangerName} className="h-full w-full object-cover" />
+                  isAvatarImage(strangerAvatar) ? (
+                    <img src={normalizeAvatarSrc(strangerAvatar)} alt={strangerName} className="h-full w-full object-cover" />
                   ) : (
-                    <span>{strangerAvatar}</span>
+                    <span>{strangerAvatar.length > 8 ? "👤" : strangerAvatar}</span>
                   )
                 ) : (
                   <MessageSquare className="h-8 w-8 text-primary" />

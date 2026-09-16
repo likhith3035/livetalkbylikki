@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Message } from "@/hooks/use-chat";
-import { cn } from "@/lib/utils";
+import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 import Header from "@/components/Header";
 import MobileNav from "@/components/MobileNav";
 import ChatStatusBar from "@/components/chat/ChatStatusBar";
@@ -686,10 +686,10 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
               <button onClick={() => setShowProfileSheet(true)} className="flex items-center gap-3 hover:opacity-80 active:scale-[0.99] transition-all">
                 <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
                 {strangerAvatar && (
-                  strangerAvatar.startsWith("data:image/") ? (
-                    <img src={strangerAvatar} alt="avatar" className="h-5 w-5 rounded-full object-cover shrink-0 border border-primary/25" />
+                  isAvatarImage(strangerAvatar) ? (
+                    <img src={normalizeAvatarSrc(strangerAvatar)} alt="avatar" className="h-5 w-5 rounded-full object-cover shrink-0 border border-primary/25" />
                   ) : (
-                    <span className="text-sm shrink-0">{strangerAvatar}</span>
+                    <span className="text-sm shrink-0">{strangerAvatar.length > 8 ? "😀" : strangerAvatar}</span>
                   )
                 )}
                 <div className="flex items-center gap-2">

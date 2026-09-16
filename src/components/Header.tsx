@@ -9,7 +9,7 @@ import OnlineBadge from "@/components/OnlineBadge";
 import ApkDownloadButton from "@/components/ApkDownloadButton";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
-import { cn } from "@/lib/utils";
+import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 import { db } from "@/lib/firebase";
 import { ref as firebaseRef, onValue } from "firebase/database";
 import {
@@ -125,14 +125,16 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
           aria-label="View profile"
         >
           {strangerAvatar && (
-            strangerAvatar.startsWith("data:image/") ? (
+            isAvatarImage(strangerAvatar) ? (
               <img
-                src={strangerAvatar}
+                src={normalizeAvatarSrc(strangerAvatar)}
                 alt="avatar"
                 className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover shrink-0 border border-primary/20 shadow-sm"
               />
             ) : (
-              <span className="text-base sm:text-lg leading-none shrink-0">{strangerAvatar}</span>
+              <span className="text-base sm:text-lg leading-none shrink-0">
+                {strangerAvatar.length > 8 ? "😀" : strangerAvatar}
+              </span>
             )
           )}
           <div className="flex flex-col min-w-0">

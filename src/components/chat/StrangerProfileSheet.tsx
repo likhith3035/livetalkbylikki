@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, Tag, Shield, MessageSquare, Phone, Video, MapPin } from "lucide-react";
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 
 interface StrangerProfileSheetProps {
   show: boolean;
@@ -74,7 +73,7 @@ export default function StrangerProfileSheet({
   const h = nameHash(strangerName);
   const gradient = GRADIENTS[h % GRADIENTS.length];
   const emoji = strangerAvatar || FALLBACK_EMOJI[h % FALLBACK_EMOJI.length];
-  const isImageAvatar = emoji.startsWith("data:image/");
+  const isImageAvatar = isAvatarImage(emoji);
 
   return (
     <AnimatePresence>
@@ -86,7 +85,7 @@ export default function StrangerProfileSheet({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -102,7 +101,7 @@ export default function StrangerProfileSheet({
             onDragEnd={(_, info) => {
               if (info.offset.y > 100) onClose();
             }}
-            className="fixed bottom-0 left-0 right-0 z-[91] max-h-[85vh] rounded-t-3xl bg-card border-t border-border/60 shadow-2xl overflow-hidden flex flex-col"
+            className="fixed bottom-0 left-0 right-0 z-[121] max-h-[85vh] rounded-t-3xl bg-card border-t border-border/60 shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1">
@@ -130,9 +129,9 @@ export default function StrangerProfileSheet({
                 isImageAvatar ? "bg-muted" : cn("bg-gradient-to-br", gradient)
               )}>
                 {isImageAvatar ? (
-                  <img src={emoji} alt="Avatar" className="h-full w-full object-cover" />
+                  <img src={normalizeAvatarSrc(emoji)} alt="Avatar" className="h-full w-full object-cover" />
                 ) : (
-                  <span className="text-4xl select-none">{emoji}</span>
+                  <span className="text-4xl select-none">{emoji.length > 8 ? "👤" : emoji}</span>
                 )}
               </div>
 

@@ -16,7 +16,7 @@ import { useSessionStats } from "@/hooks/use-session-stats";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
+import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 import { useSEO } from "@/hooks/use-seo";
 import { toast } from "sonner";
 
@@ -111,7 +111,8 @@ const ProfilePage = () => {
         localStorage.getItem("lchat.profile.bio") ||
         "Just a student who loves games, good conversations and meeting new people. 🎮"
       );
-    } catch {
+    } catch (err) {
+      console.warn("Failed to load bio from localStorage:", err);
       return "Just a student who loves games, good conversations and meeting new people. 🎮";
     }
   });
@@ -120,7 +121,9 @@ const ProfilePage = () => {
     setBio(val);
     try {
       localStorage.setItem("lchat.profile.bio", val);
-    } catch {}
+    } catch (err) {
+      console.warn("Failed to persist bio to localStorage:", err);
+    }
   };
 
   // Joined Date state
@@ -130,7 +133,8 @@ const ProfilePage = () => {
       if (saved) return saved;
       localStorage.setItem("lchat.profile.joined", "Sep 2025");
       return "Sep 2025";
-    } catch {
+    } catch (err) {
+      console.warn("Failed to load joined date from localStorage:", err);
       return "Sep 2025";
     }
   });
@@ -175,7 +179,9 @@ const ProfilePage = () => {
     setInterests(newInterests);
     try {
       localStorage.setItem("lchat.interests", JSON.stringify(newInterests));
-    } catch {}
+    } catch (err) {
+      console.warn("Failed to persist interests to localStorage:", err);
+    }
   };
 
   const handleAddInterest = () => {
@@ -376,7 +382,7 @@ const ProfilePage = () => {
   };
 
   // Rank / Level Progress
-  const isCustomAvatarImage = profile.avatar?.startsWith("data:image/");
+  const isCustomAvatarImage = isAvatarImage(profile.avatar);
   const showBullseye = !isCustomAvatarImage && (!profile.avatar || profile.avatar === "🎯" || profile.avatar === "😀");
 
   const copyInviteLink = () => {
@@ -441,7 +447,7 @@ const ProfilePage = () => {
             >
               <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-[#3b497a] border border-indigo-200 dark:border-indigo-400/30 flex items-center justify-center text-xs font-black text-indigo-700 dark:text-indigo-100 shrink-0 shadow-inner">
                 {isCustomAvatarImage ? (
-                  <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                  <img src={normalizeAvatarSrc(profile.avatar)} alt="Avatar" className="w-full h-full object-cover rounded-full" />
                 ) : (
                   displayName.charAt(0).toUpperCase()
                 )}
@@ -536,11 +542,11 @@ const ProfilePage = () => {
                 className="group relative cursor-pointer w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white dark:border-[#121324] bg-white dark:bg-[#121326] shadow-md dark:shadow-2xl flex items-center justify-center overflow-hidden ring-2 ring-purple-500/30 dark:ring-purple-500/50 hover:ring-purple-400 transition-all dark:shadow-[0_0_25px_rgba(168,85,247,0.25)]"
               >
                 {isCustomAvatarImage ? (
-                  <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={normalizeAvatarSrc(profile.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                 ) : showBullseye ? (
                   <BullseyeDartAvatar />
                 ) : (
-                  <span className="text-5xl select-none">{profile.avatar}</span>
+                  <span className="text-5xl select-none">{profile.avatar && profile.avatar.length > 8 ? "🎯" : profile.avatar}</span>
                 )}
                 {/* Camera Overlay */}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-[2px]">

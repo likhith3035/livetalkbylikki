@@ -184,8 +184,16 @@ export default function GamesPage() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isDinoGameOpen, setIsDinoGameOpen] = useState(false);
   const [manualCode, setManualCode] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") || "");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
+  // Sync searchQuery when URL param (?q=...) changes
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q !== null) {
+      setSearchQuery(q);
+    }
+  }, [searchParams]);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [howToPlayGameId, setHowToPlayGameId] = useState<GameId>("cricket");
 
@@ -947,8 +955,8 @@ export default function GamesPage() {
                   className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-card dark:bg-[#12131e] border border-border dark:border-white/[0.08] hover:border-indigo-500/30 transition-all cursor-pointer group shadow-sm"
                   title="Click to customize gamer profile"
                 >
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-gradient-to-br dark:from-indigo-500/30 dark:to-purple-600/40 border border-indigo-200 dark:border-indigo-400/40 flex items-center justify-center text-xs font-black text-indigo-700 dark:text-indigo-200 shrink-0 shadow-inner">
-                    {gamerProfile.avatar || (gamerProfile.nickname ? gamerProfile.nickname.charAt(0).toUpperCase() : "R")}
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-gradient-to-br dark:from-indigo-500/30 dark:to-purple-600/40 border border-indigo-200 dark:border-indigo-400/40 flex items-center justify-center text-xs font-black text-indigo-700 dark:text-indigo-200 shrink-0 shadow-inner overflow-hidden">
+                    <GameAvatar avatar={gamerProfile.avatar} fallback={gamerProfile.nickname ? gamerProfile.nickname.charAt(0).toUpperCase() : "R"} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex flex-col text-left min-w-0 pr-1">
                     <span className="text-xs sm:text-sm font-bold text-foreground dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors truncate max-w-[120px] sm:max-w-[150px]">
