@@ -80,7 +80,8 @@
     "rooms": {
       ".read": true,
       "$roomId": {
-        ".write": true
+        ".write": true,
+        ".validate": "!newData.exists() || (newData.hasChild('created_at') || newData.hasChild('last_activity') || newData.hasChild('messages') || newData.hasChild('users') || newData.hasChild('status'))"
       }
     },
 
@@ -89,7 +90,8 @@
       "$roomCode": {
         ".read": true,
         "$reactionId": {
-          ".write": true
+          ".write": true,
+          ".validate": "!newData.exists() || (newData.hasChildren(['emoji', 'timestamp']) && newData.child('emoji').val().length <= 16)"
         }
       }
     },
@@ -99,7 +101,8 @@
       "$roomCode": {
         ".read": true,
         "$messageId": {
-          ".write": true
+          ".write": true,
+          ".validate": "!newData.exists() || (newData.hasChildren(['sender', 'timestamp']) && (!newData.hasChild('text') || newData.child('text').val().length <= 500))"
         }
       }
     },

@@ -37,9 +37,12 @@ const ImageUploadButton = ({ disabled, onUpload, roomId }: ImageUploadButtonProp
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const rawExt = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "";
+      const ALLOWED_EXTS = ["jpg", "jpeg", "png", "gif", "webp"];
+      const ext = ALLOWED_EXTS.includes(rawExt) ? rawExt : "jpg";
       const fileName = `${crypto.randomUUID()}.${ext}`;
-      const path = roomId ? `${roomId}/${fileName}` : fileName;
+      const cleanRoomId = roomId ? roomId.replace(/[^a-zA-Z0-9-_]/g, "") : null;
+      const path = cleanRoomId ? `${cleanRoomId}/${fileName}` : fileName;
 
       const { error } = await supabase.storage
         .from("chat-images")
@@ -47,18 +50,20 @@ const ImageUploadButton = ({ disabled, onUpload, roomId }: ImageUploadButtonProp
 
       if (error) throw error;
 
-      if (roomId) {
-        await trackRoomMediaUpload(roomId, path);
+      if (cleanRoomId) {
+        await trackRoomMediaUpload(cleanRoomId, path);
       }
 
       const { data } = supabase.storage.from("chat-images").getPublicUrl(path);
       onUpload(data.publicUrl);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Upload failed:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred while uploading the image.";
       toast({
         variant: "destructive",
         title: "Upload failed",
-        description: err.message || "An error occurred while uploading the image."
+        description: errorMessage,
       });
     } finally {
       setUploading(false);
@@ -79,8 +84,11 @@ const ImageUploadButton = ({ disabled, onUpload, roomId }: ImageUploadButtonProp
         }}
       />
       <button
+        type="button"
         onClick={() => fileRef.current?.click()}
         disabled={disabled || uploading}
+        aria-label="Upload image"
+        title="Upload image"
         className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
       >
         {uploading ? (

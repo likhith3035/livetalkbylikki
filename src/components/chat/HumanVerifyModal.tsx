@@ -44,9 +44,19 @@ function generatePuzzle(): Puzzle {
 
     const correct = String(answer);
     const wrongs = new Set<string>();
+    const offsets = [1, 2, 3, 4, 5, -1, -2, -3].sort(() => Math.random() - 0.5);
+    for (const offset of offsets) {
+      if (wrongs.size >= 3) break;
+      const val = answer + offset;
+      if (val >= 0 && String(val) !== correct) {
+        wrongs.add(String(val));
+      }
+    }
+    let bump = 1;
     while (wrongs.size < 3) {
-      const w = String(answer + (Math.floor(Math.random() * 7) - 3));
-      if (w !== correct && parseInt(w) >= 0) wrongs.add(w);
+      const candidate = String(answer + bump * 2 + 1);
+      if (candidate !== correct) wrongs.add(candidate);
+      bump++;
     }
     const options = [...wrongs, correct].sort(() => Math.random() - 0.5);
     return { type, question: `${a} ${op} ${b} = ?`, answer: correct, options, hint: "Solve the math" };

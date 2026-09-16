@@ -51,7 +51,12 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        globIgnores: ["**/AdminDashboard-*.js", "**/QrScanner-*.js"],
+        globIgnores: [
+          "**/AdminDashboard-*.js",
+          "**/QrScanner-*.js",
+          "**/screenshot-*.png",
+          "**/hero-banner.png",
+        ],
         importScripts: ["sw-custom.js"],
       },
       manifest: {
