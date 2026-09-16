@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, Tag, Shield, ChevronDown } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface StrangerProfileCardProps {
@@ -61,17 +61,43 @@ export default function StrangerProfileCard({
 }: StrangerProfileCardProps) {
   const elapsed = useElapsed(connectedAt);
   const [expanded, setExpanded] = useState(false);
+  const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const h = nameHash(strangerName);
   const gradient = GRADIENTS[h % GRADIENTS.length];
   const emoji = strangerAvatar || AVATARS[h % AVATARS.length];
+  const isImageAvatar = typeof emoji === "string" && (
+    emoji.startsWith("data:image/") ||
+    emoji.startsWith("http://") ||
+    emoji.startsWith("https://") ||
+    emoji.startsWith("blob:") ||
+    emoji.startsWith("/")
+  );
 
   // Auto-collapse after 4s
   useEffect(() => {
-    if (!show) { setExpanded(false); return; }
+    if (!show) {
+      setExpanded(false);
+      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+      return;
+    }
     setExpanded(true);
-    const t = setTimeout(() => setExpanded(false), 4000);
-    return () => clearTimeout(t);
+    collapseTimerRef.current = setTimeout(() => {
+      setExpanded(false);
+      collapseTimerRef.current = null;
+    }, 4000);
+
+    return () => {
+      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+    };
   }, [show]);
+
+  const handleToggle = () => {
+    if (collapseTimerRef.current) {
+      clearTimeout(collapseTimerRef.current);
+      collapseTimerRef.current = null;
+    }
+    setExpanded((prev) => !prev);
+  };
 
   return (
     <AnimatePresence>
@@ -90,16 +116,17 @@ export default function StrangerProfileCard({
 
             {/* Collapsed pill — always visible */}
             <button
-              onClick={() => setExpanded(e => !e)}
-              className="flex items-center gap-2 px-2.5 py-1.5 w-full"
+              onClick={handleToggle}
+              aria-label={`Stranger profile: ${strangerName}`}
+              className="flex items-center gap-2 px-2.5 py-1.5 w-full text-left"
             >
               {/* Mini avatar */}
               <div className={cn(
                 "h-6 w-6 rounded-lg bg-gradient-to-br flex items-center justify-center text-sm shrink-0 overflow-hidden",
-                !emoji.startsWith("data:image/") && gradient
+                !isImageAvatar && gradient
               )}>
-                {emoji.startsWith("data:image/") ? (
-                  <img src={emoji} alt="Avatar" className="h-full w-full object-cover rounded-lg" />
+                {isImageAvatar ? (
+                  <img src={emoji} alt={strangerName} className="h-full w-full object-cover rounded-lg" />
                 ) : (
                   emoji
                 )}

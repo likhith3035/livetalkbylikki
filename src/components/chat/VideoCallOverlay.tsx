@@ -491,7 +491,7 @@ const VideoCallOverlay = ({
   if (callStatus === "active") {
     return (
       <div
-        className="fixed inset-0 lg:left-[220px] z-[90] bg-background flex flex-col animate-fade-in overscroll-none select-none"
+        className="fixed inset-0 z-[100] bg-background flex flex-col animate-fade-in overscroll-none select-none"
         style={{ height: "100dvh", touchAction: "manipulation", overscrollBehavior: "none" }}
         data-video-call-active="true"
         data-no-pull-refresh="true"
@@ -606,6 +606,7 @@ const VideoCallOverlay = ({
                     ref={remoteVideoRef}
                     autoPlay
                     playsInline
+                    muted
                     className={cn(
                       "h-full w-full",
                       remoteIsScreenSharing ? "object-contain" : "object-cover",
@@ -724,6 +725,7 @@ const VideoCallOverlay = ({
                     ref={remoteVideoRef}
                     autoPlay
                     playsInline
+                    muted
                     className={cn(
                       "h-full w-full object-cover",
                       remoteIsScreenSharing && "object-contain bg-black",

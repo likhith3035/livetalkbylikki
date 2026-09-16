@@ -18,11 +18,44 @@ interface GifItem {
   full: string;
 }
 
+const FALLBACK_GIFS: GifItem[] = [
+  {
+    id: "wave",
+    preview: "https://media.giphy.com/media/mG2VSp1d48ZXuY97mO/giphy.gif",
+    full: "https://media.giphy.com/media/mG2VSp1d48ZXuY97mO/giphy.gif"
+  },
+  {
+    id: "laugh",
+    preview: "https://media.giphy.com/media/3oEjHAUOqG3lSS0f1C/giphy.gif",
+    full: "https://media.giphy.com/media/3oEjHAUOqG3lSS0f1C/giphy.gif"
+  },
+  {
+    id: "applause",
+    preview: "https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif",
+    full: "https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif"
+  },
+  {
+    id: "dance",
+    preview: "https://media.giphy.com/media/blSTtZehjAZ8I/giphy.gif",
+    full: "https://media.giphy.com/media/blSTtZehjAZ8I/giphy.gif"
+  },
+  {
+    id: "thumbsup",
+    preview: "https://media.giphy.com/media/111ebonMs90YLu/giphy.gif",
+    full: "https://media.giphy.com/media/111ebonMs90YLu/giphy.gif"
+  },
+  {
+    id: "cat",
+    preview: "https://media.giphy.com/media/BzyTuYCmvSORqs1ABM/giphy.gif",
+    full: "https://media.giphy.com/media/BzyTuYCmvSORqs1ABM/giphy.gif"
+  }
+];
+
 async function fetchGifsFromGiphy(endpoint: string): Promise<GifItem[]> {
   const res = await fetch(endpoint);
   if (!res.ok) throw new Error(`GIPHY HTTP ${res.status}`);
   const data = await res.json();
-  return (data.data || []).map((r: any) => ({
+  return (data.data || []).map((r: { id: string; images?: { fixed_width_small?: { url?: string }; fixed_width?: { url?: string }; original?: { url?: string } } }) => ({
     id: r.id,
     preview: r.images?.fixed_width_small?.url || r.images?.fixed_width?.url || r.images?.original?.url || "",
     full: r.images?.original?.url || r.images?.fixed_width?.url || "",
@@ -30,22 +63,30 @@ async function fetchGifsFromGiphy(endpoint: string): Promise<GifItem[]> {
 }
 
 async function searchGifs(query: string): Promise<GifItem[]> {
+  if (!GIPHY_KEY) {
+    const q = query.toLowerCase().trim();
+    return FALLBACK_GIFS.filter(g => g.id.includes(q) || !q);
+  }
   try {
     const url = `${GIPHY_API}/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=pg-13`;
     return await fetchGifsFromGiphy(url);
   } catch (e) {
-    console.warn("GIPHY search failed:", e);
-    throw new Error("GIF search is temporarily unavailable. Please try again.");
+    console.warn("GIPHY search failed, using fallback GIFs:", e);
+    const q = query.toLowerCase().trim();
+    return FALLBACK_GIFS.filter(g => g.id.includes(q) || !q);
   }
 }
 
 async function fetchTrendingGifs(): Promise<GifItem[]> {
+  if (!GIPHY_KEY) {
+    return FALLBACK_GIFS;
+  }
   try {
     const url = `${GIPHY_API}/trending?api_key=${GIPHY_KEY}&limit=24&rating=pg-13`;
     return await fetchGifsFromGiphy(url);
   } catch (e) {
-    console.warn("GIPHY trending failed:", e);
-    throw new Error("GIF service is temporarily unavailable. Please try again.");
+    console.warn("GIPHY trending failed, using fallback GIFs:", e);
+    return FALLBACK_GIFS;
   }
 }
 
@@ -82,9 +123,8 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
       setError(null);
       const items = await fetchTrendingGifs();
       setTrending(items);
-    } catch (err: any) {
-      setError(err.message || "Failed to load GIFs.");
-      setTrending([]);
+    } catch {
+      setTrending(FALLBACK_GIFS);
     } finally {
       setLoading(false);
     }
@@ -100,9 +140,8 @@ const GifPicker = ({ isConnected, onSendGif, customTrigger }: GifPickerProps) =>
       setError(null);
       const items = await searchGifs(q);
       setResults(items);
-    } catch (err: any) {
-      setError(err.message || "GIF search failed.");
-      setResults([]);
+    } catch {
+      setResults(FALLBACK_GIFS);
     } finally {
       setLoading(false);
     }

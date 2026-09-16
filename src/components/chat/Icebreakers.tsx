@@ -37,8 +37,12 @@ const Icebreakers = ({ onSelect, disabled, isSilentMatch = false }: IcebreakersP
   const handleShuffle = () => {
     setIsSpinning(true);
     setTimeout(() => {
-      const shuffled = [...ALL_ICEBREAKERS].sort(() => 0.5 - Math.random());
-      setCurrentPool(shuffled.slice(0, 5));
+      const pool = [...ALL_ICEBREAKERS];
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      setCurrentPool(pool.slice(0, 5));
       setIsSpinning(false);
     }, 250);
   };
@@ -67,6 +71,7 @@ const Icebreakers = ({ onSelect, disabled, isSilentMatch = false }: IcebreakersP
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleShuffle}
+          aria-label="Shuffle icebreaker topics"
           className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-primary/20 border border-primary/40 px-3 py-1 text-[11px] font-bold text-primary hover:bg-primary/30 transition-all shadow-sm shrink-0"
           title="Shuffle Icebreaker Topics"
         >
@@ -75,12 +80,13 @@ const Icebreakers = ({ onSelect, disabled, isSilentMatch = false }: IcebreakersP
         </motion.button>
 
         {/* Icebreaker Pills */}
-        {currentPool.map((item, idx) => (
+        {currentPool.map((item) => (
           <motion.button
-            key={idx}
+            key={item.text}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onSelect(item.text)}
+            aria-label={`Send icebreaker: ${item.label}`}
             className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-secondary/70 border border-border/60 px-3.5 py-1.5 text-[11px] font-medium text-foreground hover:bg-secondary hover:border-primary/30 transition-all shadow-sm shrink-0"
           >
             {item.icon}

@@ -53,6 +53,7 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
   const isAudioOnlyRef = useRef(false);
   // Ref for toggleScreenShare to avoid stale closure in onended
   const toggleScreenShareRef = useRef<() => void>(() => {});
+  const iceRecoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { sendSignalingEventRef.current = sendSignalingEvent; }, [sendSignalingEvent]);
 
@@ -104,6 +105,10 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
 
   const cleanup = useCallback(() => {
     console.log("WebRTC: Cleaning up call...");
+    if (iceRecoveryTimerRef.current) {
+      clearTimeout(iceRecoveryTimerRef.current);
+      iceRecoveryTimerRef.current = null;
+    }
     if (pcRef.current) {
       pcRef.current.close();
       pcRef.current = null;
@@ -190,7 +195,9 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
       if (pc.iceConnectionState === "disconnected") {
         console.warn("WebRTC: ICE disconnected — attempting automatic recovery");
         setIsReconnecting(true);
-        setTimeout(() => {
+        if (iceRecoveryTimerRef.current) clearTimeout(iceRecoveryTimerRef.current);
+        iceRecoveryTimerRef.current = setTimeout(() => {
+          iceRecoveryTimerRef.current = null;
           if (
             pcRef.current === pc &&
             pc.iceConnectionState !== "connected" &&
@@ -216,7 +223,9 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
             handleRenegotiateOffer(pc, sendSignalingEventRef.current, sessionId);
             console.log("WebRTC: ICE restart triggered");
             // Give it 8 seconds to recover
-            setTimeout(() => {
+            if (iceRecoveryTimerRef.current) clearTimeout(iceRecoveryTimerRef.current);
+            iceRecoveryTimerRef.current = setTimeout(() => {
+              iceRecoveryTimerRef.current = null;
               if (pcRef.current === pc &&
                   pc.iceConnectionState !== "connected" &&
                   pc.iceConnectionState !== "completed") {
@@ -423,25 +432,33 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
 
     if (!isNativeAndroid) return;
 
+    let isCancelled = false;
     let actionListener: { remove: () => void } | null = null;
 
     if (callStatus === "incoming") {
       import("@/plugins/call-service").then(async ({ default: CallService }) => {
+        if (isCancelled) return;
         CallService.startIncomingCallService({ strangerName: "Stranger" }).catch(() => {});
 
-        actionListener = await CallService.addListener("callAction", (data) => {
+        const listener = await CallService.addListener("callAction", (data) => {
           if (data.action === "acceptCall") {
             acceptCall();
           } else if (data.action === "declineCall") {
             declineCall();
           }
         });
+        if (isCancelled) {
+          listener.remove();
+        } else {
+          actionListener = listener;
+        }
       });
     } else if (callStatus === "active") {
       import("@/plugins/call-service").then(async ({ default: CallService }) => {
+        if (isCancelled) return;
         CallService.startCallService({ strangerName: "Stranger" }).catch(() => {});
 
-        actionListener = await CallService.addListener("callAction", (data) => {
+        const listener = await CallService.addListener("callAction", (data) => {
           if (data.action === "toggleMute") {
             toggleMute();
           } else if (data.action === "toggleCamera") {
@@ -450,6 +467,11 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
             endCall();
           }
         });
+        if (isCancelled) {
+          listener.remove();
+        } else {
+          actionListener = listener;
+        }
       });
     } else {
       import("@/plugins/call-service").then(({ default: CallService }) => {
@@ -458,7 +480,8 @@ export function useVideoCall({ sessionId, sendSignalingEvent, onCallEnded, onCal
     }
 
     return () => {
-      if (actionListener) actionListener.remove();
+      isCancelled = true;
+      if (actionListener) (actionListener as { remove: () => void }).remove();
     };
   }, [callStatus, toggleMute, toggleCamera, endCall, acceptCall, declineCall]);
 

@@ -238,8 +238,7 @@ export function useChat(callbacks?: ChatCallbacks) {
         if (eventKey) processedEventIds.add(eventKey);
 
         if (data.payload?.senderId === sessionId) {
-          // Still clean up our own events
-          setTimeout(() => remove(snapshot.ref).catch(() => {}), 3000);
+          // Ignore our own events (already added to local UI state on send)
           return;
         }
 

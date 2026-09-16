@@ -31,11 +31,13 @@ const MessageReactions = ({ messageId, reactions, onReact, isMine }: MessageReac
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 500, damping: 25 }}
             onClick={() => onReact(messageId, emoji)}
+            aria-label={`React with ${emoji} (${senders.length})`}
+            title={`React with ${emoji} (${senders.length})`}
             className={cn(
-              "flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-xs",
+              "flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs",
               "hover:bg-secondary active:scale-95 transition-all shadow-sm",
               "bg-background/90 backdrop-blur-sm border-border/60",
-              "min-w-[2rem] justify-center"
+              "min-w-[2.2rem] min-h-[28px] justify-center touch-manipulation"
             )}
           >
             <span className="text-sm leading-none">{emoji}</span>

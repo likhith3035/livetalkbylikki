@@ -43,6 +43,7 @@ const ChatInput = ({
   roomChannel, sessionId, roomId, hideGames, hasMessages,
   activeGame, setActiveGame, onToggleAI, onVideoCall, onNext, onReact
 }: ChatInputProps) => {
+  const isConnected = status === "connected";
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -146,8 +147,6 @@ const ChatInput = ({
       fileInputRef.current?.click();
     }, 50);
   };
-
-  const isConnected = status === "connected";
 
   return (
     <div className="w-full shrink-0 pb-[env(safe-area-inset-bottom,0px)] bg-background border-t border-border/30">
@@ -380,10 +379,11 @@ const ChatInput = ({
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={onNext}
-              className="h-9 w-9 sm:h-11 sm:w-11 rounded-full shrink-0 flex items-center justify-center bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 active:scale-95 transition-all lg:hidden shadow-sm"
+              className="h-10 w-10 sm:h-11 sm:w-11 rounded-full shrink-0 flex items-center justify-center bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 active:scale-95 transition-all lg:hidden shadow-sm touch-manipulation"
               title="Skip to next stranger"
+              aria-label="Skip to next stranger"
             >
-              <SkipForward className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
+              <SkipForward className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </motion.button>
           )}
 
@@ -405,9 +405,11 @@ const ChatInput = ({
             whileTap={{ scale: 0.95 }}
             onClick={handleSend}
             disabled={!isConnected || !input.trim()}
-            className="h-9 w-9 sm:h-11 sm:w-11 rounded-full shrink-0 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none shadow-md"
+            className="h-10 w-10 sm:h-11 sm:w-11 rounded-full shrink-0 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none shadow-md touch-manipulation"
+            title="Send message"
+            aria-label="Send message"
           >
-            <Send className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
+            <Send className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
           </motion.button>
         </div>
       </div>
