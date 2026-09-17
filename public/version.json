@@ -1,16 +1,16 @@
 {
-  "latestVersion": "1.9.0",
+  "latestVersion": "2.0.0",
   "minimumVersion": "1.0.0",
   "forceUpdate": false,
   "downloadUrl": "https://github.com/likhith3035/livetalkbylikki/raw/main/livetalk.apk",
-  "releaseDate": "July 25, 2026 (04:47 PM)",
+  "releaseDate": "September 18, 2026",
   "apkSize": "9.1 MB",
   "releaseNotes": [
-    "⚡ Android 13+ POST_NOTIFICATIONS Runtime Permission Auto-Prompt",
-    "📌 Upgraded Active Call Channel to DEFAULT Importance (Persistent Status Bar Icon)",
-    "🔔 WhatsApp-Style Full-Screen Intent Heads-Up Banner Fixes",
-    "🔊 In-Call Audio Output Selector (Speaker / Earpiece / Bluetooth)",
-    "📲 Automatic In-App APK Updater with 5s Auto-Download",
-    "🔒 Native Biometric Hardware Security Lock"
+    "📸 Snapchat-Grade Hardware Screenshot & Screen Recording Detection",
+    "🛡️ Android FLAG_SECURE Hardware Screen Protection & Recording Blackout",
+    "🔥 View-Once Ephemeral 'Snaps' with 10s Countdown and Auto-Burn on Screenshot",
+    "🔔 Real-Time Mutual Screenshot Alerts in Chat with Audio and Haptic Feedback",
+    "⚡ Android 14+ ScreenCaptureCallback Native Hardware Interception",
+    "🔒 Native Biometric Security Lock and Persistent WebRTC Audio/Video"
   ]
 }

@@ -12,12 +12,12 @@ export interface ApkInfo {
 export const GITHUB_RELEASE_APK_URL =
   "https://github.com/likhith3035/livetalkbylikki/raw/main/livetalk.apk";
 
-// APK hosted on GitHub Raw CDN (direct & instant download)
+// APK hosted on GitHub Raw CDN (direct & instant download) with local site fallback
 export const APK_INFO: ApkInfo = {
-  version: "1.6.0",
-  size: "8.5 MB",
-  sizeBytes: 8978432,
-  lastUpdated: "July 25, 2026",
+  version: "2.0.0",
+  size: "9.1 MB",
+  sizeBytes: 9144634,
+  lastUpdated: "September 18, 2026",
   url: GITHUB_RELEASE_APK_URL,
   isNew: true,
 };
