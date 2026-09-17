@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, Tag, Shield, MessageSquare, Phone, Video, MapPin } from "lucide-react";
 import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";

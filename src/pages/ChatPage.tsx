@@ -37,6 +37,7 @@ import StrangerProfileCard from "@/components/chat/StrangerProfileCard";
 import StrangerProfileSheet from "@/components/chat/StrangerProfileSheet";
 import DisconnectGuardModal from "@/components/chat/DisconnectGuardModal";
 import EmojiExplosionOverlay from "@/components/chat/EmojiExplosionOverlay";
+import PrivacyWatermark from "@/components/chat/PrivacyWatermark";
 import useMobileBackGuard from "@/hooks/use-mobile-back-guard";
 import useChatTranslator, { SUPPORTED_LANGUAGES } from "@/hooks/use-chat-translator";
 import { useHumanVerify } from "@/hooks/use-human-verify";
@@ -414,7 +415,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
 
   // Heuristic screen protection & recording detection hook
   const { isTriggered } = useProtectionDetection({
-    active: status === "connected" && privacyModeActive,
+    active: status === "connected" && (privacyModeActive || settings.protectionEnabled),
     onTriggered: (type) => {
       sendPrivacyAlert(type);
       toast({
@@ -466,8 +467,14 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     };
   }, [status, privacyModeActive, toast]);
 
-  const handleImageUpload = (url: string) => {
-    sendMessage("", url, replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.sender } : undefined);
+  const handleImageUpload = (url: string, isSnap?: boolean, snapDuration?: number) => {
+    sendMessage(
+      "",
+      url,
+      replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.sender } : undefined,
+      isSnap,
+      snapDuration
+    );
     setReplyingTo(null);
     // Track image in temp-room metadata for cleanup when room expires
     if (roomId) {

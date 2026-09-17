@@ -16,6 +16,9 @@ const audioCtx = () => {
 const playTone = (frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.15) => {
   try {
     const ctx = audioCtx();
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
