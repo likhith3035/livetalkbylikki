@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
+import { startNativeScreenshotDetection, stopNativeScreenshotDetection } from "@/lib/privacy-protection";
 
 interface UseProtectionDetectionProps {
   active: boolean;
@@ -132,6 +133,26 @@ export function useProtectionDetection({ active, onTriggered }: UseProtectionDet
       navigator.mediaDevices.getDisplayMedia = originalGetDisplayMedia;
       if (OriginalMediaRecorder) {
         window.MediaRecorder = OriginalMediaRecorder;
+      }
+    };
+  }, [active, settings.protectionEnabled, triggerViolation]);
+
+  // 5. Native Android Screenshot Detection (Android 14+ ScreenCaptureCallback & MediaStore observer)
+  useEffect(() => {
+    if (!active || !settings.protectionEnabled) {
+      return;
+    }
+
+    let unregister: (() => void) | null = null;
+    startNativeScreenshotDetection((info) => {
+      triggerViolation(`Screenshot Captured (${info.source})`);
+    }).then((cleanup) => {
+      unregister = cleanup;
+    });
+
+    return () => {
+      if (unregister) {
+        unregister();
       }
     };
   }, [active, settings.protectionEnabled, triggerViolation]);

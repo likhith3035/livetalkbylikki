@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.incogtalk.likki',
+  appId: 'com.ohmegle.app',
   appName: 'IncogTalk',
   webDir: 'dist',
   server: {
