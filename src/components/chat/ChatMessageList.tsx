@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
-import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X, File as FileIcon, Play, Pause, Mic, Download, BarChart3, Check, ChevronDown } from "lucide-react";
+import { CheckCheck, Pin, Trash2, Reply as ReplyIcon, Timer, Forward, Copy, Globe, X, File as FileIcon, Play, Pause, Mic, Download, BarChart3, Check, ChevronDown, Camera, Video, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import TypingIndicator from "@/components/TypingIndicator";
@@ -8,10 +8,12 @@ import ChatImage from "@/components/chat/ChatImage";
 import FormattedText from "@/components/chat/FormattedText";
 import SwipeableMessage from "@/components/chat/SwipeableMessage";
 import LinkPreview from "@/components/chat/LinkPreview";
+import SnapMediaModal from "@/components/chat/SnapMediaModal";
 import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Message } from "@/hooks/use-chat";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useChatContext } from "@/contexts/ChatContext";
 
 const AudioMessageBubble = ({ src, isMine }: { src: string; isMine?: boolean }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -239,6 +241,8 @@ const ChatMessageList = ({
   autoTranslations,
 }: ChatMessageListProps) => {
   const { settings } = useSettings();
+  const { markSnapOpened, sendPrivacyAlert } = useChatContext();
+  const [activeSnapMsg, setActiveSnapMsg] = useState<Message | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -577,8 +581,35 @@ const ChatMessageList = ({
                         </button>
                       )}
 
-                      {/* Media content — GIFs get special rendering */}
-                      {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
+                      {/* Media content — GIFs get special rendering, Snaps get View-Once interactive flow */}
+                      {msg.isSnap ? (
+                        msg.snapOpened ? (
+                          <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-muted/40 border border-border/50 text-muted-foreground select-none my-1">
+                            <Flame className="h-4 w-4 opacity-40 text-muted-foreground" />
+                            <span className="text-xs font-bold uppercase tracking-wider opacity-60">Snap Opened • Expired</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setActiveSnapMsg(msg);
+                              markSnapOpened(msg.id);
+                            }}
+                            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-rose-500/15 border border-amber-500/40 hover:border-amber-500 hover:scale-[1.02] active:scale-95 transition-all shadow-md select-none my-1 group text-left"
+                          >
+                            <div className="h-7 w-7 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md shrink-0">
+                              <Flame className="h-4 w-4 animate-bounce" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-black uppercase tracking-wider text-amber-500 dark:text-amber-400 group-hover:text-amber-300">
+                                New Snap • Tap to View
+                              </p>
+                              <p className="text-[10px] font-bold text-muted-foreground">
+                                Expires in {msg.snapDuration || 10}s
+                              </p>
+                            </div>
+                          </button>
+                        )
+                      ) : !msg.deleted && isAudioMedia(msg.imageUrl) ? (
                         <AudioMessageBubble src={msg.imageUrl!} isMine={false} />
                       ) : !msg.deleted && (isImageMedia(msg.imageUrl) || isGifUrl(msg.imageUrl)) ? (
                         <ChatImage src={msg.imageUrl!} isMine={false} />
@@ -710,8 +741,15 @@ const ChatMessageList = ({
                       </button>
                     )}
 
-                    {/* Media content — GIFs get special rendering */}
-                    {!msg.deleted && isAudioMedia(msg.imageUrl) ? (
+                    {/* Media content — GIFs get special rendering, Snaps get delivery indicators */}
+                    {msg.isSnap ? (
+                      <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/10 border border-white/20 text-white select-none my-1 shadow-sm">
+                        <Flame className="h-4 w-4 text-amber-400 animate-pulse" />
+                        <span className="text-xs font-bold uppercase tracking-wider">
+                          {msg.snapOpened ? "Snap Opened 🔥" : "Snap Sent • Delivered"}
+                        </span>
+                      </div>
+                    ) : !msg.deleted && isAudioMedia(msg.imageUrl) ? (
                       <AudioMessageBubble src={msg.imageUrl!} isMine={true} />
                     ) : !msg.deleted && (isImageMedia(msg.imageUrl) || isGifUrl(msg.imageUrl)) ? (
                       <ChatImage src={msg.imageUrl!} isMine={true} />
@@ -767,14 +805,52 @@ const ChatMessageList = ({
                 </div>
               ) : (
                 /* System messages */
-                <div
-                  className={cn(
-                    "max-w-fit bg-white/5 backdrop-blur-sm text-muted-foreground text-[11px] text-center italic px-4 py-1.5 rounded-full border border-white/5",
-                    msg.deleted && "opacity-60 italic"
-                  )}
-                >
-                  {msg.text && <FormattedText text={msg.text} />}
-                </div>
+                msg.text?.includes("📸") || msg.text?.toLowerCase().includes("screenshot") ? (
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="max-w-sm mx-auto my-2 px-4 py-2.5 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-500 dark:text-amber-400 flex items-center gap-3 shadow-lg shadow-amber-500/10 select-none"
+                  >
+                    <div className="h-8 w-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
+                      <Camera className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[12px] font-black tracking-wide leading-tight text-amber-500 dark:text-amber-300">
+                        {msg.text}
+                      </p>
+                      <p className="text-[9px] font-bold opacity-75 font-mono mt-0.5">
+                        {format(msg.timestamp, "h:mm a")} • Screenshot Alert
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : msg.text?.includes("🎥") || msg.text?.toLowerCase().includes("recording") ? (
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="max-w-sm mx-auto my-2 px-4 py-2.5 rounded-2xl bg-destructive/15 border border-destructive/40 text-destructive flex items-center gap-3 shadow-lg select-none"
+                  >
+                    <div className="h-8 w-8 rounded-xl bg-destructive/20 border border-destructive/30 flex items-center justify-center shrink-0">
+                      <Video className="h-4.5 w-4.5 text-destructive animate-pulse" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[12px] font-black tracking-wide leading-tight">
+                        {msg.text}
+                      </p>
+                      <p className="text-[9px] font-bold opacity-75 font-mono mt-0.5">
+                        {format(msg.timestamp, "h:mm a")} • Screen Recording Alert
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div
+                    className={cn(
+                      "max-w-fit bg-white/5 backdrop-blur-sm text-muted-foreground text-[11px] text-center italic px-4 py-1.5 rounded-full border border-white/5",
+                      msg.deleted && "opacity-60 italic"
+                    )}
+                  >
+                    {msg.text && <FormattedText text={msg.text} />}
+                  </div>
+                )
               )}
             </SwipeableMessage>
 
@@ -1031,6 +1107,19 @@ const ChatMessageList = ({
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* Snapchat View-Once Snap Fullscreen Modal */}
+      {activeSnapMsg && (
+        <SnapMediaModal
+          isOpen={true}
+          imageUrl={activeSnapMsg.imageUrl || ""}
+          senderName={strangerName || "Stranger"}
+          duration={activeSnapMsg.snapDuration || 10}
+          onClose={() => setActiveSnapMsg(null)}
+          onExpire={() => setActiveSnapMsg(null)}
+          onScreenshotAttempt={() => sendPrivacyAlert("Screenshot of Snap", "snap")}
+        />
+      )}
 
       <div ref={endRef} />
     </div>

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { RoomChannel } from "@/lib/types";
-import { Send, X, Reply, File, Image, Music, Video, Gamepad2, Smile, MapPin, Loader2, SkipForward, Sparkles, Mic, BarChart3, Heart, Palette } from "lucide-react";
+import { Send, X, Reply, File, Image, Music, Video, Gamepad2, Smile, MapPin, Loader2, SkipForward, Sparkles, Mic, BarChart3, Heart, Palette, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import EmojiPicker from "@/components/chat/EmojiPicker";
@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 interface ChatInputProps {
   status: ChatStatus;
   onSend: (text: string, imageUrl?: string, replyTo?: Message["replyTo"]) => void;
-  onImageUpload: (url: string) => void;
+  onImageUpload: (url: string, isSnap?: boolean, snapDuration?: number) => void;
   onTyping: (text?: string) => void;
   replyingTo?: Message | null;
   onCancelReply?: () => void;
@@ -50,6 +50,7 @@ const ChatInput = ({
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showQuickEmojis, setShowQuickEmojis] = useState(false);
   const [showIcebreakers, setShowIcebreakers] = useState(false);
+  const [isSnapUpload, setIsSnapUpload] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileTypeFilter, setFileTypeFilter] = useState<string>("*");
   const throttleRef = useRef<number>(0);
@@ -115,7 +116,8 @@ const ChatInput = ({
       }
 
       const { data } = supabase.storage.from("chat-images").getPublicUrl(path);
-      onImageUpload(data.publicUrl);
+      onImageUpload(data.publicUrl, isSnapUpload, 10);
+      setIsSnapUpload(false);
     } catch (err: any) {
       console.warn("Storage upload fallback engaged:", err);
       // Fallback: only allow Data URI fallback for images under 1MB to prevent RTDB memory bloat
@@ -124,7 +126,8 @@ const ChatInput = ({
         reader.onload = (e) => {
           const result = e.target?.result as string;
           if (result) {
-            onImageUpload(result);
+            onImageUpload(result, isSnapUpload, 10);
+            setIsSnapUpload(false);
           }
         };
         reader.readAsDataURL(file);
@@ -279,12 +282,29 @@ const ChatInput = ({
 
             {/* Images Pill */}
             <button
-              onClick={() => triggerFileSelect("image/*")}
+              onClick={() => {
+                setIsSnapUpload(false);
+                triggerFileSelect("image/*");
+              }}
               disabled={uploading}
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-border/60 bg-card rounded-full text-[10px] sm:text-[11px] font-semibold text-foreground hover:bg-secondary/50 active:scale-95 transition-all shrink-0"
             >
               {uploading ? <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <Image className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />}
               Images
+            </button>
+
+            {/* Snapchat-style View Once Snap Pill */}
+            <button
+              onClick={() => {
+                setIsSnapUpload(true);
+                triggerFileSelect("image/*");
+              }}
+              disabled={uploading}
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 border border-amber-500/40 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-full text-[10px] sm:text-[11px] font-bold text-amber-500 hover:bg-amber-500/20 active:scale-95 transition-all shrink-0 shadow-sm"
+              title="Send View-Once Snap (Self-Destructs in 10s)"
+            >
+              <Flame className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-500 animate-pulse" />
+              Snap 1x
             </button>
 
             {/* Video Pill */}

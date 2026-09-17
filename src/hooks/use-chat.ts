@@ -28,6 +28,9 @@ export interface Message {
   deleted?: boolean;
   pinned?: boolean;
   disappearAt?: number;
+  isSnap?: boolean;
+  snapOpened?: boolean;
+  snapDuration?: number;
 }
 
 export type ChatStatus = "idle" | "searching" | "connected" | "disconnected";
@@ -135,13 +138,24 @@ export function useChat(callbacks?: ChatCallbacks) {
     if (callbacksRef.current?.notificationsEnabled) sendNotification(title, body, type);
   }, []);
 
-  const addMessage = useCallback((sender: Message["sender"], text: string, imageUrl?: string, senderNickname?: string, senderAvatar?: string, existingId?: string, replyTo?: Message["replyTo"], senderMood?: string) => {
+  const addMessage = useCallback((
+    sender: Message["sender"],
+    text: string,
+    imageUrl?: string,
+    senderNickname?: string,
+    senderAvatar?: string,
+    existingId?: string,
+    replyTo?: Message["replyTo"],
+    senderMood?: string,
+    isSnap?: boolean,
+    snapDuration?: number
+  ) => {
     const id = existingId || crypto.randomUUID();
     const dt = disappearTimerRef.current;
     const disappearAt = dt && sender !== "system" ? Date.now() + dt * 1000 : undefined;
     setMessages((prev) => [
       ...prev,
-      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, senderMood, read: false, replyTo, disappearAt },
+      { id, sender, text, imageUrl, timestamp: new Date(), reactions: {}, senderNickname, senderAvatar, senderMood, read: false, replyTo, disappearAt, isSnap, snapDuration },
     ]);
     return id;
   }, []);
@@ -244,14 +258,41 @@ export function useChat(callbacks?: ChatCallbacks) {
 
         switch (data.event) {
           case "message": {
-            const payloadData = data.payload as { senderId: string; messageId: string; text: string; imageUrl?: string; nickname?: string; avatar?: string; replyTo?: Message["replyTo"]; mood?: string };
+            const payloadData = data.payload as { 
+              senderId: string; 
+              messageId: string; 
+              text: string; 
+              imageUrl?: string; 
+              nickname?: string; 
+              avatar?: string; 
+              replyTo?: Message["replyTo"]; 
+              mood?: string;
+              isSnap?: boolean;
+              snapDuration?: number;
+            };
             setStrangerTyping(false);
-            addMessage("stranger", payloadData.text, payloadData.imageUrl, payloadData.nickname, payloadData.avatar, payloadData.messageId, payloadData.replyTo, payloadData.mood);
+            addMessage(
+              "stranger", 
+              payloadData.text, 
+              payloadData.imageUrl, 
+              payloadData.nickname, 
+              payloadData.avatar, 
+              payloadData.messageId, 
+              payloadData.replyTo, 
+              payloadData.mood,
+              payloadData.isSnap,
+              payloadData.snapDuration
+            );
             playSoundIfEnabled("messageReceived");
             if (callbacksRef.current?.soundEnabled) haptics.vibrate(50);
-            notifyIfEnabled("L Chat", payloadData.imageUrl ? "📷 Image" : payloadData.text.slice(0, 100), "message");
+            notifyIfEnabled("L Chat", payloadData.isSnap ? "🔥 Sent a Snap" : payloadData.imageUrl ? "📷 Image" : payloadData.text.slice(0, 100), "message");
             channelMock.send({ type: "broadcast", event: "read", payload: { senderId: sessionId, messageId: payloadData.messageId } });
             setTimeout(() => remove(snapshot.ref).catch(() => {}), 3000);
+            break;
+          }
+          case "snap_opened": {
+            const payloadData = data.payload as { senderId: string; messageId: string };
+            setMessages((prev) => prev.map((msg) => msg.id === payloadData.messageId ? { ...msg, snapOpened: true } : msg));
             break;
           }
           case "read": {
@@ -488,7 +529,7 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, [addMessage, clearReconnectTimer, startFirebaseSearch, isBanned]);
 
   const sendMessage = useCallback(
-    (text: string, imageUrl?: string, replyTo?: Message["replyTo"]) => {
+    (text: string, imageUrl?: string, replyTo?: Message["replyTo"], isSnap?: boolean, snapDuration?: number) => {
       if (status !== "connected" || (!text.trim() && !imageUrl) || !roomChannelRef.current) return;
       if (text && checkProfanity(text)) {
         addMessage("system", "Blocked: Please maintain a friendly environment. Profanity is not allowed.");
@@ -497,16 +538,38 @@ export function useChat(callbacks?: ChatCallbacks) {
       }
       const p = getProfile();
       const messageId = crypto.randomUUID();
-      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId, replyTo, p.mood);
+      addMessage("you", text.trim(), imageUrl, p.nickname, p.avatar, messageId, replyTo, p.mood, isSnap, snapDuration);
       playSoundIfEnabled("messageSent");
       roomChannelRef.current.send({
         type: "broadcast",
         event: "message",
-        payload: { senderId: sessionId, messageId, text: text.trim(), imageUrl, nickname: userName || p.nickname, avatar: p.avatar, replyTo, mood: p.mood },
+        payload: { 
+          senderId: sessionId, 
+          messageId, 
+          text: text.trim(), 
+          imageUrl, 
+          nickname: userName || p.nickname, 
+          avatar: p.avatar, 
+          replyTo, 
+          mood: p.mood,
+          isSnap,
+          snapDuration: snapDuration || 10
+        },
       });
     },
     [status, addMessage, playSoundIfEnabled, checkProfanity, userName, stableId, sessionId, handleViolation]
   );
+
+  const markSnapOpened = useCallback((messageId: string) => {
+    setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, snapOpened: true } : m));
+    if (roomChannelRef.current) {
+      roomChannelRef.current.send({
+        type: "broadcast",
+        event: "snap_opened",
+        payload: { senderId: sessionId, messageId }
+      });
+    }
+  }, []);
 
   const nextChat = useCallback(() => {
     if (roomChannelRef.current && roomIdRef.current) {
@@ -783,6 +846,6 @@ export function useChat(callbacks?: ChatCallbacks) {
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom, joinRoomById,
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
-    reportStranger, addMessage
+    reportStranger, addMessage, markSnapOpened
   };
 }

@@ -5,6 +5,8 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "react-router-dom";
 import type { ChatTheme } from "@/components/chat/ChatThemePicker";
+import { sounds, haptics } from "@/lib/sounds";
+import { setNativeScreenSecure } from "@/lib/privacy-protection";
 
 interface InCallMessage {
   id: string;
@@ -37,7 +39,8 @@ interface ChatContextValue {
   // Chat actions
   setInterests: (i: string[]) => void;
   startChat: () => void;
-  sendMessage: (text: string, imageUrl?: string, replyTo?: Message["replyTo"]) => void;
+  sendMessage: (text: string, imageUrl?: string, replyTo?: Message["replyTo"], isSnap?: boolean, snapDuration?: number) => void;
+  markSnapOpened: (messageId: string) => void;
   sendTyping: (text?: string) => void;
   nextChat: () => void;
   stopChat: () => void;
@@ -228,7 +231,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     deleteMessage, pinMessage, disappearTimer, setDisappearTimer,
     sendSignalingEvent, reportStranger, stableId,
     userName, setUserName, strangerName, strangerAvatar, strangerMood, addMessage,
-    privateRoomCode, roomId,
+    privateRoomCode, roomId, markSnapOpened,
   } = chatHook;
 
   const [localPrivacyModeActive, setLocalPrivacyModeActive] = useState(false);
@@ -242,6 +245,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const togglePrivacyMode = useCallback((val?: boolean) => {
     const newVal = val !== undefined ? val : !localPrivacyModeActive;
     setLocalPrivacyModeActive(newVal);
+    setNativeScreenSecure(newVal);
     setPrivacyLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Local Privacy Mode ${newVal ? "Enabled" : "Disabled"}`]);
     
     // Add inline system message about active settings
@@ -258,7 +262,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [localPrivacyModeActive, roomChannel, sessionId, addMessage]);
 
-  const sendPrivacyAlert = useCallback((type: string) => {
+  const sendPrivacyAlert = useCallback((type: string, target?: "chat" | "snap" | "call") => {
     setPrivacyLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Local capture detected: ${type}`]);
     
     // Set local alert active to trigger UI overlays/blurs
@@ -266,15 +270,21 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     alertTimeoutRef.current = setTimeout(() => setPrivacyAlertActive(false), 3000);
 
+    const isScreenshot = type.toLowerCase().includes("screenshot");
+    if (isScreenshot) {
+      addMessage("system", target === "snap" ? "📸 You took a screenshot of a snap" : "📸 You took a screenshot");
+      haptics.vibrate(50);
+    }
+
     // Notify peer via signaling channel
     if (settings.notifyAlerts) {
       roomChannel?.send({
         type: "broadcast",
         event: "privacy_alert",
-        payload: { senderId: sessionId, username: userName || "Stranger", type }
+        payload: { senderId: sessionId, username: userName || "Stranger", type, target }
       });
     }
-  }, [roomChannel, sessionId, userName, settings.notifyAlerts]);
+  }, [roomChannel, sessionId, userName, settings.notifyAlerts, addMessage]);
 
   // Sync privacy mode events in real-time
   useEffect(() => {
@@ -283,6 +293,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       setStrangerPrivacyModeActive(false);
       setPrivacyAlertActive(false);
       setPrivacyLogs([]);
+      setNativeScreenSecure(false);
       return;
     }
 
@@ -309,7 +320,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const onPrivacyAlert = (payload: any) => {
-      const data = payload.payload as { senderId: string; username: string; type: string };
+      const data = payload.payload as { senderId: string; username: string; type: string; target?: string };
       if (data.senderId !== sessionId) {
         setPrivacyLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Peer attempted screen capture: ${data.type}`]);
         
@@ -318,12 +329,20 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
         alertTimeoutRef.current = setTimeout(() => setPrivacyAlertActive(false), 3000);
 
-        addMessage("system", `⚠️ Possible screenshot or screen recording detected!`);
+        const peerName = data.username || strangerName || "Stranger";
+        const isScreenshot = data.type.toLowerCase().includes("screenshot");
+        const alertMsg = isScreenshot
+          ? `📸 ${peerName} took a screenshot of ${data.target === "snap" ? "your snap" : "the chat"}!`
+          : `🎥 ${peerName} is recording the screen!`;
+
+        addMessage("system", alertMsg);
+        haptics.vibrate([100, 50, 100]);
+        sounds.play("blocked");
 
         toast({
           variant: "destructive",
-          title: "⚠️ Privacy Alert",
-          description: "Possible screenshot or screen recording detected",
+          title: isScreenshot ? "📸 Screenshot Alert" : "🎥 Screen Recording Alert",
+          description: alertMsg,
         });
       }
     };
@@ -344,6 +363,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       setStrangerPrivacyModeActive(false);
       setPrivacyAlertActive(false);
       setPrivacyLogs([]);
+      setNativeScreenSecure(false);
     }
   }, [status]);
 
@@ -494,7 +514,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const value: ChatContextValue = {
     messages, status, onlineCount, interests, matchedInterests, strangerTyping, strangerTypingText,
     autoReconnectCountdown, sessionId, roomId, roomChannel, searchElapsed, disappearTimer,
-    setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
+    setInterests, startChat, sendMessage, markSnapOpened, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom, joinRoomById,
     deleteMessage, pinMessage, setDisappearTimer,
     privateRoomCode, sendSignalingEvent,
