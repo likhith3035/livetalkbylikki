@@ -50,6 +50,7 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({
     if ((isHost || isLocalMode || isAIMode) && state.gameState === "waiting" && room.status === "playing") {
       const delay = Math.floor(Math.random() * 2400) + 1800;
       timerRef.current = setTimeout(() => {
+        if (room.status !== "playing") return;
         const greenTime = Date.now();
         gameAudio.playGo();
 
@@ -70,7 +71,10 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({
     }
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [state.gameState, isHost, isLocalMode, isAIMode, room.status, room.round]);
 
@@ -145,6 +149,10 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({
 
     // ── 1. False Start (Tapped while waiting) ──
     if (state.gameState === "waiting") {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       gameAudio.playLose();
       setLocalClicked(true);
 
@@ -304,10 +312,13 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({
       let nextGuestScore = room.players.guest?.score || 0;
 
       if (bothTapped) {
+        const isDraw = (newHostTime as number) === (newGuestTime as number);
         const hostFaster = (newHostTime as number) < (newGuestTime as number);
-        winnerId = hostFaster ? room.players.host.id : room.players.guest?.id || "guest";
-        if (hostFaster) nextHostScore += 1;
-        else nextGuestScore += 1;
+        winnerId = isDraw ? "draw" : hostFaster ? room.players.host.id : room.players.guest?.id || "guest";
+        if (!isDraw) {
+          if (hostFaster) nextHostScore += 1;
+          else nextGuestScore += 1;
+        }
       }
 
       const updatedState: ReactionGameState = {

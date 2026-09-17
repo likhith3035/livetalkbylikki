@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -13,6 +13,7 @@ import { GameRoomState } from "../types";
 import { GameAvatar } from "./GameAvatar";
 import { triggerConfetti } from "../services/confettiEffect";
 import { getGamerProfile, getXpForNextLevel } from "../services/gameProgressionService";
+import { gameAudio } from "../services/gameSoundService";
 
 interface VictoryModalProps {
   isOpen: boolean;
@@ -59,6 +60,22 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     }
   }, [isOpen, isWinner, isSeriesOver, isLocal, isDraw]);
 
+  // Synchronized victory, defeat, or draw audio when modal opens
+  const lastSoundRoundRef = useRef<number>(-1);
+  useEffect(() => {
+    if (!isOpen || !room.winnerId) return;
+    if (lastSoundRoundRef.current === room.round) return;
+    lastSoundRoundRef.current = room.round;
+
+    if (isDraw) {
+      gameAudio.playDraw();
+    } else if (isWinner || isLocal) {
+      gameAudio.playWin();
+    } else {
+      gameAudio.playLose();
+    }
+  }, [isOpen, room.round, room.winnerId, isDraw, isWinner, isLocal]);
+
   const hostPlayer = room.players.host;
   const rawGuest = room.players.guest;
 
@@ -88,7 +105,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     ? hostPlayer.name
     : guestDisplayName;
 
-  const seriesWinnerName = room.seriesWinnerId === "host"
+  const seriesWinnerName = room.seriesWinnerId === "host" || room.players.host.score > (room.players.guest?.score || 0)
     ? hostPlayer.name
     : guestDisplayName;
 

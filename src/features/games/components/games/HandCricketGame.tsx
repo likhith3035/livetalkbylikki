@@ -202,6 +202,34 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     }
   }, [activeInnings.balls, state.currentDelivery.hostPick, state.currentDelivery.guestPick]);
 
+  // Synchronize delivery audio & banner celebration across all players in online matches
+  const lastProcessedDeliveryTimestampRef = useRef<number>(0);
+  useEffect(() => {
+    const lastRes = state.currentDelivery?.lastResult;
+    if (!lastRes) return;
+    const latestTimestamp = activeDeliveries[0]?.timestamp || 0;
+    if (latestTimestamp && latestTimestamp === lastProcessedDeliveryTimestampRef.current) return;
+    lastProcessedDeliveryTimestampRef.current = latestTimestamp;
+
+    if (lastRes.isWicket) {
+      gameAudio.playWicket();
+      setBannerCelebration({ text: "WICKET! OUT! 🎯", sub: "The batsman is dismissed!", color: "#ef4444" });
+    } else if (lastRes.runsAdded === 6) {
+      gameAudio.playBoundarySix();
+      setBannerCelebration({ text: "MAXIMUM SIX! 🚀", sub: "Dispatched into the stands!", color: "#ec4899" });
+    } else if (lastRes.runsAdded === 4) {
+      gameAudio.playBoundaryFour();
+      setBannerCelebration({ text: "BOUNDARY FOUR! 🏏", sub: "Timed to perfection!", color: "#f59e0b" });
+    } else {
+      gameAudio.playBatHit(lastRes.runsAdded);
+    }
+
+    const timer = setTimeout(() => {
+      setBannerCelebration(null);
+    }, 2200);
+    return () => clearTimeout(timer);
+  }, [state.currentDelivery?.lastResult, activeDeliveries]);
+
   // ── AI Auto-Move Execution ──
   useEffect(() => {
     if (!isAIMode) return;
@@ -295,7 +323,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     if (isLocalMode || isAIMode) {
       onLocalMove?.({ ...room, gameState: nextState });
     } else {
-      sendGameMove(room.roomCode, myPlayerId, nextState);
+      sendGameMove(room.roomCode, nextState, room.players.guest?.id || myPlayerId);
     }
   };
 
@@ -330,7 +358,10 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
           const guestNum = num;
           const effectiveCaller = state.toss.callerId || room.players.host.id;
           const { isEven, callerWon } = evaluateCricketToss(state.toss.choice, hostNum, guestNum);
-          const winnerId = callerWon ? effectiveCaller : "local_player_2";
+          const opponentId = effectiveCaller === room.players.host.id
+            ? (room.players.guest?.id || (isLocalMode ? "local_player_2" : "guest_player"))
+            : room.players.host.id;
+          const winnerId = callerWon ? effectiveCaller : opponentId;
 
           const nextState: HandCricketState = {
             ...state,
@@ -362,10 +393,13 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
             nextState.toss.hostPick,
             nextState.toss.guestPick
           );
-          nextState.toss.winnerId = callerWon ? effectiveCaller : room.players.guest?.id || "guest_player";
+          const opponentId = effectiveCaller === room.players.host.id
+            ? room.players.guest?.id || "guest_player"
+            : room.players.host.id;
+          nextState.toss.winnerId = callerWon ? effectiveCaller : opponentId;
           nextState.phase = "toss_decision";
         }
-        sendGameMove(room.roomCode, myPlayerId, nextState);
+        sendGameMove(room.roomCode, nextState, nextState.toss.winnerId || myPlayerId);
       }
     }, 600);
   };
@@ -400,7 +434,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     if (isLocalMode || isAIMode) {
       onLocalMove?.({ ...room, gameState: nextState });
     } else {
-      sendGameMove(room.roomCode, myPlayerId, nextState);
+      sendGameMove(room.roomCode, nextState, room.currentTurn);
     }
   };
 
@@ -501,7 +535,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
           };
 
           if (isLocalMode || isAIMode) onLocalMove?.({ ...room, gameState: nextState });
-          else sendGameMove(room.roomCode, myPlayerId, nextState);
+          else sendGameMove(room.roomCode, nextState, room.currentTurn);
           return;
         }
 
@@ -530,7 +564,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
         };
 
         if (isLocalMode || isAIMode) onLocalMove?.({ ...room, gameState: nextState });
-        else sendGameMove(room.roomCode, myPlayerId, nextState);
+        else sendGameMove(room.roomCode, nextState, room.currentTurn);
         return;
       }
 
@@ -546,15 +580,20 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
         if (hasReachedTarget) {
           // Batsman chasing won!
           winnerId = state.batsmanId;
-          gameAudio.playWin();
         } else if (nextRuns === target - 1) {
           // Super Over / Tie
           winnerId = "draw";
-          gameAudio.playDraw();
         } else {
           // Defending bowler won!
           winnerId = state.bowlerId;
+        }
+
+        if (winnerId === myPlayerId || isLocalMode) {
           gameAudio.playWin();
+        } else if (winnerId === "draw") {
+          gameAudio.playDraw();
+        } else {
+          gameAudio.playLose();
         }
 
         const nextState: HandCricketState = {
@@ -601,7 +640,26 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
         };
 
         if (isLocalMode || isAIMode) onLocalMove?.(updatedRoom);
-        else sendGameMove(room.roomCode, myPlayerId, nextState);
+        else {
+          const isHostWon = winnerId === room.players.host.id;
+          const isGuestWon = winnerId === (room.players.guest?.id || "");
+          const nextHScore = isHostWon ? room.players.host.score + 1 : room.players.host.score;
+          const nextGScore = room.players.guest
+            ? (isGuestWon ? room.players.guest.score + 1 : room.players.guest.score)
+            : 0;
+
+          sendGameMove(
+            room.roomCode,
+            nextState,
+            room.players.host.id,
+            winnerId,
+            true,
+            nextHScore,
+            nextGScore,
+            room.rules?.turnTimerSeconds || 0,
+            room.rules?.maxSeriesWins || 2
+          );
+        }
         return;
       }
 
@@ -630,7 +688,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
       };
 
       if (isLocalMode || isAIMode) onLocalMove?.({ ...room, gameState: nextState });
-      else sendGameMove(room.roomCode, myPlayerId, nextState);
+      else sendGameMove(room.roomCode, nextState, room.currentTurn);
     }, 1200);
   };
 
@@ -681,15 +739,31 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     if (nextState.currentDelivery.hostPick !== null && nextState.currentDelivery.guestPick !== null) {
       handleDeliveryResolution(nextState.currentDelivery.hostPick, nextState.currentDelivery.guestPick);
     } else {
-      sendGameMove(room.roomCode, myPlayerId, nextState);
+      const nextTurnId = isH ? (room.players.guest?.id || "") : room.players.host.id;
+      sendGameMove(room.roomCode, nextState, nextTurnId);
     }
   };
 
   // ── Render Toss Phase ──
   if (state.phase === "toss") {
-    const isCaller = state.toss.callerId === myPlayerId;
-    const callerName = isCaller ? "You" : room.players.host.name;
-    const hostHasPicked = state.toss.hostPick !== null;
+    const isCaller = isLocalMode || state.toss.callerId === myPlayerId;
+    const callerName = state.toss.callerId === myPlayerId ? "You" : room.players.host.name;
+    const isH = room.players.host.id === myPlayerId;
+    const hasCurrentPlayerPickedToss = isLocalMode
+      ? (state.toss.hostPick !== null && state.toss.guestPick !== null)
+      : isAIMode
+      ? state.toss.hostPick !== null
+      : isH
+      ? state.toss.hostPick !== null
+      : state.toss.guestPick !== null;
+
+    const tossPromptText = isLocalMode
+      ? state.toss.hostPick === null
+        ? `${room.players.host.name} (P1): Pick Toss Number (1–6):`
+        : `Player 2: Pick Toss Number (1–6):`
+      : hasCurrentPlayerPickedToss
+      ? "Locked in! Waiting for opponent toss..."
+      : "Pick your Toss Number (1–6):";
 
     return (
       <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-3 select-none">
@@ -745,7 +819,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
         {/* Flash Number (1 to 6) */}
         <div className="w-full bg-card/80 backdrop-blur-xl border border-border/80 rounded-2xl p-4 shadow-2xl text-center">
           <span className="text-xs font-bold text-foreground mb-3 block">
-            {hostHasPicked ? "Waiting for opponent toss..." : "Pick your Toss Number (1–6):"}
+            {tossPromptText}
           </span>
 
           <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
@@ -754,8 +828,8 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
                 key={num}
                 type="button"
                 onClick={() => handlePickTossNumber(num)}
-                disabled={hostHasPicked || isCoinFlipping}
-                className="py-2.5 rounded-xl bg-background/80 hover:bg-primary/20 border border-border/80 hover:border-primary font-black text-base transition-all hover:scale-110 active:scale-95 text-foreground"
+                disabled={hasCurrentPlayerPickedToss || isCoinFlipping}
+                className="py-2.5 rounded-xl bg-background/80 hover:bg-primary/20 border border-border/80 hover:border-primary font-black text-base transition-all hover:scale-110 active:scale-95 text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {num}
               </button>
@@ -845,7 +919,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
             gameAudio.playUmpireWhistle();
             const nextState: HandCricketState = { ...state, phase: "innings_2" };
             if (isLocalMode || isAIMode) onLocalMove?.({ ...room, gameState: nextState });
-            else sendGameMove(room.roomCode, myPlayerId, nextState);
+            else sendGameMove(room.roomCode, nextState, room.currentTurn);
           }}
           className="py-3 px-8 rounded-2xl bg-primary text-primary-foreground font-extrabold text-sm shadow-xl shadow-primary/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
         >

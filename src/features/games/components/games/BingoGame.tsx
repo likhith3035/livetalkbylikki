@@ -381,16 +381,26 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     if (isOver) {
       if (isHostWon && isGuestWon) {
         winnerPlayerId = "draw";
+        gameAudio.playDraw();
       } else if (isHostWon) {
         winnerPlayerId = room.players.host.id;
         nextHostScore += 1;
-        gameAudio.playBingoWinFanfare();
+        if (isHost || isLocalMode) {
+          gameAudio.playBingoWinFanfare();
+        } else {
+          gameAudio.playLose();
+        }
       } else if (isGuestWon) {
-        winnerPlayerId = room.players.guest?.id || "guest_player";
+        winnerPlayerId = room.players.guest?.id || (isAIMode ? "ai_bot" : "guest_player");
         nextGuestScore += 1;
-        gameAudio.playBingoWinFanfare();
+        if ((!isHost && !isAIMode) || isLocalMode) {
+          gameAudio.playBingoWinFanfare();
+        } else {
+          gameAudio.playLose();
+        }
       } else {
         winnerPlayerId = "draw";
+        gameAudio.playDraw();
       }
     }
 
@@ -488,8 +498,33 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     return () => clearTimeout(timer);
   }, [isAITurn, guestCard, stampedNumbers, aiDifficulty, handleCallNumber]);
 
+  // Audio & Letter Unlock sync for incoming moves (online multiplayer & AI)
+  const prevLinesCountRef = useRef(myLinesResult.count);
+  const prevLastCalledRef = useRef(lastCalledNumber);
+
+  useEffect(() => {
+    if (lastCalledNumber !== null && lastCalledNumber !== prevLastCalledRef.current) {
+      prevLastCalledRef.current = lastCalledNumber;
+      gameAudio.playBingoCall();
+      gameAudio.playBingoStamp();
+    }
+  }, [lastCalledNumber]);
+
+  useEffect(() => {
+    if (myLinesResult.count > prevLinesCountRef.current) {
+      const newLines = myLinesResult.count;
+      gameAudio.playBingoLetterUnlock(newLines);
+      const letterUnlocked = BINGO_LETTERS[Math.min(newLines - 1, 4)];
+      setUnlockedLetterBanner(`🎉 Unlocked [ ${letterUnlocked} ]! (${newLines}/5 Lines)`);
+      const timer = setTimeout(() => setUnlockedLetterBanner(null), 2500);
+      prevLinesCountRef.current = newLines;
+      return () => clearTimeout(timer);
+    }
+    prevLinesCountRef.current = myLinesResult.count;
+  }, [myLinesResult.count, BINGO_LETTERS]);
+
   // Reshuffle card
-  const handleReshuffleCard = () => {
+  const handleReshuffleCard = async () => {
     if (stampedNumbers.length > 0) return;
     const newCard = generateRandomBingoCard();
     const updatedState: BingoGameState = {
@@ -505,10 +540,20 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
       lastCalledNumber: null,
       isCardLocked: false,
     };
-    onLocalMove?.({
-      ...room,
-      gameState: updatedState,
-    });
+    if (isLocalMode || isAIMode) {
+      onLocalMove?.({
+        ...room,
+        gameState: updatedState,
+      });
+    } else {
+      await sendGameMove(
+        room.roomCode,
+        updatedState,
+        room.currentTurn,
+        null,
+        false
+      );
+    }
     gameAudio.playClick();
   };
 

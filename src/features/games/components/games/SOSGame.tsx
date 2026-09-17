@@ -479,6 +479,19 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
     };
   }, []);
 
+  // Synchronize laser particle sparks & streak fanfare when lines change in online multiplayer
+  const lastLineCountRef = useRef(lines.length);
+  useEffect(() => {
+    if (lines.length > lastLineCountRef.current) {
+      const addedLines = lines.slice(lastLineCountRef.current);
+      spawnLineParticles(addedLines);
+      gameAudio.playSOSStreak();
+      lastLineCountRef.current = lines.length;
+    } else {
+      lastLineCountRef.current = lines.length;
+    }
+  }, [lines, spawnLineParticles]);
+
   // AI Speech bubble generator
   const triggerAiSpeech = useCallback((type: "onMove" | "onScore" | "onOpponentScore") => {
     if (!isAIMode) return;
@@ -641,14 +654,23 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
     let nextSeriesGuestScore = room.players.guest?.score || 0;
 
     if (isOver) {
+      const isHost = room.players.host.id === myPlayerId;
       if (nextHostScore > nextGuestScore) {
         winnerPlayerId = room.players.host.id;
         nextSeriesHostScore += 1;
-        gameAudio.playWin();
+        if (isHost || isLocalMode) {
+          gameAudio.playWin();
+        } else {
+          gameAudio.playLose();
+        }
       } else if (nextGuestScore > nextHostScore) {
-        winnerPlayerId = room.players.guest?.id || "guest_player";
+        winnerPlayerId = room.players.guest?.id || (isAIMode ? "ai_bot" : "guest_player");
         nextSeriesGuestScore += 1;
-        gameAudio.playWin();
+        if ((!isHost && !isAIMode) || isLocalMode) {
+          gameAudio.playWin();
+        } else {
+          gameAudio.playLose();
+        }
       } else {
         winnerPlayerId = "draw";
         gameAudio.playDraw();

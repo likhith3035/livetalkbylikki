@@ -45,6 +45,23 @@ export const RPSClashGame: React.FC<RPSClashGameProps> = ({ room, myPlayerId, on
     }
   }, [room.round, room.status, state.hostChoice, state.guestChoice]);
 
+  // Audio reaction when round resolves / reveals in online multiplayer
+  const hasPlayedRevealAudioRef = useRef(false);
+  useEffect(() => {
+    if (state.revealed && !hasPlayedRevealAudioRef.current) {
+      hasPlayedRevealAudioRef.current = true;
+      if (state.roundWinner === "draw") {
+        gameAudio.playDraw();
+      } else if (state.roundWinner === myPlayerId || room.mode === "local") {
+        gameAudio.playWin();
+      } else {
+        gameAudio.playLose();
+      }
+    } else if (!state.revealed) {
+      hasPlayedRevealAudioRef.current = false;
+    }
+  }, [state.revealed, state.roundWinner, myPlayerId, room.mode]);
+
   const handleSelectChoice = async (choice: "rock" | "paper" | "scissors") => {
     if (room.status === "round_over" || room.status === "game_over") return;
     if (hasMyChoice) return;

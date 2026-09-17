@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { GameRoomState, TicTacToeState } from "../../types";
 import { gameAudio } from "../../services/gameSoundService";
@@ -80,6 +80,17 @@ export function getSmartAIMove(
 }
 
 export const TicTacToeGame: React.FC<TicTacToeGameProps> = ({ room, myPlayerId, isMyTurn, onLocalMove }) => {
+  const aiTimerRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (aiTimerRef.current) {
+        clearTimeout(aiTimerRef.current);
+        aiTimerRef.current = null;
+      }
+    };
+  }, [room.round, room.status]);
+
   const state = room.gameState || { board: Array(9).fill(""), winningLine: null };
   const rawBoard = state.board || [];
   const board: TicTacToeCell[] = Array.from({ length: 9 }, (_, i) => rawBoard[i] || "");
@@ -170,7 +181,8 @@ export const TicTacToeGame: React.FC<TicTacToeGameProps> = ({ room, myPlayerId, 
       onLocalMove?.(updatedRoom);
 
       if (!isOver) {
-        setTimeout(() => {
+        if (aiTimerRef.current) clearTimeout(aiTimerRef.current);
+        aiTimerRef.current = setTimeout(() => {
           const aiDifficulty = room.rules?.aiDifficulty || "medium";
           const aiMoveIndex = getSmartAIMove(newBoard, "O", aiDifficulty);
           const aiBoard = [...newBoard];

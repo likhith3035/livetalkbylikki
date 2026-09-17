@@ -34,6 +34,21 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const aiMemoryRef = useRef<Map<number, string>>(new Map());
 
+  const stateRef = useRef<MemoryGameState>(state);
+  stateRef.current = state;
+
+  const roomRef = useRef<GameRoomState<MemoryGameState>>(room);
+  roomRef.current = room;
+
+  const isProcessingRef = useRef(isProcessing);
+  isProcessingRef.current = isProcessing;
+
+  const aiTimersRef = useRef<any[]>([]);
+  const clearAiTimers = () => {
+    aiTimersRef.current.forEach((t) => clearTimeout(t));
+    aiTimersRef.current = [];
+  };
+
   // Track cards revealed in AI memory
   useEffect(() => {
     state.cards.forEach((c) => {
@@ -45,7 +60,13 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
 
   useEffect(() => {
     setIsProcessing(false);
+    isProcessingRef.current = false;
+    clearAiTimers();
   }, [room.round, room.status]);
+
+  useEffect(() => {
+    return () => clearAiTimers();
+  }, []);
 
   const guestDisplayName =
     room.mode === "ai"
@@ -59,39 +80,49 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
       : guestPlayer.name;
 
   const handleCardClick = async (cardId: number) => {
-    if (isProcessing || room.status === "round_over" || room.status === "game_over") return;
-    if (room.mode !== "local" && !isMyTurn && room.currentTurn !== "ai_opponent") return;
+    const currentState = stateRef.current;
+    const currentRoom = roomRef.current;
 
-    const currentFlipped = Array.isArray(state.flippedCardIds) ? state.flippedCardIds : [];
+    if (isProcessingRef.current || currentRoom.status === "round_over" || currentRoom.status === "game_over") return;
+    if (currentRoom.mode !== "local" && !isMyTurn && currentRoom.currentTurn !== "ai_opponent") return;
+
+    const currentFlipped = Array.isArray(currentState.flippedCardIds) ? currentState.flippedCardIds : [];
     if (currentFlipped.length >= 2) return;
 
-    const card = state.cards.find((c) => c.id === cardId);
+    const card = currentState.cards.find((c) => c.id === cardId);
     if (!card || card.isFlipped || card.isMatched) return;
 
     gameAudio.playFlip();
 
     const newFlipped = [...currentFlipped, cardId];
-    const newCards = state.cards.map((c) => (c.id === cardId ? { ...c, isFlipped: true } : c));
+    const newCards = currentState.cards.map((c) => (c.id === cardId ? { ...c, isFlipped: true } : c));
+
+    // Keep stateRef immediately synced for asynchronous AI second card click
+    stateRef.current = {
+      ...currentState,
+      cards: newCards,
+      flippedCardIds: newFlipped,
+    };
 
     if (newFlipped.length === 1) {
       const updatedState: MemoryGameState = {
-        ...state,
+        ...currentState,
         cards: newCards,
         flippedCardIds: newFlipped,
       };
-      if (room.mode === "local" || room.mode === "ai") {
-        onLocalMove?.({ ...room, gameState: updatedState });
+      if (currentRoom.mode === "local" || currentRoom.mode === "ai") {
+        onLocalMove?.({ ...currentRoom, gameState: updatedState });
       } else {
         await sendGameMove(
-          room.roomCode,
+          currentRoom.roomCode,
           updatedState,
-          room.currentTurn,
+          currentRoom.currentTurn,
           null,
           false,
           undefined,
           undefined,
-          room.rules?.turnTimerSeconds || 0,
-          room.rules?.maxSeriesWins || 2
+          currentRoom.rules?.turnTimerSeconds || 0,
+          currentRoom.rules?.maxSeriesWins || 2
         );
       }
       return;
@@ -99,6 +130,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
 
     if (newFlipped.length === 2) {
       setIsProcessing(true);
+      isProcessingRef.current = true;
       const [firstId, secondId] = newFlipped;
       const firstCard = newCards.find((c) => c.id === firstId);
       const secondCard = newCards.find((c) => c.id === secondId);
@@ -107,7 +139,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
 
       if (isMatch) {
         gameAudio.playMatch();
-        const currentActivePlayerId = room.currentTurn;
+        const currentActivePlayerId = currentRoom.currentTurn;
         const matchedCards = newCards.map((c) =>
           c.id === firstId || c.id === secondId
             ? { ...c, isMatched: true, matchedBy: currentActivePlayerId }
@@ -115,26 +147,33 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
         );
 
         const newHostPairs =
-          currentActivePlayerId === room.players.host.id ? state.hostPairs + 1 : state.hostPairs;
+          currentActivePlayerId === currentRoom.players.host.id ? currentState.hostPairs + 1 : currentState.hostPairs;
         const newGuestPairs =
-          currentActivePlayerId !== room.players.host.id ? state.guestPairs + 1 : state.guestPairs;
+          currentActivePlayerId !== currentRoom.players.host.id ? currentState.guestPairs + 1 : currentState.guestPairs;
         const allMatched = matchedCards.every((c) => c.isMatched);
 
         let winnerId: string | null = null;
-        let nextHostScore = room.players.host.score;
-        let nextGuestScore = room.players.guest?.score || 0;
+        let nextHostScore = currentRoom.players.host.score;
+        let nextGuestScore = currentRoom.players.guest?.score || 0;
 
         if (allMatched) {
           if (newHostPairs > newGuestPairs) {
-            winnerId = room.players.host.id;
+            winnerId = currentRoom.players.host.id;
             nextHostScore += 1;
           } else if (newGuestPairs > newHostPairs) {
-            winnerId = room.players.guest?.id || (room.mode === "ai" ? "ai_opponent" : "guest");
+            winnerId = currentRoom.players.guest?.id || (currentRoom.mode === "ai" ? "ai_opponent" : "guest");
             nextGuestScore += 1;
           } else {
             winnerId = "draw";
           }
-          gameAudio.playWin();
+
+          if (winnerId === myPlayerId || currentRoom.mode === "local") {
+            gameAudio.playWin();
+          } else if (winnerId === "draw") {
+            gameAudio.playDraw();
+          } else {
+            gameAudio.playLose();
+          }
         }
 
         const updatedState: MemoryGameState = {
@@ -142,100 +181,110 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
           flippedCardIds: [],
           hostPairs: newHostPairs,
           guestPairs: newGuestPairs,
-          totalPairs: state.totalPairs,
+          totalPairs: currentState.totalPairs,
         };
+        stateRef.current = updatedState;
 
         const updatedRoom = {
-          ...room,
+          ...currentRoom,
           gameState: updatedState,
           winnerId,
           status: allMatched ? ("round_over" as const) : ("playing" as const),
           players: {
-            host: { ...room.players.host, score: nextHostScore },
-            guest: room.players.guest ? { ...room.players.guest, score: nextGuestScore } : null,
+            host: { ...currentRoom.players.host, score: nextHostScore },
+            guest: currentRoom.players.guest ? { ...currentRoom.players.guest, score: nextGuestScore } : null,
           },
         };
+        roomRef.current = updatedRoom;
 
-        if (room.mode === "local" || room.mode === "ai") {
+        if (currentRoom.mode === "local" || currentRoom.mode === "ai") {
           onLocalMove?.(updatedRoom);
           setIsProcessing(false);
+          isProcessingRef.current = false;
         } else {
           await sendGameMove(
-            room.roomCode,
+            currentRoom.roomCode,
             updatedState,
-            room.currentTurn,
+            currentRoom.currentTurn,
             winnerId,
             allMatched,
             nextHostScore,
             nextGuestScore,
-            room.rules?.turnTimerSeconds || 0,
-            room.rules?.maxSeriesWins || 2
+            currentRoom.rules?.turnTimerSeconds || 0,
+            currentRoom.rules?.maxSeriesWins || 2
           );
           setIsProcessing(false);
+          isProcessingRef.current = false;
         }
       } else {
         // Mismatch: show both cards flipped, then flip back after 800ms and pass turn
         const mismatchedState: MemoryGameState = {
-          ...state,
+          ...currentState,
           cards: newCards,
           flippedCardIds: newFlipped,
         };
+        stateRef.current = mismatchedState;
 
-        if (room.mode === "local" || room.mode === "ai") {
-          onLocalMove?.({ ...room, gameState: mismatchedState });
+        if (currentRoom.mode === "local" || currentRoom.mode === "ai") {
+          onLocalMove?.({ ...currentRoom, gameState: mismatchedState });
         } else {
           await sendGameMove(
-            room.roomCode,
+            currentRoom.roomCode,
             mismatchedState,
-            room.currentTurn,
+            currentRoom.currentTurn,
             null,
             false,
             undefined,
             undefined,
-            room.rules?.turnTimerSeconds || 0,
-            room.rules?.maxSeriesWins || 2
+            currentRoom.rules?.turnTimerSeconds || 0,
+            currentRoom.rules?.maxSeriesWins || 2
           );
         }
 
-        setTimeout(async () => {
+        const mismatchTimer = setTimeout(async () => {
           const resetCards = newCards.map((c) =>
             c.id === firstId || c.id === secondId ? { ...c, isFlipped: false } : c
           );
           const nextTurnId =
-            room.currentTurn === room.players.host.id
-              ? room.players.guest?.id || (room.mode === "ai" ? "ai_opponent" : "local_player_2")
-              : room.players.host.id;
+            currentRoom.currentTurn === currentRoom.players.host.id
+              ? currentRoom.players.guest?.id || (currentRoom.mode === "ai" ? "ai_opponent" : "local_player_2")
+              : currentRoom.players.host.id;
 
           const updatedState: MemoryGameState = {
-            ...state,
+            ...currentState,
             cards: resetCards,
             flippedCardIds: [],
           };
+          stateRef.current = updatedState;
 
           const updatedRoom = {
-            ...room,
+            ...currentRoom,
             gameState: updatedState,
             currentTurn: nextTurnId,
           };
+          roomRef.current = updatedRoom;
 
-          if (room.mode === "local" || room.mode === "ai") {
+          if (currentRoom.mode === "local" || currentRoom.mode === "ai") {
             onLocalMove?.(updatedRoom);
             setIsProcessing(false);
+            isProcessingRef.current = false;
           } else {
             await sendGameMove(
-              room.roomCode,
+              currentRoom.roomCode,
               updatedState,
               nextTurnId,
               null,
               false,
               undefined,
               undefined,
-              room.rules?.turnTimerSeconds || 0,
-              room.rules?.maxSeriesWins || 2
+              currentRoom.rules?.turnTimerSeconds || 0,
+              currentRoom.rules?.maxSeriesWins || 2
             );
             setIsProcessing(false);
+            isProcessingRef.current = false;
           }
         }, 800);
+        aiTimersRef.current.push(mismatchTimer);
       }
     }
   };
@@ -254,6 +303,8 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
     const available = state.cards.filter((c) => !c.isMatched && !c.isFlipped);
     if (available.length === 0) return;
 
+    clearAiTimers();
+
     const timer = setTimeout(() => {
       const difficulty = room.rules?.aiDifficulty || "medium";
       let firstPick: number | null = null;
@@ -261,7 +312,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
 
       if (difficulty !== "easy") {
         const memoryEntries = Array.from(aiMemoryRef.current.entries()).filter(([id]) => {
-          const c = state.cards.find((card) => card.id === id);
+          const c = stateRef.current.cards.find((card) => card.id === id);
           return c && !c.isMatched;
         });
 
@@ -277,21 +328,23 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
       }
 
       if (firstPick === null) {
-        const rand = Math.floor(Math.random() * available.length);
-        firstPick = available[rand].id;
+        const currentAvail = stateRef.current.cards.filter((c) => !c.isMatched && !c.isFlipped);
+        if (currentAvail.length === 0) return;
+        const rand = Math.floor(Math.random() * currentAvail.length);
+        firstPick = currentAvail[rand].id;
       }
 
       handleCardClick(firstPick);
 
-      setTimeout(() => {
+      const secondTimer = setTimeout(() => {
         if (secondPick === null) {
-          const firstCard = state.cards.find((c) => c.id === firstPick);
+          const firstCard = stateRef.current.cards.find((c) => c.id === firstPick);
           if (firstCard && difficulty === "hard") {
             const matchInMem = Array.from(aiMemoryRef.current.entries()).find(
               ([id, emoji]) =>
                 emoji === firstCard.emoji &&
                 id !== firstPick &&
-                !state.cards.find((c) => c.id === id)?.isMatched
+                !stateRef.current.cards.find((c) => c.id === id)?.isMatched
             );
             if (matchInMem) {
               secondPick = matchInMem[0];
@@ -300,7 +353,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
         }
 
         if (secondPick === null) {
-          const remaining = state.cards.filter(
+          const remaining = stateRef.current.cards.filter(
             (c) => !c.isMatched && !c.isFlipped && c.id !== firstPick
           );
           if (remaining.length > 0) {
@@ -311,10 +364,13 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
         if (secondPick !== null) {
           handleCardClick(secondPick);
         }
-      }, 600);
-    }, 600);
+      }, 650);
+      aiTimersRef.current.push(secondTimer);
+    }, 700);
 
-    return () => clearTimeout(timer);
+    aiTimersRef.current.push(timer);
+
+    return () => clearAiTimers();
   }, [room.mode, room.currentTurn, isProcessing, room.status, state.cards]);
 
   return (

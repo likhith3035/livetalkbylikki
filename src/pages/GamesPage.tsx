@@ -432,7 +432,7 @@ export default function GamesPage() {
           gameAudio.playWin();
           toast.success("Found an online opponent! Match starting...");
         }
-      } catch (err: any) {
+      } catch {
         setIsSearchingQuickMatch(false);
         toast.info("Online queue unavailable. Launching Cyber AI Bot match!");
         await handleSelectMode(gameId, "ai", rules);
@@ -458,8 +458,9 @@ export default function GamesPage() {
         setIsQRModalOpen(true);
         setSearchParams({ room: newRoom.roomCode });
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to initialize game room.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to initialize game room.";
+      toast.error(message);
     }
   };
 
@@ -505,8 +506,11 @@ export default function GamesPage() {
         gameAudio.playWin();
         toast.success(`Connected to room ${clean}!`);
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to join game room.");
+    } catch (err: unknown) {
+      createdRoomCodeRef.current = clean;
+      setSearchParams({});
+      const message = err instanceof Error ? err.message : "Failed to join game room.";
+      toast.error(message);
     }
   };
 
@@ -521,6 +525,7 @@ export default function GamesPage() {
       });
 
       if (specRoom) {
+        createdRoomCodeRef.current = clean;
         setActiveRoom(specRoom);
         setIsSpectator(true);
         setDismissedVictoryRound(-1);
@@ -529,8 +534,11 @@ export default function GamesPage() {
         setSearchParams({ room: clean, spectate: "true" });
         toast.success(`Now spectating match in room ${clean}!`);
       }
-    } catch (err: any) {
-      toast.error(err.message || "Could not spectate this room.");
+    } catch (err: unknown) {
+      createdRoomCodeRef.current = clean;
+      setSearchParams({});
+      const message = err instanceof Error ? err.message : "Could not spectate this room.";
+      toast.error(message);
     }
   };
 
@@ -577,6 +585,7 @@ export default function GamesPage() {
 
   const handleTurnTimeout = useCallback(async () => {
     if (!activeRoom || activeRoom.status !== "playing" || isSpectator) return;
+    if (activeRoom.gameId === "reaction" || activeRoom.gameId === "rps") return;
     const isMyTurn = activeRoom.currentTurn === myPlayerId;
     if (!isMyTurn) return;
 

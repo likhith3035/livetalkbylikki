@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { GameRoomState, ConnectFourState } from "../../types";
 import { gameAudio } from "../../services/gameSoundService";
@@ -121,6 +121,16 @@ export function getBestConnectFourAIMove(
 
 export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({ room, myPlayerId, isMyTurn, onLocalMove }) => {
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
+  const aiTimerRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (aiTimerRef.current) {
+        clearTimeout(aiTimerRef.current);
+        aiTimerRef.current = null;
+      }
+    };
+  }, [room.round, room.status]);
 
   const state = room.gameState || {
     board: Array(ROWS).fill("").map(() => Array(COLS).fill("")),
@@ -215,7 +225,8 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({ room, myPlayer
       onLocalMove?.(updatedRoom);
 
       if (!isOver) {
-        setTimeout(() => {
+        if (aiTimerRef.current) clearTimeout(aiTimerRef.current);
+        aiTimerRef.current = setTimeout(() => {
           const aiDiff = room.rules?.aiDifficulty || "medium";
           const aiCol = getBestConnectFourAIMove(newBoard, "yellow", aiDiff);
           const aiRow = getLowestEmptyRow(newBoard, aiCol);
