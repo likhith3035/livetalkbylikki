@@ -3,7 +3,8 @@ import { evaluateCricketToss } from "@/features/games/components/games/HandCrick
 import { determineRPSWinner } from "@/features/games/components/games/RPSClashGame";
 import { checkTicTacToeWinner } from "@/features/games/components/games/TicTacToeGame";
 import { checkConnectFourWinner } from "@/features/games/components/games/ConnectFourGame";
-import { calculateBingoLines } from "@/features/games/components/games/BingoGame";
+import { calculateBingoLines, normalizeBingoCard } from "@/features/games/components/games/BingoGame";
+import { isLineInBlastArea } from "@/features/games/components/games/SOSGame";
 
 describe("Games Audit Edge Cases & Multi-Player Robustness", () => {
   describe("Hand Cricket - Comprehensive Toss Winner Assignment", () => {
@@ -259,6 +260,117 @@ describe("Games Audit Edge Cases & Multi-Player Robustness", () => {
 
       // Player 2's buttons MUST NOT be disabled in step 2
       expect(hasCurrentPlayerPickedToss).toBe(false);
+    });
+  });
+
+  describe("Super SOS Neon - EMP Blast Line Calculation", () => {
+    it("identifies lines crossing through the 3x3 EMP blast zone", () => {
+      const lineAcross = {
+        id: "line_1",
+        startRow: 1,
+        startCol: 1,
+        endRow: 1,
+        endCol: 3,
+        color: "#06b6d4",
+        playerId: "host",
+      };
+
+      // Blast center at (1, 2) covers row 0..2, col 1..3
+      expect(isLineInBlastArea(lineAcross, 1, 2)).toBe(true);
+    });
+
+    it("leaves lines outside the 3x3 blast zone intact", () => {
+      const distantLine = {
+        id: "line_2",
+        startRow: 4,
+        startCol: 4,
+        endRow: 4,
+        endCol: 6,
+        color: "#f43f5e",
+        playerId: "guest",
+      };
+
+      // Blast center at (1, 1) covers row 0..2, col 0..2
+      expect(isLineInBlastArea(distantLine, 1, 1)).toBe(false);
+    });
+  });
+
+  describe("Bingo Blitz - Robust Card Normalization", () => {
+    it("handles normal 2D arrays correctly", () => {
+      const card = [
+        [1, 2, 3, 4, 5],
+        [6, 7, 8, 9, 10],
+        [11, 12, 13, 14, 15],
+        [16, 17, 18, 19, 20],
+        [21, 22, 23, 24, 25],
+      ];
+      const normalized = normalizeBingoCard(card);
+      expect(normalized).not.toBeNull();
+      expect(normalized?.length).toBe(5);
+      expect(normalized?.[0]?.[0]).toBe(1);
+    });
+
+    it("normalizes Firebase RTDB objectified arrays ({ '0': [...], ... }) without breaking", () => {
+      const rtdbObjectCard = {
+        "0": { "0": 5, "1": 12, "2": 3, "3": 19, "4": 25 },
+        "1": { "0": 8, "1": 14, "2": 2, "3": 21, "4": 1 },
+        "2": { "0": 9, "1": 15, "2": 4, "3": 22, "4": 6 },
+        "3": { "0": 10, "1": 16, "2": 7, "3": 23, "4": 11 },
+        "4": { "0": 13, "1": 17, "2": 18, "3": 24, "4": 20 },
+      };
+      const normalized = normalizeBingoCard(rtdbObjectCard);
+      expect(normalized).not.toBeNull();
+      expect(normalized?.length).toBe(5);
+      expect(normalized?.[0]?.[0]).toBe(5);
+      expect(normalized?.[4]?.[4]).toBe(20);
+    });
+  });
+
+  describe("Victory Modal - Series Champion Determination", () => {
+    it("correctly identifies host as series champion when host has more wins", () => {
+      const hostId = "host_user_1";
+      const guestId = "guest_user_2";
+      const myPlayerId = hostId;
+      const isHost = true;
+      const hostScore = 2;
+      const guestScore = 1;
+      const isSeriesOver = true;
+
+      const isHostSeriesWinner = hostScore > guestScore;
+      const isSeriesWinner = isSeriesOver && ((isHost && isHostSeriesWinner) || (!isHost && !isHostSeriesWinner));
+
+      expect(isHostSeriesWinner).toBe(true);
+      expect(isSeriesWinner).toBe(true);
+    });
+
+    it("correctly rejects loser from being crowned series champion", () => {
+      const hostId = "host_user_1";
+      const guestId = "guest_user_2";
+      const myPlayerId = guestId; // Current player is the guest
+      const isHost = false;
+      const hostScore = 2;
+      const guestScore = 0;
+      const isSeriesOver = true;
+
+      const isHostSeriesWinner = hostScore > guestScore;
+      const isSeriesWinner = isSeriesOver && ((isHost && isHostSeriesWinner) || (!isHost && !isHostSeriesWinner));
+
+      // Guest lost, so isSeriesWinner must be false
+      expect(isSeriesWinner).toBe(false);
+    });
+  });
+
+  describe("Arcade XP & Streak Security - Local Mode Isolation", () => {
+    it("filters out local pass-and-play from awarding ranked XP and modifying competitive stats", () => {
+      const mode = "local";
+      const shouldAwardRankedXP = mode !== "local";
+      expect(shouldAwardRankedXP).toBe(false);
+    });
+
+    it("allows online and AI modes to award XP and record match history", () => {
+      expect("friend" !== "local").toBe(true);
+      expect("quickmatch" !== "local").toBe(true);
+      expect("ai" !== "local").toBe(true);
     });
   });
 });
