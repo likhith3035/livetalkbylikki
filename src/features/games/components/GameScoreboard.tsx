@@ -15,6 +15,7 @@ import {
   getSavedConnectFourTheme,
   C4_THEME_CHANGE_EVENT,
 } from "../data/connectFourThemes";
+import { GameVoiceChat } from "./GameVoiceChat";
 
 interface GameScoreboardProps {
   room: GameRoomState;
@@ -55,6 +56,7 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
   const isMyTurn = !isSpectator && room.currentTurn === myPlayerId;
   const isAI = room.mode === "ai";
   const isLocal = room.mode === "local";
+  const isOnline = room.mode === "friend" || room.mode === "quickmatch";
 
   const isHostTurn = room.currentTurn === room.players.host.id;
   const isGuestTurn = !isHostTurn && room.status === "playing";
@@ -231,6 +233,17 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Push-To-Talk WebRTC Voice Chat for Online Matches */}
+      {isOnline && (
+        <div className="w-full flex items-center justify-center -mt-1.5 mb-1">
+          <GameVoiceChat
+            roomCode={room.roomCode}
+            isHost={room.players.host.id === myPlayerId}
+            isOnline={isOnline}
+          />
+        </div>
+      )}
 
       {/* Players & Turn Card */}
       <div className="p-2 sm:p-3 rounded-2xl bg-card/90 backdrop-blur-md border border-border shadow-md flex items-center justify-between gap-1.5 sm:gap-3">
