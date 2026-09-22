@@ -257,6 +257,20 @@ export function generateRandomBingoCard(): number[][] {
   return card;
 }
 
+export function normalizeBingoCard(card: any): number[][] | null {
+  if (!card) return null;
+  if (Array.isArray(card) && card.length === 5) {
+    return card.map((row) => (Array.isArray(row) ? row : Object.values(row || {})));
+  }
+  if (typeof card === "object") {
+    const rows = Object.values(card);
+    if (rows.length === 5) {
+      return rows.map((row) => (Array.isArray(row) ? row : Object.values(row || {})));
+    }
+  }
+  return null;
+}
+
 // ── Main Bingo Blitz Duel Deluxe Component ──
 
 export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn, onLocalMove }) => {
@@ -266,18 +280,31 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
   const isAIMode = room.mode === "ai";
   const isLocalMode = room.mode === "local";
 
+  const localHostCardRef = useRef<number[][] | null>(null);
+  const localGuestCardRef = useRef<number[][] | null>(null);
+
   const hostCard: number[][] = useMemo(() => {
-    if (rawState?.hostCard && Array.isArray(rawState.hostCard) && rawState.hostCard.length === 5) {
-      return rawState.hostCard;
+    const normalized = normalizeBingoCard(rawState?.hostCard);
+    if (normalized) {
+      localHostCardRef.current = normalized;
+      return normalized;
     }
-    return generateRandomBingoCard();
+    if (!localHostCardRef.current) {
+      localHostCardRef.current = generateRandomBingoCard();
+    }
+    return localHostCardRef.current;
   }, [rawState?.hostCard]);
 
   const guestCard: number[][] = useMemo(() => {
-    if (rawState?.guestCard && Array.isArray(rawState.guestCard) && rawState.guestCard.length === 5) {
-      return rawState.guestCard;
+    const normalized = normalizeBingoCard(rawState?.guestCard);
+    if (normalized) {
+      localGuestCardRef.current = normalized;
+      return normalized;
     }
-    return generateRandomBingoCard();
+    if (!localGuestCardRef.current) {
+      localGuestCardRef.current = generateRandomBingoCard();
+    }
+    return localGuestCardRef.current;
   }, [rawState?.guestCard]);
 
   const myCard = isHost || isAIMode ? hostCard : guestCard;
@@ -301,6 +328,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
   const [showOpponentRadar, setShowOpponentRadar] = useState(false);
   const [unlockedLetterBanner, setUnlockedLetterBanner] = useState<string | null>(null);
   const [wildStampActive, setWildStampActive] = useState(false);
+  const [wildStampsUsed, setWildStampsUsed] = useState(0);
   const [aiSpeech, setAiSpeech] = useState<string | null>(null);
 
   const BINGO_LETTERS = ["B", "I", "N", "G", "O"];
@@ -391,7 +419,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
           gameAudio.playLose();
         }
       } else if (isGuestWon) {
-        winnerPlayerId = room.players.guest?.id || (isAIMode ? "ai_bot" : "guest_player");
+        winnerPlayerId = room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2");
         nextGuestScore += 1;
         if ((!isHost && !isAIMode) || isLocalMode) {
           gameAudio.playBingoWinFanfare();
@@ -408,10 +436,13 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     const nextTurnId = isWildExtra
       ? actingPlayerId
       : actingPlayerId === room.players.host.id
-      ? room.players.guest?.id || "guest_player"
+      ? room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2")
       : room.players.host.id;
 
-    if (wildStampActive) setWildStampActive(false);
+    if (wildStampActive) {
+      setWildStampActive(false);
+      setWildStampsUsed((prev) => prev + 1);
+    }
 
     const updatedGameState: BingoGameState = {
       hostCard,
@@ -814,19 +845,23 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
           <div className="flex items-center gap-2">
             <button
               type="button"
-              title="Wild Star Stamp (Stamp 1 free tile)"
+              title={wildStampsUsed >= 1 ? "Wild Star Stamp already used" : "Wild Star Stamp (Stamp 1 free tile, 1 per match)"}
+              disabled={wildStampsUsed >= 1}
               onClick={() => {
+                if (wildStampsUsed >= 1) return;
                 setWildStampActive(!wildStampActive);
                 if (!wildStampActive) gameAudio.playPowerUpTrigger();
               }}
               className={`flex items-center gap-1 py-1 px-2.5 rounded-xl text-xs font-bold border transition-all ${
                 wildStampActive
                   ? "bg-purple-500/30 border-purple-400 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.5)] scale-105"
+                  : wildStampsUsed >= 1
+                  ? "bg-card/20 border-border/30 text-muted-foreground/40 cursor-not-allowed"
                   : "bg-card/40 border-border/60 text-purple-400 hover:bg-purple-500/10"
               }`}
             >
               <Star className="w-3.5 h-3.5 text-purple-400" />
-              <span>Wild Stamp</span>
+              <span>{wildStampsUsed >= 1 ? "Wild (Used)" : "Wild Stamp (1x)"}</span>
             </button>
           </div>
         )}

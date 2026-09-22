@@ -329,6 +329,19 @@ export function getSmartSOSAIMove(
   return { row: emptyCells[0][0], col: emptyCells[0][1], letter: "S" };
 }
 
+export function isLineInBlastArea(line: SOSLine, blastCenterR: number, blastCenterC: number): boolean {
+  const minR = blastCenterR - 1, maxR = blastCenterR + 1;
+  const minC = blastCenterC - 1, maxC = blastCenterC + 1;
+  const midR = Math.round((line.startRow + line.endRow) / 2);
+  const midC = Math.round((line.startCol + line.endCol) / 2);
+  const points = [
+    [line.startRow, line.startCol],
+    [midR, midC],
+    [line.endRow, line.endCol],
+  ];
+  return points.some(([pr, pc]) => pr >= minR && pr <= maxR && pc >= minC && pc <= maxC);
+}
+
 // ── Main Super SOS Neon Duel Deluxe Component ──
 
 export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, onLocalMove }) => {
@@ -353,6 +366,9 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
   const [selectedLetter, setSelectedLetter] = useState<"S" | "O" | "?">("S");
   const [hoverCell, setHoverCell] = useState<[number, number] | null>(null);
   const [activePowerUp, setActivePowerUp] = useState<"2x" | "bomb" | "wildcard" | null>(null);
+  const [bombsUsed, setBombsUsed] = useState(0);
+  const [doublePointsUsed, setDoublePointsUsed] = useState(0);
+  const [wildcardsUsed, setWildcardsUsed] = useState(0);
   const [bonusTurnBanner, setBonusTurnBanner] = useState<{ text: string; color: string; id: number } | null>(null);
   const [aiSpeech, setAiSpeech] = useState<string | null>(null);
 
@@ -394,6 +410,15 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Reset power-up quotas on new round or reset
+  useEffect(() => {
+    if (lines.length === 0 && board.every((row) => row.every((c) => c === ""))) {
+      setBombsUsed(0);
+      setDoublePointsUsed(0);
+      setWildcardsUsed(0);
+    }
+  }, [lines.length, board]);
 
   // ── Particle Sparks Animation Engine ──
   const spawnLineParticles = useCallback((newLines: SOSLine[]) => {
@@ -541,14 +566,18 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
           }
         }
       }
+
+      // Remove any lines that crossed through the blast zone
+      const survivingLines = lines.filter((l) => !isLineInBlastArea(l, r, c));
       setActivePowerUp(null);
+      setBombsUsed((prev) => prev + 1);
 
       const nextRoomState: GameRoomState<SOSGameState> = {
         ...room,
         gameState: {
           gridSize,
           board: newBoard,
-          lines,
+          lines: survivingLines,
           hostScore,
           guestScore,
           streakCount: 0,
@@ -560,7 +589,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
             newLinesCount: 0,
           },
         },
-        currentTurn: actingPlayerId === room.players.host.id ? (room.players.guest?.id || "guest") : room.players.host.id,
+        currentTurn: actingPlayerId === room.players.host.id ? (room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2")) : room.players.host.id,
         lastMoveTimestamp: Date.now(),
       };
 
@@ -602,6 +631,13 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
     const isDoublePoints = currentPowerUp === "2x";
     const actualPointsAdded = isDoublePoints ? scoreGained * 2 : scoreGained;
 
+    if (isDoublePoints) {
+      setDoublePointsUsed((prev) => prev + 1);
+    }
+    if (currentPowerUp === "wildcard") {
+      setWildcardsUsed((prev) => prev + 1);
+    }
+
     if (actingPlayerId === room.players.host.id) {
       nextHostScore += actualPointsAdded;
     } else {
@@ -613,7 +649,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
     const nextTurnId = isBonusTurn
       ? actingPlayerId
       : actingPlayerId === room.players.host.id
-      ? room.players.guest?.id || "guest_player"
+      ? room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2")
       : room.players.host.id;
 
     // Audio, haptics & visual sparks
@@ -664,7 +700,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
           gameAudio.playLose();
         }
       } else if (nextGuestScore > nextHostScore) {
-        winnerPlayerId = room.players.guest?.id || (isAIMode ? "ai_bot" : "guest_player");
+        winnerPlayerId = room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2");
         nextSeriesGuestScore += 1;
         if ((!isHost && !isAIMode) || isLocalMode) {
           gameAudio.playWin();
@@ -759,7 +795,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
       const aiMove = getSmartSOSAIMove(
         board,
         lines,
-        room.players.guest?.id || "ai_bot",
+        room.players.guest?.id || "ai_opponent",
         aiDifficulty
       );
       handleCellClick(aiMove.row, aiMove.col, aiMove.letter, aiMove.usePowerUp);
@@ -984,57 +1020,69 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
         <div className="flex items-center gap-1 sm:gap-1.5">
           <button
             type="button"
-            title="2X Score Overcharge (Next SOS gives +2 points)"
+            title={doublePointsUsed >= 1 ? "2X Score Overcharge already used this match" : "2X Score Overcharge (Next SOS gives +2 points) - 1x per match"}
+            disabled={doublePointsUsed >= 1}
             onClick={() => {
+              if (doublePointsUsed >= 1) return;
               const next = activePowerUp === "2x" ? null : "2x";
               setActivePowerUp(next);
               if (next) gameAudio.playPowerUpTrigger();
             }}
             className={`flex items-center gap-1 py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold border transition-all ${
-              activePowerUp === "2x"
+              doublePointsUsed >= 1
+                ? "bg-card/20 border-border/30 text-muted-foreground/40 cursor-not-allowed opacity-50"
+                : activePowerUp === "2x"
                 ? "bg-amber-500/30 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.5)] scale-105 animate-pulse"
                 : "bg-card/40 border-border/60 text-amber-400/80 hover:bg-amber-500/10"
             }`}
           >
             <Zap className="w-3.5 h-3.5 text-amber-400" />
-            <span>2X</span>
+            <span>2X {doublePointsUsed >= 1 ? "(Used)" : "(1x)"}</span>
           </button>
 
           <button
             type="button"
-            title="Wildcard Tile (Acts as both S and O)"
+            title={wildcardsUsed >= 1 ? "Wildcard Tile already used this match" : "Wildcard Tile (Acts as both S and O) - 1x per match"}
+            disabled={wildcardsUsed >= 1}
             onClick={() => {
+              if (wildcardsUsed >= 1) return;
               const next = activePowerUp === "wildcard" ? null : "wildcard";
               setActivePowerUp(next);
               setSelectedLetter("?");
               if (next) gameAudio.playPowerUpTrigger();
             }}
             className={`flex items-center gap-1 py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold border transition-all ${
-              activePowerUp === "wildcard"
+              wildcardsUsed >= 1
+                ? "bg-card/20 border-border/30 text-muted-foreground/40 cursor-not-allowed opacity-50"
+                : activePowerUp === "wildcard"
                 ? "bg-purple-500/30 border-purple-400 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.5)] scale-105 animate-pulse"
                 : "bg-card/40 border-border/60 text-purple-400/80 hover:bg-purple-500/10"
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span>Wild</span>
+            <span>Wild {wildcardsUsed >= 1 ? "(Used)" : "(1x)"}</span>
           </button>
 
           <button
             type="button"
-            title="EMP Bomb (Detonates 3x3 zone)"
+            title={bombsUsed >= 1 ? "EMP Bomb already used this match" : "EMP Bomb (Detonates 3x3 zone) - 1x per match"}
+            disabled={bombsUsed >= 1}
             onClick={() => {
+              if (bombsUsed >= 1) return;
               const next = activePowerUp === "bomb" ? null : "bomb";
               setActivePowerUp(next);
               if (next) gameAudio.playPowerUpTrigger();
             }}
             className={`flex items-center gap-1 py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold border transition-all ${
-              activePowerUp === "bomb"
+              bombsUsed >= 1
+                ? "bg-card/20 border-border/30 text-muted-foreground/40 cursor-not-allowed opacity-50"
+                : activePowerUp === "bomb"
                 ? "bg-red-500/30 border-red-400 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.5)] scale-105 animate-pulse"
                 : "bg-card/40 border-border/60 text-red-400/80 hover:bg-red-500/10"
             }`}
           >
             <Bomb className="w-3.5 h-3.5 text-red-400" />
-            <span>Bomb</span>
+            <span>Bomb {bombsUsed >= 1 ? "(Used)" : "(1x)"}</span>
           </button>
         </div>
       </div>

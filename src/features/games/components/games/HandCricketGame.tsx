@@ -202,7 +202,10 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     }
   }, [activeInnings.balls, state.currentDelivery.hostPick, state.currentDelivery.guestPick]);
 
-  // Synchronize delivery audio & banner celebration across all players in online matches
+  // ── AI Auto-Move Execution ──
+  const aiGuestId = room.players.guest?.id || "ai_opponent";
+
+  // Synchronize delivery audio, clash effect & banner celebration across all players in online matches
   const lastProcessedDeliveryTimestampRef = useRef<number>(0);
   useEffect(() => {
     const lastRes = state.currentDelivery?.lastResult;
@@ -210,6 +213,9 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     const latestTimestamp = activeDeliveries[0]?.timestamp || 0;
     if (latestTimestamp && latestTimestamp === lastProcessedDeliveryTimestampRef.current) return;
     lastProcessedDeliveryTimestampRef.current = latestTimestamp;
+
+    setIsClashing(true);
+    const clashTimer = setTimeout(() => setIsClashing(false), 450);
 
     if (lastRes.isWicket) {
       gameAudio.playWicket();
@@ -227,7 +233,10 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     const timer = setTimeout(() => {
       setBannerCelebration(null);
     }, 2200);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(clashTimer);
+      clearTimeout(timer);
+    };
   }, [state.currentDelivery?.lastResult, activeDeliveries]);
 
   // ── AI Auto-Move Execution ──
@@ -244,24 +253,24 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
           const guestNum = aiTossPick;
           const effectiveCaller = state.toss.callerId || room.players.host.id;
           const { isEven, callerWon } = evaluateCricketToss(state.toss.choice, hostNum, guestNum);
-          const winnerId = callerWon ? effectiveCaller : "ai_player";
+          const winnerId = callerWon ? effectiveCaller : aiGuestId;
 
           // If AI won toss, AI decides to bat or bowl
           const aiElected: "bat" | "bowl" = Math.random() < 0.6 ? "bat" : "bowl";
-          const finalElected = winnerId === "ai_player" ? aiElected : null;
-          const nextPhase = winnerId === "ai_player" ? "innings_1" : "toss_decision";
+          const finalElected = winnerId === aiGuestId ? aiElected : null;
+          const nextPhase = winnerId === aiGuestId ? "innings_1" : "toss_decision";
 
           const nextBatsman =
             nextPhase === "innings_1"
               ? finalElected === "bat"
-                ? "ai_player"
+                ? aiGuestId
                 : room.players.host.id
               : "";
           const nextBowler =
             nextPhase === "innings_1"
               ? finalElected === "bat"
                 ? room.players.host.id
-                : "ai_player"
+                : aiGuestId
               : "";
 
           const nextState: HandCricketState = {
@@ -293,7 +302,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     const aiNeedsMove = state.currentDelivery.hostPick !== null && state.currentDelivery.guestPick === null;
     if (aiNeedsMove && !isClashing) {
       const timer = setTimeout(() => {
-        const aiMove = getSmartCricketAIMove(state, "ai_player", aiDifficulty);
+        const aiMove = getSmartCricketAIMove(state, aiGuestId, aiDifficulty);
         if (aiMove.speech) setAiSpeech(aiMove.speech);
         handleDeliveryResolution(state.currentDelivery.hostPick!, aiMove.pick);
       }, 700);
@@ -307,6 +316,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     state.currentDelivery.hostPick,
     state.currentDelivery.guestPick,
     isClashing,
+    aiGuestId,
   ]);
 
   // ── Toss Phase Handlers ──
@@ -409,7 +419,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     const tossWinnerId = state.toss.winnerId || myPlayerId;
     const opponentId =
       tossWinnerId === room.players.host.id
-        ? room.players.guest?.id || (isAIMode ? "ai_player" : "local_player_2")
+        ? room.players.guest?.id || (isAIMode ? aiGuestId : "local_player_2")
         : room.players.host.id;
 
     const batsmanId = elected === "bat" ? tossWinnerId : opponentId;
@@ -847,7 +857,7 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
     const winnerName =
       tossWinnerId === myPlayerId
         ? "You"
-        : tossWinnerId === "ai_player"
+        : tossWinnerId === aiGuestId
         ? aiPersona.name
         : room.players.guest?.name || (isLocalMode ? "Player 2" : "Opponent");
 
