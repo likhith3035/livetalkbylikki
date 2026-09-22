@@ -35,6 +35,7 @@ export interface GameReaction {
   type: "emoji" | "taunt";
   content: string;
   timestamp: number;
+  isSpectator?: boolean;
 }
 
 export interface GameChatMessage {
@@ -128,6 +129,8 @@ export interface ConnectFourState {
   lastDroppedCol: number | null;
 }
 
+export type RPSChoice = "" | "rock" | "paper" | "scissors";
+
 export interface RPSState {
   hostChoice: string; // "" | "rock" | "paper" | "scissors"
   guestChoice: string;
@@ -140,6 +143,7 @@ export interface MemoryCard {
   emoji: string;
   isFlipped: boolean;
   isMatched: boolean;
+  matchedBy?: string;
 }
 
 export interface MemoryGameState {

@@ -76,12 +76,10 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
     }, 1400);
 
     await sendGameReaction(roomCode, {
-      id: `rx_${Date.now()}`,
       senderId: myPlayerId,
       senderName: myPlayerName,
       type: "emoji",
       content: emoji,
-      timestamp: Date.now(),
       isSpectator,
     });
   };
@@ -111,12 +109,10 @@ export const GameLiveReactions: React.FC<GameLiveReactionsProps> = ({
     }, 1800);
 
     await sendGameReaction(roomCode, {
-      id: `rx_${Date.now()}`,
       senderId: myPlayerId,
       senderName: myPlayerName,
       type: "taunt",
       content: taunt,
-      timestamp: Date.now(),
       isSpectator,
     });
   };

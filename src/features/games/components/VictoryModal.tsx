@@ -19,6 +19,7 @@ interface VictoryModalProps {
   isOpen: boolean;
   room: GameRoomState;
   myPlayerId: string;
+  isSpectator?: boolean;
   onClose?: () => void;
   onRematch: () => void;
   onExitToLobby: () => void;
@@ -28,6 +29,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   isOpen,
   room,
   myPlayerId,
+  isSpectator = false,
   onClose,
   onRematch,
   onExitToLobby,
@@ -79,15 +81,35 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   const hostPlayer = room.players.host;
   const rawGuest = room.players.guest;
 
+  const isSpectatorMode =
+    isSpectator ||
+    (room.mode !== "local" &&
+      room.mode !== "ai" &&
+      myPlayerId !== hostPlayer?.id &&
+      myPlayerId !== rawGuest?.id);
+
+  const hostIsMe = isHost && !isSpectatorMode && !isLocal;
+  const guestIsMe = !isHost && !isSpectatorMode && !isLocal && !isAI;
+
+  const hostDisplayName = hostIsMe
+    ? (hostPlayer?.name || "Player 1")
+    : (guestIsMe && hostPlayer?.name === rawGuest?.name)
+    ? `${hostPlayer?.name || "Player 1"} (Host)`
+    : hostPlayer?.name || "Host";
+
   const guestDisplayName = isAI
     ? "Cyber AI 🤖"
     : isLocal
     ? "Player 2"
     : !rawGuest
     ? "Waiting for Player..."
-    : (rawGuest.name === hostPlayer.name || rawGuest.name.toLowerCase() === "you")
+    : guestIsMe
+    ? (rawGuest.name || "Player 2")
+    : (hostIsMe && rawGuest.name === hostPlayer?.name)
+    ? `${rawGuest.name || "Player 2"} (Guest)`
+    : (isHost && rawGuest.name?.toLowerCase() === "you")
     ? "Opponent"
-    : rawGuest.name;
+    : rawGuest.name || "Opponent";
 
   const guestPlayer = rawGuest || {
     id: "guest",
@@ -101,12 +123,12 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
   const roundWinnerName = isDraw
     ? "It's a Draw!"
-    : room.winnerId === hostPlayer.id
-    ? hostPlayer.name
+    : room.winnerId === hostPlayer?.id
+    ? hostDisplayName
     : guestDisplayName;
 
-  const seriesWinnerName = room.seriesWinnerId === "host" || room.players.host.score > (room.players.guest?.score || 0)
-    ? hostPlayer.name
+  const seriesWinnerName = room.seriesWinnerId === "host" || (hostPlayer?.score || 0) > (rawGuest?.score || 0)
+    ? hostDisplayName
     : guestDisplayName;
 
   const handleDismiss = () => {
@@ -186,7 +208,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               <GameAvatar avatar={hostPlayer.avatar} fallback="👤" className="text-base sm:text-lg" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[110px]">
-              {hostPlayer.name} {isHost && !isLocal && "(You)"}
+              {hostDisplayName} {hostIsMe && "(You)"}
             </span>
             <div className="flex items-baseline gap-1">
               <span className="text-xl sm:text-2xl font-black text-violet-400">{hostPlayer.score}</span>
@@ -218,7 +240,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               <GameAvatar avatar={guestPlayer.avatar} fallback={isAI ? "🤖" : "👤"} className="text-base sm:text-lg" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[110px]">
-              {guestDisplayName} {!isHost && !isLocal && !isAI && "(You)"}
+              {guestDisplayName} {guestIsMe && "(You)"}
             </span>
             <div className="flex items-baseline gap-1">
               <span className="text-xl sm:text-2xl font-black text-cyan-400">{guestPlayer.score}</span>
@@ -237,7 +259,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           <div className="p-2.5 rounded-xl bg-muted/30 border border-border/40 text-xs font-bold flex items-center justify-between mb-3 text-muted-foreground">
             <span>SOS Formed This Round:</span>
             <div className="flex items-center gap-2">
-              <span className="text-violet-400 font-black">{hostPlayer.name}: {((room.gameState as any)?.hostScore ?? 0)}</span>
+              <span className="text-violet-400 font-black">{hostDisplayName}: {((room.gameState as any)?.hostScore ?? 0)}</span>
               <span>-</span>
               <span className="text-cyan-400 font-black">{guestDisplayName}: {((room.gameState as any)?.guestScore ?? 0)}</span>
             </div>
@@ -248,7 +270,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           <div className="p-2.5 rounded-xl bg-muted/30 border border-border/40 text-xs font-bold flex items-center justify-between mb-3 text-muted-foreground">
             <span>Completed Lines:</span>
             <div className="flex items-center gap-2">
-              <span className="text-violet-400 font-black">{hostPlayer.name}: {((room.gameState as any)?.hostLines ?? 0)}/5</span>
+              <span className="text-violet-400 font-black">{hostDisplayName}: {((room.gameState as any)?.hostLines ?? 0)}/5</span>
               <span>-</span>
               <span className="text-cyan-400 font-black">{guestDisplayName}: {((room.gameState as any)?.guestLines ?? 0)}/5</span>
             </div>

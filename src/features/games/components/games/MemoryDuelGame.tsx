@@ -75,9 +75,9 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
       ? "Player 2"
       : !guestPlayer
       ? "Waiting for Player..."
-      : guestPlayer.name === hostPlayer.name || (isHost && guestPlayer.name.toLowerCase() === "you")
+      : guestPlayer?.name === hostPlayer?.name || (isHost && guestPlayer?.name?.toLowerCase() === "you")
       ? "Opponent"
-      : guestPlayer.name;
+      : guestPlayer?.name || "Opponent";
 
   const handleCardClick = async (cardId: number) => {
     const currentState = stateRef.current;
