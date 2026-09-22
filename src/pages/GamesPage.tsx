@@ -22,6 +22,7 @@ import { ReactionDashGame } from "@/features/games/components/games/ReactionDash
 import { SOSGame } from "@/features/games/components/games/SOSGame";
 import { BingoGame } from "@/features/games/components/games/BingoGame";
 import { HandCricketGame } from "@/features/games/components/games/HandCricketGame";
+import { TapTugGame } from "@/features/games/components/games/TapTugGame";
 import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
 import { GameHowToPlayModal } from "@/features/games/components/GameHowToPlayModal";
 import {
@@ -166,6 +167,16 @@ const GAMES_CATALOG: GameMetadata[] = [
     accentColor: "#10b981",
     badge: "Hot 🔥",
   },
+  {
+    id: "taptug",
+    title: "Tap Blitz: Tug of War",
+    tagline: "Ultra-fast finger masher! Push the neon laser boundary with combo streaks, freeze, and shield power-ups!",
+    category: "Reflex",
+    icon: "⚡",
+    gradient: "from-amber-500 via-rose-500 to-purple-600",
+    accentColor: "#f59e0b",
+    badge: "Insane 🔥",
+  },
 ];
 
 export default function GamesPage() {
@@ -285,6 +296,8 @@ export default function GamesPage() {
       const delayMs =
         activeRoom.gameId === "rps" || activeRoom.gameId === "cricket"
           ? 1200
+          : activeRoom.gameId === "taptug"
+          ? 900
           : activeRoom.gameId === "connect4" || activeRoom.gameId === "sos"
           ? 600
           : 350;
@@ -852,6 +865,14 @@ export default function GamesPage() {
                   room={activeRoom}
                   myPlayerId={myPlayerId}
                   isMyTurn={!isSpectator && activeRoom.currentTurn === myPlayerId}
+                  onLocalMove={(updated) => setActiveRoom(updated)}
+                />
+              )}
+              {activeRoom.gameId === "taptug" && (
+                <TapTugGame
+                  room={activeRoom}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator}
                   onLocalMove={(updated) => setActiveRoom(updated)}
                 />
               )}

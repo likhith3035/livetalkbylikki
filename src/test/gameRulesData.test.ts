@@ -12,9 +12,10 @@ describe("Arcade Academy & Game Rules Suite", () => {
     "sos",
     "bingo",
     "cricket",
+    "taptug",
   ];
 
-  it("should have comprehensive rules for all 8 arcade games", () => {
+  it("should have comprehensive rules for all 9 arcade games", () => {
     EXPECTED_GAME_IDS.forEach((id) => {
       const rule = ALL_GAME_RULES[id];
       expect(rule).toBeDefined();
@@ -53,4 +54,15 @@ describe("Arcade Academy & Game Rules Suite", () => {
     expect(bingoRule.winCondition).toContain("5");
     expect(bingoRule.asciiDiagram).toContain("B   I   N   G   O");
   });
+
+  it("should have accurate Tap Blitz Tug of War steps, power-up tips and sudden-death win condition", () => {
+    const tapTugRule = ALL_GAME_RULES.taptug;
+    expect(tapTugRule.steps).toHaveLength(4);
+    expect(tapTugRule.steps[1].title).toContain("Overdrive");
+    expect(tapTugRule.steps[2].title).toContain("Power-Ups");
+    expect(tapTugRule.winCondition).toContain("100%");
+    expect(tapTugRule.asciiDiagram).toContain("CLASH NEXUS");
+    expect(tapTugRule.proTips.some((t) => t.includes("Multi-Touch"))).toBe(true);
+  });
 });
+

@@ -438,6 +438,47 @@ export const ShareVictoryCardModal: React.FC<ShareVictoryCardModalProps> = ({
         ctx.font = "bold 22px sans-serif";
         ctx.fillStyle = "#94a3b8";
         ctx.fillText("FASTEST REFLEXES WIN", boardX + boardW / 2, boardY + 50);
+      } else if (gid === "taptug") {
+        // Tap Blitz: Tug of War glowing clash meter illustration
+        ctx.textAlign = "center";
+        ctx.font = "bold 26px sans-serif";
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillText("⚡ TUG OF WAR LASER DUEL ⚡", boardX + boardW / 2, boardY + 45);
+
+        // Clashing Tug Bar
+        const barY = boardY + boardH / 2 - 15;
+        const barW = boardW - 100;
+        const barX = boardX + 50;
+
+        // Background groove
+        ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, barW, 44, 22);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing Blue/Cyan dominant beam
+        const beamGrad = ctx.createLinearGradient(barX, barY, barX + barW * 0.75, barY);
+        beamGrad.addColorStop(0, "#06b6d4");
+        beamGrad.addColorStop(1, "#38bdf8");
+        ctx.fillStyle = beamGrad;
+        ctx.shadowColor = "#06b6d4";
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.roundRect(barX + 4, barY + 4, barW * 0.72, 36, 18);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Clash spark icon
+        ctx.font = "40px sans-serif";
+        ctx.fillText("💥", barX + barW * 0.72, barY + 34);
+
+        // Subtitle badges
+        ctx.font = "bold 22px sans-serif";
+        ctx.fillStyle = "#f59e0b";
+        ctx.fillText("🔥 OVERDRIVE MASH CHAMPION", boardX + boardW / 2, boardY + boardH - 45);
       }
 
       // 10. Player Profile Callout Box

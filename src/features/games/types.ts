@@ -1,4 +1,4 @@
-export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo" | "cricket";
+export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo" | "cricket" | "taptug";
 
 export type GameMode = "friend" | "quickmatch" | "ai" | "local";
 
@@ -285,4 +285,32 @@ export interface SpectatorCheer {
   spectatorName: string;
   type: SpectatorCheerType;
   timestamp: number;
+}
+
+// ── Tap Blitz: Tug of War Types ──
+
+export type TapTugPowerUp = "2x" | "freeze" | "bomb" | "shield";
+
+export interface TapTugGameState {
+  ropePosition: number; // 0 to 100 (50 is center; >= 100 Host KO, <= 0 Guest KO)
+  hostTaps: number;
+  guestTaps: number;
+  hostHeat: number; // 0 to 100
+  guestHeat: number;
+  hostOverdrive: boolean;
+  guestOverdrive: boolean;
+  hostPowerUp: TapTugPowerUp | null;
+  guestPowerUp: TapTugPowerUp | null;
+  hostFrozenUntil: number; // timestamp
+  guestFrozenUntil: number; // timestamp
+  hostShieldUntil: number; // timestamp
+  guestShieldUntil: number; // timestamp
+  hostMultiplierTapsLeft: number;
+  guestMultiplierTapsLeft: number;
+  matchDurationSeconds: number;
+  timeRemainingSeconds: number;
+  startedAt: number;
+  lastTapTimestamp: number;
+  lastTapPlayerId?: string;
+  isKO?: boolean;
 }

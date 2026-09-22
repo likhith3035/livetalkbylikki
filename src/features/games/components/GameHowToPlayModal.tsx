@@ -60,6 +60,8 @@ export const GameHowToPlayModal: React.FC<GameHowToPlayModalProps> = ({
       gameAudio.playBoundarySix();
     } else if (selectedGameId === "bingo") {
       gameAudio.playBingoWinFanfare();
+    } else if (selectedGameId === "taptug") {
+      gameAudio.playPowerUpTrigger();
     } else {
       gameAudio.playWin();
     }

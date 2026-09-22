@@ -454,4 +454,60 @@ export const ALL_GAME_RULES: Record<GameId, GameRuleGuide> = {
     [ 🟢 NEON GREEN: TAP NOW!! ]  <-- TAP! 182ms = LEGENDARY!
     `,
   },
+  taptug: {
+    gameId: "taptug",
+    title: "Tap Blitz: Tug of War",
+    tagline: "High-octane finger-tap tug of war with Overdrive Combos, Freeze & EMP power-ups!",
+    category: "Reflex",
+    icon: "⚡",
+    accentColor: "#f59e0b",
+    gradient: "from-amber-500 via-rose-500 to-purple-600",
+    difficulty: "Hard",
+    avgDuration: "30 - 45 secs",
+    objective: "Mash your tap pad to push the clashing laser conduit into the opponent's zone to score a Sudden-Death KO!",
+    quickSummary: "Rapid multi-finger mashing tug-of-war. Build Overdrive heat for 1.75x force, and deploy Freeze, Bomb, 2X, and Shield power-ups to dominate territory.",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Mash the Battle Pad",
+        description: "Tap rapidly with multiple fingers (or press [SPACE] / [A] on desktop) to push the clashing energy conduit toward your opponent's win zone.",
+        icon: "⚡",
+        badge: "Core Tap",
+      },
+      {
+        stepNumber: 2,
+        title: "Ignite Overdrive Heat",
+        description: "Consecutive rapid tapping charges your heat gauge. Reaching 100% unleashes FIRE OVERDRIVE (+75% push force for 2.2 seconds)!",
+        icon: "🔥",
+        badge: "Overdrive",
+      },
+      {
+        stepNumber: 3,
+        title: "Deploy Tactical Power-Ups",
+        description: "Activate 2X Overcharge (double force for 12 taps), Glitch Freeze (locks opponent for 1.4s), EMP Shockwave (12% territory blast), or Kinetic Shield (absorbs 75% incoming push).",
+        icon: "💣",
+        badge: "Tactics",
+      },
+      {
+        stepNumber: 4,
+        title: "Sudden-Death KO or Territory Win",
+        description: "Pushing the beam all the way to 100% (or 0% for P2) triggers an instant Sudden-Death KO! If 30 seconds expire, the player holding majority territory (>52%) wins.",
+        icon: "👑",
+        badge: "Victory",
+      },
+    ],
+    proTips: [
+      "Multi-Touch Drumming: Use two index fingers to alternate taps in a rapid drum roll rhythm for up to 15 taps/sec!",
+      "Combo Synergy: Activate 2X Overcharge right as you trigger Fire Overdrive to deliver an insane 3.5x push force per tap!",
+      "Counter-Shielding: If your opponent activates 2X or Overdrive, immediately pop your Kinetic Shield to neutralize 75% of their attack!",
+      "Clutch EMP Timing: Save your EMP Shockwave for when the beam is at 88% to blast through the final 12% for an instant Sudden-Death KO.",
+    ],
+    winCondition: "Push the energy conduit to 100% (Instant KO), or hold majority territory (>52%) when the 30-second match clock expires.",
+    boardLayoutDescription: "High-voltage laser conduit arena with LED heat tachometers, tactile 3D slam pads, and 4 tactical power-up chips.",
+    asciiDiagram: `
+    [ P2 GOAL (0%) ] <====== [ ⚡ CLASH NEXUS: 50% ] ======> [ P1 GOAL (100%) ]
+           ❄️ FREEZE          🛡️ KINETIC SHIELD          💣 EMP BLAST (12%)
+    `,
+  },
 };
+

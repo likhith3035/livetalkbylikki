@@ -68,6 +68,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     rps: "RPS Clash",
     memory: "Memory Duel",
     reaction: "Reaction Dash",
+    taptug: "Tap Blitz: Tug of War",
   };
   const activeGameTitle = GAME_TITLES[room.gameId] || "Arcade Duel";
 
