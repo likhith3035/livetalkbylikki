@@ -36,18 +36,26 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
   const spectatorUrl = `${window.location.origin}/games?room=${roomCode}&spectate=true`;
   const activeUrl = tab === "play" ? inviteUrl : spectatorUrl;
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(roomCode);
-    setCopied(true);
-    gameAudio.playClick();
-    toast.success(`Room Code ${roomCode} copied!`);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setCopied(true);
+      gameAudio.playClick();
+      toast.success(`Room Code ${roomCode} copied!`);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy room code.");
+    }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(activeUrl);
-    gameAudio.playClick();
-    toast.success(tab === "play" ? "Player invite link copied!" : "Spectator watch link copied!");
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(activeUrl);
+      gameAudio.playClick();
+      toast.success(tab === "play" ? "Player invite link copied!" : "Spectator watch link copied!");
+    } catch {
+      toast.error("Could not copy link to clipboard.");
+    }
   };
 
   const handleNativeShare = async () => {

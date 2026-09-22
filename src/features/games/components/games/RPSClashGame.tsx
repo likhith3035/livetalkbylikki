@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GameRoomState, RPSChoice, RPSState } from "../../types";
 import { gameAudio } from "../../services/gameSoundService";
@@ -17,7 +17,7 @@ const CHOICES: { id: "rock" | "paper" | "scissors"; label: string; emoji: string
   { id: "scissors", label: "Scissors", emoji: "✂️", color: "from-rose-500/20 to-pink-600/20 border-rose-500/40" },
 ];
 
-export function determineRPSWinner(p1: RPSChoice, p2: RPSChoice): "p1" | "p2" | "draw" {
+export function determineRPSWinner(p1: RPSChoice | string, p2: RPSChoice | string): "p1" | "p2" | "draw" {
   if (!p1 || !p2) return "draw";
   if (p1 === p2) return "draw";
   if (
