@@ -72,9 +72,25 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
   useEffect(() => {
     if (!isPushToTalk || voiceStatus !== "connected") return;
 
+    const isBlockedElementActive = () => {
+      const activeElement = document.activeElement;
+      const activeTag = activeElement?.tagName?.toLowerCase();
+      if (
+        activeTag === "input" ||
+        activeTag === "textarea" ||
+        (activeElement as HTMLElement)?.isContentEditable
+      ) {
+        return true;
+      }
+      // If a modal or mini-game dialog (e.g. Chrome Dino) is currently open, don't hijack Space
+      if (document.querySelector('[role="dialog"]') !== null) {
+        return true;
+      }
+      return false;
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      const activeTag = document.activeElement?.tagName.toLowerCase();
-      if (activeTag === "input" || activeTag === "textarea") return;
+      if (isBlockedElementActive()) return;
 
       if (e.code === "Space" && !e.repeat && !isPttPressed) {
         e.preventDefault();
@@ -86,8 +102,7 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      const activeTag = document.activeElement?.tagName.toLowerCase();
-      if (activeTag === "input" || activeTag === "textarea") return;
+      if (isBlockedElementActive()) return;
 
       if (e.code === "Space" && isPttPressed) {
         e.preventDefault();

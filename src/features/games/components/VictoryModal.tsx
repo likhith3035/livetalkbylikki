@@ -71,12 +71,13 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   };
   const activeGameTitle = GAME_TITLES[room.gameId] || "Arcade Duel";
 
-  // Trigger confetti burst on victory or series championship
+  // Trigger confetti burst on victory or series championship (for the winning player or local mode)
   useEffect(() => {
-    if (isOpen && (isWinner || isSeriesOver || (isLocal && !isDraw))) {
+    const isSeriesChampion = isSeriesOver && (isWinner || (isLocal && !isDraw) || (isHost && (room.players.host.score > (room.players.guest?.score || 0))) || (!isHost && !isAI && ((room.players.guest?.score || 0) > room.players.host.score)));
+    if (isOpen && (isWinner || isSeriesChampion || (isLocal && !isDraw))) {
       triggerConfetti({ particleCount: isSeriesOver ? 120 : 70 });
     }
-  }, [isOpen, isWinner, isSeriesOver, isLocal, isDraw]);
+  }, [isOpen, isWinner, isSeriesOver, isLocal, isDraw, isHost, isAI, room.players.host.score, room.players.guest?.score]);
 
   // Synchronized victory, defeat, or draw audio and haptics when modal opens
   const lastSoundRoundRef = useRef<number>(-1);
@@ -146,9 +147,18 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     ? hostDisplayName
     : guestDisplayName;
 
-  const seriesWinnerName = room.seriesWinnerId === "host" || (hostPlayer?.score || 0) > (rawGuest?.score || 0)
-    ? hostDisplayName
-    : guestDisplayName;
+  const isHostSeriesWinner =
+    room.seriesWinnerId === hostPlayer?.id ||
+    room.seriesWinnerId === "host" ||
+    (!room.seriesWinnerId && (hostPlayer?.score || 0) > (rawGuest?.score || 0));
+
+  const isSeriesWinner = isSeriesOver && (
+    room.seriesWinnerId === myPlayerId ||
+    (isHost && isHostSeriesWinner) ||
+    (!isHost && !isAI && !isHostSeriesWinner)
+  );
+
+  const seriesWinnerName = isHostSeriesWinner ? hostDisplayName : guestDisplayName;
 
   const handleDismiss = () => {
     if (onClose) {
@@ -162,7 +172,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleDismiss()}>
       <DialogContent className="max-w-[92vw] sm:max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/60 shadow-2xl text-center max-h-[92vh] overflow-y-auto no-scrollbar touch-manipulation">
         {/* Celebration Ambient Glow */}
-        {(isWinner || (isLocal && !isDraw) || isSeriesOver) && (
+        {(isWinner || (isLocal && !isDraw) || isSeriesWinner) && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-amber-500/25 rounded-full blur-3xl animate-pulse" />
           </div>
@@ -174,7 +184,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 350, damping: 18 }}
             className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-3xl sm:text-4xl shadow-xl mb-2.5 sm:mb-3 border ${
-              isSeriesOver
+              isSeriesWinner || (isLocal && isSeriesOver)
                 ? "bg-gradient-to-tr from-amber-400 to-yellow-500 text-amber-950 border-yellow-300 shadow-amber-500/40 ring-4 ring-amber-400/30 animate-bounce"
                 : isDraw
                 ? "bg-amber-500/15 border-amber-500/30 text-amber-400 shadow-amber-500/10"
@@ -183,7 +193,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
                 : "bg-muted/60 border-border text-muted-foreground"
             }`}
           >
-            {isSeriesOver ? (
+            {isSeriesWinner || (isLocal && isSeriesOver) ? (
               <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-amber-950" />
             ) : isDraw ? (
               <Meh className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400" />
@@ -196,7 +206,11 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
           <DialogTitle className="text-xl sm:text-3xl font-black tracking-tight">
             {isSeriesOver
-              ? `👑 ${seriesWinnerName} is the Champion!`
+              ? isLocal
+                ? `👑 ${seriesWinnerName} is the Series Champion!`
+                : isSeriesWinner
+                ? "👑 Series Champion!"
+                : "Series Defeat"
               : isDraw
               ? "Good Game! It's a Draw"
               : isLocal
@@ -208,7 +222,11 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
           <DialogDescription className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
             {isSeriesOver
-              ? `Conquered the series with ${Math.max(hostPlayer.score, guestPlayer.score)} victories!`
+              ? isLocal
+                ? `${seriesWinnerName} clinched the series with ${Math.max(hostPlayer.score, guestPlayer.score)} victories!`
+                : isSeriesWinner
+                ? `Spectacular triumph! You won the championship series with ${Math.max(hostPlayer.score, guestPlayer.score)} victories!`
+                : `Opponent clinched the series with ${Math.max(hostPlayer.score, guestPlayer.score)} victories. Rematch to redeem yourself!`
               : isDraw
               ? "Both players matched wits equally."
               : isLocal

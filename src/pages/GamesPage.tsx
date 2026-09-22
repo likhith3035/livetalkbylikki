@@ -175,6 +175,7 @@ export default function GamesPage() {
   const [activeRoom, setActiveRoom] = useState<GameRoomState | null>(null);
   const [isSpectator, setIsSpectator] = useState(false);
   const [dismissedVictoryRound, setDismissedVictoryRound] = useState<number>(-1);
+  const [isVictoryModalVisible, setIsVictoryModalVisible] = useState(false);
   const [selectedGameForModal, setSelectedGameForModal] = useState<GameMetadata | null>(null);
   const [isSearchingQuickMatch, setIsSearchingQuickMatch] = useState(false);
   const [searchingGameMeta, setSearchingGameMeta] = useState<GameMetadata | null>(null);
@@ -278,6 +279,26 @@ export default function GamesPage() {
     [myPlayerId, gamerProfile]
   );
 
+  // Delay victory modal for games with dramatic reveal animations (RPS, Cricket, Connect4)
+  useEffect(() => {
+    if (activeRoom && (activeRoom.status === "round_over" || activeRoom.status === "game_over")) {
+      const delayMs =
+        activeRoom.gameId === "rps" || activeRoom.gameId === "cricket"
+          ? 1200
+          : activeRoom.gameId === "connect4" || activeRoom.gameId === "sos"
+          ? 600
+          : 350;
+
+      const timer = setTimeout(() => {
+        setIsVictoryModalVisible(true);
+      }, delayMs);
+
+      return () => clearTimeout(timer);
+    } else {
+      setIsVictoryModalVisible(false);
+    }
+  }, [activeRoom?.status, activeRoom?.round, activeRoom?.gameId]);
+
   // Track victory in local stats, award XP, and record match history
   useEffect(() => {
     if (activeRoom && (activeRoom.status === "round_over" || activeRoom.status === "game_over") && !isSpectator) {
@@ -286,33 +307,36 @@ export default function GamesPage() {
         const won = activeRoom.winnerId === myPlayerId;
         const draw = activeRoom.winnerId === "draw";
 
-        const reward = awardMatchXP({ won, draw });
-        setGamerProfile(reward.profile);
+        // Only award competitive ranked XP and record history in online/AI matches (prevent local pass-and-play manipulation)
+        if (activeRoom.mode !== "local") {
+          const reward = awardMatchXP({ won, draw });
+          setGamerProfile(reward.profile);
 
-        const opponentName = activeRoom.players.host.id === myPlayerId
-          ? activeRoom.players.guest?.name || "Opponent"
-          : activeRoom.players.host.name;
+          const opponentName = activeRoom.players.host.id === myPlayerId
+            ? activeRoom.players.guest?.name || (activeRoom.mode === "ai" ? "Cyber AI 🤖" : "Opponent")
+            : activeRoom.players.host.name;
 
-        recordMatchHistory({
-          gameId: activeRoom.gameId,
-          mode: activeRoom.mode,
-          outcome: won ? "won" : draw ? "draw" : "lost",
-          opponentName,
-          xpGained: reward.xpGained,
-        });
+          recordMatchHistory({
+            gameId: activeRoom.gameId,
+            mode: activeRoom.mode,
+            outcome: won ? "won" : draw ? "draw" : "lost",
+            opponentName,
+            xpGained: reward.xpGained,
+          });
 
-        if (reward.leveledUp) {
-          toast.success(`🎉 LEVEL UP! You reached Level ${reward.profile.level} (${reward.profile.title})!`);
-        } else if (won) {
-          toast.success(`+${reward.xpGained} XP Awarded!`);
-        }
+          if (reward.leveledUp) {
+            toast.success(`🎉 LEVEL UP! You reached Level ${reward.profile.level} (${reward.profile.title})!`);
+          } else if (won) {
+            toast.success(`+${reward.xpGained} XP Awarded!`);
+          }
 
-        if (reward.newBadgeUnlocked) {
-          toast.success(`🏆 Achievement Unlocked: ${reward.newBadgeUnlocked.title}!`);
+          if (reward.newBadgeUnlocked) {
+            toast.success(`🏆 Achievement Unlocked: ${reward.newBadgeUnlocked.title}!`);
+          }
         }
       }
     }
-  }, [activeRoom?.status, activeRoom?.round, activeRoom?.winnerId, myPlayerId, isSpectator]);
+  }, [activeRoom?.status, activeRoom?.round, activeRoom?.winnerId, activeRoom?.mode, myPlayerId, isSpectator]);
 
   // Auto-join if ?room=XXXX in URL (checking if spectator mode)
   useEffect(() => {
@@ -937,7 +961,8 @@ export default function GamesPage() {
             <VictoryModal
               isOpen={
                 (activeRoom.status === "round_over" || activeRoom.status === "game_over") &&
-                dismissedVictoryRound !== activeRoom.round
+                dismissedVictoryRound !== activeRoom.round &&
+                isVictoryModalVisible
               }
               room={activeRoom}
               myPlayerId={myPlayerId}
