@@ -94,7 +94,7 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({
       const isHostFaster = hostTime < guestTime;
       const isDraw = hostTime === guestTime;
 
-      const winnerId = isDraw ? "draw" : isHostFaster ? room.players.host.id : room.players.guest?.id || "guest";
+      const winnerId = isDraw ? "draw" : isHostFaster ? room.players.host.id : room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2");
       let nextHostScore = room.players.host.score;
       let nextGuestScore = room.players.guest?.score || 0;
 
@@ -119,7 +119,7 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({
         },
       };
 
-      if (winnerId === myPlayerId) {
+      if (winnerId === myPlayerId || isLocalMode) {
         gameAudio.playWin();
       } else if (winnerId === "draw") {
         gameAudio.playDraw();
@@ -159,11 +159,11 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({
       const falseStartPlayer = isLocalMode
         ? playerKey === "host"
           ? room.players.host.id
-          : room.players.guest?.id || "player_2"
+          : room.players.guest?.id || "local_player_2"
         : myPlayerId;
 
       const winnerId = falseStartPlayer === room.players.host.id
-        ? room.players.guest?.id || (isAIMode ? "ai_opponent" : "guest")
+        ? room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2")
         : room.players.host.id;
 
       let nextHostScore = room.players.host.score;
@@ -224,7 +224,7 @@ export const ReactionDashGame: React.FC<ReactionDashGameProps> = ({
       // Mode A: Pass & Play Local (2 players on 1 screen)
       if (isLocalMode) {
         const isHostTap = playerKey === "host";
-        const winnerId = isHostTap ? room.players.host.id : room.players.guest?.id || "player_2";
+        const winnerId = isHostTap ? room.players.host.id : room.players.guest?.id || "local_player_2";
         let nextHostScore = room.players.host.score;
         let nextGuestScore = room.players.guest?.score || 0;
 

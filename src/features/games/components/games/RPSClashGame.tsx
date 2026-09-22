@@ -111,9 +111,6 @@ export const RPSClashGame: React.FC<RPSClashGameProps> = ({ room, myPlayerId, on
           },
         };
 
-        if (winnerId === "draw") gameAudio.playDraw();
-        else gameAudio.playWin();
-
         onLocalMove?.(updatedRoom);
         return;
       }
@@ -156,10 +153,6 @@ export const RPSClashGame: React.FC<RPSClashGameProps> = ({ room, myPlayerId, on
           guest: room.players.guest ? { ...room.players.guest, score: nextGuestScore } : null,
         },
       };
-
-      if (winnerId === room.players.host.id) gameAudio.playWin();
-      else if (winnerId === "ai_opponent") gameAudio.playLose();
-      else gameAudio.playDraw();
 
       onLocalMove?.(updatedRoom);
       return;

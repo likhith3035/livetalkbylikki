@@ -516,6 +516,7 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({ room, myPlayer
   // Track the most recent drop coordinates for physical drop animation
   const [lastDropPos, setLastDropPos] = useState<{ row: number; col: number; id: string } | null>(null);
   const prevBoardRef = useRef<ConnectFourCell[][] | null>(null);
+  const lastLocalDropCellRef = useRef<{ row: number; col: number } | null>(null);
   const aiTimerRef = useRef<any>(null);
 
   // ── Tactical Hints & Social Unlock States ──
@@ -561,12 +562,20 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({ room, myPlayer
   useEffect(() => {
     const prev = prevBoardRef.current;
     if (prev) {
-      for (let r = 0; r < ROWS; r++) {
+      outer: for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           if (!prev[r][c] && board[r][c]) {
-            setLastDropPos({ row: r, col: c, id: `${r}-${c}-${Date.now()}` });
-            gameAudio.playConnect4Drop(r);
-            break;
+            const isLocalDrop =
+              lastLocalDropCellRef.current &&
+              lastLocalDropCellRef.current.row === r &&
+              lastLocalDropCellRef.current.col === c;
+
+            if (!isLocalDrop) {
+              setLastDropPos({ row: r, col: c, id: `${r}-${c}-${Date.now()}` });
+              gameAudio.playConnect4Drop(r);
+            }
+            lastLocalDropCellRef.current = null;
+            break outer;
           }
         }
       }
@@ -693,6 +702,7 @@ export const ConnectFourGame: React.FC<ConnectFourGameProps> = ({ room, myPlayer
     newBoard[row][col] = dropColor;
 
     // Trigger physical drop animation and pitch-scaled audio
+    lastLocalDropCellRef.current = { row, col };
     setLastDropPos({ row, col, id: `${row}-${col}-${Date.now()}` });
     gameAudio.playConnect4Drop(row);
 

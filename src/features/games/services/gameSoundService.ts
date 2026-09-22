@@ -4,6 +4,9 @@ import { gameHaptics } from "./gameHapticsService";
 class GameSoundSynthesizer {
   private ctx: AudioContext | null = null;
   private muted: boolean = false;
+  private lastWinTime: number = 0;
+  private lastLoseTime: number = 0;
+  private lastDrawTime: number = 0;
 
   constructor() {
     try {
@@ -125,6 +128,9 @@ class GameSoundSynthesizer {
   }
 
   public playWin() {
+    const now = Date.now();
+    if (now - this.lastWinTime < 1000 || now - this.lastLoseTime < 500) return;
+    this.lastWinTime = now;
     this.vibrate([30, 40, 60, 40, 80]);
     this.playTone(523.25, 0.1, "sine", 0.15); // C5
     this.playTone(659.25, 0.1, "sine", 0.15, 90); // E5
@@ -133,6 +139,9 @@ class GameSoundSynthesizer {
   }
 
   public playLose() {
+    const now = Date.now();
+    if (now - this.lastLoseTime < 1000 || now - this.lastWinTime < 500) return;
+    this.lastLoseTime = now;
     this.vibrate([60, 40, 80]);
     this.playTone(392.00, 0.15, "sawtooth", 0.1); // G4
     this.playTone(329.63, 0.15, "sawtooth", 0.1, 120); // E4
@@ -140,6 +149,9 @@ class GameSoundSynthesizer {
   }
 
   public playDraw() {
+    const now = Date.now();
+    if (now - this.lastDrawTime < 1000) return;
+    this.lastDrawTime = now;
     this.vibrate([20, 20]);
     this.playTone(440, 0.1, "triangle", 0.12);
     this.playTone(440, 0.15, "sine", 0.12, 100);
