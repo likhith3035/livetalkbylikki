@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -8,12 +8,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trophy, RotateCcw, Home, Sparkles, Frown, Meh, Crown, X, Zap, Flame, Loader2, Check } from "lucide-react";
+import { Trophy, RotateCcw, Home, Sparkles, Frown, Meh, Crown, X, Zap, Flame, Loader2, Check, Share2 } from "lucide-react";
 import { GameRoomState } from "../types";
 import { GameAvatar } from "./GameAvatar";
 import { triggerConfetti } from "../services/confettiEffect";
 import { getGamerProfile, getXpForNextLevel } from "../services/gameProgressionService";
 import { gameAudio } from "../services/gameSoundService";
+import { gameHaptics } from "../services/gameHapticsService";
+import { ShareVictoryCardModal } from "./ShareVictoryCardModal";
 
 interface VictoryModalProps {
   isOpen: boolean;
@@ -55,6 +57,20 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   const streakMultiplier = profile.streak >= 5 ? 1.5 : profile.streak >= 3 ? 1.25 : 1.0;
   const streakBonus = isWinner && streakMultiplier > 1 ? Math.round(80 * (streakMultiplier - 1)) : 0;
 
+  const [isShareCardOpen, setIsShareCardOpen] = useState(false);
+
+  const GAME_TITLES: Record<string, string> = {
+    connect_four: "Connect 4",
+    sos: "Super SOS Neon",
+    cricket: "Hand Cricket",
+    bingo: "Bingo Blitz",
+    tic_tac_toe: "Tic-Tac-Toe",
+    rps: "RPS Clash",
+    memory: "Memory Duel",
+    reaction: "Reaction Dash",
+  };
+  const activeGameTitle = GAME_TITLES[room.gameId] || "Arcade Duel";
+
   // Trigger confetti burst on victory or series championship
   useEffect(() => {
     if (isOpen && (isWinner || isSeriesOver || (isLocal && !isDraw))) {
@@ -62,7 +78,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     }
   }, [isOpen, isWinner, isSeriesOver, isLocal, isDraw]);
 
-  // Synchronized victory, defeat, or draw audio when modal opens
+  // Synchronized victory, defeat, or draw audio and haptics when modal opens
   const lastSoundRoundRef = useRef<number>(-1);
   useEffect(() => {
     if (!isOpen || !room.winnerId) return;
@@ -70,10 +86,13 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     lastSoundRoundRef.current = room.round;
 
     if (isDraw) {
+      gameHaptics.medium();
       gameAudio.playDraw();
     } else if (isWinner || isLocal) {
+      gameHaptics.victory();
       gameAudio.playWin();
     } else {
+      gameHaptics.defeat();
       gameAudio.playLose();
     }
   }, [isOpen, room.round, room.winnerId, isDraw, isWinner, isLocal]);
@@ -306,6 +325,18 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
         {/* Action Buttons with Two-Way Handshake Rematch */}
         <div className="flex flex-col gap-2 relative z-10">
+          {/* 📸 Share Victory Card Button (Instagram / WhatsApp / Image) */}
+          <Button
+            onClick={() => {
+              gameHaptics.light();
+              setIsShareCardOpen(true);
+            }}
+            className="w-full h-11 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-sm shadow-xl shadow-indigo-500/25 transition-all gap-2 cursor-pointer border border-white/20"
+          >
+            <Share2 className="w-4 h-4 text-cyan-300" />
+            <span>📸 Share Victory Card (Story / WhatsApp)</span>
+          </Button>
+
           {isOnline ? (
             myVote ? (
               <Button
@@ -363,6 +394,15 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           </div>
         </div>
       </DialogContent>
+
+      {/* 9:16 High-Res Shareable Victory Poster Modal */}
+      <ShareVictoryCardModal
+        isOpen={isShareCardOpen}
+        onClose={() => setIsShareCardOpen(false)}
+        room={room}
+        myPlayerId={myPlayerId}
+        gameTitle={activeGameTitle}
+      />
     </Dialog>
   );
 };
