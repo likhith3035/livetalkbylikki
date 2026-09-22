@@ -90,6 +90,24 @@ class GameSoundSynthesizer {
     this.playTone(220, 0.12, "sine", 0.12, 50);
   }
 
+  public playConnect4Drop(row: number = 5) {
+    // Row 5 is deep bottom (lowest pitch), Row 0 is top (highest pitch)
+    const baseFreq1 = 190 + (5 - row) * 28;
+    const baseFreq2 = 130 + (5 - row) * 20;
+    this.vibrate(18 + (5 - row) * 2);
+    this.playTone(baseFreq1, 0.08, "triangle", 0.16);
+    this.playTone(baseFreq2, 0.12, "sine", 0.14, 45);
+    // Subtle physical plastic clink on bounce
+    this.playTone(700 + (5 - row) * 45, 0.03, "sine", 0.06, 50);
+  }
+
+  public playHintChime() {
+    this.vibrate([15, 30, 20]);
+    this.playTone(659.25, 0.08, "sine", 0.12); // E5
+    this.playTone(880.00, 0.12, "sine", 0.14, 60); // A5
+    this.playTone(1174.66, 0.20, "sine", 0.16, 130); // D6
+  }
+
   public playFlip() {
     this.vibrate(12);
     this.playTone(700, 0.04, "sine", 0.06);
