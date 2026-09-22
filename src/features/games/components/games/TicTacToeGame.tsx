@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { GameRoomState, TicTacToeState } from "../../types";
 import { gameAudio } from "../../services/gameSoundService";
 import { sendGameMove } from "../../services/gameRoomService";
+import { cn } from "@/lib/utils";
 
 interface TicTacToeGameProps {
   room: GameRoomState<TicTacToeState>;
@@ -98,6 +99,10 @@ export const TicTacToeGame: React.FC<TicTacToeGameProps> = ({ room, myPlayerId, 
   const isHost = room.players.host.id === myPlayerId;
   const mySymbol: "X" | "O" = isHost ? "X" : "O";
   const currentSymbol: "X" | "O" = room.currentTurn === room.players.host.id ? "X" : "O";
+  const opponentSymbol: "X" | "O" = mySymbol === "X" ? "O" : "X";
+  const opponentName = isHost
+    ? (room.players.guest?.name || (room.mode === "ai" ? "Cyber AI 🤖" : "Player 2"))
+    : room.players.host.name;
 
   const handleCellClick = async (index: number) => {
     if (board[index] || room.status === "round_over" || room.status === "game_over") return;
@@ -242,6 +247,48 @@ export const TicTacToeGame: React.FC<TicTacToeGameProps> = ({ room, myPlayerId, 
 
   return (
     <div className="flex flex-col items-center justify-center p-2 sm:p-4 select-none w-full max-w-[320px] xs:max-w-sm mx-auto touch-manipulation">
+      {/* Match Identity & Turn Strip */}
+      <div className="w-full flex items-center justify-between gap-2 px-2.5 sm:px-3 py-1.5 mb-2.5 rounded-xl bg-card/80 border border-border/70 backdrop-blur-md shadow-sm">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[10px] text-muted-foreground font-semibold">You:</span>
+          <span
+            className={cn(
+              "text-[11px] sm:text-xs font-black px-1.5 py-0.5 rounded border leading-none flex items-center gap-1",
+              mySymbol === "X"
+                ? "text-rose-400 bg-rose-500/15 border-rose-500/30"
+                : "text-cyan-400 bg-cyan-500/15 border-cyan-500/30"
+            )}
+          >
+            <span>{mySymbol === "X" ? "❌ Playing as X" : "⭕ Playing as O"}</span>
+          </span>
+        </div>
+
+        {/* Turn Status Badge */}
+        <div className="flex items-center gap-1 shrink-0">
+          {isMyTurn || room.mode === "local" ? (
+            <motion.div
+              animate={{ scale: [1, 1.04, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              className="px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] sm:text-[11px] font-black flex items-center gap-1 shadow-sm shadow-emerald-500/25"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              <span>YOUR TURN</span>
+            </motion.div>
+          ) : room.status === "round_over" ? (
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
+              Round Over
+            </span>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary/80 text-muted-foreground border border-border/50 text-[10px] sm:text-[11px] font-medium shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400/90 animate-pulse" />
+              <span className="truncate max-w-[130px] sm:max-w-[170px]">
+                {opponentName}'s Turn ({opponentSymbol})
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-card border-2 border-border shadow-2xl w-full aspect-square relative">
         {board.map((cell, index) => {
           const isWinningCell = state.winningLine?.includes(index);
