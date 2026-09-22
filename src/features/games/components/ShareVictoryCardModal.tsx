@@ -217,7 +217,7 @@ export const ShareVictoryCardModal: React.FC<ShareVictoryCardModalProps> = ({
         ctx.fillText(c.label, x + chipW / 2, chipY + 90);
       });
 
-      // 9. 3D Game Visual Illustration (Connect 4 Board Matrix)
+      // 9. Dynamic Game Visual Illustration (adapts to active game)
       const boardX = 220;
       const boardY = 790;
       const boardW = 640;
@@ -230,7 +230,7 @@ export const ShareVictoryCardModal: React.FC<ShareVictoryCardModalProps> = ({
       ctx.fillStyle = gridGlow;
       ctx.fillRect(boardX - 40, boardY - 40, boardW + 80, boardH + 80);
 
-      // Cabinet
+      // Cabinet frame
       ctx.fillStyle = "#0f172a";
       ctx.strokeStyle = "#38bdf8";
       ctx.lineWidth = 6;
@@ -253,39 +253,191 @@ export const ShareVictoryCardModal: React.FC<ShareVictoryCardModalProps> = ({
       ctx.fillText("CAN YOU", 900, 980);
       ctx.fillText("BEAT ME?", 900, 1015);
 
-      // Grid chips simulation
-      const cols = 7;
-      const rows = 6;
-      const startGx = boardX + 50;
-      const startGy = boardY + 45;
-      const cellGap = 77;
+      // --- Game-specific interior ---
+      const gid = room.gameId;
 
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const cx = startGx + c * cellGap;
-          const cy = startGy + r * cellGap;
-
-          // Determine chip color pattern (winning diagonal)
-          let chipColor = "rgba(255, 255, 255, 0.08)";
-          if ((r === 5 && c === 2) || (r === 4 && c === 3) || (r === 3 && c === 4) || (r === 2 && c === 5)) {
-            chipColor = "#ef4444"; // Red winning line
-          } else if ((r === 5 && (c === 1 || c === 3 || c === 4)) || (r === 4 && c === 2) || (r === 3 && c === 3)) {
-            chipColor = "#eab308"; // Yellow tokens
-          } else if (r === 5 && (c === 0 || c === 5)) {
-            chipColor = "#ef4444";
-          }
-
-          ctx.fillStyle = chipColor;
-          ctx.beginPath();
-          ctx.arc(cx, cy, 28, 0, Math.PI * 2);
-          ctx.fill();
-
-          if (chipColor !== "rgba(255, 255, 255, 0.08)") {
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-            ctx.lineWidth = 3;
-            ctx.stroke();
+      if (gid === "connect4") {
+        // Connect 4 grid chips
+        const cols = 7, rows = 6, startGx = boardX + 50, startGy = boardY + 45, cellGap = 77;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const cx = startGx + c * cellGap;
+            const cy = startGy + r * cellGap;
+            let chipColor = "rgba(255, 255, 255, 0.08)";
+            if ((r===5&&c===2)||(r===4&&c===3)||(r===3&&c===4)||(r===2&&c===5)) chipColor = "#ef4444";
+            else if ((r===5&&(c===1||c===3||c===4))||(r===4&&c===2)||(r===3&&c===3)) chipColor = "#eab308";
+            else if (r===5&&(c===0||c===5)) chipColor = "#ef4444";
+            ctx.fillStyle = chipColor;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+            ctx.fill();
+            if (chipColor !== "rgba(255, 255, 255, 0.08)") {
+              ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            }
           }
         }
+      } else if (gid === "ttt") {
+        // Tic-Tac-Toe 3x3
+        const cells = ["X","O","","X","X","O","O","","X"];
+        const cellSize = 140, pad = 50;
+        const gx = boardX + (boardW - 3 * cellSize - 2 * pad) / 2;
+        const gy = boardY + (boardH - 3 * cellSize - 2 * pad) / 2;
+        for (let i = 0; i < 9; i++) {
+          const r = Math.floor(i / 3), c = i % 3;
+          const cx = gx + c * (cellSize + pad);
+          const cy = gy + r * (cellSize + pad);
+          ctx.fillStyle = "rgba(255,255,255,0.04)";
+          ctx.strokeStyle = "rgba(255,255,255,0.15)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.roundRect(cx, cy, cellSize, cellSize, 20);
+          ctx.fill();
+          ctx.stroke();
+          ctx.textAlign = "center";
+          ctx.font = "bold 72px sans-serif";
+          if (cells[i] === "X") {
+            ctx.fillStyle = "#22d3ee";
+            ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 15;
+          } else if (cells[i] === "O") {
+            ctx.fillStyle = "#f43f5e";
+            ctx.shadowColor = "#f43f5e"; ctx.shadowBlur = 15;
+          }
+          if (cells[i]) ctx.fillText(cells[i], cx + cellSize / 2, cy + cellSize / 2 + 26);
+          ctx.shadowBlur = 0;
+        }
+      } else if (gid === "sos") {
+        // SOS 5x5 neon grid
+        const sosCells = ["S","","O","","S","","S","","O","","O","","S","","O","","S","","O","","S","","O","","S"];
+        const cs = 90, sp = 16;
+        const ox = boardX + (boardW - 5 * cs - 4 * sp) / 2;
+        const oy = boardY + (boardH - 5 * cs - 4 * sp) / 2;
+        for (let i = 0; i < 25; i++) {
+          const r = Math.floor(i / 5), c = i % 5;
+          const cx = ox + c * (cs + sp), cy = oy + r * (cs + sp);
+          ctx.fillStyle = "rgba(255,255,255,0.03)";
+          ctx.strokeStyle = sosCells[i] === "S" ? "rgba(52,211,153,0.5)" : sosCells[i] === "O" ? "rgba(139,92,246,0.5)" : "rgba(255,255,255,0.1)";
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.roundRect(cx, cy, cs, cs, 14); ctx.fill(); ctx.stroke();
+          if (sosCells[i]) {
+            ctx.textAlign = "center";
+            ctx.font = "bold 42px sans-serif";
+            ctx.fillStyle = sosCells[i] === "S" ? "#34d399" : "#a78bfa";
+            ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 12;
+            ctx.fillText(sosCells[i], cx + cs / 2, cy + cs / 2 + 16);
+            ctx.shadowBlur = 0;
+          }
+        }
+      } else if (gid === "bingo") {
+        // Bingo 5x5 card
+        const bingoH = ["B","I","N","G","O"];
+        const cs = 90, sp = 14;
+        const ox = boardX + (boardW - 5 * cs - 4 * sp) / 2;
+        let oy = boardY + 30;
+        ctx.textAlign = "center"; ctx.font = "bold 36px sans-serif"; ctx.fillStyle = "#fbbf24";
+        bingoH.forEach((ch, i) => ctx.fillText(ch, ox + i * (cs + sp) + cs / 2, oy + 30));
+        oy += 50;
+        const stamped = [0,3,6,8,12,16,18,21,24];
+        for (let i = 0; i < 25; i++) {
+          const r = Math.floor(i / 5), c = i % 5;
+          const cx = ox + c * (cs + sp), cy = oy + r * (cs + sp);
+          const isStamped = stamped.includes(i);
+          const isFree = i === 12;
+          ctx.fillStyle = isFree ? "rgba(245,158,11,0.3)" : isStamped ? "rgba(34,211,238,0.15)" : "rgba(255,255,255,0.03)";
+          ctx.strokeStyle = isFree ? "rgba(245,158,11,0.6)" : isStamped ? "rgba(34,211,238,0.4)" : "rgba(255,255,255,0.1)";
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.roundRect(cx, cy, cs, cs, 12); ctx.fill(); ctx.stroke();
+          ctx.textAlign = "center"; ctx.font = "bold 28px sans-serif";
+          ctx.fillStyle = isFree ? "#fcd34d" : isStamped ? "#67e8f9" : "#64748b";
+          ctx.fillText(isFree ? "★" : isStamped ? "✓" : `${Math.floor(Math.random() * 60 + 1)}`, cx + cs / 2, cy + cs / 2 + 10);
+        }
+      } else if (gid === "rps") {
+        // Rock Paper Scissors icons
+        const icons = [["✊","ROCK","#22d3ee"],["✋","PAPER","#f43f5e"],["✌️","SCISSORS","#a78bfa"]];
+        const iconSize = 100, gap = 60;
+        const totalW = icons.length * iconSize + (icons.length - 1) * gap;
+        const sx = boardX + (boardW - totalW) / 2;
+        const sy = boardY + boardH / 2 - 40;
+        icons.forEach(([emoji, label, color], i) => {
+          const x = sx + i * (iconSize + gap) + iconSize / 2;
+          ctx.textAlign = "center";
+          ctx.font = "80px sans-serif";
+          ctx.shadowColor = color as string; ctx.shadowBlur = 20;
+          ctx.fillText(emoji as string, x, sy + 20);
+          ctx.shadowBlur = 0;
+          ctx.font = "bold 22px sans-serif";
+          ctx.fillStyle = "#94a3b8";
+          ctx.fillText(label as string, x, sy + 70);
+          if (i < icons.length - 1) {
+            ctx.font = "bold 48px sans-serif";
+            ctx.fillStyle = "#fbbf24";
+            ctx.fillText("⚡", x + (iconSize + gap) / 2, sy + 5);
+          }
+        });
+      } else if (gid === "memory") {
+        // Memory card pairs
+        const emojis = ["🎯","🎯","🌟","❓","🔥","❓","🌟","🔥","💎","❓","❓","💎"];
+        const cs = 120, sp = 20;
+        const ox = boardX + (boardW - 4 * cs - 3 * sp) / 2;
+        const oy = boardY + (boardH - 3 * cs - 2 * sp) / 2;
+        emojis.forEach((em, i) => {
+          const r = Math.floor(i / 4), c = i % 4;
+          const cx = ox + c * (cs + sp), cy = oy + r * (cs + sp);
+          const revealed = em !== "❓";
+          ctx.fillStyle = revealed ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.04)";
+          ctx.strokeStyle = revealed ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.12)";
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.roundRect(cx, cy, cs, cs, 18); ctx.fill(); ctx.stroke();
+          ctx.textAlign = "center"; ctx.font = "48px sans-serif";
+          if (revealed) { ctx.shadowColor = "#6366f1"; ctx.shadowBlur = 12; }
+          ctx.fillText(em, cx + cs / 2, cy + cs / 2 + 18);
+          ctx.shadowBlur = 0;
+        });
+      } else if (gid === "cricket") {
+        // Hand Cricket bat vs ball
+        ctx.textAlign = "center";
+        ctx.font = "120px sans-serif";
+        ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 25;
+        ctx.fillText("🏏", boardX + boardW / 2 - 130, boardY + boardH / 2 + 30);
+        ctx.shadowColor = "#f43f5e"; ctx.shadowBlur = 25;
+        ctx.fillText("🤾", boardX + boardW / 2 + 130, boardY + boardH / 2 + 30);
+        ctx.shadowBlur = 0;
+        ctx.font = "bold 52px sans-serif";
+        ctx.fillStyle = "#fbbf24";
+        ctx.fillText("VS", boardX + boardW / 2, boardY + boardH / 2 + 20);
+        // Number circles
+        ctx.font = "bold 24px sans-serif";
+        [1,2,3,4,5,6].forEach((n, i) => {
+          const nx = boardX + 130 + i * 70;
+          const ny = boardY + boardH - 60;
+          ctx.fillStyle = "rgba(255,255,255,0.08)";
+          ctx.strokeStyle = "rgba(255,255,255,0.2)";
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(nx, ny, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#94a3b8"; ctx.textAlign = "center";
+          ctx.fillText(`${n}`, nx, ny + 9);
+        });
+      } else if (gid === "reaction") {
+        // Reaction Dash lightning bolt
+        ctx.textAlign = "center";
+        ctx.font = "160px sans-serif";
+        ctx.shadowColor = "#facc15"; ctx.shadowBlur = 40;
+        ctx.fillText("⚡", boardX + boardW / 2, boardY + boardH / 2 + 40);
+        ctx.shadowBlur = 0;
+        // Speed bars
+        const bars = [["#10b981", 220], ["#f59e0b", 160], ["#ef4444", 90]];
+        bars.forEach(([color, w], i) => {
+          ctx.fillStyle = color as string;
+          ctx.shadowColor = color as string; ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.roundRect(boardX + (boardW - Number(w)) / 2, boardY + boardH - 90 + i * 25, Number(w), 14, 7);
+          ctx.fill();
+        });
+        ctx.shadowBlur = 0;
+        ctx.font = "bold 22px sans-serif";
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText("FASTEST REFLEXES WIN", boardX + boardW / 2, boardY + 50);
       }
 
       // 10. Player Profile Callout Box
@@ -439,36 +591,177 @@ export const ShareVictoryCardModal: React.FC<ShareVictoryCardModalProps> = ({
               </div>
             </div>
 
-            {/* 3D GAME CENTERPIECE (Connect 4 Board Simulation) */}
-            <div className="relative w-full max-w-[260px] aspect-[4/3] rounded-2xl bg-slate-900/90 border-2 border-cyan-500/50 shadow-2xl p-2.5 flex flex-col justify-between my-1 z-10">
-              <div className="grid grid-cols-7 gap-1 h-full w-full place-items-center">
-                {Array.from({ length: 42 }).map((_, idx) => {
-                  const r = Math.floor(idx / 7);
-                  const c = idx % 7;
-                  const isWinChip =
-                    (r === 5 && c === 2) ||
-                    (r === 4 && c === 3) ||
-                    (r === 3 && c === 4) ||
-                    (r === 2 && c === 5);
-                  const isOppChip =
-                    (r === 5 && (c === 1 || c === 3 || c === 4)) ||
-                    (r === 4 && c === 2) ||
-                    (r === 3 && c === 3);
+            {/* DYNAMIC GAME CENTERPIECE — adapts to active game */}
+            <div className="relative w-full max-w-[260px] aspect-[4/3] rounded-2xl bg-slate-900/90 border-2 border-cyan-500/50 shadow-2xl p-2.5 flex flex-col justify-between my-1 z-10 overflow-hidden">
+              {/* Connect 4 */}
+              {room.gameId === "connect4" && (
+                <div className="grid grid-cols-7 gap-1 h-full w-full place-items-center">
+                  {Array.from({ length: 42 }).map((_, idx) => {
+                    const r = Math.floor(idx / 7);
+                    const c = idx % 7;
+                    const isWinChip =
+                      (r === 5 && c === 2) || (r === 4 && c === 3) || (r === 3 && c === 4) || (r === 2 && c === 5);
+                    const isOppChip =
+                      (r === 5 && (c === 1 || c === 3 || c === 4)) || (r === 4 && c === 2) || (r === 3 && c === 3);
+                    return (
+                      <div
+                        key={idx}
+                        className={`w-4 sm:w-5 h-4 sm:h-5 rounded-full border transition-all ${
+                          isWinChip
+                            ? "bg-red-500 border-red-300 shadow-[0_0_8px_rgba(239,68,68,0.9)]"
+                            : isOppChip
+                            ? "bg-amber-400 border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.7)]"
+                            : "bg-slate-950/80 border-slate-800"
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+              )}
 
-                  return (
+              {/* Tic-Tac-Toe */}
+              {room.gameId === "ttt" && (
+                <div className="grid grid-cols-3 gap-2 h-full w-full place-items-center p-3">
+                  {["X","O","","X","X","O","O","","X"].map((cell, idx) => (
                     <div
                       key={idx}
-                      className={`w-4 sm:w-5 h-4 sm:h-5 rounded-full border transition-all ${
-                        isWinChip
-                          ? "bg-red-500 border-red-300 shadow-[0_0_8px_rgba(239,68,68,0.9)]"
-                          : isOppChip
-                          ? "bg-amber-400 border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.7)]"
-                          : "bg-slate-950/80 border-slate-800"
+                      className={`w-full aspect-square rounded-xl flex items-center justify-center text-2xl sm:text-3xl font-black border-2 ${
+                        cell === "X"
+                          ? "text-cyan-400 border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_12px_rgba(34,211,238,0.3)]"
+                          : cell === "O"
+                          ? "text-rose-400 border-rose-500/50 bg-rose-500/10 shadow-[0_0_12px_rgba(244,63,94,0.3)]"
+                          : "border-slate-700 bg-slate-950/50"
                       }`}
-                    />
-                  );
-                })}
-              </div>
+                    >
+                      {cell}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* SOS */}
+              {room.gameId === "sos" && (
+                <div className="grid grid-cols-5 gap-1.5 h-full w-full place-items-center p-2">
+                  {["S","","O","","S","","S","","O","","O","","S","","O","","S","","O","","S","","O","","S"].map((cell, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-full aspect-square rounded-lg flex items-center justify-center text-xs sm:text-sm font-black border ${
+                        cell === "S"
+                          ? "text-emerald-400 border-emerald-500/40 bg-emerald-500/10 shadow-[0_0_8px_rgba(52,211,153,0.4)]"
+                          : cell === "O"
+                          ? "text-violet-400 border-violet-500/40 bg-violet-500/10 shadow-[0_0_8px_rgba(139,92,246,0.4)]"
+                          : "border-slate-800 bg-slate-950/50"
+                      }`}
+                    >
+                      {cell}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Bingo */}
+              {room.gameId === "bingo" && (
+                <div className="flex flex-col items-center h-full w-full justify-center gap-1 p-1">
+                  <div className="grid grid-cols-5 gap-0.5 w-full">
+                    {["B","I","N","G","O"].map((ch) => (
+                      <div key={ch} className="text-center text-xs sm:text-sm font-black text-amber-400 tracking-widest">{ch}</div>
+                    ))}
+                    {Array.from({ length: 25 }).map((_, idx) => {
+                      const stamped = [0,3,6,8,12,16,18,21,24].includes(idx);
+                      return (
+                        <div
+                          key={idx}
+                          className={`aspect-square rounded-md flex items-center justify-center text-[9px] sm:text-[10px] font-bold border ${
+                            idx === 12
+                              ? "bg-amber-500/30 border-amber-400/60 text-amber-300 shadow-[0_0_6px_rgba(245,158,11,0.5)]"
+                              : stamped
+                              ? "bg-cyan-500/20 border-cyan-400/40 text-cyan-300"
+                              : "bg-slate-950/60 border-slate-700 text-slate-500"
+                          }`}
+                        >
+                          {idx === 12 ? "★" : stamped ? "✓" : Math.floor(Math.random() * 60 + 1)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* RPS Clash */}
+              {room.gameId === "rps" && (
+                <div className="flex items-center justify-center h-full w-full gap-3 p-2">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-4xl sm:text-5xl drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">✊</span>
+                    <span className="text-[10px] font-bold text-slate-400">ROCK</span>
+                  </div>
+                  <span className="text-2xl font-black text-amber-400 animate-pulse">⚡</span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-4xl sm:text-5xl drop-shadow-[0_0_12px_rgba(244,63,94,0.6)]">✋</span>
+                    <span className="text-[10px] font-bold text-slate-400">PAPER</span>
+                  </div>
+                  <span className="text-2xl font-black text-amber-400 animate-pulse">⚡</span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-4xl sm:text-5xl drop-shadow-[0_0_12px_rgba(139,92,246,0.6)]">✌️</span>
+                    <span className="text-[10px] font-bold text-slate-400">SCISSORS</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Memory Duel */}
+              {room.gameId === "memory" && (
+                <div className="grid grid-cols-4 gap-1.5 h-full w-full place-items-center p-2">
+                  {["🎯","🎯","🌟","❓","🔥","❓","🌟","🔥","💎","❓","❓","💎"].map((emoji, idx) => {
+                    const revealed = emoji !== "❓";
+                    return (
+                      <div
+                        key={idx}
+                        className={`w-full aspect-square rounded-xl flex items-center justify-center text-lg border-2 ${
+                          revealed
+                            ? "bg-indigo-500/15 border-indigo-400/50 shadow-[0_0_10px_rgba(99,102,241,0.3)]"
+                            : "bg-slate-800/80 border-slate-700"
+                        }`}
+                      >
+                        <span className={revealed ? "" : "opacity-30"}>{emoji}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Hand Cricket */}
+              {room.gameId === "cricket" && (
+                <div className="flex items-center justify-center h-full w-full gap-4 p-2">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <span className="text-5xl sm:text-6xl drop-shadow-[0_0_16px_rgba(34,211,238,0.5)]">🏏</span>
+                    <span className="text-[10px] font-bold text-cyan-400 tracking-wide">BATSMAN</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-xl font-black text-amber-400">VS</span>
+                    <div className="flex gap-1 mt-1">
+                      {[1,2,3,4,5,6].map((n) => (
+                        <span key={n} className="w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[8px] font-bold text-white/60">{n}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <span className="text-5xl sm:text-6xl drop-shadow-[0_0_16px_rgba(244,63,94,0.5)]">🤾</span>
+                    <span className="text-[10px] font-bold text-rose-400 tracking-wide">BOWLER</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Reaction Dash */}
+              {room.gameId === "reaction" && (
+                <div className="flex flex-col items-center justify-center h-full w-full gap-2 p-2">
+                  <span className="text-6xl sm:text-7xl animate-pulse drop-shadow-[0_0_24px_rgba(250,204,21,0.7)]">⚡</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="h-2 w-12 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                    <div className="h-2 w-8 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                    <div className="h-2 w-4 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+                  </div>
+                  <span className="text-[10px] font-black text-slate-400 tracking-[0.2em]">FASTEST REFLEXES WIN</span>
+                </div>
+              )}
 
               {/* Side Callout Labels */}
               <span className="absolute -left-6 top-1/2 -translate-y-1/2 text-[9px] font-bold italic text-slate-500 -rotate-90 hidden sm:block">

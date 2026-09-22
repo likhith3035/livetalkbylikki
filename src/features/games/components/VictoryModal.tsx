@@ -60,11 +60,11 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   const [isShareCardOpen, setIsShareCardOpen] = useState(false);
 
   const GAME_TITLES: Record<string, string> = {
-    connect_four: "Connect 4",
+    connect4: "Connect 4",
     sos: "Super SOS Neon",
     cricket: "Hand Cricket",
     bingo: "Bingo Blitz",
-    tic_tac_toe: "Tic-Tac-Toe",
+    ttt: "Tic-Tac-Toe",
     rps: "RPS Clash",
     memory: "Memory Duel",
     reaction: "Reaction Dash",
