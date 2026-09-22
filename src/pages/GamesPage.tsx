@@ -45,6 +45,7 @@ import {
   getXpForNextLevel,
 } from "@/features/games/services/gameProgressionService";
 import { gameAudio } from "@/features/games/services/gameSoundService";
+import { gameHaptics } from "@/features/games/services/gameHapticsService";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSEO } from "@/hooks/use-seo";
 import { getCurrentUserId } from "@/lib/auth";
@@ -340,6 +341,7 @@ export default function GamesPage() {
         // If an opponent connected while QR popup is open, auto-close it
         if (updated.players?.guest && !activeRoom.players?.guest) {
           setIsQRModalOpen(false);
+          gameHaptics.opponentJoined();
           gameAudio.playWin();
           toast.success(`Opponent ${updated.players.guest?.name || "Player 2"} connected! Game ready.`);
         }
@@ -348,6 +350,7 @@ export default function GamesPage() {
         // If we were searching for quickmatch and an opponent connected, exit searching
         if (isSearchingQuickMatch && updated.players.guest) {
           setIsSearchingQuickMatch(false);
+          gameHaptics.opponentJoined();
           gameAudio.playWin();
           toast.success("Opponent connected! Game starting...");
         }
@@ -376,6 +379,7 @@ export default function GamesPage() {
     if (!prevGuestConnectedRef.current && isGuestConnected) {
       setIsQRModalOpen((isOpen) => {
         if (isOpen) {
+          gameHaptics.opponentJoined();
           gameAudio.playWin();
           toast.success(`Opponent ${activeRoom?.players?.guest?.name || "Player 2"} connected! Game ready.`);
           return false;

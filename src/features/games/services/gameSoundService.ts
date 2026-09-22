@@ -1,4 +1,5 @@
 // Pure Web Audio synthesizer with tactile haptic feedback for zero-asset game audio
+import { gameHaptics } from "./gameHapticsService";
 
 class GameSoundSynthesizer {
   private ctx: AudioContext | null = null;
@@ -39,13 +40,16 @@ class GameSoundSynthesizer {
   }
 
   public vibrate(pattern: number | number[] = 15) {
-    if (typeof window !== "undefined" && "vibrate" in navigator) {
-      try {
-        if ((navigator as any).userActivation && !(navigator as any).userActivation.hasBeenActive) {
-          return;
-        }
-        navigator.vibrate(pattern);
-      } catch {}
+    if (Array.isArray(pattern)) {
+      if (pattern.length === 3) gameHaptics.success();
+      else if (pattern.length > 3) gameHaptics.victory();
+      else gameHaptics.medium();
+    } else if (pattern >= 50) {
+      gameHaptics.heavy();
+    } else if (pattern >= 20) {
+      gameHaptics.medium();
+    } else {
+      gameHaptics.light();
     }
   }
 
