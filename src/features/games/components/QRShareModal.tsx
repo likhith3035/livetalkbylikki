@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Dialog,
@@ -19,6 +19,8 @@ interface QRShareModalProps {
   roomCode: string;
   gameTitle: string;
   onScanJoin?: (scannedCode: string) => void;
+  hasOpponentConnected?: boolean;
+  opponentName?: string;
 }
 
 export const QRShareModal: React.FC<QRShareModalProps> = ({
@@ -27,10 +29,24 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
   roomCode,
   gameTitle,
   onScanJoin,
+  hasOpponentConnected = false,
+  opponentName,
 }) => {
-  const [tab, setTab] = useState<"play" | "spectate">("play");
+  const [tab, setTab] = useState<"play" | "spectate">(() => (hasOpponentConnected ? "spectate" : "play"));
   const [copied, setCopied] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+
+  // Auto-close QR popup when opponent connects while modal is open
+  const prevConnectedRef = useRef(hasOpponentConnected);
+  useEffect(() => {
+    if (!prevConnectedRef.current && hasOpponentConnected && isOpen) {
+      if (showScanner) {
+        setShowScanner(false);
+      }
+      onClose();
+    }
+    prevConnectedRef.current = hasOpponentConnected;
+  }, [hasOpponentConnected, isOpen, showScanner, onClose]);
 
   const inviteUrl = `${window.location.origin}/games?room=${roomCode}`;
   const spectatorUrl = `${window.location.origin}/games?room=${roomCode}&spectate=true`;

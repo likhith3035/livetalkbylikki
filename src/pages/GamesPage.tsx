@@ -337,6 +337,13 @@ export default function GamesPage() {
 
     const unsub = subscribeToGameRoom(activeRoom.roomCode, (updated) => {
       if (updated) {
+        // If an opponent connected while QR popup is open, auto-close it
+        if (updated.players?.guest && !activeRoom.players?.guest) {
+          setIsQRModalOpen(false);
+          gameAudio.playWin();
+          toast.success(`Opponent ${updated.players.guest?.name || "Player 2"} connected! Game ready.`);
+        }
+
         setActiveRoom(updated);
         // If we were searching for quickmatch and an opponent connected, exit searching
         if (isSearchingQuickMatch && updated.players.guest) {
@@ -359,7 +366,25 @@ export default function GamesPage() {
     });
 
     return () => unsub();
-  }, [activeRoom?.roomCode, activeRoom?.mode, isSearchingQuickMatch, dismissedVictoryRound]);
+  }, [activeRoom?.roomCode, activeRoom?.mode, activeRoom?.players?.guest, isSearchingQuickMatch, dismissedVictoryRound]);
+
+  // Reactive guard: auto-close QR popup whenever opponent connects
+  const isGuestConnected = Boolean(activeRoom?.players?.guest);
+  const prevGuestConnectedRef = useRef(isGuestConnected);
+
+  useEffect(() => {
+    if (!prevGuestConnectedRef.current && isGuestConnected) {
+      setIsQRModalOpen((isOpen) => {
+        if (isOpen) {
+          gameAudio.playWin();
+          toast.success(`Opponent ${activeRoom?.players?.guest?.name || "Player 2"} connected! Game ready.`);
+          return false;
+        }
+        return false;
+      });
+    }
+    prevGuestConnectedRef.current = isGuestConnected;
+  }, [isGuestConnected, activeRoom?.players?.guest?.name]);
 
   const handleSwitchActiveRoomToAI = useCallback(() => {
     if (!activeRoom) return;
@@ -900,6 +925,8 @@ export default function GamesPage() {
               roomCode={activeRoom.roomCode}
               gameTitle={activeGameMeta?.title || "Arcade Duel"}
               onScanJoin={handleJoinByCode}
+              hasOpponentConnected={Boolean(activeRoom.players?.guest)}
+              opponentName={activeRoom.players?.guest?.name}
             />
 
             {/* Victory / Next Round Modal with Two-Way Handshake */}

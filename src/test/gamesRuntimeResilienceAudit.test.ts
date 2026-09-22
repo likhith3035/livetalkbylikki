@@ -120,5 +120,37 @@ describe("Arcade Games Runtime Resilience Audit", () => {
       const guestDisplayName = room.players.guest?.name || "Player 2";
       expect(guestDisplayName).toBe("Player 2");
     });
+
+    it("detects transition when opponent connects to auto-close QR modal", () => {
+      let isQRModalOpen = true;
+      let prevConnected = false;
+
+      // Initial state: room created, waiting for guest
+      const initialGuest = null;
+      const isConnectedInitial = Boolean(initialGuest);
+
+      // Simulation of opponent connection handler
+      function handleGuestSync(newGuest: { id: string; name: string } | null) {
+        const isConnected = Boolean(newGuest);
+        if (!prevConnected && isConnected) {
+          isQRModalOpen = false;
+        }
+        prevConnected = isConnected;
+      }
+
+      expect(isQRModalOpen).toBe(true);
+
+      // Opponent connects
+      handleGuestSync({ id: "guest_123", name: "SpeedyPlayer" });
+
+      expect(isQRModalOpen).toBe(false);
+      expect(prevConnected).toBe(true);
+
+      // Subsequent sync does not re-trigger
+      isQRModalOpen = true; // Host opens share for spectators
+      handleGuestSync({ id: "guest_123", name: "SpeedyPlayer" });
+      expect(isQRModalOpen).toBe(true); // Should remain open for spectator sharing
+    });
   });
 });
+
