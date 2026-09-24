@@ -195,8 +195,8 @@ export interface SOSGameState {
 }
 
 export interface BingoGameState {
-  hostCard: number[][]; // 5x5 matrix with numbers 1-25
-  guestCard: number[][]; // 5x5 matrix with numbers 1-25
+  hostCard: number[][]; // 5x5 matrix with numbers 1-25 (0 for unfilled during draft)
+  guestCard: number[][]; // 5x5 matrix with numbers 1-25 (0 for unfilled during draft)
   stampedNumbers: number[]; // Array of called numbers
   calledHistory: Array<{ number: number; calledBy: string; timestamp: number }>;
   hostLines: number; // Count of completed lines (0-5+)
@@ -205,6 +205,9 @@ export interface BingoGameState {
   guestCompletedLines: string[];
   lastCalledNumber: number | null;
   isCardLocked?: boolean;
+  phase?: "setup" | "playing" | "round_over";
+  hostReady?: boolean;
+  guestReady?: boolean;
 }
 
 export interface CricketDelivery {

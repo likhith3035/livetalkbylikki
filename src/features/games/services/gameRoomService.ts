@@ -121,22 +121,11 @@ export function createInitialGameState(gameId: GameId) {
       return state;
     }
     case "bingo": {
-      const generateCard = () => {
-        const numbers = Array.from({ length: 25 }, (_, i) => i + 1);
-        for (let i = numbers.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-        }
-        const card: number[][] = [];
-        for (let r = 0; r < 5; r++) {
-          card.push(numbers.slice(r * 5, (r + 1) * 5));
-        }
-        return card;
-      };
+      const createEmptyCard = () => Array.from({ length: 5 }, () => Array(5).fill(0));
 
       const state: BingoGameState = {
-        hostCard: generateCard(),
-        guestCard: generateCard(),
+        hostCard: createEmptyCard(),
+        guestCard: createEmptyCard(),
         stampedNumbers: [],
         calledHistory: [],
         hostLines: 0,
@@ -145,6 +134,9 @@ export function createInitialGameState(gameId: GameId) {
         guestCompletedLines: [],
         lastCalledNumber: null,
         isCardLocked: false,
+        phase: "setup",
+        hostReady: false,
+        guestReady: false,
       };
       return state;
     }

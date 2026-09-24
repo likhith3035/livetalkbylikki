@@ -15,6 +15,21 @@ import {
   Lock,
   LockOpen,
   Volume2,
+  Wand2,
+  Trash2,
+  Shield,
+  ArrowRight,
+  Gamepad2,
+  CheckCircle2,
+  RotateCcw,
+  ArrowLeftRight,
+  ListOrdered,
+  Layers,
+  Undo2,
+  X,
+  Move,
+  Grab,
+  PenTool,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -244,6 +259,12 @@ export function getSmartBingoAIMove(
   return unstampedNumbers[0];
 }
 
+// ── Card Creation, Normalization & Customization Utilities ──
+
+export function createEmptyBingoCard(): number[][] {
+  return Array.from({ length: 5 }, () => Array(5).fill(0));
+}
+
 export function generateRandomBingoCard(): number[][] {
   const numbers = Array.from({ length: 25 }, (_, i) => i + 1);
   for (let i = numbers.length - 1; i > 0; i--) {
@@ -255,6 +276,108 @@ export function generateRandomBingoCard(): number[][] {
     card.push(numbers.slice(r * 5, (r + 1) * 5));
   }
   return card;
+}
+
+export function generateSequentialBingoCard(direction: "rows" | "cols" = "rows"): number[][] {
+  const card: number[][] = [];
+  if (direction === "rows") {
+    let n = 1;
+    for (let r = 0; r < 5; r++) {
+      const row: number[] = [];
+      for (let c = 0; c < 5; c++) {
+        row.push(n++);
+      }
+      card.push(row);
+    }
+  } else {
+    for (let r = 0; r < 5; r++) {
+      const row: number[] = [];
+      for (let c = 0; c < 5; c++) {
+        row.push(c * 5 + r + 1);
+      }
+      card.push(row);
+    }
+  }
+  return card;
+}
+
+export function generateSpiralBingoCard(): number[][] {
+  const card = Array.from({ length: 5 }, () => Array(5).fill(0));
+  let top = 0;
+  let bottom = 4;
+  let left = 0;
+  let right = 4;
+  let num = 1;
+
+  while (top <= bottom && left <= right) {
+    for (let c = left; c <= right; c++) card[top][c] = num++;
+    top++;
+    for (let r = top; r <= bottom; r++) card[r][right] = num++;
+    right--;
+    if (top <= bottom) {
+      for (let c = right; c >= left; c--) card[bottom][c] = num++;
+      bottom--;
+    }
+    if (left <= right) {
+      for (let r = bottom; r >= top; r--) card[r][left] = num++;
+      left++;
+    }
+  }
+  return card;
+}
+
+export function validateBingoCard(card: number[][]): boolean {
+  if (!card || !Array.isArray(card) || card.length !== 5) return false;
+  const flat = card.flat();
+  if (flat.length !== 25) return false;
+  const unique = new Set<number>();
+  for (const num of flat) {
+    if (typeof num !== "number" || num < 1 || num > 25 || unique.has(num)) {
+      return false;
+    }
+    unique.add(num);
+  }
+  return unique.size === 25;
+}
+
+export function autoFillRemainingCard(partialCard: number[][]): number[][] {
+  const current =
+    partialCard && Array.isArray(partialCard) && partialCard.length === 5
+      ? partialCard.map((row) => (Array.isArray(row) ? [...row] : Object.values(row || {})))
+      : createEmptyBingoCard();
+
+  const used = new Set<number>();
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const val = Number(current[r]?.[c] || 0);
+      if (val >= 1 && val <= 25) {
+        used.add(val);
+      }
+    }
+  }
+
+  const unused: number[] = [];
+  for (let i = 1; i <= 25; i++) {
+    if (!used.has(i)) unused.push(i);
+  }
+
+  // Shuffle unused
+  for (let i = unused.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [unused[i], unused[j]] = [unused[j], unused[i]];
+  }
+
+  let unusedIdx = 0;
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const val = Number(current[r]?.[c] || 0);
+      if (val < 1 || val > 25) {
+        current[r][c] = unused[unusedIdx++] || 1;
+      }
+    }
+  }
+
+  return current;
 }
 
 export function normalizeBingoCard(card: any): number[][] | null {
@@ -271,6 +394,22 @@ export function normalizeBingoCard(card: any): number[][] | null {
   return null;
 }
 
+// ── Drag Types ──
+
+export interface BingoDragSource {
+  type: "bank" | "cell";
+  num: number;
+  r?: number;
+  c?: number;
+}
+
+export interface BingoDragState {
+  source: BingoDragSource;
+  x: number;
+  y: number;
+  hoverCell: { r: number; c: number } | null;
+}
+
 // ── Main Bingo Blitz Duel Deluxe Component ──
 
 export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn, onLocalMove }) => {
@@ -279,6 +418,14 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
   const isHost = room.players.host.id === myPlayerId;
   const isAIMode = room.mode === "ai";
   const isLocalMode = room.mode === "local";
+
+  // Check if we are currently in Setup/Draft Phase
+  const isSetupPhase =
+    rawState?.phase === "setup" ||
+    (!rawState?.phase &&
+      !rawState?.isCardLocked &&
+      (!rawState?.stampedNumbers || rawState.stampedNumbers.length === 0) &&
+      rawState?.hostReady === false);
 
   const localHostCardRef = useRef<number[][] | null>(null);
   const localGuestCardRef = useRef<number[][] | null>(null);
@@ -290,10 +437,10 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
       return normalized;
     }
     if (!localHostCardRef.current) {
-      localHostCardRef.current = generateRandomBingoCard();
+      localHostCardRef.current = isSetupPhase ? createEmptyBingoCard() : generateRandomBingoCard();
     }
     return localHostCardRef.current;
-  }, [rawState?.hostCard]);
+  }, [rawState?.hostCard, isSetupPhase]);
 
   const guestCard: number[][] = useMemo(() => {
     const normalized = normalizeBingoCard(rawState?.guestCard);
@@ -302,10 +449,10 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
       return normalized;
     }
     if (!localGuestCardRef.current) {
-      localGuestCardRef.current = generateRandomBingoCard();
+      localGuestCardRef.current = isSetupPhase ? createEmptyBingoCard() : generateRandomBingoCard();
     }
     return localGuestCardRef.current;
-  }, [rawState?.guestCard]);
+  }, [rawState?.guestCard, isSetupPhase]);
 
   const myCard = isHost || isAIMode ? hostCard : guestCard;
   const opponentCard = isHost || isAIMode ? guestCard : hostCard;
@@ -331,6 +478,33 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
   const [wildStampsUsed, setWildStampsUsed] = useState(0);
   const [aiSpeech, setAiSpeech] = useState<string | null>(null);
 
+  // ── Card Draft Builder States (Defaults to Clean Blank Slate 0/25) ──
+  const [draftCard, setDraftCard] = useState<number[][]>(() => {
+    const raw = isHost || isAIMode ? rawState?.hostCard : rawState?.guestCard;
+    const normalized = normalizeBingoCard(raw);
+    return normalized || createEmptyBingoCard();
+  });
+  const [selectedBankNumber, setSelectedBankNumber] = useState<number | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{ r: number; c: number } | null>(null);
+  const [draftHistory, setDraftHistory] = useState<number[][][]>([]);
+  const [hoveredEmptyCell, setHoveredEmptyCell] = useState<{ r: number; c: number } | null>(null);
+
+  // ── Drag & Drop States ──
+  const [activeDrag, setActiveDrag] = useState<BingoDragState | null>(null);
+  const gridContainerRef = useRef<HTMLDivElement | null>(null);
+  const dragPointerIdRef = useRef<number | null>(null);
+  const hasMovedRef = useRef<boolean>(false);
+  const startPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Local 2-Player draft phase steps: "host_draft" -> "pass_screen" -> "guest_draft"
+  const [localDraftStep, setLocalDraftStep] = useState<"host_draft" | "pass_screen" | "guest_draft">("host_draft");
+  const [localP1DraftCard, setLocalP1DraftCard] = useState<number[][]>(() =>
+    normalizeBingoCard(rawState?.hostCard) || createEmptyBingoCard()
+  );
+  const [localP2DraftCard, setLocalP2DraftCard] = useState<number[][]>(() =>
+    normalizeBingoCard(rawState?.guestCard) || createEmptyBingoCard()
+  );
+
   const BINGO_LETTERS = ["B", "I", "N", "G", "O"];
 
   const hostColor = "#06b6d4"; // Cyan
@@ -341,183 +515,688 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
   const personaKey = aiDifficulty === "easy" ? "lucy" : aiDifficulty === "hard" ? "omega" : "baron";
   const aiPersona = BINGO_AI_PERSONAS[personaKey];
 
-  const activePlayerName = room.currentTurn === room.players.host.id
-    ? room.players.host.name
-    : room.players.guest?.name || (isAIMode ? aiPersona.name : "Player 2");
+  const activePlayerName =
+    room.currentTurn === room.players.host.id
+      ? room.players.host.name
+      : room.players.guest?.name || (isAIMode ? aiPersona.name : "Player 2");
+
+  // ── Placed numbers calculation in Builder ──
+  const currentActiveDraft = isLocalMode
+    ? localDraftStep === "guest_draft"
+      ? localP2DraftCard
+      : localP1DraftCard
+    : draftCard;
+
+  const placedNumbersSet = useMemo(() => {
+    const set = new Set<number>();
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 5; c++) {
+        const val = currentActiveDraft[r]?.[c] || 0;
+        if (val >= 1 && val <= 25) {
+          set.add(val);
+        }
+      }
+    }
+    return set;
+  }, [currentActiveDraft]);
+
+  const placedCount = placedNumbersSet.size;
+  const isDraftCardComplete = placedCount === 25 && validateBingoCard(currentActiveDraft);
+
+  // Lowest available number for sequential freeform tapping (1 to 25)
+  const nextLowestUnused = useMemo(() => {
+    for (let i = 1; i <= 25; i++) {
+      if (!placedNumbersSet.has(i)) return i;
+    }
+    return null;
+  }, [placedNumbersSet]);
 
   // AI Dialogue trigger
-  const triggerAiSpeech = useCallback((type: "onCall" | "onLineComplete" | "onOpponentLine") => {
-    if (!isAIMode) return;
-    const quotes = aiPersona.quotes[type];
-    if (!quotes || quotes.length === 0) return;
-    const quote = quotes[Math.floor(Math.random() * quotes.length)];
-    setAiSpeech(quote);
-    setTimeout(() => setAiSpeech(null), 3000);
-  }, [isAIMode, aiPersona]);
+  const triggerAiSpeech = useCallback(
+    (type: "onCall" | "onLineComplete" | "onOpponentLine") => {
+      if (!isAIMode) return;
+      const quotes = aiPersona.quotes[type];
+      if (!quotes || quotes.length === 0) return;
+      const quote = quotes[Math.floor(Math.random() * quotes.length)];
+      setAiSpeech(quote);
+      setTimeout(() => setAiSpeech(null), 3000);
+    },
+    [isAIMode, aiPersona]
+  );
 
-  // Call number handler
-  const handleCallNumber = useCallback(async (num: number, isWildExtra = false) => {
-    if (stampedSet.has(num) || room.status === "round_over" || room.status === "game_over") return;
+  // ── Draft Builder Handlers with Undo Support ──
 
-    const isCurrentlyAITurn = isAIMode && room.currentTurn !== room.players.host.id;
-    if (!isLocalMode) {
-      if (isAIMode) {
-        if (!isMyTurn && !isCurrentlyAITurn) return;
-      } else {
-        if (!isMyTurn) return;
-      }
-    }
-
-    const actingPlayerId = isLocalMode || isCurrentlyAITurn ? room.currentTurn : myPlayerId;
-    const nextStamped = [...stampedNumbers, num];
-
-    // Audio cues
-    gameAudio.playBingoCall();
-    gameAudio.playBingoStamp();
-
-    // Recalculate lines
-    const nextHostRes = calculateBingoLines(hostCard, nextStamped);
-    const nextGuestRes = calculateBingoLines(guestCard, nextStamped);
-
-    const prevMyLines = isHost ? hostLinesResult.count : guestLinesResult.count;
-    const newMyLines = isHost ? nextHostRes.count : nextGuestRes.count;
-
-    if (newMyLines > prevMyLines) {
-      gameAudio.playBingoLetterUnlock(newMyLines);
-      const letterUnlocked = BINGO_LETTERS[Math.min(newMyLines - 1, 4)];
-      setUnlockedLetterBanner(`🎉 Unlocked [ ${letterUnlocked} ]! (${newMyLines}/5 Lines)`);
-      setTimeout(() => setUnlockedLetterBanner(null), 2500);
-
-      if (actingPlayerId === room.players.host.id) {
-        triggerAiSpeech("onOpponentLine");
-      } else {
-        triggerAiSpeech("onLineComplete");
-      }
-    } else if (actingPlayerId !== room.players.host.id) {
-      triggerAiSpeech("onCall");
-    }
-
-    // Check B-I-N-G-O Win Condition (5 completed lines)
-    const isHostWon = nextHostRes.count >= 5;
-    const isGuestWon = nextGuestRes.count >= 5;
-    const isOver = isHostWon || isGuestWon || nextStamped.length >= 25;
-
-    let winnerPlayerId: string | null = null;
-    let nextHostScore = room.players.host.score;
-    let nextGuestScore = room.players.guest?.score || 0;
-
-    if (isOver) {
-      if (isHostWon && isGuestWon) {
-        winnerPlayerId = "draw";
-        gameAudio.playDraw();
-      } else if (isHostWon) {
-        winnerPlayerId = room.players.host.id;
-        nextHostScore += 1;
-        if (isHost || isLocalMode) {
-          gameAudio.playBingoWinFanfare();
+  const updateActiveDraft = useCallback(
+    (updater: (prev: number[][]) => number[][]) => {
+      if (isLocalMode) {
+        if (localDraftStep === "guest_draft") {
+          setLocalP2DraftCard((prev) => {
+            setDraftHistory((h) => [...h.slice(-15), prev.map((r) => [...r])]);
+            return updater(prev);
+          });
         } else {
-          gameAudio.playLose();
-        }
-      } else if (isGuestWon) {
-        winnerPlayerId = room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2");
-        nextGuestScore += 1;
-        if ((!isHost && !isAIMode) || isLocalMode) {
-          gameAudio.playBingoWinFanfare();
-        } else {
-          gameAudio.playLose();
+          setLocalP1DraftCard((prev) => {
+            setDraftHistory((h) => [...h.slice(-15), prev.map((r) => [...r])]);
+            return updater(prev);
+          });
         }
       } else {
-        winnerPlayerId = "draw";
-        gameAudio.playDraw();
+        setDraftCard((prev) => {
+          setDraftHistory((h) => [...h.slice(-15), prev.map((r) => [...r])]);
+          return updater(prev);
+        });
       }
+    },
+    [isLocalMode, localDraftStep]
+  );
+
+  const handleUndoDraft = useCallback(() => {
+    if (draftHistory.length === 0) return;
+    gameAudio.playClick();
+    const prev = draftHistory[draftHistory.length - 1];
+    setDraftHistory((h) => h.slice(0, -1));
+    if (isLocalMode) {
+      if (localDraftStep === "guest_draft") {
+        setLocalP2DraftCard(prev);
+      } else {
+        setLocalP1DraftCard(prev);
+      }
+    } else {
+      setDraftCard(prev);
     }
+    setSelectedCell(null);
+    setSelectedBankNumber(null);
+  }, [draftHistory, isLocalMode, localDraftStep]);
 
-    // If wild extra stamp, turn stays with caller
-    const nextTurnId = isWildExtra
-      ? actingPlayerId
-      : actingPlayerId === room.players.host.id
-      ? room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2")
-      : room.players.host.id;
-
-    if (wildStampActive) {
-      setWildStampActive(false);
-      setWildStampsUsed((prev) => prev + 1);
+  // ── Drag & Drop Coordinate Detection ──
+  const getGridCellAtPos = useCallback((clientX: number, clientY: number): { r: number; c: number } | null => {
+    if (!gridContainerRef.current) return null;
+    const rect = gridContainerRef.current.getBoundingClientRect();
+    if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) {
+      return null;
     }
+    const c = Math.min(4, Math.max(0, Math.floor(((clientX - rect.left) / rect.width) * 5)));
+    const r = Math.min(4, Math.max(0, Math.floor(((clientY - rect.top) / rect.height) * 5)));
+    return { r, c };
+  }, []);
 
-    const updatedGameState: BingoGameState = {
+  const handlePointerDownDrag = useCallback(
+    (source: BingoDragSource, e: React.PointerEvent) => {
+      if (e.button !== 0) return;
+      dragPointerIdRef.current = e.pointerId;
+      hasMovedRef.current = false;
+      startPosRef.current = { x: e.clientX, y: e.clientY };
+
+      const initialHover = getGridCellAtPos(e.clientX, e.clientY);
+      setActiveDrag({
+        source,
+        x: e.clientX,
+        y: e.clientY,
+        hoverCell: initialHover,
+      });
+    },
+    [getGridCellAtPos]
+  );
+
+  // Global Pointer Listeners for Smooth Dragging & Dropping
+  useEffect(() => {
+    if (!activeDrag) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (dragPointerIdRef.current !== null && e.pointerId !== dragPointerIdRef.current) return;
+      const dx = Math.abs(e.clientX - startPosRef.current.x);
+      const dy = Math.abs(e.clientY - startPosRef.current.y);
+      if (dx > 5 || dy > 5) {
+        hasMovedRef.current = true;
+      }
+
+      const hover = getGridCellAtPos(e.clientX, e.clientY);
+      setActiveDrag((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY, hoverCell: hover } : null));
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (dragPointerIdRef.current !== null && e.pointerId !== dragPointerIdRef.current) return;
+
+      if (activeDrag && hasMovedRef.current) {
+        const dropCell = getGridCellAtPos(e.clientX, e.clientY);
+
+        if (dropCell) {
+          // Dropped on grid cell (r, c)
+          const { r, c } = dropCell;
+          const source = activeDrag.source;
+
+          if (source.type === "bank") {
+            gameAudio.playBingoStamp();
+            updateActiveDraft((prev) => {
+              const next = prev.map((row) => [...row]);
+              for (let rowIdx = 0; rowIdx < 5; rowIdx++) {
+                for (let colIdx = 0; colIdx < 5; colIdx++) {
+                  if (next[rowIdx][colIdx] === source.num) {
+                    next[rowIdx][colIdx] = 0;
+                  }
+                }
+              }
+              next[r][c] = source.num;
+              return next;
+            });
+            setSelectedBankNumber(null);
+            setSelectedCell(null);
+          } else if (source.type === "cell" && source.r !== undefined && source.c !== undefined) {
+            // Dragged from cell to cell
+            if (source.r !== r || source.c !== c) {
+              gameAudio.playBingoStamp();
+              updateActiveDraft((prev) => {
+                const next = prev.map((row) => [...row]);
+                const val1 = next[source.r!][source.c!];
+                const val2 = next[r][c];
+                next[r][c] = val1;
+                next[source.r!][source.c!] = val2;
+                return next;
+              });
+              setSelectedCell(null);
+            }
+          }
+        } else {
+          // Dropped outside grid -> Clear from board back to bank
+          if (activeDrag.source.type === "cell" && activeDrag.source.r !== undefined && activeDrag.source.c !== undefined) {
+            gameAudio.playClick();
+            const { r, c } = activeDrag.source;
+            updateActiveDraft((prev) => {
+              const next = prev.map((row) => [...row]);
+              next[r][c] = 0;
+              return next;
+            });
+            setSelectedCell(null);
+          }
+        }
+      }
+
+      setActiveDrag(null);
+      dragPointerIdRef.current = null;
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    };
+  }, [activeDrag, getGridCellAtPos, updateActiveDraft]);
+
+  // ── Cell Click: Freeform Tap-to-Place Sequential Numbering (1..25), Bank Placing & Two-Tap Swap ──
+  const handleCellClickInDraft = useCallback(
+    (r: number, c: number) => {
+      if (hasMovedRef.current) return;
+      gameAudio.playClick();
+
+      // 1. If a Bank Number is actively selected: Place it directly
+      if (selectedBankNumber !== null) {
+        updateActiveDraft((prev) => {
+          const next = prev.map((row) => [...row]);
+          for (let rowIdx = 0; rowIdx < 5; rowIdx++) {
+            for (let colIdx = 0; colIdx < 5; colIdx++) {
+              if (next[rowIdx][colIdx] === selectedBankNumber) {
+                next[rowIdx][colIdx] = 0;
+              }
+            }
+          }
+          next[r][c] = selectedBankNumber;
+          return next;
+        });
+
+        // Auto-advance bank number to next lowest available
+        const updatedUsed = new Set(placedNumbersSet);
+        updatedUsed.add(selectedBankNumber);
+        let nextToSelect: number | null = null;
+        for (let i = 1; i <= 25; i++) {
+          if (!updatedUsed.has(i)) {
+            nextToSelect = i;
+            break;
+          }
+        }
+        setSelectedBankNumber(nextToSelect);
+        setSelectedCell(null);
+        return;
+      }
+
+      // 2. If a Cell is already selected for Swap / Move:
+      if (selectedCell !== null) {
+        if (selectedCell.r === r && selectedCell.c === c) {
+          setSelectedCell(null);
+          return;
+        }
+
+        // SWAP / MOVE between selectedCell and current (r, c)
+        updateActiveDraft((prev) => {
+          const next = prev.map((row) => [...row]);
+          const val1 = next[selectedCell.r][selectedCell.c];
+          const val2 = next[r][c];
+
+          next[r][c] = val1;
+          next[selectedCell.r][selectedCell.c] = val2;
+          return next;
+        });
+
+        setSelectedCell(null);
+        return;
+      }
+
+      // 3. No Bank number and No Cell selected:
+      const currentVal = currentActiveDraft[r][c];
+      if (currentVal > 0) {
+        // Tapping filled cell -> Select it for SWAP / MOVE
+        setSelectedCell({ r, c });
+      } else {
+        // Tapping empty cell -> FREEFORM CONSECUTIVE TAP-TO-NUMBER (1 -> 2 -> ... -> 25)
+        updateActiveDraft((prev) => {
+          const next = prev.map((row) => [...row]);
+          const used = new Set<number>();
+          for (let rowIdx = 0; rowIdx < 5; rowIdx++) {
+            for (let colIdx = 0; colIdx < 5; colIdx++) {
+              if (next[rowIdx][colIdx] > 0) used.add(next[rowIdx][colIdx]);
+            }
+          }
+          for (let i = 1; i <= 25; i++) {
+            if (!used.has(i)) {
+              next[r][c] = i;
+              break;
+            }
+          }
+          return next;
+        });
+      }
+    },
+    [selectedBankNumber, selectedCell, placedNumbersSet, currentActiveDraft, updateActiveDraft]
+  );
+
+  const handleClearSelectedCell = useCallback(() => {
+    if (!selectedCell) return;
+    gameAudio.playClick();
+    updateActiveDraft((prev) => {
+      const next = prev.map((row) => [...row]);
+      next[selectedCell.r][selectedCell.c] = 0;
+      return next;
+    });
+    setSelectedCell(null);
+  }, [selectedCell, updateActiveDraft]);
+
+  const handleBankNumberSelect = useCallback(
+    (num: number) => {
+      if (hasMovedRef.current) return;
+      gameAudio.playClick();
+      setSelectedCell(null);
+      if (selectedBankNumber === num) {
+        setSelectedBankNumber(null);
+      } else {
+        setSelectedBankNumber(num);
+      }
+    },
+    [selectedBankNumber]
+  );
+
+  // ── Quick Presets & Layout Generators ──
+  const handleShuffleDraft = useCallback(() => {
+    gameAudio.playClick();
+    const randomized = generateRandomBingoCard();
+    updateActiveDraft(() => randomized);
+    setSelectedBankNumber(null);
+    setSelectedCell(null);
+  }, [updateActiveDraft]);
+
+  const handleApplyPresetSequential = useCallback(
+    (direction: "rows" | "cols") => {
+      gameAudio.playClick();
+      const card = generateSequentialBingoCard(direction);
+      updateActiveDraft(() => card);
+      setSelectedBankNumber(null);
+      setSelectedCell(null);
+    },
+    [updateActiveDraft]
+  );
+
+  const handleApplyPresetSpiral = useCallback(() => {
+    gameAudio.playClick();
+    const card = generateSpiralBingoCard();
+    updateActiveDraft(() => card);
+    setSelectedBankNumber(null);
+    setSelectedCell(null);
+  }, [updateActiveDraft]);
+
+  const handleAutoFillDraft = useCallback(() => {
+    gameAudio.playClick();
+    updateActiveDraft((prev) => autoFillRemainingCard(prev));
+    setSelectedBankNumber(null);
+    setSelectedCell(null);
+  }, [updateActiveDraft]);
+
+  const handleClearDraft = useCallback(() => {
+    gameAudio.playClick();
+    updateActiveDraft(() => createEmptyBingoCard());
+    setSelectedBankNumber(1);
+    setSelectedCell(null);
+  }, [updateActiveDraft]);
+
+  // ── Lock & Start Match Handlers ──
+
+  const handleLockAndStartAI = useCallback(async () => {
+    if (!isDraftCardComplete) return;
+    gameAudio.playWin();
+
+    const aiCard = generateRandomBingoCard();
+    const updatedState: BingoGameState = {
+      ...rawState,
+      hostCard: draftCard,
+      guestCard: aiCard,
+      stampedNumbers: [],
+      calledHistory: [],
+      hostLines: 0,
+      guestLines: 0,
+      hostCompletedLines: [],
+      guestCompletedLines: [],
+      lastCalledNumber: null,
+      isCardLocked: true,
+      phase: "playing",
+      hostReady: true,
+      guestReady: true,
+    };
+
+    onLocalMove?.({
+      ...room,
+      gameState: updatedState,
+    });
+  }, [isDraftCardComplete, draftCard, rawState, room, onLocalMove]);
+
+  const handleLockLocalP1 = useCallback(() => {
+    if (!validateBingoCard(localP1DraftCard)) return;
+    gameAudio.playClick();
+    setLocalDraftStep("pass_screen");
+    setSelectedBankNumber(null);
+    setSelectedCell(null);
+    setDraftHistory([]);
+  }, [localP1DraftCard]);
+
+  const handleLockAndStartLocal = useCallback(() => {
+    if (!validateBingoCard(localP2DraftCard)) return;
+    gameAudio.playWin();
+
+    const updatedState: BingoGameState = {
+      ...rawState,
+      hostCard: localP1DraftCard,
+      guestCard: localP2DraftCard,
+      stampedNumbers: [],
+      calledHistory: [],
+      hostLines: 0,
+      guestLines: 0,
+      hostCompletedLines: [],
+      guestCompletedLines: [],
+      lastCalledNumber: null,
+      isCardLocked: true,
+      phase: "playing",
+      hostReady: true,
+      guestReady: true,
+    };
+
+    onLocalMove?.({
+      ...room,
+      gameState: updatedState,
+    });
+  }, [localP1DraftCard, localP2DraftCard, rawState, room, onLocalMove]);
+
+  const handleQuickStartRandomLocal = useCallback(() => {
+    gameAudio.playWin();
+    const p1 = generateRandomBingoCard();
+    const p2 = generateRandomBingoCard();
+    const updatedState: BingoGameState = {
+      ...rawState,
+      hostCard: p1,
+      guestCard: p2,
+      stampedNumbers: [],
+      calledHistory: [],
+      hostLines: 0,
+      guestLines: 0,
+      hostCompletedLines: [],
+      guestCompletedLines: [],
+      lastCalledNumber: null,
+      isCardLocked: true,
+      phase: "playing",
+      hostReady: true,
+      guestReady: true,
+    };
+    onLocalMove?.({
+      ...room,
+      gameState: updatedState,
+    });
+  }, [rawState, room, onLocalMove]);
+
+  const isMyOnlineReady = isHost ? !!rawState?.hostReady : !!rawState?.guestReady;
+  const isOpponentOnlineReady = isHost ? !!rawState?.guestReady : !!rawState?.hostReady;
+
+  const handleLockOnlineCard = useCallback(async () => {
+    if (!isDraftCardComplete) return;
+    gameAudio.playWin();
+
+    const willBothBeReady = isHost ? !!rawState?.guestReady : !!rawState?.hostReady;
+
+    const updatedState: BingoGameState = {
+      ...rawState,
+      hostCard: isHost ? draftCard : hostCard,
+      guestCard: !isHost ? draftCard : guestCard,
+      hostReady: isHost ? true : rawState?.hostReady,
+      guestReady: !isHost ? true : rawState?.guestReady,
+      phase: willBothBeReady ? "playing" : "setup",
+      isCardLocked: willBothBeReady,
+      stampedNumbers: [],
+      calledHistory: [],
+      hostLines: 0,
+      guestLines: 0,
+      hostCompletedLines: [],
+      guestCompletedLines: [],
+      lastCalledNumber: null,
+    };
+
+    await sendGameMove(
+      room.roomCode,
+      updatedState,
+      room.currentTurn,
+      null,
+      false,
+      room.players.host.score,
+      room.players.guest?.score || 0
+    );
+  }, [isDraftCardComplete, isHost, rawState, draftCard, hostCard, guestCard, room]);
+
+  const handleUnlockOnlineCard = useCallback(async () => {
+    gameAudio.playClick();
+    const updatedState: BingoGameState = {
+      ...rawState,
+      hostReady: isHost ? false : rawState?.hostReady,
+      guestReady: !isHost ? false : rawState?.guestReady,
+      phase: "setup",
+      isCardLocked: false,
+    };
+    await sendGameMove(
+      room.roomCode,
+      updatedState,
+      room.currentTurn,
+      null,
+      false,
+      room.players.host.score,
+      room.players.guest?.score || 0
+    );
+  }, [isHost, rawState, room]);
+
+  // ── In-Game Call Number Handler ──
+  const handleCallNumber = useCallback(
+    async (num: number, isWildExtra = false) => {
+      if (stampedSet.has(num) || room.status === "round_over" || room.status === "game_over") return;
+
+      const isCurrentlyAITurn = isAIMode && room.currentTurn !== room.players.host.id;
+      if (!isLocalMode) {
+        if (isAIMode) {
+          if (!isMyTurn && !isCurrentlyAITurn) return;
+        } else {
+          if (!isMyTurn) return;
+        }
+      }
+
+      const actingPlayerId = isLocalMode || isCurrentlyAITurn ? room.currentTurn : myPlayerId;
+      const nextStamped = [...stampedNumbers, num];
+
+      // Audio cues
+      gameAudio.playBingoCall();
+      gameAudio.playBingoStamp();
+
+      // Recalculate lines
+      const nextHostRes = calculateBingoLines(hostCard, nextStamped);
+      const nextGuestRes = calculateBingoLines(guestCard, nextStamped);
+
+      const prevMyLines = isHost ? hostLinesResult.count : guestLinesResult.count;
+      const newMyLines = isHost ? nextHostRes.count : nextGuestRes.count;
+
+      if (newMyLines > prevMyLines) {
+        gameAudio.playBingoLetterUnlock(newMyLines);
+        const letterUnlocked = BINGO_LETTERS[Math.min(newMyLines - 1, 4)];
+        setUnlockedLetterBanner(`🎉 Unlocked [ ${letterUnlocked} ]! (${newMyLines}/5 Lines)`);
+        setTimeout(() => setUnlockedLetterBanner(null), 2500);
+
+        if (actingPlayerId === room.players.host.id) {
+          triggerAiSpeech("onOpponentLine");
+        } else {
+          triggerAiSpeech("onLineComplete");
+        }
+      } else if (actingPlayerId !== room.players.host.id) {
+        triggerAiSpeech("onCall");
+      }
+
+      // Check B-I-N-G-O Win Condition (5 completed lines)
+      const isHostWon = nextHostRes.count >= 5;
+      const isGuestWon = nextGuestRes.count >= 5;
+      const isOver = isHostWon || isGuestWon || nextStamped.length >= 25;
+
+      let winnerPlayerId: string | null = null;
+      let nextHostScore = room.players.host.score;
+      let nextGuestScore = room.players.guest?.score || 0;
+
+      if (isOver) {
+        if (isHostWon && isGuestWon) {
+          winnerPlayerId = "draw";
+          gameAudio.playDraw();
+        } else if (isHostWon) {
+          winnerPlayerId = room.players.host.id;
+          nextHostScore += 1;
+          if (isHost || isLocalMode) {
+            gameAudio.playBingoWinFanfare();
+          } else {
+            gameAudio.playLose();
+          }
+        } else if (isGuestWon) {
+          winnerPlayerId = room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2");
+          nextGuestScore += 1;
+          if ((!isHost && !isAIMode) || isLocalMode) {
+            gameAudio.playBingoWinFanfare();
+          } else {
+            gameAudio.playLose();
+          }
+        } else {
+          winnerPlayerId = "draw";
+          gameAudio.playDraw();
+        }
+      }
+
+      // If wild extra stamp, turn stays with caller
+      const nextTurnId = isWildExtra
+        ? actingPlayerId
+        : actingPlayerId === room.players.host.id
+        ? room.players.guest?.id || (isAIMode ? "ai_opponent" : "local_player_2")
+        : room.players.host.id;
+
+      if (wildStampActive) {
+        setWildStampActive(false);
+        setWildStampsUsed((prev) => prev + 1);
+      }
+
+      const updatedGameState: BingoGameState = {
+        hostCard,
+        guestCard,
+        stampedNumbers: nextStamped,
+        calledHistory: [
+          ...(rawState?.calledHistory || []),
+          { number: num, calledBy: actingPlayerId, timestamp: Date.now() },
+        ],
+        hostLines: nextHostRes.count,
+        guestLines: nextGuestRes.count,
+        hostCompletedLines: nextHostRes.completedLineIds,
+        guestCompletedLines: nextGuestRes.completedLineIds,
+        lastCalledNumber: num,
+        isCardLocked: true,
+        phase: isOver ? "round_over" : "playing",
+        hostReady: true,
+        guestReady: true,
+      };
+
+      const nextRoomState: GameRoomState<BingoGameState> = {
+        ...room,
+        gameState: updatedGameState,
+        currentTurn: nextTurnId,
+        status: isOver ? "round_over" : "playing",
+        winnerId: winnerPlayerId,
+        lastMoveTimestamp: Date.now(),
+        players: {
+          host: {
+            ...room.players.host,
+            score: nextHostScore,
+          },
+          guest: room.players.guest
+            ? {
+                ...room.players.guest,
+                score: nextGuestScore,
+              }
+            : null,
+        },
+      };
+
+      if (isLocalMode || isAIMode) {
+        onLocalMove?.(nextRoomState);
+      } else {
+        await sendGameMove(
+          room.roomCode,
+          updatedGameState,
+          nextTurnId,
+          winnerPlayerId,
+          isOver,
+          nextHostScore,
+          nextGuestScore,
+          room.rules?.turnTimerSeconds || 0,
+          room.rules?.maxSeriesWins || 2
+        );
+      }
+    },
+    [
+      stampedSet,
+      stampedNumbers,
       hostCard,
       guestCard,
-      stampedNumbers: nextStamped,
-      calledHistory: [
-        ...(rawState?.calledHistory || []),
-        { number: num, calledBy: actingPlayerId, timestamp: Date.now() },
-      ],
-      hostLines: nextHostRes.count,
-      guestLines: nextGuestRes.count,
-      hostCompletedLines: nextHostRes.completedLineIds,
-      guestCompletedLines: nextGuestRes.completedLineIds,
-      lastCalledNumber: num,
-      isCardLocked: true,
-    };
+      hostLinesResult.count,
+      guestLinesResult.count,
+      isHost,
+      room,
+      isLocalMode,
+      isAIMode,
+      isMyTurn,
+      myPlayerId,
+      wildStampActive,
+      onLocalMove,
+      rawState?.calledHistory,
+      BINGO_LETTERS,
+      triggerAiSpeech,
+    ]
+  );
 
-    const nextRoomState: GameRoomState<BingoGameState> = {
-      ...room,
-      gameState: updatedGameState,
-      currentTurn: nextTurnId,
-      status: isOver ? "round_over" : "playing",
-      winnerId: winnerPlayerId,
-      lastMoveTimestamp: Date.now(),
-      players: {
-        host: {
-          ...room.players.host,
-          score: nextHostScore,
-        },
-        guest: room.players.guest
-          ? {
-              ...room.players.guest,
-              score: nextGuestScore,
-            }
-          : null,
-      },
-    };
-
-    if (isLocalMode || isAIMode) {
-      onLocalMove?.(nextRoomState);
-    } else {
-      await sendGameMove(
-        room.roomCode,
-        updatedGameState,
-        nextTurnId,
-        winnerPlayerId,
-        isOver,
-        nextHostScore,
-        nextGuestScore,
-        room.rules?.turnTimerSeconds || 0,
-        room.rules?.maxSeriesWins || 2
-      );
-    }
-  }, [
-    stampedSet,
-    stampedNumbers,
-    hostCard,
-    guestCard,
-    hostLinesResult.count,
-    guestLinesResult.count,
-    isHost,
-    room,
-    isLocalMode,
-    isAIMode,
-    isMyTurn,
-    myPlayerId,
-    wildStampActive,
-    onLocalMove,
-    rawState?.calledHistory,
-    BINGO_LETTERS,
-    triggerAiSpeech,
-  ]);
-
-  // AI Opponent auto-trigger
-  const isAITurn = isAIMode && room.status === "playing" && room.currentTurn !== room.players.host.id;
+  // AI Opponent auto-trigger during Playing Phase
+  const isAITurn = isAIMode && room.status === "playing" && !isSetupPhase && room.currentTurn !== room.players.host.id;
   useEffect(() => {
     if (!isAITurn) return;
 
@@ -529,7 +1208,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     return () => clearTimeout(timer);
   }, [isAITurn, guestCard, stampedNumbers, aiDifficulty, handleCallNumber]);
 
-  // Audio & Letter Unlock sync for incoming moves (online multiplayer & AI)
+  // Audio & Letter Unlock sync for incoming moves
   const prevLinesCountRef = useRef(myLinesResult.count);
   const prevLastCalledRef = useRef(lastCalledNumber);
 
@@ -554,7 +1233,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     prevLinesCountRef.current = myLinesResult.count;
   }, [myLinesResult.count, BINGO_LETTERS]);
 
-  // Reshuffle card
+  // Reshuffle card during playing phase if no calls yet
   const handleReshuffleCard = async () => {
     if (stampedNumbers.length > 0) return;
     const newCard = generateRandomBingoCard();
@@ -569,7 +1248,10 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
       hostCompletedLines: [],
       guestCompletedLines: [],
       lastCalledNumber: null,
-      isCardLocked: false,
+      isCardLocked: true,
+      phase: "playing",
+      hostReady: true,
+      guestReady: true,
     };
     if (isLocalMode || isAIMode) {
       onLocalMove?.({
@@ -577,13 +1259,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
         gameState: updatedState,
       });
     } else {
-      await sendGameMove(
-        room.roomCode,
-        updatedState,
-        room.currentTurn,
-        null,
-        false
-      );
+      await sendGameMove(room.roomCode, updatedState, room.currentTurn, null, false);
     }
     gameAudio.playClick();
   };
@@ -596,7 +1272,10 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
   // SVG Golden Line Lasers Overlay
   const renderCompletedLineLasers = () => {
     return myLinesResult.completedLineIds.map((lineId) => {
-      let x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+      let x1 = 0,
+        y1 = 0,
+        x2 = 0,
+        y2 = 0;
 
       if (lineId.startsWith("row-")) {
         const r = parseInt(lineId.replace("row-", ""), 10);
@@ -654,6 +1333,475 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     });
   };
 
+  // ══════════════════════════════════════════════════════════════════
+  // ── VIEW 1: SETUP & CUSTOM CARD DRAFT PHASE (BLANK SLATE) ──
+  // ══════════════════════════════════════════════════════════════════
+
+  if (isSetupPhase) {
+    // ── Local 2-Player Pass Device Shield Screen ──
+    if (isLocalMode && localDraftStep === "pass_screen") {
+      return (
+        <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 select-none">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full p-6 rounded-3xl bg-card/85 backdrop-blur-2xl border-2 border-primary/40 shadow-2xl flex flex-col items-center text-center gap-4"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-lg shadow-cyan-500/20">
+              <Shield className="w-8 h-8 stroke-[2.2]" />
+            </div>
+
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 text-xs font-bold mb-2">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Player 1 Card Locked!</span>
+              </div>
+              <h2 className="text-xl font-black text-foreground">Pass Device to Player 2</h2>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                Keep cards secret! Hand the device to <strong>{room.players.guest?.name || "Player 2"}</strong> to craft
+                their 25-number board.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="default"
+              size="lg"
+              onClick={() => {
+                gameAudio.playClick();
+                setLocalDraftStep("guest_draft");
+                setSelectedBankNumber(null);
+                setSelectedCell(null);
+                setDraftHistory([]);
+              }}
+              className="w-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-black shadow-lg shadow-rose-500/25 rounded-2xl h-12 flex items-center justify-center gap-2 cursor-pointer text-sm"
+            >
+              <span>I'm Player 2 — Craft My Board</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </motion.div>
+        </div>
+      );
+    }
+
+    const draftPlayerTitle = isLocalMode
+      ? localDraftStep === "guest_draft"
+        ? `${room.players.guest?.name || "Player 2"} (Guest) Board Setup`
+        : `${room.players.host.name} (Player 1) Board Setup`
+      : isAIMode
+      ? "Craft Your 5x5 Bingo Board"
+      : isHost
+      ? `${room.players.host.name} (Host Card Builder)`
+      : `${room.players.guest?.name || "Player 2"} (Guest Card Builder)`;
+
+    const selectedCellValue = selectedCell ? currentActiveDraft[selectedCell.r]?.[selectedCell.c] : null;
+
+    return (
+      <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-2 select-none">
+        {/* ── Top Header & Freeform Sequential Prompt ── */}
+        <div className="w-full mb-3 p-3 rounded-2xl bg-card/75 backdrop-blur-md border border-border/60 shadow-lg flex flex-col items-center">
+          <div className="flex items-center justify-between w-full mb-1 px-1">
+            <div className="flex items-center gap-1.5 font-black text-sm text-foreground">
+              <PenTool className="w-4 h-4 text-amber-400" />
+              <span>{draftPlayerTitle}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {draftHistory.length > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleUndoDraft}
+                  title="Undo last change"
+                  className="h-6 px-2 text-[10px] font-bold rounded-lg text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+                >
+                  <Undo2 className="w-3 h-3" />
+                  <span>Undo</span>
+                </Button>
+              )}
+              <div
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-black border transition-all ${
+                  isDraftCardComplete
+                    ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                    : "bg-amber-500/15 border-amber-400/60 text-amber-300"
+                }`}
+              >
+                {placedCount} / 25 Placed
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic Contextual Helper Banner: Next Number to Place */}
+          <div className="w-full px-2.5 py-2 rounded-xl bg-muted/40 border border-border/40 mt-1 flex items-center justify-between text-xs">
+            {activeDrag && hasMovedRef.current ? (
+              <div className="flex items-center gap-1.5 text-amber-300 font-extrabold animate-pulse">
+                <Move className="w-3.5 h-3.5" />
+                <span>
+                  Dragging #{activeDrag.source.num} • Drop on any cell to place/swap!
+                </span>
+              </div>
+            ) : selectedCell && selectedCellValue ? (
+              <div className="flex items-center justify-between w-full text-amber-300 font-bold">
+                <span className="flex items-center gap-1">
+                  <ArrowLeftRight className="w-3.5 h-3.5 animate-pulse" />
+                  <span>
+                    Swapping <strong>#{selectedCellValue}</strong>: Tap another cell to swap / move
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleClearSelectedCell}
+                  className="text-rose-400 hover:text-rose-300 text-[10px] underline cursor-pointer ml-1"
+                >
+                  Clear cell
+                </button>
+              </div>
+            ) : selectedBankNumber !== null ? (
+              <div className="flex items-center justify-between w-full text-amber-300 font-bold">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>
+                    Placing <strong>#{selectedBankNumber}</strong>: Tap or Drag onto grid
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedBankNumber(null)}
+                  className="text-muted-foreground hover:text-foreground text-[10px] cursor-pointer ml-1"
+                >
+                  <X className="w-3 h-3 inline" />
+                </button>
+              </div>
+            ) : isDraftCardComplete ? (
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" /> All 25 numbers placed! Ready to lock card.
+              </span>
+            ) : (
+              <div className="flex items-center justify-between w-full">
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <span>Tap any empty box to place</span>
+                </span>
+                <motion.div
+                  key={nextLowestUnused}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className="flex items-center gap-1 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 px-2.5 py-0.5 rounded-full border border-amber-400/60 shadow-sm"
+                >
+                  <span className="text-[10px] font-bold text-amber-300">Next:</span>
+                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-slate-950 flex items-center justify-center font-black text-xs shadow-sm">
+                    {nextLowestUnused || 1}
+                  </span>
+                </motion.div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Presets & Smart Layout Bar */}
+          <div className="flex items-center justify-center gap-1 w-full mt-2.5 pt-2 border-t border-border/40 overflow-x-auto no-scrollbar">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleShuffleDraft}
+              title="Shuffle All Numbers"
+              className="flex-1 h-7 text-[10px] font-bold rounded-xl bg-card/60 hover:bg-muted/80 border-border/60 flex items-center justify-center gap-1 px-2"
+            >
+              <Shuffle className="w-3 h-3 text-amber-400" />
+              <span>Shuffle</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleApplyPresetSequential("rows")}
+              title="Arrange numbers 1-25 row by row"
+              className="flex-1 h-7 text-[10px] font-bold rounded-xl bg-card/60 hover:bg-muted/80 border-border/60 flex items-center justify-center gap-1 px-2"
+            >
+              <ListOrdered className="w-3 h-3 text-indigo-400" />
+              <span>1–25 Row</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleApplyPresetSpiral}
+              title="Arrange numbers 1-25 in a spiral pattern"
+              className="flex-1 h-7 text-[10px] font-bold rounded-xl bg-card/60 hover:bg-muted/80 border-border/60 flex items-center justify-center gap-1 px-2"
+            >
+              <Layers className="w-3 h-3 text-pink-400" />
+              <span>Spiral</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isDraftCardComplete}
+              onClick={handleAutoFillDraft}
+              title="Auto-fill empty remaining cells"
+              className="flex-1 h-7 text-[10px] font-bold rounded-xl bg-card/60 hover:bg-muted/80 border-border/60 flex items-center justify-center gap-1 px-2 disabled:opacity-40"
+            >
+              <Wand2 className="w-3 h-3 text-cyan-400" />
+              <span>Auto-Fill</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={placedCount === 0}
+              onClick={handleClearDraft}
+              title="Clear all numbers (Blank Slate)"
+              className="h-7 text-[10px] font-bold rounded-xl bg-card/60 hover:bg-rose-500/10 hover:text-rose-400 border-border/60 flex items-center justify-center gap-1 px-2 disabled:opacity-40"
+            >
+              <Trash2 className="w-3 h-3 text-rose-400" />
+              <span>Clear</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* ── 5x5 Draft Grid (Blank Slate with Ghost Previews & Drag Support) ── */}
+        <div
+          ref={gridContainerRef}
+          className="relative w-full aspect-square max-w-[min(370px,calc(100vw-2rem))] bg-card/80 backdrop-blur-2xl p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl border-2 border-border/80 shadow-[0_0_25px_rgba(0,0,0,0.4)] flex items-center justify-center touch-none select-none"
+        >
+          <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-1.5 sm:gap-2">
+            {currentActiveDraft.map((row, r) =>
+              row.map((num, c) => {
+                const isFilled = num >= 1 && num <= 25;
+                const isCellSelectedForSwap = selectedCell?.r === r && selectedCell?.c === c;
+                const isSelectedBankNumMatch = selectedBankNumber !== null && selectedBankNumber === num;
+                const isHoveredByDrag = activeDrag?.hoverCell?.r === r && activeDrag?.hoverCell?.c === c;
+                const isHoveredEmpty = hoveredEmptyCell?.r === r && hoveredEmptyCell?.c === c && !isFilled;
+
+                return (
+                  <motion.div
+                    key={`draft-${r}-${c}`}
+                    whileHover={{ scale: isFilled ? 1.05 : 1.03 }}
+                    whileTap={{ scale: 0.95 }}
+                    onMouseEnter={() => !isFilled && setHoveredEmptyCell({ r, c })}
+                    onMouseLeave={() => setHoveredEmptyCell(null)}
+                    onPointerDown={(e) => {
+                      if (isFilled) {
+                        handlePointerDownDrag({ type: "cell", num, r, c }, e);
+                      }
+                    }}
+                    onClick={() => handleCellClickInDraft(r, c)}
+                    className={`relative flex items-center justify-center rounded-xl font-black text-lg sm:text-xl transition-all duration-150 cursor-pointer ${
+                      isHoveredByDrag
+                        ? "bg-amber-400/40 border-2 border-amber-300 text-amber-100 ring-4 ring-amber-400/60 scale-105 shadow-[0_0_20px_rgba(245,158,11,0.6)] z-20"
+                        : isCellSelectedForSwap
+                        ? "bg-amber-500/35 border-2 border-amber-400 text-amber-200 ring-4 ring-amber-400/50 scale-105 shadow-[0_0_15px_rgba(245,158,11,0.5)] z-10"
+                        : isSelectedBankNumMatch
+                        ? "bg-amber-500/25 border-2 border-amber-300 text-amber-200 ring-2 ring-amber-300/40"
+                        : isFilled
+                        ? "bg-primary/25 border-2 border-primary/60 text-primary-foreground hover:bg-primary/35 shadow-sm"
+                        : isHoveredEmpty
+                        ? "bg-amber-500/10 border-2 border-dashed border-amber-400/80 text-amber-300/70"
+                        : "bg-background/40 hover:bg-muted/60 border border-dashed border-border/70 text-muted-foreground/40"
+                    }`}
+                  >
+                    {isFilled ? (
+                      <span>{num}</span>
+                    ) : isHoveredEmpty ? (
+                      <span className="text-sm font-extrabold text-amber-300 opacity-80">
+                        {selectedBankNumber || nextLowestUnused || "+"}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono opacity-30 text-muted-foreground">
+                        {r * 5 + c + 1}
+                      </span>
+                    )}
+
+                    {/* Swap Indicator Badge on active cell */}
+                    {isCellSelectedForSwap && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-[9px] font-black shadow-sm"
+                      >
+                        ⇄
+                      </motion.div>
+                    )}
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* ── Floating Drag Avatar / Follow Cursor Preview ── */}
+        {activeDrag && hasMovedRef.current && (
+          <div
+            className="fixed pointer-events-none z-50 transform -translate-x-1/2 -translate-y-1/2 select-none"
+            style={{ left: activeDrag.x, top: activeDrag.y }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, rotate: 0 }}
+              animate={{ scale: 1.25, rotate: 6 }}
+              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-2xl flex items-center justify-center shadow-[0_15px_35px_rgba(245,158,11,0.6)] border-2 border-white ring-4 ring-amber-300/60"
+            >
+              <span>{activeDrag.source.num}</span>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ── Number Bank (1 to 25) with Direct Drag-Out Support ── */}
+        <div className="w-full mt-3 p-3 rounded-2xl bg-card/65 backdrop-blur-md border border-border/50 shadow-sm flex flex-col gap-2">
+          <div className="flex items-center justify-between px-1 text-[11px] font-bold text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Gamepad2 className="w-3.5 h-3.5 text-primary" /> Number Bank (1–25)
+            </span>
+            <span className="text-[10px]">
+              {selectedBankNumber ? (
+                <span className="text-amber-300 font-extrabold">Placing: #{selectedBankNumber}</span>
+              ) : (
+                "Tap or drag onto grid"
+              )}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-1.5 w-full touch-none select-none">
+            {Array.from({ length: 25 }, (_, i) => i + 1).map((n) => {
+              const isPlaced = placedNumbersSet.has(n);
+              const isSelected = selectedBankNumber === n;
+              const isNextSequential = n === nextLowestUnused && selectedBankNumber === null;
+
+              return (
+                <div
+                  key={`bank-${n}`}
+                  onPointerDown={(e) => handlePointerDownDrag({ type: "bank", num: n }, e)}
+                  onClick={() => handleBankNumberSelect(n)}
+                  className={`h-7 sm:h-8 rounded-lg font-black text-xs transition-all flex items-center justify-center cursor-pointer border select-none ${
+                    isSelected
+                      ? "bg-amber-500 border-amber-300 text-slate-950 font-black shadow-[0_0_10px_rgba(245,158,11,0.6)] scale-105 ring-2 ring-amber-300"
+                      : isNextSequential
+                      ? "bg-amber-500/25 border-2 border-amber-400 text-amber-300 ring-2 ring-amber-400/40 animate-pulse font-extrabold"
+                      : isPlaced
+                      ? "bg-muted/40 border-border/40 text-muted-foreground/40 hover:text-muted-foreground"
+                      : "bg-background/80 hover:bg-primary/20 border-primary/40 text-foreground shadow-sm hover:scale-105"
+                  }`}
+                >
+                  <span>{n}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Ready & Lock Card Action Bar ── */}
+        <div className="w-full mt-3 flex flex-col gap-2">
+          {isLocalMode ? (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="default"
+                onClick={handleQuickStartRandomLocal}
+                className="flex-1 rounded-2xl h-11 text-xs font-bold border-border/60 bg-card/60"
+              >
+                <Shuffle className="w-3.5 h-3.5 text-amber-400 mr-1.5" />
+                <span>Quick Start (Both Random)</span>
+              </Button>
+
+              {localDraftStep === "host_draft" ? (
+                <Button
+                  type="button"
+                  variant="default"
+                  size="default"
+                  disabled={!isDraftCardComplete}
+                  onClick={handleLockLocalP1}
+                  className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-black shadow-lg shadow-cyan-500/25 rounded-2xl h-11 text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Lock Player 1 Card</span>
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="default"
+                  size="default"
+                  disabled={!isDraftCardComplete}
+                  onClick={handleLockAndStartLocal}
+                  className="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-black shadow-lg shadow-rose-500/25 rounded-2xl h-11 text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Start 2-Player Match</span>
+                </Button>
+              )}
+            </div>
+          ) : isAIMode ? (
+            <Button
+              type="button"
+              variant="default"
+              size="lg"
+              disabled={!isDraftCardComplete}
+              onClick={handleLockAndStartAI}
+              className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700 text-slate-950 font-black shadow-xl shadow-emerald-500/25 rounded-2xl h-12 text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{isDraftCardComplete ? `Lock Card & Play vs ${aiPersona.name} 🚀` : `Tap empty boxes to place remaining (${25 - placedCount} left)`}</span>
+            </Button>
+          ) : (
+            /* Online Multiplayer Mode */
+            <div className="w-full flex flex-col gap-2">
+              {/* Opponent Status Indicator */}
+              <div className="w-full px-3 py-1.5 rounded-xl bg-card/60 border border-border/50 flex items-center justify-between text-xs font-bold">
+                <span className="text-muted-foreground">Opponent Status:</span>
+                <span className={isOpponentOnlineReady ? "text-emerald-400 flex items-center gap-1" : "text-amber-400"}>
+                  {isOpponentOnlineReady ? "Ready! 🟢" : "Drafting card... ⏳"}
+                </span>
+              </div>
+
+              {isMyOnlineReady ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 py-2.5 px-3 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-black text-xs text-center flex items-center justify-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Card Locked! Waiting for opponent...</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="default"
+                    onClick={handleUnlockOnlineCard}
+                    className="rounded-2xl h-11 text-xs font-bold"
+                  >
+                    <LockOpen className="w-3.5 h-3.5 mr-1" />
+                    <span>Unlock</span>
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="default"
+                  size="lg"
+                  disabled={!isDraftCardComplete}
+                  onClick={handleLockOnlineCard}
+                  className="w-full bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-500 text-primary-foreground font-black shadow-xl shadow-primary/25 rounded-2xl h-12 text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>
+                    {isDraftCardComplete
+                      ? isOpponentOnlineReady
+                        ? "Opponent Ready! Lock to Begin 🚀"
+                        : "Lock Card & Ready 🔒"
+                      : `Tap empty boxes to place remaining (${25 - placedCount} left)`}
+                  </span>
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // ── VIEW 2: ACTIVE MATCH PLAYING PHASE ──
+  // ══════════════════════════════════════════════════════════════════
+
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-2 select-none">
       {/* ── B - I - N - G - O Marquee Tracker ── */}
@@ -704,7 +1852,9 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
               <Sparkles className="w-3.5 h-3.5" /> Pick a Number to Call!
             </span>
           ) : (
-            <span>Waiting for <strong className="text-foreground">{activePlayerName}</strong>...</span>
+            <span>
+              Waiting for <strong className="text-foreground">{activePlayerName}</strong>...
+            </span>
           )}
         </div>
 
@@ -785,7 +1935,6 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
           {myCard.map((row, r) =>
             row.map((num, c) => {
               const isStamped = stampedSet.has(num);
-              const isHovered = hoverNumber === num;
               const isLatestCall = lastCalledNumber === num;
 
               return (
@@ -845,7 +1994,11 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
           <div className="flex items-center gap-2">
             <button
               type="button"
-              title={wildStampsUsed >= 1 ? "Wild Star Stamp already used" : "Wild Star Stamp (Stamp 1 free tile, 1 per match)"}
+              title={
+                wildStampsUsed >= 1
+                  ? "Wild Star Stamp already used"
+                  : "Wild Star Stamp (Stamp 1 free tile, 1 per match)"
+              }
               disabled={wildStampsUsed >= 1}
               onClick={() => {
                 if (wildStampsUsed >= 1) return;

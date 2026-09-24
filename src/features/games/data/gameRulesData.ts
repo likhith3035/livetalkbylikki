@@ -158,10 +158,10 @@ export const ALL_GAME_RULES: Record<GameId, GameRuleGuide> = {
     steps: [
       {
         stepNumber: 1,
-        title: "Inspect Your 5x5 Card",
-        description: "Each player receives a unique randomized card containing all numbers from 1 to 25.",
+        title: "Craft or Shuffle Your 5x5 Card",
+        description: "Set your own custom 25-number card (1 to 25) by tapping cells and picking from the number bank, or use Shuffle and Auto-Fill for instant readiness.",
         icon: "📋",
-        badge: "Setup",
+        badge: "Draft & Setup",
       },
       {
         stepNumber: 2,
