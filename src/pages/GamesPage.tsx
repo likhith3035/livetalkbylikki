@@ -7,6 +7,7 @@ import { GameModeModal } from "@/features/games/components/GameModeModal";
 import { QuickMatchSearchingOverlay } from "@/features/games/components/QuickMatchSearchingOverlay";
 import { GameScoreboard } from "@/features/games/components/GameScoreboard";
 import { QRShareModal } from "@/features/games/components/QRShareModal";
+import { QuickJoinModal } from "@/features/games/components/QuickJoinModal";
 import { OfflineAIFallbackBanner } from "@/features/games/components/OfflineAIFallbackBanner";
 import { VictoryModal } from "@/features/games/components/VictoryModal";
 import { GameLiveReactions } from "@/features/games/components/GameLiveReactions";
@@ -41,6 +42,7 @@ import {
 } from "@/features/games/services/gameRoomService";
 import {
   getGamerProfile,
+  saveGamerProfile,
   awardMatchXP,
   recordMatchHistory,
   getXpForNextLevel,
@@ -194,6 +196,8 @@ export default function GamesPage() {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isQuickJoinOpen, setIsQuickJoinOpen] = useState(false);
+  const [pendingJoinRoomCode, setPendingJoinRoomCode] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isDinoGameOpen, setIsDinoGameOpen] = useState(false);
   const [manualCode, setManualCode] = useState("");
@@ -351,7 +355,7 @@ export default function GamesPage() {
     }
   }, [activeRoom?.status, activeRoom?.round, activeRoom?.winnerId, activeRoom?.mode, myPlayerId, isSpectator]);
 
-  // Auto-join if ?room=XXXX in URL (checking if spectator mode)
+  // Auto-prompt join if ?room=XXXX in URL (checking if spectator mode)
   useEffect(() => {
     const queryRoom = searchParams.get("room");
     const spectateParam = searchParams.get("spectate") === "true";
@@ -361,10 +365,12 @@ export default function GamesPage() {
       queryRoom.toUpperCase() !== createdRoomCodeRef.current &&
       (!activeRoom || activeRoom.roomCode !== queryRoom.toUpperCase())
     ) {
+      const clean = queryRoom.trim().toUpperCase();
       if (spectateParam) {
-        handleJoinSpectate(queryRoom);
+        handleJoinSpectate(clean);
       } else {
-        handleJoinByCode(queryRoom);
+        setPendingJoinRoomCode(clean);
+        setIsQuickJoinOpen(true);
       }
     }
   }, [searchParams]);
@@ -375,12 +381,17 @@ export default function GamesPage() {
 
     const unsub = subscribeToGameRoom(activeRoom.roomCode, (updated) => {
       if (updated) {
-        // If an opponent connected while QR popup is open, auto-close it
+        // If an opponent connected while QR popup is open, auto-close it with celebratory notification
         if (updated.players?.guest && !activeRoom.players?.guest) {
           setIsQRModalOpen(false);
           gameHaptics.opponentJoined();
           gameAudio.playWin();
-          toast.success(`Opponent ${updated.players.guest?.name || "Player 2"} connected! Game ready.`);
+          const guestName = updated.players.guest.name || "Player 2";
+          const guestAvatar = updated.players.guest.avatar || "👾";
+          toast.success(`🎉 ${guestAvatar} ${guestName} joined the match! Game ready!`, {
+            icon: "⚔️",
+            duration: 4000,
+          });
         }
 
         setActiveRoom(updated);
@@ -389,7 +400,9 @@ export default function GamesPage() {
           setIsSearchingQuickMatch(false);
           gameHaptics.opponentJoined();
           gameAudio.playWin();
-          toast.success("Opponent connected! Game starting...");
+          const guestName = updated.players.guest.name || "Opponent";
+          const guestAvatar = updated.players.guest.avatar || "👾";
+          toast.success(`🎉 ${guestAvatar} ${guestName} connected! Game starting...`);
         }
 
         // If both players accepted rematch, dismiss victory modal
@@ -418,14 +431,19 @@ export default function GamesPage() {
         if (isOpen) {
           gameHaptics.opponentJoined();
           gameAudio.playWin();
-          toast.success(`Opponent ${activeRoom?.players?.guest?.name || "Player 2"} connected! Game ready.`);
+          const guestName = activeRoom?.players?.guest?.name || "Player 2";
+          const guestAvatar = activeRoom?.players?.guest?.avatar || "👾";
+          toast.success(`🎉 ${guestAvatar} ${guestName} joined the match! Game ready!`, {
+            icon: "⚔️",
+            duration: 4000,
+          });
           return false;
         }
         return false;
       });
     }
     prevGuestConnectedRef.current = isGuestConnected;
-  }, [isGuestConnected, activeRoom?.players?.guest?.name]);
+  }, [isGuestConnected, activeRoom?.players?.guest?.name, activeRoom?.players?.guest?.avatar]);
 
   const handleSwitchActiveRoomToAI = useCallback(() => {
     if (!activeRoom) return;
@@ -545,11 +563,20 @@ export default function GamesPage() {
     await handleSelectMode(searchingGameMeta.id, "ai");
   };
 
-  const handleJoinByCode = async (codeToJoin: string) => {
+  const handleJoinByCode = async (codeToJoin: string, customName?: string, customAvatar?: string) => {
     const clean = codeToJoin.trim().toUpperCase();
     if (!clean) {
       toast.error("Please enter a valid room code.");
       return;
+    }
+
+    const finalName = customName?.trim() || gamerProfile.nickname?.trim() || "Player 2";
+    const finalAvatar = customAvatar || gamerProfile.avatar || "👾";
+
+    if (customName || customAvatar) {
+      const updatedProfile = { ...gamerProfile, nickname: finalName, avatar: finalAvatar };
+      setGamerProfile(updatedProfile);
+      saveGamerProfile(updatedProfile);
     }
 
     try {
@@ -557,6 +584,8 @@ export default function GamesPage() {
         roomCode: clean,
         guestPlayer: {
           ...myPlayerInfo,
+          name: finalName,
+          avatar: finalAvatar,
           isHost: false,
         },
       });
@@ -568,13 +597,17 @@ export default function GamesPage() {
         setDismissedVictoryRound(-1);
         setIsJoinModalOpen(false);
         setIsScannerOpen(false);
+        setIsQuickJoinOpen(false);
+        setPendingJoinRoomCode(null);
         setSearchParams({ room: clean });
         gameAudio.playWin();
-        toast.success(`Connected to room ${clean}!`);
+        toast.success(`Connected to room ${clean} as ${finalName}!`);
       }
     } catch (err: unknown) {
       createdRoomCodeRef.current = clean;
       setSearchParams({});
+      setIsQuickJoinOpen(false);
+      setPendingJoinRoomCode(null);
       const message = err instanceof Error ? err.message : "Failed to join game room.";
       toast.error(message);
     }
@@ -651,7 +684,7 @@ export default function GamesPage() {
 
   const handleTurnTimeout = useCallback(async () => {
     if (!activeRoom || activeRoom.status !== "playing" || isSpectator) return;
-    if (activeRoom.gameId === "reaction" || activeRoom.gameId === "rps") return;
+    if (activeRoom.gameId === "reaction" || activeRoom.gameId === "rps" || activeRoom.gameId === "bingo") return;
     const isMyTurn = activeRoom.currentTurn === myPlayerId;
     if (!isMyTurn) return;
 
@@ -1396,8 +1429,28 @@ export default function GamesPage() {
           if (isSpectateLink) {
             handleJoinSpectate(codeToJoin);
           } else {
-            handleJoinByCode(codeToJoin);
+            setPendingJoinRoomCode(codeToJoin.toUpperCase());
+            setIsQuickJoinOpen(true);
           }
+        }}
+      />
+
+      {/* Quick Join Name & Avatar Dialog when invited via QR or Link */}
+      <QuickJoinModal
+        isOpen={isQuickJoinOpen}
+        roomCode={pendingJoinRoomCode || ""}
+        initialName={gamerProfile.nickname}
+        initialAvatar={gamerProfile.avatar}
+        onJoin={(code, name, avatar) => handleJoinByCode(code, name, avatar)}
+        onSpectate={(code) => {
+          setIsQuickJoinOpen(false);
+          setPendingJoinRoomCode(null);
+          handleJoinSpectate(code);
+        }}
+        onClose={() => {
+          setIsQuickJoinOpen(false);
+          setPendingJoinRoomCode(null);
+          setSearchParams({});
         }}
       />
 
