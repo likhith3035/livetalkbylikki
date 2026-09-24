@@ -8,10 +8,13 @@ const PwaInstallBanner = () => {
   const { showBanner, canInstall, install, dismissBanner } = usePwaInstall();
   const location = useLocation();
 
-  // Suppress banner on /chat to avoid blocking the message input & keyboard
-  const isChatRoute = location.pathname.startsWith("/chat");
+  // Suppress banner on /chat, /games, and /room to avoid blocking touch controls & keyboard
+  const isSuppressedRoute =
+    location.pathname.startsWith("/chat") ||
+    location.pathname.startsWith("/games") ||
+    location.pathname.startsWith("/room");
 
-  if (!showBanner || !canInstall || isChatRoute) return null;
+  if (!showBanner || !canInstall || isSuppressedRoute) return null;
 
   return (
     <AnimatePresence>

@@ -365,7 +365,7 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
           )}
 
           {/* Turn Timer Countdown Bar */}
-          {room.rules?.turnTimerSeconds && room.rules.turnTimerSeconds > 0 && room.status === "playing" ? (
+          {room.rules?.turnTimerSeconds && room.rules.turnTimerSeconds > 0 && room.status === "playing" && room.gameId !== "bingo" ? (
             <GameTurnTimer
               turnExpiresAt={room.turnExpiresAt}
               turnTimerSeconds={room.rules.turnTimerSeconds}

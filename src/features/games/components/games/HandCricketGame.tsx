@@ -1093,8 +1093,9 @@ export const HandCricketGame: React.FC<HandCricketGameProps> = ({
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Compass className="w-3.5 h-3.5" />
-          <span>Wagon Wheel</span>
+          <Compass className="w-3.5 h-3.5 shrink-0" />
+          <span className="truncate hidden xs:inline">Wagon Wheel</span>
+          <span className="truncate xs:hidden">Wagon</span>
         </button>
         <button
           id="cricket-tab-scorecard"

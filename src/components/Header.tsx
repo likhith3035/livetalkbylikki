@@ -99,22 +99,22 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         className="flex items-center justify-between px-2.5 sm:px-4 py-1.5 sm:py-3 bg-background border-b border-border/30 sticky top-0 z-40 lg:hidden"
         style={{ willChange: "transform" }}
       >
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             onClick={onBack ? onBack : () => navigate("/")}
-            className="h-10 w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0 min-h-[40px] min-w-[40px]"
+            className="h-8.5 w-8.5 sm:h-10 sm:w-10 rounded-full border border-border/75 bg-card flex items-center justify-center text-foreground hover:bg-secondary transition-all active:scale-95 shadow-sm shrink-0 min-h-[34px] min-w-[34px] sm:min-h-[40px] sm:min-w-[40px]"
             aria-label="Exit chat"
             title="Back"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
           </button>
           <button
             onClick={() => navigate("/")}
-            className="h-10 w-10 rounded-full border border-primary/30 bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-95 shadow-sm shrink-0 min-h-[40px] min-w-[40px]"
+            className="h-8.5 w-8.5 sm:h-10 sm:w-10 rounded-full border border-primary/30 bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-95 shadow-sm shrink-0 min-h-[34px] min-w-[34px] sm:min-h-[40px] sm:min-w-[40px]"
             aria-label="Go to Home"
             title="Go to Home"
           >
-            <Home className="h-4 w-4" />
+            <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
         </div>
 
@@ -306,12 +306,12 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
           </SheetContent>
         </Sheet>
 
-        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate("/")}>
+        <div className="flex items-center gap-2 cursor-pointer min-w-0" onClick={() => navigate("/")}>
           <BrandLogo
-            className="h-8 w-8 sm:h-9 sm:w-9 drop-shadow-md hover:scale-105 transition-transform"
+            className="h-8 w-8 sm:h-9 sm:w-9 drop-shadow-md hover:scale-105 transition-transform shrink-0"
             aria-label="IncogTalk Home"
           />
-          <span className="font-display text-sm sm:text-base font-bold text-foreground hover:text-primary transition-colors select-none">
+          <span className="font-display text-sm sm:text-base font-bold text-foreground hover:text-primary transition-colors select-none truncate hidden xs:inline">
             IncogTalk
           </span>
         </div>
@@ -323,7 +323,7 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
         <button
           type="button"
           onClick={() => setShowMiniGame(true)}
-          className="h-7 sm:h-8 px-1.5 sm:px-2.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/60 text-foreground font-medium text-xs flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-sm hover:scale-105 active:scale-95 transition-all shrink-0"
+          className="hidden xs:flex h-7 sm:h-8 px-1.5 sm:px-2.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/60 text-foreground font-medium text-xs items-center gap-1 sm:gap-1.5 cursor-pointer shadow-sm hover:scale-105 active:scale-95 transition-all shrink-0"
           title="Play Dino Runner Mini-Game"
         >
           <span className="text-sm">🦖</span>

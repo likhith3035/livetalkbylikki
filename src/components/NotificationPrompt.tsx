@@ -93,7 +93,7 @@ const NotificationPrompt = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="relative w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-2xl shadow-primary/10"
+            className="relative w-full max-w-sm rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-2xl shadow-primary/10 max-h-[90dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close */}

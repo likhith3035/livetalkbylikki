@@ -28,9 +28,9 @@ export const OfflineBanner: React.FC = () => {
   if (!isOffline) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-destructive/95 backdrop-blur-md text-destructive-foreground py-2 px-4 shadow-lg flex items-center justify-center gap-2 text-xs font-semibold animate-slide-down border-b border-destructive/40">
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-destructive/95 backdrop-blur-md text-destructive-foreground pt-[max(env(safe-area-inset-top,0px),0.5rem)] pb-2 px-3 sm:px-4 shadow-lg flex items-center justify-center gap-2 text-[11px] sm:text-xs font-semibold text-center animate-slide-down border-b border-destructive/40">
       <WifiOff className="h-4 w-4 shrink-0 animate-pulse" />
-      <span>⚡ Network Disconnected — You are currently offline. Live sharing features will resume automatically when reconnected.</span>
+      <span className="leading-snug">⚡ Network Disconnected — You are currently offline. Features will resume automatically when reconnected.</span>
     </div>
   );
 };

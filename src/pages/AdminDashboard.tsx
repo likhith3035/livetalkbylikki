@@ -922,9 +922,9 @@ const AdminDashboard = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-lg sm:text-xl font-black tracking-tight leading-none flex items-center gap-2">
-                IncogTalk Super Admin Command Center
-                <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
+              <h1 className="text-lg sm:text-xl font-black tracking-tight leading-normal flex flex-wrap items-center gap-2">
+                <span>IncogTalk Super Admin Command Center</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 shrink-0">
                   PRO V2.5
                 </span>
               </h1>

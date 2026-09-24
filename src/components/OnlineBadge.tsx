@@ -32,7 +32,7 @@ const OnlineBadge = ({ count }: OnlineBadgeProps) => {
         {formatted.split("").map((char, i) => (
           <AnimatedDigit key={`${i}-${char}`} digit={char} />
         ))}
-        <span className="ml-1">online</span>
+        <span className="ml-1 hidden xs:inline">online</span>
       </span>
     </div>
   );

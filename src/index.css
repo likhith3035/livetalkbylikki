@@ -116,10 +116,24 @@
     overflow-x: hidden;
   }
 
+  html, body {
+    overscroll-behavior-y: none;
+  }
+
+  /* Prevent iOS Safari from forcing auto-zoom on input focus */
+  @media screen and (max-width: 768px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
     transition: background-color 0.3s ease, color 0.3s ease;
     -webkit-tap-highlight-color: transparent;
+    overflow-wrap: break-word;
   }
 
   /* Smoother scrollbar */
