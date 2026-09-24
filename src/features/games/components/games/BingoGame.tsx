@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion";
 import { GameRoomState, BingoGameState } from "../../types";
 import { gameAudio } from "../../services/gameSoundService";
+import { gameHaptics } from "../../services/gameHapticsService";
 import { sendGameMove } from "../../services/gameRoomService";
 import {
   Sparkles,
@@ -27,10 +28,13 @@ import {
   Layers,
   Undo2,
   X,
+  Clock,
+  AlertTriangle,
   Move,
   Grab,
   PenTool,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 interface BingoGameProps {
@@ -257,6 +261,19 @@ export function getSmartBingoAIMove(
   }
 
   return unstampedNumbers[0];
+}
+
+export const DEFAULT_BINGO_TURN_TIMER = 15;
+
+/**
+ * Smart AFK Auto-Call helper for Bingo:
+ * Returns the strategic optimal unstamped tile to advance completed lines.
+ */
+export function getBingoAFKAutoMove(
+  card: number[][],
+  stampedNumbers: number[]
+): number {
+  return getSmartBingoAIMove(card, stampedNumbers, "hard");
 }
 
 // ── Card Creation, Normalization & Customization Utilities ──
@@ -519,6 +536,18 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     room.currentTurn === room.players.host.id
       ? room.players.host.name
       : room.players.guest?.name || (isAIMode ? aiPersona.name : "Player 2");
+
+  // ── 15-Second Turn Timer States & Refs ──
+  const turnDuration =
+    room.rules?.turnTimerSeconds && room.rules.turnTimerSeconds > 0
+      ? room.rules.turnTimerSeconds
+      : DEFAULT_BINGO_TURN_TIMER;
+
+  const [turnTimeLeft, setTurnTimeLeft] = useState<number>(turnDuration);
+  const turnStartTimeRef = useRef<number>(Date.now());
+  const lastTurnKeyRef = useRef<string>("");
+  const lastTickedSecondRef = useRef<number>(-1);
+  const hasAutoCalledRef = useRef<boolean>(false);
 
   // ── Placed numbers calculation in Builder ──
   const currentActiveDraft = isLocalMode
@@ -906,8 +935,11 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     onLocalMove?.({
       ...room,
       gameState: updatedState,
+      status: "playing",
+      lastMoveTimestamp: Date.now(),
+      turnExpiresAt: Date.now() + turnDuration * 1000,
     });
-  }, [isDraftCardComplete, draftCard, rawState, room, onLocalMove]);
+  }, [isDraftCardComplete, draftCard, rawState, room, onLocalMove, turnDuration]);
 
   const handleLockLocalP1 = useCallback(() => {
     if (!validateBingoCard(localP1DraftCard)) return;
@@ -942,8 +974,11 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     onLocalMove?.({
       ...room,
       gameState: updatedState,
+      status: "playing",
+      lastMoveTimestamp: Date.now(),
+      turnExpiresAt: Date.now() + turnDuration * 1000,
     });
-  }, [localP1DraftCard, localP2DraftCard, rawState, room, onLocalMove]);
+  }, [localP1DraftCard, localP2DraftCard, rawState, room, onLocalMove, turnDuration]);
 
   const handleQuickStartRandomLocal = useCallback(() => {
     gameAudio.playWin();
@@ -968,11 +1003,82 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
     onLocalMove?.({
       ...room,
       gameState: updatedState,
+      status: "playing",
+      lastMoveTimestamp: Date.now(),
+      turnExpiresAt: Date.now() + turnDuration * 1000,
     });
-  }, [rawState, room, onLocalMove]);
+  }, [rawState, room, onLocalMove, turnDuration]);
 
   const isMyOnlineReady = isHost ? !!rawState?.hostReady : !!rawState?.guestReady;
   const isOpponentOnlineReady = isHost ? !!rawState?.guestReady : !!rawState?.hostReady;
+  const opponentPlayerName = isHost ? room.players.guest?.name || "Player 2" : room.players.host.name;
+
+  // Realtime notification & sound when opponent finishes their 5x5 board
+  const prevOpponentOnlineReadyRef = useRef(isOpponentOnlineReady);
+  useEffect(() => {
+    if (!isLocalMode && !isAIMode && isSetupPhase) {
+      if (!prevOpponentOnlineReadyRef.current && isOpponentOnlineReady) {
+        gameAudio.playPowerUpTrigger();
+        gameHaptics.vibrateMedium();
+        toast.success(
+          `⚡ ${opponentPlayerName} locked their 5x5 board! Ready & waiting for you!`,
+          {
+            icon: "🎉",
+            duration: 4500,
+          }
+        );
+      }
+    }
+    prevOpponentOnlineReadyRef.current = isOpponentOnlineReady;
+  }, [isOpponentOnlineReady, isLocalMode, isAIMode, isSetupPhase, opponentPlayerName]);
+
+  const handleAutoFillAndLockOnline = useCallback(async () => {
+    gameAudio.playWin();
+    const finalCard = isDraftCardComplete ? draftCard : autoFillRemainingCard(draftCard);
+    setDraftCard(finalCard);
+
+    const willBothBeReady = true;
+
+    const updatedState: BingoGameState = {
+      ...rawState,
+      hostCard: isHost ? finalCard : hostCard,
+      guestCard: !isHost ? finalCard : guestCard,
+      hostReady: isHost ? true : rawState?.hostReady,
+      guestReady: !isHost ? true : rawState?.guestReady,
+      phase: "playing",
+      isCardLocked: true,
+      stampedNumbers: [],
+      calledHistory: [],
+      hostLines: 0,
+      guestLines: 0,
+      hostCompletedLines: [],
+      guestCompletedLines: [],
+      lastCalledNumber: null,
+    };
+
+    await sendGameMove(
+      room.roomCode,
+      updatedState,
+      room.currentTurn,
+      null,
+      false,
+      room.players.host.score,
+      room.players.guest?.score || 0,
+      turnDuration
+    );
+  }, [
+    isDraftCardComplete,
+    draftCard,
+    isHost,
+    rawState,
+    hostCard,
+    guestCard,
+    room.roomCode,
+    room.currentTurn,
+    room.players.host.score,
+    room.players.guest?.score,
+    turnDuration,
+  ]);
 
   const handleLockOnlineCard = useCallback(async () => {
     if (!isDraftCardComplete) return;
@@ -1004,9 +1110,10 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
       null,
       false,
       room.players.host.score,
-      room.players.guest?.score || 0
+      room.players.guest?.score || 0,
+      willBothBeReady ? turnDuration : 0
     );
-  }, [isDraftCardComplete, isHost, rawState, draftCard, hostCard, guestCard, room]);
+  }, [isDraftCardComplete, isHost, rawState, draftCard, hostCard, guestCard, room, turnDuration]);
 
   const handleUnlockOnlineCard = useCallback(async () => {
     gameAudio.playClick();
@@ -1144,6 +1251,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
         status: isOver ? "round_over" : "playing",
         winnerId: winnerPlayerId,
         lastMoveTimestamp: Date.now(),
+        turnExpiresAt: isOver ? null : Date.now() + turnDuration * 1000,
         players: {
           host: {
             ...room.players.host,
@@ -1169,7 +1277,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
           isOver,
           nextHostScore,
           nextGuestScore,
-          room.rules?.turnTimerSeconds || 0,
+          turnDuration,
           room.rules?.maxSeriesWins || 2
         );
       }
@@ -1192,6 +1300,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
       rawState?.calledHistory,
       BINGO_LETTERS,
       triggerAiSpeech,
+      turnDuration,
     ]
   );
 
@@ -1207,6 +1316,126 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
 
     return () => clearTimeout(timer);
   }, [isAITurn, guestCard, stampedNumbers, aiDifficulty, handleCallNumber]);
+
+  // ── 15-Second Turn Countdown & AFK Auto-Call Engine ──
+  const currentTurnKey = `${room.currentTurn}_${stampedNumbers.length}_${room.status}_${room.round}`;
+
+  useEffect(() => {
+    if (currentTurnKey !== lastTurnKeyRef.current) {
+      lastTurnKeyRef.current = currentTurnKey;
+      hasAutoCalledRef.current = false;
+      lastTickedSecondRef.current = -1;
+      turnStartTimeRef.current = Date.now();
+      setTurnTimeLeft(turnDuration);
+    }
+  }, [currentTurnKey, turnDuration]);
+
+  useEffect(() => {
+    if (room.status !== "playing" || isSetupPhase) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      let remaining: number;
+
+      if (room.turnExpiresAt && room.turnExpiresAt > now) {
+        remaining = Math.max(0, Math.ceil((room.turnExpiresAt - now) / 1000));
+      } else {
+        const elapsed = (now - turnStartTimeRef.current) / 1000;
+        remaining = Math.max(0, Math.ceil(turnDuration - elapsed));
+      }
+
+      setTurnTimeLeft(remaining);
+
+      // Heartbeat audio tick during the final 5 seconds for the active player's turn
+      const isCurrentActiveTurn = isLocalMode || (isAIMode ? isMyTurn : isMyTurn);
+      if (remaining > 0 && remaining <= 5 && isCurrentActiveTurn) {
+        if (lastTickedSecondRef.current !== remaining) {
+          lastTickedSecondRef.current = remaining;
+          gameAudio.playHeartbeatTick();
+        }
+      }
+
+      // AFK Auto-Call when timer reaches 0
+      if (remaining === 0 && !hasAutoCalledRef.current) {
+        if (isLocalMode) {
+          hasAutoCalledRef.current = true;
+          const isHostTurn = room.currentTurn === room.players.host.id;
+          const activeCard = isHostTurn ? hostCard : guestCard;
+          const activeName = isHostTurn ? room.players.host.name : (room.players.guest?.name || "Player 2");
+          const autoNum = getBingoAFKAutoMove(activeCard, stampedNumbers);
+
+          toast.info(`⏰ ${activeName} timed out! Auto-called #${autoNum}`, {
+            icon: "⚡",
+            duration: 2500,
+          });
+          handleCallNumber(autoNum);
+        } else if (isAIMode) {
+          if (isMyTurn) {
+            hasAutoCalledRef.current = true;
+            const autoNum = getBingoAFKAutoMove(myCard, stampedNumbers);
+            toast.info(`⏰ Turn timed out! Auto-called #${autoNum} for you`, {
+              icon: "⚡",
+              duration: 2500,
+            });
+            handleCallNumber(autoNum);
+          }
+        } else {
+          // Online Multiplayer
+          if (isMyTurn) {
+            hasAutoCalledRef.current = true;
+            const autoNum = getBingoAFKAutoMove(myCard, stampedNumbers);
+            toast.info(`⏰ Turn timed out! Auto-called #${autoNum} for you`, {
+              icon: "⚡",
+              duration: 2500,
+            });
+            handleCallNumber(autoNum);
+          }
+        }
+      }
+
+      // Online Multiplayer Opponent Fallback (AFK referee):
+      // If opponent client is inactive/disconnected for turnDuration + 2s (17s total), host client steps in
+      if (!isLocalMode && !isAIMode && !isMyTurn && !hasAutoCalledRef.current) {
+        const elapsed = (now - turnStartTimeRef.current) / 1000;
+        const graceThreshold = isHost ? turnDuration + 2 : turnDuration + 3;
+        if (elapsed >= graceThreshold) {
+          hasAutoCalledRef.current = true;
+          const oppCard = opponentCard;
+          const oppName =
+            room.currentTurn === room.players.host.id
+              ? room.players.host.name
+              : room.players.guest?.name || "Opponent";
+          const autoNum = getBingoAFKAutoMove(oppCard, stampedNumbers);
+          toast.info(`⏰ ${oppName} is AFK! Auto-called #${autoNum} to keep match moving`, {
+            icon: "⚡",
+            duration: 2500,
+          });
+          handleCallNumber(autoNum);
+        }
+      }
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [
+    room.status,
+    room.turnExpiresAt,
+    room.currentTurn,
+    room.players.host.id,
+    room.players.host.name,
+    room.players.guest?.name,
+    isSetupPhase,
+    isLocalMode,
+    isAIMode,
+    isMyTurn,
+    isHost,
+    turnDuration,
+    hostCard,
+    guestCard,
+    myCard,
+    opponentCard,
+    stampedNumbers,
+    handleCallNumber,
+  ]);
 
   // Audio & Letter Unlock sync for incoming moves
   const prevLinesCountRef = useRef(myLinesResult.count);
@@ -1398,6 +1627,55 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
 
     return (
       <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-2 select-none">
+        {/* ── Realtime Opponent Ready Alert Banner ── */}
+        {!isLocalMode && !isAIMode && (
+          <div className="w-full mb-2.5">
+            {isOpponentOnlineReady ? (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="w-full p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-cyan-500/25 border-2 border-emerald-400/70 shadow-[0_0_18px_rgba(16,185,129,0.35)] flex items-center justify-between gap-2"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs sm:text-sm font-black text-emerald-300 truncate">
+                      ⚡ {opponentPlayerName} locked their 5x5 board!
+                    </span>
+                    <span className="text-[10px] text-muted-foreground truncate">
+                      {isDraftCardComplete
+                        ? "Lock your card below to start match!"
+                        : `${25 - placedCount} slots remaining — or tap Quick-Fill!`}
+                    </span>
+                  </div>
+                </div>
+
+                {!isDraftCardComplete && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleAutoFillAndLockOnline}
+                    className="h-8 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shrink-0 shadow-md shadow-emerald-500/30 flex items-center gap-1 cursor-pointer animate-pulse"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Quick Ready ⚡</span>
+                  </Button>
+                )}
+              </motion.div>
+            ) : (
+              <div className="w-full px-3 py-1.5 rounded-xl bg-card/50 border border-border/50 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  Opponent: <strong className="text-foreground">{opponentPlayerName}</strong>
+                </span>
+                <span className="text-amber-400/90 font-mono text-[10px]">
+                  Drafting 5x5 board... ⏳
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Top Header & Freeform Sequential Prompt ── */}
         <div className="w-full mb-3 p-3 rounded-2xl bg-card/75 backdrop-blur-md border border-border/60 shadow-lg flex flex-col items-center">
           <div className="flex items-center justify-between w-full mb-1 px-1">
@@ -1694,7 +1972,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
         {/* ── Ready & Lock Card Action Bar ── */}
         <div className="w-full mt-3 flex flex-col gap-2">
           {isLocalMode ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -1703,7 +1981,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
                 className="flex-1 rounded-2xl h-11 text-xs font-bold border-border/60 bg-card/60"
               >
                 <Shuffle className="w-3.5 h-3.5 text-amber-400 mr-1.5" />
-                <span>Quick Start (Both Random)</span>
+                <span className="truncate">Quick Start (Both Random)</span>
               </Button>
 
               {localDraftStep === "host_draft" ? (
@@ -1716,7 +1994,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
                   className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-black shadow-lg shadow-cyan-500/25 rounded-2xl h-11 text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Lock className="w-3.5 h-3.5" />
-                  <span>Lock Player 1 Card</span>
+                  <span className="truncate">Lock Player 1 Card</span>
                 </Button>
               ) : (
                 <Button
@@ -1728,7 +2006,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
                   className="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-black shadow-lg shadow-rose-500/25 rounded-2xl h-11 text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Start 2-Player Match</span>
+                  <span className="truncate">Start 2-Player Match</span>
                 </Button>
               )}
             </div>
@@ -1770,6 +2048,29 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
                   >
                     <LockOpen className="w-3.5 h-3.5 mr-1" />
                     <span>Unlock</span>
+                  </Button>
+                </div>
+              ) : isOpponentOnlineReady && !isDraftCardComplete ? (
+                <div className="flex flex-col gap-2 w-full">
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="lg"
+                    onClick={handleAutoFillAndLockOnline}
+                    className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 font-black shadow-xl shadow-emerald-500/25 rounded-2xl h-12 text-sm flex items-center justify-center gap-2 cursor-pointer animate-pulse"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>⚡ Quick Auto-Fill & Start Match Now!</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="default"
+                    disabled
+                    className="w-full rounded-2xl h-9 text-xs font-bold border-border/60 bg-card/60 opacity-60"
+                  >
+                    <Lock className="w-3.5 h-3.5 mr-1" />
+                    <span>Or place remaining ({25 - placedCount} left) manually</span>
                   </Button>
                 </div>
               ) : (
@@ -1835,6 +2136,61 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
           })}
         </div>
       </div>
+
+      {/* ── 15-Second Turn Countdown with AFK Auto-Call Bar ── */}
+      {room.status === "playing" && (
+        <div className="w-full mb-2.5 px-3 py-2 rounded-2xl bg-card/75 backdrop-blur-md border border-border/60 shadow-sm flex flex-col gap-1.5 transition-colors">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {turnTimeLeft <= 5 ? (
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-bounce shrink-0" />
+              ) : (
+                <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              )}
+              <span
+                className={`truncate ${
+                  turnTimeLeft <= 5 ? "text-rose-400 font-black animate-pulse" : "text-foreground"
+                }`}
+              >
+                {turnTimeLeft <= 5
+                  ? `⚠️ ${turnTimeLeft}s • Auto-pick imminent!`
+                  : isLocalMode
+                  ? `${activePlayerName}'s Turn`
+                  : isMyTurn
+                  ? "Your Turn — Pick a Number"
+                  : `${activePlayerName} Calling...`}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[10px] text-muted-foreground uppercase font-mono tracking-wider hidden xs:inline">
+                AFK Auto-Pick
+              </span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black font-mono shadow-sm transition-all ${
+                  turnTimeLeft <= 5
+                    ? "bg-rose-500/25 text-rose-400 border border-rose-500/50 shadow-rose-500/20 animate-pulse scale-105"
+                    : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                }`}
+              >
+                {turnTimeLeft}s
+              </span>
+            </div>
+          </div>
+
+          {/* Smooth Progress Bar */}
+          <div className="w-full h-1.5 rounded-full bg-muted/60 overflow-hidden relative">
+            <motion.div
+              className={`h-full rounded-full transition-all duration-200 ${
+                turnTimeLeft <= 5
+                  ? "bg-gradient-to-r from-rose-500 to-red-600 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
+                  : "bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+              }`}
+              style={{ width: `${Math.min(100, Math.max(0, (turnTimeLeft / turnDuration) * 100))}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── 3D Calling Ball Marquee & Recent Calls Ribbon ── */}
       <div className="w-full flex items-center justify-between mb-3 px-3 py-2 rounded-2xl bg-card/60 backdrop-blur-md border border-border/50 shadow-sm">

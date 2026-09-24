@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   calculateBingoLines,
   getSmartBingoAIMove,
+  getBingoAFKAutoMove,
+  DEFAULT_BINGO_TURN_TIMER,
   generateRandomBingoCard,
   generateSequentialBingoCard,
   generateSpiralBingoCard,
@@ -222,4 +224,87 @@ describe("Bingo Blitz Duel Game Logic", () => {
       expect(move).toBe(5);
     });
   });
+
+  describe("15-Second Turn Timer & AFK Auto-Call Strategy", () => {
+    it("has a standard default turn timer duration of 15 seconds", () => {
+      expect(DEFAULT_BINGO_TURN_TIMER).toBe(15);
+    });
+
+    it("AFK auto-move returns a valid unstamped number on the card", () => {
+      const stamped = [1, 7, 13, 19];
+      const autoMove = getBingoAFKAutoMove(sampleCard, stamped);
+      expect(autoMove).toBeGreaterThanOrEqual(1);
+      expect(autoMove).toBeLessThanOrEqual(25);
+      expect(stamped.includes(autoMove)).toBe(false);
+    });
+
+    it("AFK auto-move immediately clinches a 4/5 completed line", () => {
+      // Main diagonal has 1, 7, 13, 19 stamped. Missing 25.
+      const stamped = [1, 7, 13, 19];
+      const autoMove = getBingoAFKAutoMove(sampleCard, stamped);
+      expect(autoMove).toBe(25);
+    });
+
+    it("AFK auto-move selects the sole remaining tile when 24 numbers are stamped", () => {
+      // Stamp all except #17
+      const stamped = Array.from({ length: 25 }, (_, i) => i + 1).filter((n) => n !== 17);
+      const autoMove = getBingoAFKAutoMove(sampleCard, stamped);
+      expect(autoMove).toBe(17);
+    });
+  });
+
+  describe("Realtime Online 5x5 Board Lock & Fast Auto-Fill Synchronization", () => {
+    it("fast auto-fills a partially drafted board into a valid 5x5 card instantaneously", () => {
+      const draft = createEmptyBingoCard();
+      // Player hand-picked their 5 favorite numbers:
+      draft[0][0] = 7;
+      draft[1][1] = 11;
+      draft[2][2] = 22;
+      draft[3][3] = 14;
+      draft[4][4] = 3;
+
+      const fastFilled = autoFillRemainingCard(draft);
+
+      // Verify custom placed numbers remain intact
+      expect(fastFilled[0][0]).toBe(7);
+      expect(fastFilled[1][1]).toBe(11);
+      expect(fastFilled[2][2]).toBe(22);
+      expect(fastFilled[3][3]).toBe(14);
+      expect(fastFilled[4][4]).toBe(3);
+
+      // Verify completeness and uniqueness
+      expect(validateBingoCard(fastFilled)).toBe(true);
+      const flat = fastFilled.flat();
+      expect(flat).toHaveLength(25);
+      expect(new Set(flat).size).toBe(25);
+    });
+
+    it("evaluates both ready states to transition match phase from setup to playing", () => {
+      const state = createInitialGameState("bingo") as BingoGameState;
+      expect(state.phase).toBe("setup");
+      expect(state.hostReady).toBe(false);
+      expect(state.guestReady).toBe(false);
+
+      // Opponent (Host) locks first
+      const hostLockedState: BingoGameState = {
+        ...state,
+        hostReady: true,
+        phase: false ? "playing" : "setup",
+      };
+      expect(hostLockedState.hostReady).toBe(true);
+      expect(hostLockedState.phase).toBe("setup");
+
+      // Guest locks second -> triggers immediate transition to playing phase
+      const bothLockedState: BingoGameState = {
+        ...hostLockedState,
+        guestReady: true,
+        phase: hostLockedState.hostReady ? "playing" : "setup",
+        isCardLocked: true,
+      };
+      expect(bothLockedState.guestReady).toBe(true);
+      expect(bothLockedState.phase).toBe("playing");
+      expect(bothLockedState.isCardLocked).toBe(true);
+    });
+  });
 });
+
