@@ -88,6 +88,23 @@ class GameHapticsService {
   public ptt(): void {
     this.vibrate(18);
   }
+
+  /** Ergonomic aliases */
+  public vibrateShort(): void {
+    this.light();
+  }
+
+  public vibrateMedium(): void {
+    this.medium();
+  }
+
+  public vibrateLong(): void {
+    this.heavy();
+  }
+
+  public vibrateSuccess(): void {
+    this.success();
+  }
 }
 
 export const gameHaptics = new GameHapticsService();

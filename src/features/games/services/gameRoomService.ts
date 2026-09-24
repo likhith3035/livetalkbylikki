@@ -19,7 +19,10 @@ import {
   SOSGameState,
   BingoGameState,
   HandCricketState,
+  TapTugGameState,
+  PenFightGameState,
 } from "../types";
+import { createInitialPenRigidBody } from "../data/penFightData";
 
 const ROOM_CODE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
@@ -180,6 +183,54 @@ export function createInitialGameState(gameId: GameId) {
       };
       return state;
     }
+    case "taptug": {
+      const state: TapTugGameState = {
+        ropePosition: 50,
+        hostTaps: 0,
+        guestTaps: 0,
+        hostHeat: 0,
+        guestHeat: 0,
+        hostOverdrive: false,
+        guestOverdrive: false,
+        hostPowerUp: null,
+        guestPowerUp: null,
+        hostFrozenUntil: 0,
+        guestFrozenUntil: 0,
+        hostShieldUntil: 0,
+        guestShieldUntil: 0,
+        hostMultiplierTapsLeft: 0,
+        guestMultiplierTapsLeft: 0,
+        matchDurationSeconds: 45,
+        timeRemainingSeconds: 45,
+        startedAt: Date.now(),
+        lastTapTimestamp: Date.now(),
+      };
+      return state;
+    }
+    case "penfight": {
+      const state: PenFightGameState = {
+        phase: "aiming",
+        roundNumber: 1,
+        totalRounds: 3,
+        hostPen: createInitialPenRigidBody("host", "pilot_v5", true),
+        guestPen: createInitialPenRigidBody("guest", "reynolds_045", true),
+        currentTurn: "host",
+        hostWins: 0,
+        guestWins: 0,
+        lastFlick: null,
+        roundWinnerId: null,
+        commentary: "Match started! Aim your pen and flick to strike!",
+        surfaceType: "classic_wood",
+        powerUps: [],
+        hostActivePowerUp: null,
+        guestActivePowerUp: null,
+        deskDamage: [],
+        trickShots: [],
+        hostTrickScore: 0,
+        guestTrickScore: 0,
+      };
+      return state;
+    }
   }
 }
 
@@ -200,6 +251,10 @@ export async function createGameRoom({
 }: CreateRoomParams): Promise<GameRoomState> {
   const roomCode = generateGameRoomCode();
   const initialGameState = createInitialGameState(gameId);
+
+  if (initialGameState && "currentTurn" in initialGameState) {
+    (initialGameState as any).currentTurn = hostPlayer.id;
+  }
 
   const defaultRules: GameCustomRules = {
     turnTimerSeconds: rules?.turnTimerSeconds || 0,

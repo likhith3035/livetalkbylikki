@@ -1,4 +1,4 @@
-export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo" | "cricket" | "taptug";
+export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo" | "cricket" | "taptug" | "penfight";
 
 export type GameMode = "friend" | "quickmatch" | "ai" | "local";
 
@@ -317,3 +317,101 @@ export interface TapTugGameState {
   lastTapPlayerId?: string;
   isKO?: boolean;
 }
+
+// ── Pen Fight: Classroom Duel Types ──
+
+export type PenModelId = "pilot_v5" | "reynolds_045" | "trimax" | "cello_gripper" | "parker_vector" | "montblanc" | "lamy_safari" | "camlin_flora";
+
+export type PenSurfaceType = "classic_wood" | "glass_desk" | "velvet_mat" | "wet_desk";
+
+export type PenSkinId = "default" | "flames" | "glitter" | "neon_glow" | "school_logo" | "galaxy" | "carbon_fiber";
+
+export type PenPowerUpType = "eraser_shield" | "ink_splash" | "compass_spin";
+
+export interface PenPowerUpOnDesk {
+  id: string;
+  type: PenPowerUpType;
+  x: number;
+  y: number;
+  spawnedAt: number;
+  collectedBy?: string | null; // "host" | "guest" | null
+}
+
+export interface DeskDamageMark {
+  x: number;
+  y: number;
+  type: "ink_splatter" | "scratch" | "dent";
+  radius: number;
+  color: string;
+  angle: number;
+  opacity: number;
+}
+
+export interface TrickShotEvent {
+  type: "bank_shot" | "spin_kill" | "edge_save" | "double_bounce";
+  playerId: string;
+  bonusPoints: number;
+  description: string;
+  timestamp: number;
+}
+
+export interface ReplayFrame {
+  hostPen: { x: number; y: number; angle: number; vx: number; vy: number; va: number; isFallen: boolean; fallenZ?: number };
+  guestPen: { x: number; y: number; angle: number; vx: number; vy: number; va: number; isFallen: boolean; fallenZ?: number };
+  hasCollision: boolean;
+  timestamp: number;
+}
+
+export interface PenRigidBody {
+  id: string; // "host" | "guest"
+  modelId: PenModelId;
+  capOn: boolean; // Cap attached to back (+mass, +length, +moment of inertia)
+  skinId: PenSkinId;
+  x: number; // Table coordinates (0 to 1000)
+  y: number; // Table coordinates (0 to 1800)
+  angle: number; // In radians
+  vx: number; // Velocity X
+  vy: number; // Velocity Y
+  va: number; // Angular velocity (rad/s)
+  mass: number;
+  length: number;
+  width: number;
+  isFallen: boolean; // Dropped off table
+  teeterProgress: number; // 0 to 1 (hanging on edge)
+  fallenZ?: number; // 3D drop distance to floor (0 to 100)
+  hasShield?: boolean; // Eraser shield power-up active
+  isInkSplashed?: boolean; // Opponent applied ink splash debuff
+  edgeBounceCount?: number; // Tracks wall bounces for bank shot detection
+  totalRotations?: number; // Tracks cumulative rotation for spin kill detection
+}
+
+export interface PenFlickMove {
+  playerId: string;
+  angle: number;
+  power: number; // 0 to 100
+  timestamp: number;
+}
+
+export interface PenFightGameState {
+  phase: "setup" | "toss" | "aiming" | "sliding" | "round_over" | "match_over" | "replay";
+  roundNumber: number;
+  totalRounds: number; // 3 (Best of 3) or 5 or 7
+  hostPen: PenRigidBody;
+  guestPen: PenRigidBody;
+  currentTurn: string; // playerId
+  hostWins: number;
+  guestWins: number;
+  lastFlick?: PenFlickMove | null;
+  roundWinnerId?: string | null;
+  commentary: string;
+  matchWinnerId?: string | null;
+  surfaceType: PenSurfaceType;
+  powerUps: PenPowerUpOnDesk[];
+  hostActivePowerUp?: PenPowerUpType | null;
+  guestActivePowerUp?: PenPowerUpType | null;
+  deskDamage: DeskDamageMark[];
+  trickShots: TrickShotEvent[];
+  hostTrickScore: number;
+  guestTrickScore: number;
+}
+

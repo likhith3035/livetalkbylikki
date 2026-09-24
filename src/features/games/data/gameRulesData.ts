@@ -509,5 +509,68 @@ export const ALL_GAME_RULES: Record<GameId, GameRuleGuide> = {
            ❄️ FREEZE          🛡️ KINETIC SHIELD          💣 EMP BLAST (12%)
     `,
   },
+  penfight: {
+    gameId: "penfight",
+    title: "Pen Fight 1v1",
+    tagline: "Classroom Desk Duel, 2.5D Rigid-Body Physics, Table-Edge Knockouts & Compass Nostalgia",
+    category: "Action",
+    icon: "🖊️",
+    accentColor: "#f59e0b",
+    gradient: "from-amber-600 via-orange-600 to-yellow-500",
+    difficulty: "Medium",
+    avgDuration: "2 - 3 mins",
+    objective: "Flick your pen across the wooden classroom desk to strike and knock your opponent's pen completely off the table!",
+    quickSummary: "Turn-based school bench duel. Drag back on your pen to set angle and power, release to flick with continuous rigid-body momentum, spin, and dramatic edge-teetering physics!",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Pick Your Weapon & Cap Weight",
+        description: "Choose from iconic school pens: Pilot V5 (precision needle), Reynolds 045 (slippery speed), Trimax (heavy tank), Cello Gripper (rubber grip), or Parker Vector (royal steel). Toggle cap on the back to shift center of mass!",
+        icon: "🖊️",
+        badge: "Arsenal",
+      },
+      {
+        stepNumber: 2,
+        title: "Slingshot Aim & Power Meter",
+        description: "Touch down on your pen and pull backwards to aim. The dotted laser line shows your trajectory while the dynamic power gauge charges from 0% to 100%.",
+        icon: "🎯",
+        badge: "Flick Aim",
+      },
+      {
+        stepNumber: 3,
+        title: "Impact & Angular Spin",
+        description: "Release to flick! Hitting the opponent's tail induces violent rotational spin. Glancing blows slide pens toward the edges.",
+        icon: "⚡",
+        badge: "Clash",
+      },
+      {
+        stepNumber: 4,
+        title: "Edge Teeter & Table Drop KO",
+        description: "If a pen's center of mass crosses the desk edge, gravity takes over and it tumbles off the table! Knock the opponent off to win the round (Best of 3). Don't flick yourself off!",
+        icon: "👑",
+        badge: "Knockout",
+      },
+    ],
+    proTips: [
+      "The Tail Spin Strike: Aim for the rear clip of the opponent's pen to spin them off-balance toward the table edge!",
+      "Edge Teeter Defense: If you're near the table edge, make a light, controlled flick along the edge rather than a full-power blast.",
+      "Cap Physics: Mounting the cap on the back adds mass and increases rotational spin upon impact.",
+      "The Bank Shot: Glancing off the opponent's tip can push them sideways while keeping your own pen safely on the center teak wood.",
+    ],
+    winCondition: "First player to knock the opponent's pen off the desk 2 times (Best of 3) wins the Classroom Championship!",
+    boardLayoutDescription: "2.5D classroom desk with compass carvings, tea rings, green chalkboard HUD, and wooden school benches.",
+    asciiDiagram: `
+    [ 🏫 GREEN CHALKBOARD • MATHS PERIOD: HOST 1 - GUEST 0 ]
+    +-------------------------------------------------------+
+    |                    OPPONENT PEN                       |
+    |                                                       |
+    |                  [ WOODEN DESK ]                      |
+    |                                                       |
+    |                 YOUR PEN (Pilot V5)                   |
+    |                   \-- AIM & FLICK -->                 |
+    +-------------------------------------------------------+
+    `,
+  },
 };
+
 

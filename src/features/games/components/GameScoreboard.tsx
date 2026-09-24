@@ -53,13 +53,19 @@ export const GameScoreboard: React.FC<GameScoreboardProps> = ({
   }, []);
 
   const isHost = room.players.host.id === myPlayerId;
-  const isMyTurn = !isSpectator && room.currentTurn === myPlayerId;
   const isAI = room.mode === "ai";
   const isLocal = room.mode === "local";
   const isOnline = room.mode === "friend" || room.mode === "quickmatch";
 
-  const isHostTurn = room.currentTurn === room.players.host.id;
+  const isHostTurn =
+    room.currentTurn === room.players.host.id ||
+    room.currentTurn === "host" ||
+    room.currentTurn === "p1";
   const isGuestTurn = !isHostTurn && room.status === "playing";
+  const isMyTurn =
+    !isSpectator &&
+    (room.currentTurn === myPlayerId ||
+      (isHost && (room.currentTurn === "host" || room.currentTurn === "p1")));
 
   const hostIsMe = isHost && !isSpectator && !isLocal;
   const guestIsMe = !isHost && !isSpectator && !isLocal && !isAI;

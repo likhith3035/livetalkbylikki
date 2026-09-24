@@ -343,6 +343,109 @@ class GameSoundSynthesizer {
     this.playTone(2200, 0.06, "sine", 0.14, 0);
     this.playTone(2600, 0.1, "sine", 0.16, 80);
   }
+
+  // ── Pen Fight Sound Effects ──
+
+  public playPenClack(intensity: number = 0.5) {
+    this.vibrate(Math.round(15 + intensity * 40));
+    // Sharp wood-on-plastic impact
+    const freq = 420 + intensity * 280;
+    this.playTone(freq, 0.04, "triangle", 0.18 + intensity * 0.12, 0);
+    this.playTone(freq * 1.8, 0.06, "sine", 0.1 + intensity * 0.08, 15);
+    if (intensity > 0.5) {
+      this.playTone(200, 0.08, "sawtooth", 0.12, 25);
+    }
+  }
+
+  public playEdgeScrape() {
+    this.vibrate([10, 15, 10]);
+    // Scratchy friction sound
+    this.playTone(180, 0.15, "sawtooth", 0.08, 0);
+    this.playTone(240, 0.12, "triangle", 0.06, 40);
+  }
+
+  public playPenFall() {
+    this.vibrate([30, 40, 60]);
+    // Dramatic falling + floor impact
+    this.playTone(400, 0.08, "sine", 0.15, 0);
+    this.playTone(250, 0.12, "triangle", 0.18, 60);
+    this.playTone(120, 0.2, "sawtooth", 0.22, 140);
+    this.playTone(80, 0.3, "sine", 0.25, 220);
+  }
+
+  public playPowerUpPickup() {
+    this.vibrate([15, 25, 35]);
+    // Shimmering ascending chime
+    this.playTone(880, 0.06, "sine", 0.14, 0);
+    this.playTone(1320, 0.08, "sine", 0.16, 40);
+    this.playTone(1760, 0.12, "triangle", 0.18, 80);
+    this.playTone(2640, 0.18, "sine", 0.14, 130);
+  }
+
+  public playTrickShot() {
+    this.vibrate([20, 30, 40, 50, 70]);
+    // Epic trick shot celebration fanfare
+    this.playTone(659.25, 0.1, "sine", 0.18, 0);     // E5
+    this.playTone(783.99, 0.1, "sine", 0.2, 80);     // G5
+    this.playTone(987.77, 0.12, "sine", 0.22, 160);   // B5
+    this.playTone(1318.51, 0.3, "triangle", 0.25, 240); // E6
+  }
+
+  public playReplayWhoosh() {
+    this.vibrate(15);
+    // Cinematic slow-mo whoosh
+    this.playTone(150, 0.3, "sine", 0.1, 0);
+    this.playTone(300, 0.2, "triangle", 0.08, 100);
+  }
+
+  public playShieldBlock() {
+    this.vibrate([20, 30]);
+    // Metallic deflection clang
+    this.playTone(800, 0.08, "triangle", 0.2, 0);
+    this.playTone(1200, 0.05, "sine", 0.15, 20);
+    this.playTone(600, 0.1, "sine", 0.12, 40);
+  }
+
+  public playInkSplash() {
+    this.vibrate([15, 20, 25]);
+    // Wet splatter sound
+    this.playTone(200, 0.1, "sawtooth", 0.12, 0);
+    this.playTone(350, 0.08, "triangle", 0.1, 30);
+    this.playTone(500, 0.12, "sine", 0.08, 60);
+  }
+
+  /** Start ambient classroom loop - returns stop function */
+  public startClassroomAmbience(): () => void {
+    if (this.muted) return () => {};
+    const ctx = this.getContext();
+    if (!ctx) return () => {};
+
+    let stopped = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const playAmbientTick = () => {
+      if (stopped || this.muted) return;
+      const r = Math.random();
+      if (r < 0.15) {
+        // Pen clicking
+        this.playTone(1100 + Math.random() * 400, 0.02, "sine", 0.02);
+      } else if (r < 0.25) {
+        // Distant murmur
+        this.playTone(180 + Math.random() * 60, 0.15, "triangle", 0.015);
+      } else if (r < 0.3) {
+        // Page turning
+        this.playTone(2000 + Math.random() * 500, 0.03, "sine", 0.01);
+      }
+      timeoutId = setTimeout(playAmbientTick, 2000 + Math.random() * 4000);
+    };
+
+    timeoutId = setTimeout(playAmbientTick, 1000);
+
+    return () => {
+      stopped = true;
+      clearTimeout(timeoutId);
+    };
+  }
 }
 
 export const gameAudio = new GameSoundSynthesizer();

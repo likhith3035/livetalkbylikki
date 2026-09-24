@@ -24,6 +24,7 @@ import { SOSGame } from "@/features/games/components/games/SOSGame";
 import { BingoGame } from "@/features/games/components/games/BingoGame";
 import { HandCricketGame } from "@/features/games/components/games/HandCricketGame";
 import { TapTugGame } from "@/features/games/components/games/TapTugGame";
+import { PenFightGame } from "@/features/games/components/games/PenFightGame";
 import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
 import { GameHowToPlayModal } from "@/features/games/components/GameHowToPlayModal";
 import {
@@ -179,6 +180,16 @@ const GAMES_CATALOG: GameMetadata[] = [
     accentColor: "#f59e0b",
     badge: "Insane 🔥",
   },
+  {
+    id: "penfight",
+    title: "Pen Fight 1v1",
+    tagline: "Classroom desk duel! Slingshot flick iconic school pens (Pilot V5, Trimax, Reynolds) to knock rivals off the desk!",
+    category: "Action",
+    icon: "🖊️",
+    gradient: "from-amber-600 via-orange-600 to-yellow-600",
+    accentColor: "#f59e0b",
+    badge: "Nostalgia 🔥",
+  },
 ];
 
 export default function GamesPage() {
@@ -300,6 +311,8 @@ export default function GamesPage() {
       const delayMs =
         activeRoom.gameId === "rps" || activeRoom.gameId === "cricket"
           ? 1200
+          : activeRoom.gameId === "penfight"
+          ? 1400
           : activeRoom.gameId === "taptug"
           ? 900
           : activeRoom.gameId === "connect4" || activeRoom.gameId === "sos"
@@ -649,6 +662,9 @@ export default function GamesPage() {
     if (activeRoom.mode === "local" || activeRoom.mode === "ai") {
       setDismissedVictoryRound(-1);
       const freshGameState = createInitialGameState(activeRoom.gameId);
+      if (freshGameState && "currentTurn" in freshGameState) {
+        (freshGameState as any).currentTurn = activeRoom.players.host.id;
+      }
       setActiveRoom({
         ...activeRoom,
         gameState: freshGameState,
@@ -790,7 +806,9 @@ export default function GamesPage() {
           />
         ) : activeRoom ? (
           /* VIEW 2: ACTIVE GAME ARENA */
-          <div className="flex flex-col items-center justify-center w-full max-w-2xl relative">
+          <div className={`flex flex-col items-center justify-center w-full relative ${
+            activeRoom.gameId === "penfight" ? "max-w-4xl" : "max-w-2xl"
+          }`}>
             <GameScoreboard
               room={activeRoom}
               myPlayerId={myPlayerId}
@@ -907,6 +925,19 @@ export default function GamesPage() {
                   myPlayerId={myPlayerId}
                   isMyTurn={!isSpectator}
                   onLocalMove={(updated) => setActiveRoom(updated)}
+                />
+              )}
+              {activeRoom.gameId === "penfight" && (
+                <PenFightGame
+                  room={activeRoom as any}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={
+                    !isSpectator &&
+                    (activeRoom.currentTurn === myPlayerId ||
+                      (activeRoom.players.host.id === myPlayerId &&
+                        (activeRoom.currentTurn === "host" || activeRoom.currentTurn === "p1")))
+                  }
+                  onLocalMove={(updated) => setActiveRoom(updated as any)}
                 />
               )}
             </div>
@@ -1217,7 +1248,7 @@ export default function GamesPage() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
               {/* Category Pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar touch-pan-x">
-                {["All", "Classic", "Strategy", "Reflex", "Casual", "Brain"].map((cat) => {
+                {["All", "Action", "Classic", "Strategy", "Reflex", "Casual", "Brain"].map((cat) => {
                   const isActive = selectedCategory === cat;
                   return (
                     <button
