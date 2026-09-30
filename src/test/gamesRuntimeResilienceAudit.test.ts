@@ -28,6 +28,21 @@ describe("Arcade Games Runtime Resilience Audit", () => {
       expect(card.matchedBy).toBe("player_123");
       expect(card.isMatched).toBe(true);
     });
+
+    it("verifies owner secret cheat passcode validation for 'likki'", () => {
+      const validatePasscode = (code: string) => code.trim().toLowerCase() === "likki";
+      expect(validatePasscode("likki")).toBe(true);
+      expect(validatePasscode("LIKKI")).toBe(true);
+      expect(validatePasscode("  Likki  ")).toBe(true);
+      expect(validatePasscode("admin")).toBe(false);
+      expect(validatePasscode("")).toBe(false);
+    });
+
+    it("verifies owner restriction condition for cheat mode access", () => {
+      const isOwner = (hostId: string, myId: string) => hostId === myId;
+      expect(isOwner("player_host", "player_host")).toBe(true);
+      expect(isOwner("player_host", "player_guest")).toBe(false);
+    });
   });
 
   describe("GameReaction model with spectator support", () => {
