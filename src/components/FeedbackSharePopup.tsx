@@ -14,35 +14,48 @@ const FeedbackSharePopup = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const state = raw ? JSON.parse(raw) : { visits: 0, lastShare: 0 };
-        state.visits = (state.visits || 0) + 1;
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-        const sinceShare = state.visits - (state.lastShare || 0);
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const state = raw ? JSON.parse(raw) : { visits: 0, lastShare: 0, dismissedForever: false };
 
-        if (sinceShare >= SHARE_INTERVAL) {
+      if (state.dismissedForever) return;
+
+      // Increment visit counter immediately on mount
+      state.visits = (state.visits || 0) + 1;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+      const sinceShare = state.visits - (state.lastShare || 0);
+
+      // Trigger after 45s of active session on milestone visits
+      if (sinceShare >= SHARE_INTERVAL) {
+        timer = setTimeout(() => {
           setVisible(true);
-        }
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (err) {
-        // Ignore storage access errors
+        }, 45000); // 45 seconds engagement window
       }
-    }, 180000); // 3 minutes (180 seconds)
+    } catch {
+      // Ignore storage access errors
+    }
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
-  const dismiss = () => {
+  const dismiss = (forever = false) => {
     setVisible(false);
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const state = raw ? JSON.parse(raw) : { visits: 0 };
-      state.lastShare = state.visits;
+      if (forever) {
+        state.dismissedForever = true;
+      } else {
+        // Smart snooze: snooze for 2 visits instead of waiting another full 5 visits
+        state.lastShare = Math.max(0, state.visits - (SHARE_INTERVAL - 2));
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (err) {
+    } catch {
       // Ignore storage access errors
     }
   };
@@ -55,14 +68,14 @@ const FeedbackSharePopup = () => {
       try {
         await navigator.share({ title: "IncogTalk by Likki", text, url });
         toast({ title: "Thanks for sharing! 🙌" });
-      } catch (err) {
+      } catch {
         // Ignore user cancel or Web Share API errors
       }
     } else {
       await navigator.clipboard.writeText(`${text} ${url}`);
       toast({ title: "Link copied!", description: "Share it with your friends!" });
     }
-    dismiss();
+    dismiss(true);
   };
 
   return (
@@ -76,7 +89,7 @@ const FeedbackSharePopup = () => {
           className="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-6 sm:w-80 z-50 rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl p-4"
         >
           <button
-            onClick={dismiss}
+            onClick={() => dismiss(false)}
             className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-4 w-4" />
@@ -99,7 +112,7 @@ const FeedbackSharePopup = () => {
 
             <div className="flex gap-2">
               <button
-                onClick={dismiss}
+                onClick={() => dismiss(false)}
                 className="flex-1 px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
               >
                 Not now

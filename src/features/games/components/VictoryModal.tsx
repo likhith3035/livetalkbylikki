@@ -171,7 +171,22 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleDismiss()}>
-      <DialogContent className="max-w-[92vw] sm:max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/60 shadow-2xl text-center max-h-[92vh] overflow-y-auto no-scrollbar touch-manipulation">
+      <DialogContent hideCloseButton className="max-w-[92vw] sm:max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/60 shadow-2xl text-center max-h-[92vh] overflow-y-auto no-scrollbar touch-manipulation relative">
+        {/* Dedicated High-Z-Index Top-Right Close 'X' Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            gameHaptics.light();
+            gameAudio.playClick();
+            handleDismiss();
+          }}
+          className="absolute right-3.5 top-3.5 z-50 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted border border-border/40 transition-all cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          aria-label="Close victory dialog"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         {/* Celebration Ambient Glow */}
         {(isWinner || (isLocal && !isDraw) || isSeriesWinner) && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">

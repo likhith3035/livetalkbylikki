@@ -25,6 +25,7 @@ import { BingoGame } from "@/features/games/components/games/BingoGame";
 import { HandCricketGame } from "@/features/games/components/games/HandCricketGame";
 import { TapTugGame } from "@/features/games/components/games/TapTugGame";
 import { PenFightGame } from "@/features/games/components/games/PenFightGame";
+import { ColorRushGame } from "@/features/games/components/games/ColorRushGame";
 import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
 import { GameHowToPlayModal } from "@/features/games/components/GameHowToPlayModal";
 import {
@@ -189,6 +190,16 @@ const GAMES_CATALOG: GameMetadata[] = [
     gradient: "from-amber-600 via-orange-600 to-yellow-600",
     accentColor: "#f59e0b",
     badge: "Nostalgia 🔥",
+  },
+  {
+    id: "colorrush",
+    title: "Color Rush 1v1",
+    tagline: "High-speed territory painter! Drag to capture arena cells, steal opponent zones, collect bombs, and freeze for the win!",
+    category: "Action",
+    icon: "🎨",
+    gradient: "from-cyan-500 via-fuchsia-500 to-pink-500",
+    accentColor: "#06b6d4",
+    badge: "New 🔥",
   },
 ];
 
@@ -661,7 +672,7 @@ export default function GamesPage() {
 
     if (activeRoom.mode === "local" || activeRoom.mode === "ai") {
       setDismissedVictoryRound(-1);
-      const freshGameState = createInitialGameState(activeRoom.gameId);
+      const freshGameState = createInitialGameState(activeRoom.gameId, activeRoom.rules);
       if (freshGameState && "currentTurn" in freshGameState) {
         (freshGameState as any).currentTurn = activeRoom.players.host.id;
       }
@@ -940,6 +951,14 @@ export default function GamesPage() {
                   onLocalMove={(updated) => setActiveRoom(updated as any)}
                 />
               )}
+              {activeRoom.gameId === "colorrush" && (
+                <ColorRushGame
+                  room={activeRoom as any}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator}
+                  onLocalMove={(updated) => setActiveRoom(updated as any)}
+                />
+              )}
             </div>
 
             {/* Persistent On-Screen Match Action Bar (Visible when round or series ends) */}
@@ -961,10 +980,13 @@ export default function GamesPage() {
                       ? `${activeRoom.players.host.score > (activeRoom.players.guest?.score || 0) ? activeRoom.players.host.name : (activeRoom.players.guest?.name || "Player 2")} Won!`
                       : "Round Complete"}
                   </span>
-                  {dismissedVictoryRound === activeRoom.round && (
+                  {dismissedVictoryRound === (activeRoom.round ?? 1) && (
                     <button
                       type="button"
-                      onClick={() => setDismissedVictoryRound(-1)}
+                      onClick={() => {
+                        setDismissedVictoryRound(-1);
+                        setIsVictoryModalVisible(true);
+                      }}
                       className="text-[11px] text-primary hover:underline font-bold flex items-center gap-1 cursor-pointer"
                     >
                       <Trophy className="w-3.5 h-3.5" />
@@ -1046,12 +1068,15 @@ export default function GamesPage() {
             <VictoryModal
               isOpen={
                 (activeRoom.status === "round_over" || activeRoom.status === "game_over") &&
-                dismissedVictoryRound !== activeRoom.round &&
+                dismissedVictoryRound !== (activeRoom.round ?? 1) &&
                 isVictoryModalVisible
               }
               room={activeRoom}
               myPlayerId={myPlayerId}
-              onClose={() => setDismissedVictoryRound(activeRoom.round)}
+              onClose={() => {
+                setDismissedVictoryRound(activeRoom.round ?? 1);
+                setIsVictoryModalVisible(false);
+              }}
               onRematch={handleRematch}
               onExitToLobby={handleExitGame}
             />

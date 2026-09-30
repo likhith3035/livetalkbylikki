@@ -571,6 +571,68 @@ export const ALL_GAME_RULES: Record<GameId, GameRuleGuide> = {
     +-------------------------------------------------------+
     `,
   },
+  colorrush: {
+    gameId: "colorrush",
+    title: "Color Rush 1v1",
+    tagline: "High-speed territory painter, real-time drag & splash, tactical power-up bombs, and 00:00 freeze percentage showdown!",
+    category: "Action",
+    icon: "🎨",
+    accentColor: "#06b6d4",
+    gradient: "from-cyan-500 via-fuchsia-500 to-pink-500",
+    difficulty: "Fast",
+    avgDuration: "15 - 90s",
+    objective: "Swipe and drag across the plain arena board to coat the surface in your color. When the clock strikes 00:00, the board freezes and the player with the highest captured area percentage wins!",
+    quickSummary: "Real-time territorial duel on a plain board! Paint unclaimed territory, slice into opponent zones to overwrite their color, grab floating power-up crates (Bomb 💣, Turbo ⚡, Freeze ❄️), and dominate the live territory gauge.",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Choose Timer & Palette",
+        description: "Pick your duel duration (15s Blitz, 30s Standard, 60s Championship, 90s Marathon) and your signature color theme (Cyan vs Pink, Violet vs Amber, Lime vs Indigo, or Custom!).",
+        icon: "⏱️",
+        badge: "Setup",
+      },
+      {
+        stepNumber: 2,
+        title: "Drag & Swipe to Paint",
+        description: "Touch down and drag continuously across the plain arena board. Your brush paints a fluid, seamless coat of color in real-time.",
+        icon: "🖌️",
+        badge: "Paint",
+      },
+      {
+        stepNumber: 3,
+        title: "Overwrite & Power-Up Clash",
+        description: "Slash across opponent territory to steal their area! Grab tactical power-ups: Color Bomb (wide blast), Turbo Roller (wider brush), and Glaze Freeze (locks opponent for 2.5s).",
+        icon: "💣",
+        badge: "Overdrive",
+      },
+      {
+        stepNumber: 4,
+        title: "00:00 Freeze & Area Tally",
+        description: "When the countdown expires, the plain board freezes with a frosted glass sheen. An animated laser scan counts exact captured percentages to crown the champion!",
+        icon: "🏆",
+        badge: "Victory",
+      },
+    ],
+    proTips: [
+      "Perimeter First: Sweep the unpainted outer edges early to build up free percentage before engaging in border clashes.",
+      "Power-Up Ambush: Time your approach to newly spawned Color Bomb crates to wipe out large enemy clusters.",
+      "The Turbo Slice: When collecting a Turbo Roller, immediately cut through the dense heart of your opponent's territory.",
+      "Last Second Steal: In the final 5 seconds, prioritize overwriting opponent area rather than painting neutral board to gain a 2x percentage swing!",
+    ],
+    winCondition: "The player with the highest captured area percentage when the timer freezes at 00:00 wins!",
+    boardLayoutDescription: "Smooth plain arena board with real-time continuous paint coverage, live dominance gauge, and floating tactical power-ups.",
+    asciiDiagram: `
+    [ 🎨 CYAN: 54.2% ] <=== [ LIVE DOMINANCE BAR ] ===> [ 🌸 PINK: 42.1% ]
+    +--------------------------------------------------------------------+
+    | [CYAN TERRITORY]               [💣 BOMB]          [PINK TERRITORY] |
+    | [CYAN TERRITORY]    [⚡ TURBO]                    [PINK TERRITORY] |
+    |                     [PLAIN UNCLAIMED BOARD]                        |
+    | [CYAN TERRITORY]               [❄️ FREEZE]        [PINK TERRITORY] |
+    +--------------------------------------------------------------------+
+    `,
+  },
 };
+
+export const GAME_RULES = ALL_GAME_RULES;
 
 

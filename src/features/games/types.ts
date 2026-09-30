@@ -1,4 +1,4 @@
-export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo" | "cricket" | "taptug" | "penfight";
+export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo" | "cricket" | "taptug" | "penfight" | "colorrush";
 
 export type GameMode = "friend" | "quickmatch" | "ai" | "local";
 
@@ -413,5 +413,42 @@ export interface PenFightGameState {
   trickShots: TrickShotEvent[];
   hostTrickScore: number;
   guestTrickScore: number;
+}
+
+export type ColorRushTimerOption = 15 | 30 | 60 | 90;
+export type ColorRushPowerUpType = "bomb" | "turbo" | "freeze" | "shield";
+
+export interface ColorRushPowerUp {
+  id: string;
+  type: ColorRushPowerUpType;
+  x: number;
+  y: number;
+  active: boolean;
+  spawnedAt: number;
+}
+
+export interface ColorRushGameState {
+  grid: number[]; // 0 = neutral, 1 = host, 2 = guest
+  gridWidth: number;
+  gridHeight: number;
+  hostColor: string;
+  guestColor: string;
+  themeId: string;
+  hostPct: number;
+  guestPct: number;
+  neutralPct: number;
+  timerDurationSeconds: ColorRushTimerOption;
+  timeRemainingSeconds: number;
+  startedAt: number;
+  frozenAt: number | null;
+  hostFrozenUntil: number;
+  guestFrozenUntil: number;
+  hostTurboUntil: number;
+  guestTurboUntil: number;
+  powerUps: ColorRushPowerUp[];
+  lastMoveTimestamp: number;
+  winner: "host" | "guest" | "draw" | null;
+  hostScore: number;
+  guestScore: number;
 }
 

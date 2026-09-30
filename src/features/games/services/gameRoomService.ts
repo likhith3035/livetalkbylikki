@@ -21,8 +21,10 @@ import {
   HandCricketState,
   TapTugGameState,
   PenFightGameState,
+  ColorRushGameState,
 } from "../types";
 import { createInitialPenRigidBody } from "../data/penFightData";
+import { createInitialColorRushState } from "../data/colorRushData";
 
 const ROOM_CODE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
@@ -56,7 +58,7 @@ export function generateGameRoomCode(): string {
   return code;
 }
 
-export function createInitialGameState(gameId: GameId) {
+export function createInitialGameState(gameId: GameId, rules?: GameCustomRules) {
   switch (gameId) {
     case "ttt": {
       const state: TicTacToeState = {
@@ -231,6 +233,13 @@ export function createInitialGameState(gameId: GameId) {
       };
       return state;
     }
+    case "colorrush": {
+      const duration = (rules?.turnTimerSeconds === 15 || rules?.turnTimerSeconds === 30 || rules?.turnTimerSeconds === 60 || rules?.turnTimerSeconds === 90)
+        ? rules.turnTimerSeconds
+        : 30;
+      const state: ColorRushGameState = createInitialColorRushState(duration);
+      return state;
+    }
   }
 }
 
@@ -250,7 +259,7 @@ export async function createGameRoom({
   rules,
 }: CreateRoomParams): Promise<GameRoomState> {
   const roomCode = generateGameRoomCode();
-  const initialGameState = createInitialGameState(gameId);
+  const initialGameState = createInitialGameState(gameId, rules);
 
   if (initialGameState && "currentTurn" in initialGameState) {
     (initialGameState as any).currentTurn = hostPlayer.id;
@@ -645,7 +654,7 @@ export async function voteRematch(
   const bothReady = guestId ? Boolean(newVotes[hostId] && newVotes[guestId]) : true;
 
   if (bothReady) {
-    const freshGameState = createInitialGameState(gameId);
+    const freshGameState = createInitialGameState(gameId, room.rules);
     const turnExpiresAt = turnTimerSeconds > 0 ? Date.now() + turnTimerSeconds * 1000 : null;
 
     await update(

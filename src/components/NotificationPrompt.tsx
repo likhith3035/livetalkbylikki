@@ -4,6 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
+import { requestNotificationPermission, sendNotification } from "@/lib/notifications";
+import { Capacitor } from "@capacitor/core";
+
+const STORAGE_KEY = "incogtalk_notif_prompt_shown";
+const LEGACY_STORAGE_KEY = "echo.notif_prompt_shown";
 
 const FEATURES = [
   { icon: MessageSquare, text: "New messages from strangers" },
@@ -13,14 +18,14 @@ const FEATURES = [
 
 const NotificationPrompt = () => {
   const [show, setShow] = useState(false);
-  const { settings, updateSetting } = useSettings();
+  const { updateSetting } = useSettings();
   const { toast } = useToast();
 
   useEffect(() => {
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const alreadyAsked = localStorage.getItem("echo.notif_prompt_shown");
-    const notifSupported = "Notification" in window;
+    const alreadyAsked = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+    const notifSupported = ("Notification" in window) || Capacitor.isNativePlatform();
 
     if (!notifSupported || alreadyAsked) return;
 
@@ -31,15 +36,15 @@ const NotificationPrompt = () => {
     window.addEventListener("appinstalled", onInstalled);
 
     // If already in standalone (PWA) and haven't asked yet
-    if (isStandalone && Notification.permission === "default") {
+    const permDefault = ("Notification" in window && Notification.permission === "default") || Capacitor.isNativePlatform();
+    if (isStandalone && permDefault) {
       setTimeout(() => setShow(true), 2000);
     }
 
-    // On mobile browser after a short delay (so they've seen the app first)
-    if (isMobile && !isStandalone && Notification.permission === "default") {
-      const visitCount = parseInt(localStorage.getItem("echo.visit_count") || "0", 10) + 1;
-      localStorage.setItem("echo.visit_count", String(visitCount));
-      // Ask on second visit
+    // On mobile browser after a short delay (ask on second visit)
+    if (isMobile && !isStandalone && permDefault) {
+      const visitCount = parseInt(localStorage.getItem("incogtalk_visit_count") || localStorage.getItem("echo.visit_count") || "0", 10) + 1;
+      localStorage.setItem("incogtalk_visit_count", String(visitCount));
       if (visitCount >= 2) {
         setTimeout(() => setShow(true), 5000);
       }
@@ -50,18 +55,18 @@ const NotificationPrompt = () => {
 
   const handleEnable = async () => {
     try {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
+      const granted = await requestNotificationPermission();
+      if (granted) {
         updateSetting("notifications", true);
         toast({ title: "🔔 Notifications enabled!", description: "You'll get alerts for new messages and connections." });
 
-        // Send a test notification
+        // Send a test notification with IncogTalk branding and SW/Capacitor reliability
         setTimeout(() => {
-          new Notification("L Chat", {
-            body: "Notifications are working! You'll be alerted for new messages.",
-            icon: "/pwa-icon-192.png",
-            tag: "lchat-test",
-          });
+          sendNotification(
+            "IncogTalk by Likki",
+            "Notifications are enabled! You'll be alerted when strangers message or connect.",
+            "general"
+          );
         }, 500);
       } else {
         toast({ title: "Permission denied", description: "You can enable notifications later in Settings.", variant: "destructive" });
@@ -69,12 +74,12 @@ const NotificationPrompt = () => {
     } catch {
       toast({ title: "Error", description: "Could not enable notifications." });
     }
-    localStorage.setItem("echo.notif_prompt_shown", "1");
+    localStorage.setItem(STORAGE_KEY, "1");
     setShow(false);
   };
 
   const handleDismiss = () => {
-    localStorage.setItem("echo.notif_prompt_shown", "1");
+    localStorage.setItem(STORAGE_KEY, "1");
     setShow(false);
   };
 

@@ -414,6 +414,20 @@ class GameSoundSynthesizer {
     this.playTone(500, 0.12, "sine", 0.08, 60);
   }
 
+  public playPop() {
+    this.vibrate(10);
+    // Tactile bubbly pop sound
+    this.playTone(700, 0.03, "sine", 0.1, 0);
+    this.playTone(1100, 0.04, "triangle", 0.08, 15);
+  }
+
+  public playRoundEnd() {
+    this.vibrate([25, 35, 50]);
+    // Energetic match whistle & chime
+    this.playTone(587.33, 0.1, "sine", 0.16, 0);   // D5
+    this.playTone(880.00, 0.25, "triangle", 0.2, 80); // A5
+  }
+
   /** Start ambient classroom loop - returns stop function */
   public startClassroomAmbience(): () => void {
     if (this.muted) return () => {};

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Tag, Shield, ChevronDown } from "lucide-react";
+import { X, Tag, Shield, ChevronDown, Copy, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
@@ -28,9 +28,14 @@ function useElapsed(startMs: number | null) {
 
 function formatElapsed(s: number) {
   if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return sec > 0 ? `${m}m ${sec}s` : `${m}m`;
+  if (s < 3600) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return sec > 0 ? `${m}m ${sec}s` : `${m}m`;
+  }
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
 const GRADIENTS = [
@@ -61,6 +66,7 @@ export default function StrangerProfileCard({
 }: StrangerProfileCardProps) {
   const elapsed = useElapsed(connectedAt);
   const [expanded, setExpanded] = useState(false);
+  const [copiedName, setCopiedName] = useState(false);
   const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const h = nameHash(strangerName);
   const gradient = GRADIENTS[h % GRADIENTS.length];
@@ -73,30 +79,58 @@ export default function StrangerProfileCard({
     emoji.startsWith("/")
   );
 
-  // Auto-collapse after 4s
-  useEffect(() => {
-    if (!show) {
-      setExpanded(false);
-      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
-      return;
-    }
-    setExpanded(true);
+  const startCollapseTimer = (delay = 4000) => {
+    if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
     collapseTimerRef.current = setTimeout(() => {
       setExpanded(false);
       collapseTimerRef.current = null;
-    }, 4000);
+    }, delay);
+  };
 
-    return () => {
-      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
-    };
-  }, [show]);
-
-  const handleToggle = () => {
+  const cancelCollapseTimer = () => {
     if (collapseTimerRef.current) {
       clearTimeout(collapseTimerRef.current);
       collapseTimerRef.current = null;
     }
+  };
+
+  // Auto-collapse after 4s unless user hovers or interacts
+  useEffect(() => {
+    if (!show) {
+      setExpanded(false);
+      cancelCollapseTimer();
+      return;
+    }
+    setExpanded(true);
+    startCollapseTimer(4000);
+
+    return () => cancelCollapseTimer();
+  }, [show]);
+
+  const handleToggle = () => {
+    cancelCollapseTimer();
     setExpanded((prev) => !prev);
+  };
+
+  const handleMouseEnter = () => {
+    cancelCollapseTimer();
+  };
+
+  const handleMouseLeave = () => {
+    if (expanded) {
+      startCollapseTimer(2500);
+    }
+  };
+
+  const handleCopyName = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      navigator.clipboard.writeText(strangerName);
+      setCopiedName(true);
+      setTimeout(() => setCopiedName(false), 1500);
+    } catch {
+      // Ignore
+    }
   };
 
   return (
@@ -107,6 +141,8 @@ export default function StrangerProfileCard({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.85, y: -8 }}
           transition={{ type: "spring", stiffness: 340, damping: 28 }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           // Floating overlay — top-right, doesn't push content
           className="absolute top-2 right-3 sm:right-5 z-30 max-w-[220px]"
         >
@@ -200,14 +236,34 @@ export default function StrangerProfileCard({
                       <p className="text-[9px] text-muted-foreground/50 italic">No shared interests</p>
                     )}
 
-                    {/* Close */}
-                    <button
-                      onClick={onClose}
-                      className="flex items-center gap-1 text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                      Hide
-                    </button>
+                    {/* Actions footer */}
+                    <div className="flex items-center justify-between pt-1 border-t border-border/20">
+                      <button
+                        onClick={handleCopyName}
+                        className="flex items-center gap-1 text-[9px] text-muted-foreground/60 hover:text-foreground transition-colors"
+                        title="Copy stranger nickname"
+                      >
+                        {copiedName ? (
+                          <>
+                            <Check className="h-2.5 w-2.5 text-emerald-400" />
+                            <span className="text-emerald-400 font-semibold">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-2.5 w-2.5" />
+                            <span>Copy Name</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={onClose}
+                        className="flex items-center gap-1 text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                        Hide
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               )}
