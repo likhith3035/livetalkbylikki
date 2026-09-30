@@ -21,6 +21,7 @@ interface QRShareModalProps {
   onScanJoin?: (scannedCode: string) => void;
   hasOpponentConnected?: boolean;
   opponentName?: string;
+  gridSize?: number;
 }
 
 export const QRShareModal: React.FC<QRShareModalProps> = ({
@@ -31,6 +32,7 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
   onScanJoin,
   hasOpponentConnected = false,
   opponentName,
+  gridSize,
 }) => {
   const [tab, setTab] = useState<"play" | "spectate">(() => (hasOpponentConnected ? "spectate" : "play"));
   const [copied, setCopied] = useState(false);
@@ -169,6 +171,14 @@ export const QRShareModal: React.FC<QRShareModalProps> = ({
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
+
+            {gridSize && (
+              <div className="mt-2 text-center">
+                <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  {gridSize}×{gridSize} Board ({Math.floor((gridSize * gridSize) / 2)} Pairs)
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Quick Share Buttons */}

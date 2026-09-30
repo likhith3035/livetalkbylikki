@@ -39,6 +39,31 @@ describe("IncogTalk Arcade Games Suite", () => {
 
       const memState = createInitialGameState("memory");
       expect(memState.cards).toHaveLength(16);
+      expect(memState.gridSize).toBe(4);
+      expect(memState.totalPairs).toBe(8);
+    });
+
+    it("should generate proper cards and wildcard for any NxN memory grid size (4x4 to 10x10)", () => {
+      const sizes = [4, 5, 6, 7, 8, 9, 10];
+      for (const size of sizes) {
+        const state = createInitialGameState("memory", { memoryGridSize: size });
+        const totalCards = size * size;
+        expect(state.cards).toHaveLength(totalCards);
+        expect(state.gridSize).toBe(size);
+
+        if (totalCards % 2 !== 0) {
+          // Odd grid: 1 wildcard ⭐ already revealed & matched
+          const starCards = state.cards.filter((c: any) => c.emoji === "⭐");
+          expect(starCards).toHaveLength(1);
+          expect(starCards[0].isMatched).toBe(true);
+          expect(state.totalPairs).toBe((totalCards - 1) / 2);
+        } else {
+          // Even grid: exactly totalCards / 2 pairs
+          expect(state.totalPairs).toBe(totalCards / 2);
+          const starCards = state.cards.filter((c: any) => c.emoji === "⭐");
+          expect(starCards).toHaveLength(0);
+        }
+      }
     });
   });
 

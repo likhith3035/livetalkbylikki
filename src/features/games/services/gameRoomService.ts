@@ -295,6 +295,7 @@ export async function createGameRoom({
     turnTimerSeconds: rules?.turnTimerSeconds || 0,
     maxSeriesWins: rules?.maxSeriesWins || 2,
     aiDifficulty: rules?.aiDifficulty || "medium",
+    memoryGridSize: rules?.memoryGridSize || (gameId === "memory" ? 4 : undefined),
   };
 
   const initialRoom: GameRoomState = {
@@ -453,11 +454,13 @@ export async function leaveSpectator(roomCode: string, spectatorId: string): Pro
 export interface QuickMatchParams {
   gameId: GameId;
   player: PlayerInfo;
+  rules?: GameCustomRules;
 }
 
 export async function findOrJoinQuickMatch({
   gameId,
   player,
+  rules,
 }: QuickMatchParams): Promise<{ room: GameRoomState; isMatched: boolean }> {
   if (!db) throw new Error("Realtime database unavailable.");
 
@@ -473,7 +476,8 @@ export async function findOrJoinQuickMatch({
       for (const waitingId of waitingPlayerIds) {
         if (waitingId !== player.id) {
           const item = queue[waitingId];
-          if (item && item.roomCode && Date.now() - item.createdAt < 30000) {
+          const matchesGrid = !rules?.memoryGridSize || !item?.gridSize || item.gridSize === rules.memoryGridSize;
+          if (item && item.roomCode && Date.now() - item.createdAt < 30000 && matchesGrid) {
             await remove(ref(db, `game_lobby/${gameId}/${waitingId}`)).catch(() => {});
             const joinedRoom = await joinGameRoom({
               roomCode: item.roomCode,
@@ -495,6 +499,7 @@ export async function findOrJoinQuickMatch({
     gameId,
     mode: "quickmatch",
     hostPlayer: player,
+    rules,
   });
 
   // 3. Register in lobby queue (catch if permissions restricted)
@@ -503,6 +508,7 @@ export async function findOrJoinQuickMatch({
     await set(myQueueRef, {
       playerId: player.id,
       roomCode: newRoom.roomCode,
+      gridSize: rules?.memoryGridSize || (gameId === "memory" ? 4 : undefined),
       createdAt: Date.now(),
     });
     onDisconnect(myQueueRef).remove();
@@ -778,19 +784,22 @@ export async function resetGameRound(
   roomCode: string,
   gameId: GameId,
   nextRound: number,
-  turnTimerSeconds = 0
+  turnTimerSeconds = 0,
+  customRules?: GameCustomRules
 ): Promise<void> {
   if (!db) return;
   const cleanCode = roomCode.toUpperCase();
   const roomRef = ref(db, `rooms/game_${cleanCode}`);
-  const freshGameState = createInitialGameState(gameId);
+
+  const snap = await get(roomRef);
+  const roomData = snap.exists() ? (snap.val() as GameRoomState) : null;
+  const hostId = roomData?.players?.host?.id;
+  const activeRules = customRules || roomData?.rules;
+  const freshGameState = createInitialGameState(gameId, activeRules);
 
   const turnExpiresAt = turnTimerSeconds > 0
     ? Date.now() + turnTimerSeconds * 1000
     : null;
-
-  const snap = await get(roomRef);
-  const hostId = snap.exists() ? snap.val().players?.host?.id : undefined;
 
   await update(
     roomRef,

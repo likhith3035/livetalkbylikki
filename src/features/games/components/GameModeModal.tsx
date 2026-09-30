@@ -690,57 +690,301 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
             </div>
           )}
 
-          {/* Option C: Play with Friend (QR / Link) */}
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => handleLaunch("friend")}
-            className="w-full flex items-center justify-between p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/60 transition-all text-left cursor-pointer"
+          {/* Option C: Play with Friend (QR / Code) */}
+          <div
+            className={`rounded-2xl border transition-all overflow-hidden ${
+              selectedMode === "friend"
+                ? "border-emerald-500 bg-emerald-500/5 shadow-md"
+                : "border-border/50 bg-card/60 hover:border-emerald-500/40"
+            }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                <QrCode className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-black text-foreground">Play with Friend (QR / Code)</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold uppercase">
-                    Host Room
+            <button
+              type="button"
+              onClick={() => setSelectedMode(selectedMode === "friend" ? null : "friend")}
+              className="w-full flex items-center justify-between p-3.5 text-left cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                  <QrCode className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-foreground">Play with Friend (QR / Code)</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold uppercase">
+                      Host Room
+                    </span>
+                    {game.id === "memory" && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold">
+                        {memoryGridSize}×{memoryGridSize}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground line-clamp-1">
+                    Generate an instant QR code or 6-character room code to invite a friend
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  Generate an instant QR code or 6-character room code to invite a friend
-                </span>
               </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </motion.button>
+              <ChevronRight
+                className={`w-4 h-4 text-muted-foreground transition-transform ${
+                  selectedMode === "friend" ? "rotate-90 text-emerald-400" : ""
+                }`}
+              />
+            </button>
+
+            {/* Friend Setup Drawer */}
+            <AnimatePresence>
+              {selectedMode === "friend" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-3.5 pb-3.5 pt-1 border-t border-emerald-500/20 space-y-3"
+                >
+                  {/* Memory Grid Size Picker (only for memory game) */}
+                  {game.id === "memory" && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                        <Grid3X3 className="w-3 h-3 text-emerald-400" /> Board Size:
+                      </span>
+                      <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+                        {[
+                          { size: 4, label: "4×4", pairs: 8, tag: "Classic" },
+                          { size: 5, label: "5×5", pairs: 12, tag: "" },
+                          { size: 6, label: "6×6", pairs: 18, tag: "Medium" },
+                          { size: 7, label: "7×7", pairs: 24, tag: "" },
+                          { size: 8, label: "8×8", pairs: 32, tag: "Hard" },
+                          { size: 9, label: "9×9", pairs: 40, tag: "" },
+                          { size: 10, label: "10×10", pairs: 50, tag: "Extreme" },
+                        ].map((g) => (
+                          <button
+                            key={g.size}
+                            type="button"
+                            onClick={() => setMemoryGridSize(g.size)}
+                            className={`shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black border transition-all cursor-pointer flex flex-col items-center gap-0.5 min-w-[52px] ${
+                              memoryGridSize === g.size
+                                ? "bg-emerald-500/20 text-emerald-400 border-emerald-400 shadow-sm"
+                                : "bg-card text-muted-foreground border-border/40 hover:border-emerald-500/30"
+                            }`}
+                          >
+                            <span className="text-[11px]">{g.label}</span>
+                            <span className="text-[8px] opacity-70">{g.pairs} pairs</span>
+                            {g.tag && (
+                              <span
+                                className={`text-[7px] px-1 rounded ${
+                                  memoryGridSize === g.size ? "bg-emerald-500/30" : "bg-muted"
+                                }`}
+                              >
+                                {g.tag}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Match Rules: Series Length & Turn Timer */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                        <Trophy className="w-3 h-3 text-primary" /> Series Length:
+                      </span>
+                      <div className="grid grid-cols-3 gap-1">
+                        {[
+                          { wins: 1, label: "1 Rd" },
+                          { wins: 2, label: "Best 3" },
+                          { wins: 3, label: "Best 5" },
+                        ].map((s) => (
+                          <button
+                            key={s.wins}
+                            type="button"
+                            onClick={() => setMaxWins(s.wins)}
+                            className={`py-1 rounded-lg text-[10px] font-black border transition-all cursor-pointer ${
+                              maxWins === s.wins
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-card text-muted-foreground border-border/40"
+                            }`}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-amber-400" /> Turn Timer:
+                      </span>
+                      <div className="grid grid-cols-3 gap-1">
+                        {[
+                          { sec: 0, label: "∞" },
+                          { sec: 10, label: "10s" },
+                          { sec: 15, label: "15s" },
+                        ].map((t) => (
+                          <button
+                            key={t.sec}
+                            type="button"
+                            onClick={() => setTurnTimer(t.sec)}
+                            className={`py-1 rounded-lg text-[10px] font-black border transition-all cursor-pointer ${
+                              turnTimer === t.sec
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-card text-muted-foreground border-border/40"
+                            }`}
+                          >
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Launch Friend Host Button */}
+                  <Button
+                    type="button"
+                    onClick={() => handleLaunch("friend")}
+                    className="w-full h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    <span>Create Room & Generate QR Code</span>
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Option D: Quick Match (Online Stranger) */}
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => handleLaunch("quickmatch")}
-            className="w-full flex items-center justify-between p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 hover:border-amber-500/60 transition-all text-left cursor-pointer"
+          <div
+            className={`rounded-2xl border transition-all overflow-hidden ${
+              selectedMode === "quickmatch"
+                ? "border-amber-500 bg-amber-500/5 shadow-md"
+                : "border-border/50 bg-card/60 hover:border-amber-500/40"
+            }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-black text-foreground">Quick Match (Online Stranger)</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 font-bold uppercase">
-                    Live Queue
+            <button
+              type="button"
+              onClick={() => setSelectedMode(selectedMode === "quickmatch" ? null : "quickmatch")}
+              className="w-full flex items-center justify-between p-3.5 text-left cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-foreground">Quick Match (Online Stranger)</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 font-bold uppercase">
+                      Live Queue
+                    </span>
+                    {game.id === "memory" && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 font-bold">
+                        {memoryGridSize}×{memoryGridSize}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground line-clamp-1">
+                    1-tap matchmaking queue to instantly duel other active players
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  1-tap matchmaking queue to instantly duel other active players
-                </span>
               </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </motion.button>
+              <ChevronRight
+                className={`w-4 h-4 text-muted-foreground transition-transform ${
+                  selectedMode === "quickmatch" ? "rotate-90 text-amber-400" : ""
+                }`}
+              />
+            </button>
+
+            {/* Quick Match Setup Drawer */}
+            <AnimatePresence>
+              {selectedMode === "quickmatch" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-3.5 pb-3.5 pt-1 border-t border-amber-500/20 space-y-3"
+                >
+                  {/* Memory Grid Size Picker (only for memory game) */}
+                  {game.id === "memory" && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                        <Grid3X3 className="w-3 h-3 text-amber-400" /> Board Size:
+                      </span>
+                      <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+                        {[
+                          { size: 4, label: "4×4", pairs: 8, tag: "Classic" },
+                          { size: 5, label: "5×5", pairs: 12, tag: "" },
+                          { size: 6, label: "6×6", pairs: 18, tag: "Medium" },
+                          { size: 7, label: "7×7", pairs: 24, tag: "" },
+                          { size: 8, label: "8×8", pairs: 32, tag: "Hard" },
+                          { size: 9, label: "9×9", pairs: 40, tag: "" },
+                          { size: 10, label: "10×10", pairs: 50, tag: "Extreme" },
+                        ].map((g) => (
+                          <button
+                            key={g.size}
+                            type="button"
+                            onClick={() => setMemoryGridSize(g.size)}
+                            className={`shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black border transition-all cursor-pointer flex flex-col items-center gap-0.5 min-w-[52px] ${
+                              memoryGridSize === g.size
+                                ? "bg-amber-500/20 text-amber-400 border-amber-400 shadow-sm"
+                                : "bg-card text-muted-foreground border-border/40 hover:border-amber-500/30"
+                            }`}
+                          >
+                            <span className="text-[11px]">{g.label}</span>
+                            <span className="text-[8px] opacity-70">{g.pairs} pairs</span>
+                            {g.tag && (
+                              <span
+                                className={`text-[7px] px-1 rounded ${
+                                  memoryGridSize === g.size ? "bg-amber-500/30" : "bg-muted"
+                                }`}
+                              >
+                                {g.tag}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Match Rules: Series Length */}
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                      <Trophy className="w-3 h-3 text-primary" /> Series Length:
+                    </span>
+                    <div className="grid grid-cols-3 gap-1">
+                      {[
+                        { wins: 1, label: "1 Rd" },
+                        { wins: 2, label: "Best 3" },
+                        { wins: 3, label: "Best 5" },
+                      ].map((s) => (
+                        <button
+                          key={s.wins}
+                          type="button"
+                          onClick={() => setMaxWins(s.wins)}
+                          className={`py-1 rounded-lg text-[10px] font-black border transition-all cursor-pointer ${
+                            maxWins === s.wins
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-card text-muted-foreground border-border/40"
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Launch Quick Match Button */}
+                  <Button
+                    type="button"
+                    onClick={() => handleLaunch("quickmatch")}
+                    className="w-full h-10 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Enter Live Matchmaking Queue</span>
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

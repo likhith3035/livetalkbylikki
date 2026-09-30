@@ -530,6 +530,7 @@ export default function GamesPage() {
         const result = await findOrJoinQuickMatch({
           gameId,
           player: hostPlayerInfo,
+          rules,
         });
 
         createdRoomCodeRef.current = result.room.roomCode;
@@ -1062,6 +1063,11 @@ export default function GamesPage() {
               onScanJoin={handleJoinByCode}
               hasOpponentConnected={Boolean(activeRoom.players?.guest)}
               opponentName={activeRoom.players?.guest?.name}
+              gridSize={
+                activeRoom.gameId === "memory"
+                  ? (activeRoom.gameState as any)?.gridSize || activeRoom.rules?.memoryGridSize
+                  : undefined
+              }
             />
 
             {/* Victory / Next Round Modal with Two-Way Handshake */}
