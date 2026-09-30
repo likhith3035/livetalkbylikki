@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Home, MessageSquare, User, Settings, Info, X, Smartphone, Shield, ShieldAlert, Menu, Bot, Wand2, Share2, Gamepad2 } from "lucide-react";
+import { Home, MessageSquare, User, Settings, Info, X, Smartphone, Shield, ShieldAlert, Menu, Bot, Wand2, Share2, Gamepad2, Code2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const navItems = [
   { icon: Home,          path: "/",                 label: "Home Page",       accent: "#10b981" },
   { icon: MessageSquare, path: "/chat",              label: "Start Chat",      accent: "hsl(var(--primary))" },
+  { icon: Code2,         path: "/code",              label: "Code Studio",     accent: "#06b6d4" },
   { icon: Gamepad2,      path: "/games",             label: "Arcade Games",    accent: "#f59e0b" },
   { icon: Bot,           path: "/ai-chat",           label: "AI Wingman",      accent: "#ec4899" },
   { icon: Wand2,         path: "/prompt-analyzer",   label: "Prompt Analyzer", accent: "#a855f7" },

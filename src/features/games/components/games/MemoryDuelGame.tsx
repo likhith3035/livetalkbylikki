@@ -29,6 +29,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
     hostPairs: rawState?.hostPairs ?? 0,
     guestPairs: rawState?.guestPairs ?? 0,
     totalPairs: rawState?.totalPairs ?? 8,
+    gridSize: rawState?.gridSize ?? 4,
   };
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -182,6 +183,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
           hostPairs: newHostPairs,
           guestPairs: newGuestPairs,
           totalPairs: currentState.totalPairs,
+          gridSize: currentState.gridSize,
         };
         stateRef.current = updatedState;
 
@@ -373,8 +375,44 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
     return () => clearAiTimers();
   }, [room.mode, room.currentTurn, isProcessing, room.status, state.cards]);
 
+  // Grid responsive styling based on gridSize
+  const gridSize = state.gridSize || 4;
+  const getCardTextSize = () => {
+    if (gridSize <= 4) return "text-2xl xs:text-3xl sm:text-4xl";
+    if (gridSize <= 5) return "text-xl xs:text-2xl sm:text-3xl";
+    if (gridSize <= 6) return "text-lg xs:text-xl sm:text-2xl";
+    if (gridSize <= 7) return "text-base xs:text-lg sm:text-xl";
+    if (gridSize <= 8) return "text-sm xs:text-base sm:text-lg";
+    return "text-xs xs:text-sm sm:text-base";
+  };
+  const getGapSize = () => {
+    if (gridSize <= 4) return "gap-1.5 xs:gap-2 sm:gap-3";
+    if (gridSize <= 5) return "gap-1.5 xs:gap-2 sm:gap-2.5";
+    if (gridSize <= 6) return "gap-1 xs:gap-1.5 sm:gap-2";
+    if (gridSize <= 7) return "gap-1 xs:gap-1 sm:gap-1.5";
+    return "gap-0.5 xs:gap-1 sm:gap-1";
+  };
+  const getMaxWidth = () => {
+    if (gridSize <= 4) return "max-w-[340px] xs:max-w-sm sm:max-w-md";
+    if (gridSize <= 5) return "max-w-[380px] xs:max-w-md sm:max-w-lg";
+    if (gridSize <= 6) return "max-w-[420px] xs:max-w-lg sm:max-w-xl";
+    if (gridSize <= 7) return "max-w-[460px] xs:max-w-xl sm:max-w-2xl";
+    if (gridSize <= 8) return "max-w-[500px] xs:max-w-xl sm:max-w-2xl";
+    return "max-w-[540px] xs:max-w-2xl sm:max-w-3xl";
+  };
+  const getQuestionMarkSize = () => {
+    if (gridSize <= 5) return "text-base sm:text-lg";
+    if (gridSize <= 7) return "text-sm sm:text-base";
+    return "text-xs sm:text-sm";
+  };
+  const getCardRounding = () => {
+    if (gridSize <= 5) return "rounded-xl sm:rounded-2xl";
+    if (gridSize <= 7) return "rounded-lg sm:rounded-xl";
+    return "rounded-md sm:rounded-lg";
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center p-2 sm:p-4 select-none w-full max-w-[340px] xs:max-w-sm sm:max-w-md mx-auto touch-manipulation">
+    <div className={`flex flex-col items-center justify-center p-2 sm:p-4 select-none w-full ${getMaxWidth()} mx-auto touch-manipulation`}>
       {/* Pairs Scored Tracker */}
       <div className="flex items-center justify-between w-full text-[11px] sm:text-xs font-bold mb-2.5 sm:mb-3 gap-2">
         <div className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-card border border-border shadow-sm truncate min-w-0">
@@ -382,6 +420,10 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
           <span className="truncate">
             {hostPlayer.name} {isHost && room.mode !== "local" ? "(You)" : ""}: {state.hostPairs}
           </span>
+        </div>
+        {/* Grid Size Badge */}
+        <div className="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-[10px] font-black text-primary shrink-0">
+          {gridSize}×{gridSize}
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-card border border-border shadow-sm truncate min-w-0">
           <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-cyan-500 shrink-0" />
@@ -393,10 +435,18 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
         </div>
       </div>
 
-      {/* 4x4 Grid */}
-      <div className="grid grid-cols-4 gap-1.5 xs:gap-2 sm:gap-3 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-card border-2 border-border shadow-2xl w-full aspect-square">
+      {/* Dynamic NxN Grid */}
+      <div
+        className={`${getGapSize()} p-2 sm:p-3 rounded-2xl sm:rounded-3xl bg-card border-2 border-border shadow-2xl w-full`}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+          aspectRatio: "1 / 1",
+        }}
+      >
         {state.cards.map((card) => {
           const isRevealed = card.isFlipped || card.isMatched;
+          const isWildcard = card.emoji === "⭐" && card.isMatched && !card.matchedBy;
           const isMatchedByMe = card.isMatched && card.matchedBy === myPlayerId;
           const canClick =
             !isRevealed &&
@@ -410,8 +460,10 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
               whileTap={{ scale: isRevealed || !canClick ? 1 : 0.95 }}
               onClick={() => handleCardClick(card.id)}
               disabled={!canClick}
-              className={`aspect-square rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl xs:text-3xl sm:text-4xl transition-all duration-300 border ${
-                card.isMatched
+              className={`aspect-square ${getCardRounding()} flex items-center justify-center ${getCardTextSize()} transition-all duration-300 border ${
+                isWildcard
+                  ? "bg-amber-500/15 border border-amber-500/40 opacity-60"
+                  : card.isMatched
                   ? isMatchedByMe
                     ? "bg-violet-500/20 border-2 border-violet-500/60 shadow-md shadow-violet-500/20 opacity-80"
                     : "bg-cyan-500/20 border-2 border-cyan-500/60 shadow-md shadow-cyan-500/20 opacity-80"
@@ -429,7 +481,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
                   {card.emoji}
                 </motion.span>
               ) : (
-                <span className="text-muted-foreground/40 font-bold text-base sm:text-lg">?</span>
+                <span className={`text-muted-foreground/40 font-bold ${getQuestionMarkSize()}`}>?</span>
               )}
             </motion.button>
           );

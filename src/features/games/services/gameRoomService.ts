@@ -85,21 +85,47 @@ export function createInitialGameState(gameId: GameId, rules?: GameCustomRules) 
       return state;
     }
     case "memory": {
-      const cardEmojis = ["🔥", "⚡", "💎", "👾", "🚀", "👑", "🎯", "🍀"];
-      const deck = [...cardEmojis, ...cardEmojis]
+      const gridSize = rules?.memoryGridSize || 4;
+      const totalCards = gridSize * gridSize;
+      // For odd grids (5x5=25, 7x7=49, 9x9=81), we need (totalCards-1)/2 pairs + 1 wildcard
+      const isOdd = totalCards % 2 !== 0;
+      const numPairs = isOdd ? (totalCards - 1) / 2 : totalCards / 2;
+
+      // Large emoji pool to support up to 10x10 = 50 pairs
+      const allEmojis = [
+        "🔥", "⚡", "💎", "👾", "🚀", "👑", "🎯", "🍀",
+        "🌈", "🎸", "🦄", "🐉", "🌊", "🎭", "🎪", "🧊",
+        "🍕", "🎲", "🦋", "🌸", "🔮", "🎵", "🏆", "💫",
+        "🦊", "🐙", "🌻", "🍭", "🎨", "🦁", "🐢", "🌺",
+        "🍩", "🎃", "🦅", "🐳", "🌵", "🍄", "🎈", "🦜",
+        "🌙", "🍒", "🎧", "🦀", "🌴", "🍓", "🎮", "🦉",
+        "🌟", "🍉",
+      ];
+
+      const selectedEmojis = allEmojis.slice(0, numPairs);
+      const cardEmojis = [...selectedEmojis, ...selectedEmojis];
+
+      // For odd grids, add a wildcard card (star card that's pre-matched)
+      if (isOdd) {
+        cardEmojis.push("⭐");
+      }
+
+      const deck = cardEmojis
         .sort(() => Math.random() - 0.5)
         .map((emoji, idx) => ({
           id: idx,
           emoji,
-          isFlipped: false,
-          isMatched: false,
+          isFlipped: isOdd && emoji === "⭐" && cardEmojis.filter(e => e === "⭐").length === 1,
+          isMatched: isOdd && emoji === "⭐" && cardEmojis.filter(e => e === "⭐").length === 1,
         }));
+
       const state: MemoryGameState = {
         cards: deck,
         flippedCardIds: [],
         hostPairs: 0,
         guestPairs: 0,
-        totalPairs: 8,
+        totalPairs: numPairs,
+        gridSize,
       };
       return state;
     }

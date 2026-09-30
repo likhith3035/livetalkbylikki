@@ -26,6 +26,7 @@ export interface GameCustomRules {
   botAvatar?: string;
   player2Name?: string;
   player2Avatar?: string;
+  memoryGridSize?: number;  // 4 | 5 | 6 | 7 | 8 | 9 | 10 (NxN grid, default 4)
 }
 
 export interface GameReaction {
@@ -152,6 +153,7 @@ export interface MemoryGameState {
   hostPairs: number;
   guestPairs: number;
   totalPairs: number;
+  gridSize: number; // NxN grid size (4-10), default 4
 }
 
 export interface ReactionGameState {

@@ -27,7 +27,7 @@ const AudioMessageBubble = ({ src, isMine }: { src: string; isMine?: boolean }) 
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      audioRef.current.play()?.catch?.(() => {});
     }
   };
 

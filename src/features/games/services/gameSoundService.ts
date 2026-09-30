@@ -460,6 +460,26 @@ class GameSoundSynthesizer {
       clearTimeout(timeoutId);
     };
   }
+
+  /**
+   * Generic safe play method that maps sound name to the corresponding method,
+   * e.g. play("win") -> playWin(), play("click") -> playClick()
+   */
+  public play(name?: string) {
+    if (!name || this.muted) return;
+    try {
+      const pascal = name.charAt(0).toUpperCase() + name.slice(1);
+      const methodName = `play${pascal}`;
+      const fn = (this as any)[methodName] || (this as any)[name];
+      if (typeof fn === "function" && fn !== this.play) {
+        fn.call(this);
+      } else {
+        this.playClick();
+      }
+    } catch {
+      // Safe fallback
+    }
+  }
 }
 
 export const gameAudio = new GameSoundSynthesizer();

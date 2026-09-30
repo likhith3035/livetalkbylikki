@@ -23,6 +23,7 @@ import {
   Edit2,
   Check,
   BookOpen,
+  Grid3X3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,7 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
   const [turnTimer, setTurnTimer] = useState<number>(0); // 0 = unlimited, 10, 15, 30
   const [maxWins, setMaxWins] = useState<number>(2);     // 1 = single, 2 = Best of 3, 3 = Best of 5
   const [aiDifficulty, setAiDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [memoryGridSize, setMemoryGridSize] = useState<number>(4);
 
   // Bot Customization State
   const [botPersona, setBotPersona] = useState(BOT_PERSONAS[1]);
@@ -145,6 +147,7 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
       botAvatar: botPersona.avatar,
       player2Name: player2Name.trim() || "Player 2",
       player2Avatar,
+      memoryGridSize: game.id === "memory" ? memoryGridSize : undefined,
     };
 
     onSelectMode(game.id, mode, rules);
@@ -343,6 +346,41 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
                       maxLength={20}
                     />
                   </div>
+
+                  {/* Memory Grid Size Picker (only for memory game) */}
+                  {game.id === "memory" && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                        <Grid3X3 className="w-3 h-3 text-emerald-400" /> Board Size:
+                      </span>
+                      <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+                        {[
+                          { size: 4, label: "4×4", pairs: 8, tag: "Classic" },
+                          { size: 5, label: "5×5", pairs: 12, tag: "" },
+                          { size: 6, label: "6×6", pairs: 18, tag: "Medium" },
+                          { size: 7, label: "7×7", pairs: 24, tag: "" },
+                          { size: 8, label: "8×8", pairs: 32, tag: "Hard" },
+                          { size: 9, label: "9×9", pairs: 40, tag: "" },
+                          { size: 10, label: "10×10", pairs: 50, tag: "Extreme" },
+                        ].map((g) => (
+                          <button
+                            key={g.size}
+                            type="button"
+                            onClick={() => setMemoryGridSize(g.size)}
+                            className={`shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black border transition-all cursor-pointer flex flex-col items-center gap-0.5 min-w-[52px] ${
+                              memoryGridSize === g.size
+                                ? "bg-emerald-500/20 text-emerald-400 border-emerald-400 shadow-sm"
+                                : "bg-card text-muted-foreground border-border/40 hover:border-emerald-500/30"
+                            }`}
+                          >
+                            <span className="text-[11px]">{g.label}</span>
+                            <span className="text-[8px] opacity-70">{g.pairs} pairs</span>
+                            {g.tag && <span className={`text-[7px] px-1 rounded ${memoryGridSize === g.size ? "bg-emerald-500/30" : "bg-muted"}`}>{g.tag}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Match Rules: Series Length & Turn Timer */}
                   <div className="grid grid-cols-2 gap-2 pt-1">
@@ -546,6 +584,41 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
                         </motion.div>
                       )}
                     </AnimatePresence>
+
+                    {/* Memory Grid Size Picker (only for memory game) */}
+                    {game.id === "memory" && (
+                      <div className="space-y-1.5 pt-1">
+                        <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                          <Grid3X3 className="w-3 h-3 text-emerald-400" /> Board Size:
+                        </span>
+                        <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+                          {[
+                            { size: 4, label: "4×4", pairs: 8, tag: "Classic" },
+                            { size: 5, label: "5×5", pairs: 12, tag: "" },
+                            { size: 6, label: "6×6", pairs: 18, tag: "Medium" },
+                            { size: 7, label: "7×7", pairs: 24, tag: "" },
+                            { size: 8, label: "8×8", pairs: 32, tag: "Hard" },
+                            { size: 9, label: "9×9", pairs: 40, tag: "" },
+                            { size: 10, label: "10×10", pairs: 50, tag: "Extreme" },
+                          ].map((g) => (
+                            <button
+                              key={g.size}
+                              type="button"
+                              onClick={() => setMemoryGridSize(g.size)}
+                              className={`shrink-0 px-2.5 py-1.5 rounded-xl text-[10px] font-black border transition-all cursor-pointer flex flex-col items-center gap-0.5 min-w-[52px] ${
+                                memoryGridSize === g.size
+                                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-400 shadow-sm"
+                                  : "bg-card text-muted-foreground border-border/40 hover:border-emerald-500/30"
+                              }`}
+                            >
+                              <span className="text-[11px]">{g.label}</span>
+                              <span className="text-[8px] opacity-70">{g.pairs} pairs</span>
+                              {g.tag && <span className={`text-[7px] px-1 rounded ${memoryGridSize === g.size ? "bg-emerald-500/30" : "bg-muted"}`}>{g.tag}</span>}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Series Length & Turn Timer */}
                     <div className="grid grid-cols-2 gap-2 pt-1">

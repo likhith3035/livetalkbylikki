@@ -408,8 +408,8 @@ export default function GamesPage() {
         // If an opponent connected while QR popup is open, auto-close it with celebratory notification
         if (updated.players?.guest && !activeRoom.players?.guest) {
           setIsQRModalOpen(false);
-          gameHaptics.opponentJoined();
-          gameAudio.playWin();
+          try { gameHaptics?.opponentJoined?.(); } catch {}
+          try { gameAudio?.playWin?.(); } catch {}
           const guestName = updated.players.guest.name || "Player 2";
           const guestAvatar = updated.players.guest.avatar || "👾";
           toast.success(`🎉 ${guestAvatar} ${guestName} joined the match! Game ready!`, {
@@ -422,8 +422,8 @@ export default function GamesPage() {
         // If we were searching for quickmatch and an opponent connected, exit searching
         if (isSearchingQuickMatch && updated.players.guest) {
           setIsSearchingQuickMatch(false);
-          gameHaptics.opponentJoined();
-          gameAudio.playWin();
+          try { gameHaptics?.opponentJoined?.(); } catch {}
+          try { gameAudio?.playWin?.(); } catch {}
           const guestName = updated.players.guest.name || "Opponent";
           const guestAvatar = updated.players.guest.avatar || "👾";
           toast.success(`🎉 ${guestAvatar} ${guestName} connected! Game starting...`);
@@ -453,8 +453,8 @@ export default function GamesPage() {
     if (!prevGuestConnectedRef.current && isGuestConnected) {
       setIsQRModalOpen((isOpen) => {
         if (isOpen) {
-          gameHaptics.opponentJoined();
-          gameAudio.playWin();
+          try { gameHaptics?.opponentJoined?.(); } catch {}
+          try { gameAudio?.playWin?.(); } catch {}
           const guestName = activeRoom?.players?.guest?.name || "Player 2";
           const guestAvatar = activeRoom?.players?.guest?.avatar || "👾";
           toast.success(`🎉 ${guestAvatar} ${guestName} joined the match! Game ready!`, {

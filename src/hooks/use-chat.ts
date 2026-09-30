@@ -131,7 +131,18 @@ export function useChat(callbacks?: ChatCallbacks) {
   }, [sessionId]);
 
   const playSoundIfEnabled = useCallback((sound: keyof typeof sounds) => {
-    if (callbacksRef.current?.soundEnabled) sounds[sound]();
+    try {
+      if (callbacksRef.current?.soundEnabled) {
+        const fn = sounds[sound];
+        if (typeof fn === "function") {
+          (fn as () => void)();
+        } else if (typeof (sounds as any).play === "function") {
+          (sounds as any).play(sound as string);
+        }
+      }
+    } catch (e) {
+      console.warn("[Chat] playSound error:", e);
+    }
   }, []);
 
   const notifyIfEnabled = useCallback((title: string, body: string, type: NotificationType = "general") => {
@@ -354,7 +365,11 @@ export function useChat(callbacks?: ChatCallbacks) {
         
         (channelMock as any)._listeners.forEach((l: any) => {
           if (l.event === data.event) {
-            l.callback({ event: data.event, type: "broadcast", payload: data.payload });
+            try {
+              l.callback({ event: data.event, type: "broadcast", payload: data.payload });
+            } catch (err) {
+              console.warn(`[Chat] Listener error for event ${data.event}:`, err);
+            }
           }
         });
         

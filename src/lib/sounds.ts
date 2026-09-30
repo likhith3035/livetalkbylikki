@@ -118,5 +118,26 @@ export const sounds = {
       }
     }
   },
+
+  /** Warning buzzer when blocked action occurs or security alert triggers */
+  blocked: () => {
+    playTone(220, 0.12, "sawtooth", 0.15);
+    setTimeout(() => playTone(180, 0.22, "sawtooth", 0.15), 100);
+  },
+
+  /** Safe generic player that handles sound names dynamically */
+  play: (soundName?: string) => {
+    if (!soundName) return;
+    try {
+      const target = (sounds as Record<string, any>)[soundName];
+      if (typeof target === "function" && target !== sounds.play) {
+        target();
+      } else {
+        playTone(440, 0.08, "sine", 0.08);
+      }
+    } catch {
+      // Safe fallback
+    }
+  },
 };
 

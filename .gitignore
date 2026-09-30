@@ -32,4 +32,5 @@ dist-ssr
 # Android APK binaries (hosted on GitHub Releases)
 *.apk
 public/*.apk
-
+# Build info
+*.tsbuildinfo

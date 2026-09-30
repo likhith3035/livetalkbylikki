@@ -156,7 +156,9 @@ const VideoCallOverlay = ({
     localVideoElRef.current = node;
     if (node && localStream && node.srcObject !== localStream) {
       node.srcObject = localStream;
-      node.play().catch(() => { });
+      if (typeof node.play === "function") {
+        node.play().catch(() => { });
+      }
     }
   }, [localStream]);
 
@@ -164,12 +166,14 @@ const VideoCallOverlay = ({
     remoteVideoElRef.current = node;
     if (node && remoteStream && node.srcObject !== remoteStream) {
       node.srcObject = remoteStream;
-      node.play()
-        .then(() => setAudioAutoplayBlocked(false))
-        .catch((err) => {
-          console.warn("WebRTC: remote video play error", err);
-          if (err?.name === "NotAllowedError") setAudioAutoplayBlocked(true);
-        });
+      if (typeof node.play === "function") {
+        node.play()
+          .then(() => setAudioAutoplayBlocked(false))
+          .catch((err) => {
+            console.warn("WebRTC: remote video play error", err);
+            if (err?.name === "NotAllowedError") setAudioAutoplayBlocked(true);
+          });
+      }
     }
   }, [remoteStream]);
 
@@ -178,7 +182,9 @@ const VideoCallOverlay = ({
     const el = localVideoElRef.current;
     if (el && localStream && el.srcObject !== localStream) {
       el.srcObject = localStream;
-      el.play().catch(() => { });
+      if (typeof el.play === "function") {
+        el.play().catch(() => { });
+      }
     }
   }, [localStream]);
 
@@ -186,12 +192,14 @@ const VideoCallOverlay = ({
     const el = remoteVideoElRef.current;
     if (el && remoteStream && el.srcObject !== remoteStream) {
       el.srcObject = remoteStream;
-      el.play()
-        .then(() => setAudioAutoplayBlocked(false))
-        .catch((err) => {
-          console.warn("WebRTC: remote video play error", err);
-          if (err?.name === "NotAllowedError") setAudioAutoplayBlocked(true);
-        });
+      if (typeof el.play === "function") {
+        el.play()
+          .then(() => setAudioAutoplayBlocked(false))
+          .catch((err) => {
+            console.warn("WebRTC: remote video play error", err);
+            if (err?.name === "NotAllowedError") setAudioAutoplayBlocked(true);
+          });
+      }
     }
   }, [remoteStream]);
 
@@ -529,9 +537,11 @@ const VideoCallOverlay = ({
                     audioElRef.current = el;
                     if (el && remoteStream && el.srcObject !== remoteStream) {
                       el.srcObject = remoteStream;
-                      el.play()
-                        .then(() => setAudioAutoplayBlocked(false))
-                        .catch(() => setAudioAutoplayBlocked(true));
+                      if (typeof el.play === "function") {
+                        el.play()
+                          .then(() => setAudioAutoplayBlocked(false))
+                          .catch(() => setAudioAutoplayBlocked(true));
+                      }
                     }
                   }}
                   autoPlay
@@ -547,9 +557,11 @@ const VideoCallOverlay = ({
                     audioElRef.current = el;
                     if (el && remoteStream && el.srcObject !== remoteStream) {
                       el.srcObject = remoteStream;
-                      el.play()
-                        .then(() => setAudioAutoplayBlocked(false))
-                        .catch(() => setAudioAutoplayBlocked(true));
+                      if (typeof el.play === "function") {
+                        el.play()
+                          .then(() => setAudioAutoplayBlocked(false))
+                          .catch(() => setAudioAutoplayBlocked(true));
+                      }
                     }
                   }}
                   autoPlay

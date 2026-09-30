@@ -337,7 +337,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         addMessage("system", alertMsg);
         haptics.vibrate([100, 50, 100]);
-        sounds.play("blocked");
+        if (typeof sounds.blocked === "function") {
+          sounds.blocked();
+        } else if (typeof sounds.play === "function") {
+          sounds.play("blocked");
+        }
 
         toast({
           variant: "destructive",

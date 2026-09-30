@@ -8,6 +8,7 @@ import {
   applyPaintPath,
   spawnColorRushPowerUp,
   createInitialColorRushState,
+  calculateGridPercentages,
 } from "../../data/colorRushData";
 import {
   initColorRushAIState,

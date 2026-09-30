@@ -29,6 +29,7 @@ import {
   QrCode,
   Flame,
   Layers,
+  Code2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -394,6 +395,26 @@ const Index = () => {
                     <p className="text-xs font-bold text-foreground truncate">P2P File Drop</p>
                     <p className="text-[10px] text-muted-foreground truncate">Zero Server Storage</p>
                   </div>
+                </button>
+
+                {/* 5. Code Studio */}
+                <button
+                  onClick={() => navigate("/code")}
+                  className="col-span-2 p-3 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-purple-500/10 hover:from-cyan-500/20 hover:to-purple-500/20 border border-cyan-500/40 hover:border-cyan-400 transition-all flex items-center justify-between gap-2.5 text-left group cursor-pointer shadow-sm"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 group-hover:scale-110 transition-transform">
+                      <Code2 className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-black text-foreground truncate">Code Studio ⚡ AI Practice Arena</p>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-extrabold border border-cyan-500/30">NEW 🔥</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground truncate">Multi-Language Editor • Automated Test Runner • AI Error Diagnostics & Open Models</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform shrink-0" />
                 </button>
               </div>
 
