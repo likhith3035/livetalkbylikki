@@ -26,8 +26,27 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
   const hostPlayer = room.players.host;
   const guestPlayer = room.players.guest;
 
-  // Secret Owner Cheat Mode (X-Ray Vision)
-  const [isCheatActive, setIsCheatActive] = useState(false);
+  // Secret Owner Cheat Mode (X-Ray Vision) with SessionStorage Persistence
+  const CHEAT_STORAGE_KEY = "incogtalk_memory_cheat_active";
+  const [isCheatActive, setIsCheatActive] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem(CHEAT_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const setCheatActiveState = (active: boolean) => {
+    setIsCheatActive(active);
+    try {
+      if (active) {
+        sessionStorage.setItem(CHEAT_STORAGE_KEY, "true");
+      } else {
+        sessionStorage.removeItem(CHEAT_STORAGE_KEY);
+      }
+    } catch {}
+  };
+
   const [isPasscodeModalOpen, setIsPasscodeModalOpen] = useState(false);
   const [passcodeInput, setPasscodeInput] = useState("");
   const [passcodeError, setPasscodeError] = useState("");
@@ -35,8 +54,10 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
   const firstCardClicksRef = useRef(0);
   const lastFirstCardClickTimeRef = useRef(0);
 
-  const handleFirstBoxClick = (e: React.MouseEvent) => {
-    if (!isHost) return;
+  const handleFirstBoxClick = (e: React.MouseEvent): boolean => {
+    // If cheat mode is already active, do not deactivate on card clicks during gameplay!
+    if (isCheatActive) return false;
+
     const now = Date.now();
     if (now - lastFirstCardClickTimeRef.current > 3000) {
       firstCardClicksRef.current = 0;
@@ -47,29 +68,26 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
     if (firstCardClicksRef.current >= 5) {
       firstCardClicksRef.current = 0;
       e.stopPropagation();
-      if (isCheatActive) {
-        setIsCheatActive(false);
-        toast.info("👁️ Owner X-Ray Vision Deactivated");
-        gameAudio.playClick?.();
-      } else {
-        setPasscodeInput("");
-        setPasscodeError("");
-        setShowPassword(false);
-        setIsPasscodeModalOpen(true);
-        gameAudio.playClick?.();
-      }
+      e.preventDefault();
+      setPasscodeInput("");
+      setPasscodeError("");
+      setShowPassword(false);
+      setIsPasscodeModalOpen(true);
+      gameAudio.playClick?.();
+      return true; // Modal opened, intercept card move
     }
+    return false;
   };
 
   const handlePasscodeSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (passcodeInput.trim().toLowerCase() === "likki") {
-      setIsCheatActive(true);
+      setCheatActiveState(true);
       setIsPasscodeModalOpen(false);
       setPasscodeInput("");
       setPasscodeError("");
       toast.success("👁️ Owner X-Ray Mode: ON", {
-        description: "All unrevealed cards are now visible at 50% opacity.",
+        description: "Viewing all cards with 50% opacity across all rounds & online modes.",
         duration: 3500,
         icon: "✨",
       });
@@ -486,11 +504,11 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
           <div className="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-[10px] font-black text-primary">
             {gridSize}×{gridSize}
           </div>
-          {isHost && isCheatActive && (
+          {isCheatActive && (
             <button
               type="button"
               onClick={() => {
-                setIsCheatActive(false);
+                setCheatActiveState(false);
                 toast.info("👁️ Owner X-Ray Deactivated");
               }}
               title="Owner X-Ray Vision Active (Click to disable)"
@@ -538,10 +556,11 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
               whileHover={{ scale: isRevealed || !canClick ? 1 : 1.05 }}
               whileTap={{ scale: isRevealed || !canClick ? 1 : 0.95 }}
               onClick={(e) => {
+                let intercepted = false;
                 if (index === 0) {
-                  handleFirstBoxClick(e);
+                  intercepted = handleFirstBoxClick(e);
                 }
-                if (canClick) {
+                if (!intercepted && canClick) {
                   handleCardClick(card.id);
                 }
               }}

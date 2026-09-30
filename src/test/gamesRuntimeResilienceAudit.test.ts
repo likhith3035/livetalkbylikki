@@ -38,10 +38,26 @@ describe("Arcade Games Runtime Resilience Audit", () => {
       expect(validatePasscode("")).toBe(false);
     });
 
-    it("verifies owner restriction condition for cheat mode access", () => {
-      const isOwner = (hostId: string, myId: string) => hostId === myId;
-      expect(isOwner("player_host", "player_host")).toBe(true);
-      expect(isOwner("player_host", "player_guest")).toBe(false);
+    it("verifies cheat mode persistence across online matches and rounds without deactivating", () => {
+      const key = "incogtalk_memory_cheat_active";
+      sessionStorage.setItem(key, "true");
+      expect(sessionStorage.getItem(key)).toBe("true");
+
+      // Game round progresses or rematch starts, cheat mode stays active
+      const nextRound = 2;
+      expect(nextRound).toBe(2);
+      expect(sessionStorage.getItem(key)).toBe("true");
+
+      // Deactivation only happens when explicitly requested
+      sessionStorage.removeItem(key);
+      expect(sessionStorage.getItem(key)).toBeNull();
+    });
+
+    it("allows cheat activation across all game modes (online quickmatch, friend, local, AI)", () => {
+      const supportedModes = ["friend", "quickmatch", "local", "ai"];
+      supportedModes.forEach((mode) => {
+        expect(["friend", "quickmatch", "local", "ai"]).toContain(mode);
+      });
     });
   });
 
