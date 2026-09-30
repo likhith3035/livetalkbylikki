@@ -293,18 +293,31 @@ export const ColorRushGame: React.FC<ColorRushGameProps> = ({
               ? (room.players.guest?.id || (isAIMode ? "ai_bot" : "guest"))
               : "draw";
 
-          if (isHost && onLocalMove) {
-            onLocalMove({
-              ...room,
-              status: "round_over",
-              winnerId,
-              gameState: {
-                ...state,
-                timeRemainingSeconds: 0,
-                frozenAt: Date.now(),
-                winner,
-              },
-            });
+          const nextState = {
+            ...state,
+            timeRemainingSeconds: 0,
+            frozenAt: Date.now(),
+            winner,
+          };
+
+          if (isHost) {
+            if (onLocalMove) {
+              onLocalMove({
+                ...room,
+                status: "round_over",
+                winnerId,
+                gameState: nextState,
+              });
+            }
+            if (room.mode !== "local" && room.mode !== "ai") {
+              sendGameMove(
+                room.roomCode,
+                nextState,
+                myPlayerId,
+                winnerId,
+                true
+              );
+            }
           }
           return 0;
         }
