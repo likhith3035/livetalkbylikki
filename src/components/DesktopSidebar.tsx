@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Home, MessageSquare, User, Settings, Info, Moon, Sun, Shield, ShieldAlert, Smartphone, Bot, Wand2,
-  PanelLeftClose, PanelLeftOpen, Share2, Gamepad2
+  PanelLeftClose, PanelLeftOpen, Share2, Gamepad2, Code2
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
