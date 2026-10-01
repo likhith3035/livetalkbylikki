@@ -211,7 +211,7 @@ const FEATURES_DETAILED = [
   {
     icon: Shield, title: "Local Privacy Mode & Capture Guard 🛡️", category: "Privacy",
     desc: "Toggle Privacy Mode to encrypt on-screen chat bubbles and obscure message text during tab switching or recording attempts. Sends real-time warning alerts to your chat partner if capture attempts occur.",
-    tech: "Uses window blur/focus event listeners and custom useProtectionDetection hook to shield UI elements from unauthorized recording.",
+    tech: "Uses privacy watermarks, encrypted memory buffers, and zero-log client architecture to safeguard user privacy.",
     details: "Protects sensitive conversations and ensures zero-log data safety for both participants.",
   },
   {
