@@ -185,14 +185,30 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     lastActive: Date.now(),
   };
 
-  const isHostWinner = room.winnerId === hostPlayer?.id;
-  const isGuestWinner = room.winnerId === guestPlayer?.id;
+  const isHostWinner =
+    Boolean(room.winnerId) &&
+    !isDraw &&
+    (room.winnerId === hostPlayer?.id ||
+      (isLocal && (room.winnerId === "host" || room.winnerId === "local_player_1" || room.winnerId === "p1")));
+
+  const isGuestWinner =
+    Boolean(room.winnerId) &&
+    !isDraw &&
+    (room.winnerId === guestPlayer?.id ||
+      room.winnerId === "ai_opponent" ||
+      (isLocal &&
+        (room.winnerId === "guest" ||
+          room.winnerId === "local_player_2" ||
+          room.winnerId === "guest_player" ||
+          room.winnerId === "p2")));
 
   const roundWinnerName = isDraw
     ? "It's a Draw!"
     : isHostWinner
     ? hostDisplayName
-    : guestDisplayName;
+    : isGuestWinner
+    ? guestDisplayName
+    : hostDisplayName;
 
   const isHostSeriesWinner =
     room.seriesWinnerId === hostPlayer?.id ||
@@ -263,14 +279,16 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         </motion.div>
       )}
 
-      <Dialog open={isOpen && !isMinimized} onOpenChange={(open) => !open && handleDismiss()}>
+      <Dialog open={isOpen && !isMinimized} onOpenChange={(open) => { if (!open) handleDismiss(); }}>
         <DialogContent
           hideCloseButton
-          className={`max-w-[92vw] sm:max-w-lg p-5 sm:p-7 rounded-3xl bg-[#090b14]/95 backdrop-blur-2xl border transition-all duration-300 text-center max-h-[92vh] overflow-y-auto no-scrollbar touch-manipulation relative overflow-hidden ${
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] max-w-[92vw] sm:max-w-lg p-5 sm:p-7 rounded-3xl bg-[#090b14]/95 backdrop-blur-2xl border transition-all duration-300 text-center max-h-[90vh] overflow-y-auto no-scrollbar touch-manipulation ${
             isDraw
-              ? "border-purple-500/40 shadow-[0_0_60px_rgba(168,85,247,0.22)] ring-1 ring-cyan-400/30"
+              ? "border-purple-500/40 shadow-[0_0_60px_rgba(168,85,247,0.25)] ring-1 ring-cyan-400/30"
               : isWinner || (isLocal && !isDraw) || isSeriesWinner
-              ? "border-amber-400/50 shadow-[0_0_60px_rgba(245,158,11,0.28)] ring-1 ring-amber-400/40"
+              ? "border-amber-400/50 shadow-[0_0_60px_rgba(245,158,11,0.3)] ring-1 ring-amber-400/40"
               : "border-rose-500/40 shadow-[0_0_60px_rgba(244,63,94,0.25)] ring-1 ring-rose-400/30"
           }`}
         >

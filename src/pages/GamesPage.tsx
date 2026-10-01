@@ -319,16 +319,13 @@ export default function GamesPage() {
   // Delay victory modal for games with dramatic reveal animations (RPS, Cricket, Connect4)
   useEffect(() => {
     if (activeRoom && (activeRoom.status === "round_over" || activeRoom.status === "game_over")) {
+      setDismissedVictoryRound(-1);
       const delayMs =
         activeRoom.gameId === "rps" || activeRoom.gameId === "cricket"
-          ? 1200
-          : activeRoom.gameId === "penfight"
-          ? 1400
-          : activeRoom.gameId === "taptug"
-          ? 900
-          : activeRoom.gameId === "connect4" || activeRoom.gameId === "sos"
           ? 600
-          : 350;
+          : activeRoom.gameId === "penfight"
+          ? 700
+          : 300;
 
       const timer = setTimeout(() => {
         setIsVictoryModalVisible(true);
@@ -337,6 +334,7 @@ export default function GamesPage() {
       return () => clearTimeout(timer);
     } else {
       setIsVictoryModalVisible(false);
+      setDismissedVictoryRound(-1);
     }
   }, [activeRoom?.status, activeRoom?.round, activeRoom?.gameId]);
 
