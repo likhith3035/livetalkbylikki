@@ -19,8 +19,9 @@ export interface GameVideoDuelCallbacks {
 export interface GameVoiceDuelCallbacks {
   onLocalStream?: (stream: MediaStream) => void;
   onRemoteStream?: (stream: MediaStream | null) => void;
-  onStatusChange?: (status: "idle" | "connecting" | "connected" | "failed") => void;
+  onStatusChange?: (status: "idle" | "connecting" | "connected" | "failed" | "listen-only") => void;
   onSpeakingChange?: (isSpeaking: boolean) => void;
+  onMicAvailabilityChange?: (available: boolean) => void;
 }
 
 export class GameWebRTCService {
@@ -51,11 +52,26 @@ export class GameWebRTCService {
 
     callbacks.onStatusChange?.("requesting");
 
-    // 1. Get user media (camera & audio)
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" },
-      audio: true,
-    });
+    // 1. Get user media (camera & audio, with graceful fallback if mic is missing)
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" },
+        audio: true,
+      });
+    } catch (mediaErr: any) {
+      if (
+        mediaErr?.name === "NotFoundError" ||
+        mediaErr?.name === "DevicesNotFoundError"
+      ) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" },
+          audio: false,
+        });
+      } else {
+        throw mediaErr;
+      }
+    }
     this.localStream = stream;
     callbacks.onLocalStream?.(stream);
 
@@ -188,27 +204,62 @@ export class GameWebRTCService {
       }
 
       // 1. Audio stream with echo cancellation & noise suppression
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-        video: false,
-      });
+      let stream: MediaStream | null = null;
+      let micAvailable = false;
 
-      // Default to muted (push-to-talk ready)
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = false;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+          video: false,
+        });
+        micAvailable = true;
+      } catch (mediaErr: any) {
+        const errorName = mediaErr?.name || "";
+        if (errorName === "OverconstrainedError") {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+              video: false,
+            });
+            micAvailable = true;
+          } catch {
+            micAvailable = false;
+          }
+        }
+
+        if (!micAvailable) {
+          if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
+            console.info("Voice Duel: No audio input hardware found on device. Operating in listen-only mode.");
+          } else if (errorName === "NotAllowedError" || errorName === "PermissionDeniedError") {
+            console.info("Voice Duel: Microphone access permission not granted. Operating in listen-only mode.");
+          } else {
+            console.info(`Voice Duel: Microphone unavailable (${mediaErr?.message || errorName}). Operating in listen-only mode.`);
+          }
+        }
+      }
+
+      callbacks.onMicAvailabilityChange?.(micAvailable);
+
+      if (stream) {
+        // Default to muted (push-to-talk ready)
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = false;
+          this.isMicOn = false;
+        }
+        this.voiceLocalStream = stream;
+        callbacks.onLocalStream?.(stream);
+      } else {
+        this.voiceLocalStream = null;
         this.isMicOn = false;
       }
 
-      this.voiceLocalStream = stream;
-      callbacks.onLocalStream?.(stream);
-
       if (!db || typeof RTCPeerConnection === "undefined") {
-        callbacks.onStatusChange?.("connected");
+        callbacks.onStatusChange?.(micAvailable ? "connected" : "listen-only");
         return stream;
       }
 
@@ -216,19 +267,28 @@ export class GameWebRTCService {
       const pc = new RTCPeerConnection(ICE_SERVERS);
       this.voicePc = pc;
 
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      if (stream) {
+        stream.getTracks().forEach((track) => pc.addTrack(track, stream!));
+      } else {
+        // Graceful listen-only mode: add receive-only transceiver so SDP includes audio negotiation
+        try {
+          pc.addTransceiver("audio", { direction: "recvonly" });
+        } catch {
+          // Transceiver fallback
+        }
+      }
 
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
           this.voiceRemoteStream = event.streams[0];
           callbacks.onRemoteStream?.(event.streams[0]);
-          callbacks.onStatusChange?.("connected");
+          callbacks.onStatusChange?.(micAvailable ? "connected" : "listen-only");
         }
       };
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "connected") {
-          callbacks.onStatusChange?.("connected");
+          callbacks.onStatusChange?.(micAvailable ? "connected" : "listen-only");
         } else if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
           callbacks.onStatusChange?.("failed");
         }
@@ -264,7 +324,9 @@ export class GameWebRTCService {
 
       // 4. Signaling
       if (isHost) {
-        const offer = await pc.createOffer();
+        const offer = await pc.createOffer(
+          !micAvailable ? { offerToReceiveAudio: true } : undefined
+        );
         await pc.setLocalDescription(offer);
 
         await update(ref(db, voicePath), sanitizeFirebasePayload({
@@ -292,7 +354,9 @@ export class GameWebRTCService {
             const offData = snap.val();
             try {
               await pc.setRemoteDescription(new RTCSessionDescription(offData));
-              const answer = await pc.createAnswer();
+              const answer = await pc.createAnswer(
+                !micAvailable ? { offerToReceiveAudio: true } : undefined
+              );
               await pc.setLocalDescription(answer);
 
               await update(ref(db, voicePath), sanitizeFirebasePayload({
@@ -330,6 +394,10 @@ export class GameWebRTCService {
 
   public isMicActive(): boolean {
     return this.isMicOn;
+  }
+
+  public isMicAvailable(): boolean {
+    return !!this.voiceLocalStream && this.voiceLocalStream.getAudioTracks().length > 0;
   }
 
   public stopVoiceDuel() {

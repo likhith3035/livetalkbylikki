@@ -31,8 +31,73 @@ describe("Arcade Mobile Haptics Service", () => {
 describe("Arcade WebRTC Voice Chat Service", () => {
   it("provides mic control state without throwing when uninitialized", () => {
     expect(gameWebRTC.isMicActive()).toBe(false);
+    expect(gameWebRTC.isMicAvailable()).toBe(false);
     expect(gameWebRTC.setMicEnabled(true)).toBe(false);
     expect(() => gameWebRTC.stopVoiceDuel()).not.toThrow();
+  });
+
+  it("handles missing microphone device (NotFoundError) gracefully by entering listen-only mode", async () => {
+    const notFoundError = new Error("Requested device not found");
+    notFoundError.name = "NotFoundError";
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      value: {
+        getUserMedia: vi.fn().mockRejectedValue(notFoundError),
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    const statusUpdates: string[] = [];
+    let micAvailable = true;
+
+    await gameWebRTC.startVoiceDuel("TEST12", true, {
+      onStatusChange: (status) => statusUpdates.push(status),
+      onMicAvailabilityChange: (available) => {
+        micAvailable = available;
+      },
+    });
+
+    expect(micAvailable).toBe(false);
+    expect(gameWebRTC.isMicAvailable()).toBe(false);
+    expect(statusUpdates).toContain("listen-only");
+    gameWebRTC.stopVoiceDuel();
+  });
+
+  it("handles OverconstrainedError by falling back to basic audio constraint", async () => {
+    const overconstrained = new Error("Overconstrained");
+    overconstrained.name = "OverconstrainedError";
+
+    const mockTrack = { enabled: false, stop: vi.fn() };
+    const mockStream = {
+      getAudioTracks: () => [mockTrack],
+      getTracks: () => [mockTrack],
+    };
+
+    const getUserMediaMock = vi
+      .fn()
+      .mockRejectedValueOnce(overconstrained)
+      .mockResolvedValueOnce(mockStream);
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      value: {
+        getUserMedia: getUserMediaMock,
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    let micAvailable = false;
+    await gameWebRTC.startVoiceDuel("TEST34", false, {
+      onMicAvailabilityChange: (available) => {
+        micAvailable = available;
+      },
+    });
+
+    expect(getUserMediaMock).toHaveBeenCalledTimes(2);
+    expect(micAvailable).toBe(true);
+    expect(gameWebRTC.isMicAvailable()).toBe(true);
+    gameWebRTC.stopVoiceDuel();
   });
 });
 

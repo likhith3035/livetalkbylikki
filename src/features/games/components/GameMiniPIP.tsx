@@ -47,11 +47,26 @@ export const GameMiniPIP: React.FC<GameMiniPIPProps> = ({
         setLocalStream(stream);
         setIsActive(true);
       } else {
-        // Local/AI practice face cam
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" },
-          audio: true,
-        });
+        // Local/AI practice face cam (gracefully fallback if no mic)
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" },
+            audio: true,
+          });
+        } catch (mediaErr: any) {
+          if (
+            mediaErr?.name === "NotFoundError" ||
+            mediaErr?.name === "DevicesNotFoundError"
+          ) {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" },
+              audio: false,
+            });
+          } else {
+            throw mediaErr;
+          }
+        }
         setLocalStream(stream);
         setIsActive(true);
       }

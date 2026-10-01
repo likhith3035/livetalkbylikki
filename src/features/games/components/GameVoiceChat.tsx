@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, Volume2, VolumeX, Radio, Loader2, Sparkles } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, Radio, Loader2, Sparkles, Headphones } from "lucide-react";
 import { toast } from "sonner";
 import { gameWebRTC } from "../services/gameWebRTCService";
 import { gameHaptics } from "../services/gameHapticsService";
@@ -19,7 +19,8 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
   isOnline,
   className = "",
 }) => {
-  const [voiceStatus, setVoiceStatus] = useState<"idle" | "connecting" | "connected" | "failed">("idle");
+  const [voiceStatus, setVoiceStatus] = useState<"idle" | "connecting" | "connected" | "failed" | "listen-only">("idle");
+  const [isMicAvailable, setIsMicAvailable] = useState(true);
   const [isMicOn, setIsMicOn] = useState(false);
   const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
   const [isPushToTalk, setIsPushToTalk] = useState(true);
@@ -47,6 +48,9 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
           onStatusChange: (status) => {
             if (isMounted) setVoiceStatus(status);
           },
+          onMicAvailabilityChange: (available) => {
+            if (isMounted) setIsMicAvailable(available);
+          },
         });
       } catch {
         if (isMounted) setVoiceStatus("failed");
@@ -70,7 +74,7 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
 
   // Handle Push-To-Talk Keyboard (Spacebar when not typing)
   useEffect(() => {
-    if (!isPushToTalk || voiceStatus !== "connected") return;
+    if (!isPushToTalk || voiceStatus !== "connected" || !isMicAvailable) return;
 
     const isBlockedElementActive = () => {
       const activeElement = document.activeElement;
@@ -119,11 +123,11 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [isPushToTalk, voiceStatus, isPttPressed]);
+  }, [isPushToTalk, voiceStatus, isPttPressed, isMicAvailable]);
 
   // PTT Button Press / Release Handlers
   const handlePttStart = () => {
-    if (voiceStatus !== "connected") return;
+    if (voiceStatus !== "connected" || !isMicAvailable) return;
     setIsPttPressed(true);
     gameHaptics.ptt();
     gameWebRTC.setMicEnabled(true);
@@ -131,7 +135,7 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
   };
 
   const handlePttEnd = () => {
-    if (voiceStatus !== "connected") return;
+    if (voiceStatus !== "connected" || !isMicAvailable) return;
     setIsPttPressed(false);
     gameHaptics.ptt();
     gameWebRTC.setMicEnabled(false);
@@ -140,6 +144,10 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
 
   // Open Mic Toggle Handler
   const handleToggleOpenMic = () => {
+    if (!isMicAvailable) {
+      toast.info("Microphone not detected. Operating in listen-only mode.");
+      return;
+    }
     gameHaptics.light();
     gameAudio.playClick();
     const next = !isMicOn;
@@ -186,7 +194,7 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
             <Loader2 className="w-3 h-3 text-amber-400 animate-spin" />
             <span className="text-amber-400 hidden xs:inline">Voice...</span>
           </>
-        ) : voiceStatus === "connected" ? (
+        ) : voiceStatus === "connected" && isMicAvailable ? (
           <>
             <span className="relative flex h-2 w-2">
               {isMicOn && (
@@ -202,6 +210,11 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
               {isMicOn ? "Live" : "Voice Ready"}
             </span>
           </>
+        ) : voiceStatus === "listen-only" || !isMicAvailable ? (
+          <>
+            <Headphones className="w-3 h-3 text-sky-400" />
+            <span className="text-sky-400 hidden xs:inline">Listen Only</span>
+          </>
         ) : (
           <>
             <Radio className="w-3 h-3 text-muted-foreground" />
@@ -211,7 +224,19 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
       </div>
 
       {/* PTT / Mic Main Action Button */}
-      {isPushToTalk ? (
+      {!isMicAvailable || voiceStatus === "listen-only" ? (
+        <button
+          type="button"
+          onClick={() =>
+            toast.info("Listen-only mode: No microphone detected on this device. You can still hear your opponent speak!")
+          }
+          title="No microphone detected. You can hear incoming opponent voice chat."
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs bg-sky-500/10 hover:bg-sky-500/15 text-sky-400 border border-sky-500/20 transition-all cursor-pointer"
+        >
+          <Headphones className="w-3.5 h-3.5" />
+          <span>LISTEN ONLY</span>
+        </button>
+      ) : isPushToTalk ? (
         <button
           type="button"
           onPointerDown={handlePttStart}
@@ -247,15 +272,17 @@ export const GameVoiceChat: React.FC<GameVoiceChatProps> = ({
         </button>
       )}
 
-      {/* Mode Switcher (PTT vs Open Mic) */}
-      <button
-        type="button"
-        onClick={handleToggleMode}
-        title={isPushToTalk ? "Switch to Open Mic" : "Switch to Push-To-Talk"}
-        className="px-2 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-[10px] font-bold text-muted-foreground hover:text-foreground border border-border/40 transition-colors cursor-pointer"
-      >
-        {isPushToTalk ? "PTT" : "OPEN"}
-      </button>
+      {/* Mode Switcher (PTT vs Open Mic) - only show when mic is available */}
+      {isMicAvailable && voiceStatus !== "listen-only" && (
+        <button
+          type="button"
+          onClick={handleToggleMode}
+          title={isPushToTalk ? "Switch to Open Mic" : "Switch to Push-To-Talk"}
+          className="px-2 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-[10px] font-bold text-muted-foreground hover:text-foreground border border-border/40 transition-colors cursor-pointer"
+        >
+          {isPushToTalk ? "PTT" : "OPEN"}
+        </button>
+      )}
 
       {/* Peer Audio Speaker Toggle */}
       <button
