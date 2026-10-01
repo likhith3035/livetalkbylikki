@@ -122,25 +122,8 @@ const VideoCallOverlay = ({
   const qualityIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { settings } = useSettings();
-  const { privacyModeActive, privacyAlertActive, userName, strangerName, sessionId, isReconnecting } = useChatContext();
-  const [tabFocused, setTabFocused] = useState(true);
+  const { privacyModeActive, userName, strangerName, sessionId, isReconnecting } = useChatContext();
 
-  // Monitor focus/blur for screen-recording tab protection
-  useEffect(() => {
-    if (!privacyModeActive || !settings.protectionEnabled) {
-      setTabFocused(true);
-      return;
-    }
-    const handleFocus = () => setTabFocused(true);
-    const handleBlur = () => setTabFocused(false);
-    window.addEventListener("focus", handleFocus);
-    window.addEventListener("blur", handleBlur);
-    setTabFocused(document.hasFocus());
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-      window.removeEventListener("blur", handleBlur);
-    };
-  }, [privacyModeActive, settings.protectionEnabled]);
   const [callDuration, setCallDuration] = useState(0);
   const [isPiP, setIsPiP] = useState(false);
   const [isLocalMain, setIsLocalMain] = useState(false); // WhatsApp-style swap
@@ -598,7 +581,7 @@ const VideoCallOverlay = ({
                     className={cn(
                       "h-full w-full",
                       isScreenSharing ? "object-contain" : "object-cover",
-                      (isBlurred || !tabFocused || privacyAlertActive) && "video-blur"
+                      isBlurred && "video-blur"
                     )}
                     style={{
                       transform: [
@@ -622,7 +605,7 @@ const VideoCallOverlay = ({
                     className={cn(
                       "h-full w-full",
                       remoteIsScreenSharing ? "object-contain" : "object-cover",
-                      (remoteBlurred || !tabFocused || privacyAlertActive) && "video-blur"
+                      remoteBlurred && "video-blur"
                     )}
                   />
                 ) : (
@@ -716,7 +699,7 @@ const VideoCallOverlay = ({
                     className={cn(
                       "h-full w-full",
                       isScreenSharing ? "object-contain bg-black" : "object-cover",
-                      (isBlurred || !tabFocused || privacyAlertActive) && "video-blur"
+                      isBlurred && "video-blur"
                     )}
                     style={{
                       transform: [
@@ -741,7 +724,7 @@ const VideoCallOverlay = ({
                     className={cn(
                       "h-full w-full object-cover",
                       remoteIsScreenSharing && "object-contain bg-black",
-                      (!tabFocused || privacyAlertActive) && "video-blur"
+                      remoteBlurred && "video-blur"
                     )}
                   />
                 ) : (
