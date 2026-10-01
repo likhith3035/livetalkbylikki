@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { checkTicTacToeWinner, getSmartAIMove } from "@/features/games/components/games/TicTacToeGame";
 import { checkConnectFourWinner, getBestConnectFourAIMove } from "@/features/games/components/games/ConnectFourGame";
 import { determineRPSWinner } from "@/features/games/components/games/RPSClashGame";
-import { generateGameRoomCode, createInitialGameState } from "@/features/games/services/gameRoomService";
+import { generateGameRoomCode, createInitialGameState, sanitizeFirebasePayload } from "@/features/games/services/gameRoomService";
 import {
   getGamerProfile,
   saveGamerProfile,
@@ -269,6 +269,24 @@ describe("IncogTalk Arcade Games Suite", () => {
       expect(converted.players.guest.score).toBe(0);
       expect(converted.players.host.score).toBe(1);
       expect(converted.round).toBe(2);
+    });
+
+    it("should sanitize undefined properties to null to prevent Firebase set failed crashes", () => {
+      const payloadWithUndefined = {
+        playerId: "user123",
+        roomCode: "ABCDEF",
+        gridSize: undefined,
+        nested: {
+          subProp: undefined,
+          valid: 123,
+        },
+      };
+
+      const sanitized = sanitizeFirebasePayload(payloadWithUndefined as any);
+      expect(sanitized.gridSize).toBeNull();
+      expect(sanitized.nested.subProp).toBeNull();
+      expect(sanitized.nested.valid).toBe(123);
+      expect(JSON.stringify(sanitized)).not.toContain("undefined");
     });
   });
 });

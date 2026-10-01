@@ -505,12 +505,15 @@ export async function findOrJoinQuickMatch({
   // 3. Register in lobby queue (catch if permissions restricted)
   try {
     const myQueueRef = ref(db, `game_lobby/${gameId}/${player.id}`);
-    await set(myQueueRef, {
-      playerId: player.id,
-      roomCode: newRoom.roomCode,
-      gridSize: rules?.memoryGridSize || (gameId === "memory" ? 4 : undefined),
-      createdAt: Date.now(),
-    });
+    await set(
+      myQueueRef,
+      sanitizeFirebasePayload({
+        playerId: player.id,
+        roomCode: newRoom.roomCode,
+        gridSize: rules?.memoryGridSize || (gameId === "memory" ? 4 : null),
+        createdAt: Date.now(),
+      })
+    );
     onDisconnect(myQueueRef).remove();
   } catch (queueErr) {
     console.warn("Lobby queue register notice:", queueErr);
