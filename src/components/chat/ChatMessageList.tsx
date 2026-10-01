@@ -202,7 +202,8 @@ const isGifUrl = (url?: string) => {
   if (!url) return false;
   if (/\.gif(\?.*)?$/i.test(url)) return true;
   if (url.includes("tenor.com") || url.includes("tenor.googleapis.com")) return true;
-  if (url.includes("giphy.com") || url.includes("gph.is")) return true;
+  if (url.includes("giphy.com") || url.includes("giphy") || url.includes("gph.is")) return true;
+  if (url.includes("klipy.com")) return true;
   return false;
 };
 
@@ -211,7 +212,8 @@ const isImageMedia = (url?: string) => {
   if (url.startsWith("data:image/") || url.startsWith("blob:")) return true;
   if (/\.(jpe?g|png|gif|webp|svg|avif)(\?.*)?$/i.test(url)) return true;
   if (url.includes("tenor.com") || url.includes("tenor.googleapis.com")) return true;
-  if (url.includes("giphy.com") || url.includes("gph.is")) return true;
+  if (url.includes("giphy.com") || url.includes("giphy") || url.includes("gph.is")) return true;
+  if (url.includes("klipy.com")) return true;
   if (url.includes("supabase.co/storage/") && !/\.(pdf|zip|rar|doc|docx|mp4|webm|mp3)$/i.test(url)) return true;
   return false;
 };

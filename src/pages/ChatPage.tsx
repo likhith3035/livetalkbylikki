@@ -28,7 +28,6 @@ import LiquidBackground from "@/components/LiquidBackground";
 import SharedCanvas from "@/components/chat/SharedCanvas";
 import { useSoundNotifications } from "@/hooks/use-sound-notifications";
 import { haptics } from "@/lib/haptics";
-import { useProtectionDetection } from "@/hooks/use-protection-detection";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import RoomWaitingScreen from "@/components/chat/RoomWaitingScreen";
 import HumanVerifyModal from "@/components/chat/HumanVerifyModal";
@@ -77,7 +76,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
     autoReconnectCountdown, sessionId, stableId, roomChannel, searchElapsed,
     setInterests, startChat, sendMessage, sendTyping, nextChat, stopChat,
     reactToMessage, blockStranger, createPrivateRoom, joinPrivateRoom,
-    localPrivacyModeActive, strangerPrivacyModeActive, privacyModeActive, privacyAlertActive, sendPrivacyAlert,
+    localPrivacyModeActive, strangerPrivacyModeActive, privacyModeActive,
     privateRoomCode, roomId, sendSignalingEvent,
     registerCrossDeviceSignaling,
     joinRoomById,
@@ -412,29 +411,6 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
   }, [startChat, userName, tempName, setUserName, requireVerification]);
 
   useKeyboardShortcuts({ status, onStart: handleStart, onNext: nextChat, onStop: stopChat });
-
-  // Heuristic screen protection & recording detection hook
-  const { isTriggered } = useProtectionDetection({
-    active: status === "connected" && (privacyModeActive || settings.protectionEnabled),
-    onTriggered: (type) => {
-      sendPrivacyAlert(type);
-      toast({
-        variant: "destructive",
-        title: "⚠️ Capture Attempt Blocked",
-        description: `Screenshot or recording attempt detected (${type}).`
-      });
-      if (settings.autoStopOnScreenshot) {
-        toast({
-          variant: "destructive",
-          title: "🚨 Chat Terminated",
-          description: "Disconnecting session automatically to safeguard privacy."
-        });
-        setTimeout(() => {
-          stopChat();
-        }, 1000);
-      }
-    }
-  });
 
   // Prevent right-clicks, copying, cutting in Privacy Mode (except in input fields)
   useEffect(() => {
@@ -1101,43 +1077,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
         onClose={onVerifyClose}
       />
 
-      {/* Realtime Mutual Warning Modal popup */}
-      <AnimatePresence>
-        {privacyAlertActive && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-auto"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 15 }}
-              className="bg-card border border-border/80 p-6 rounded-[2rem] max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center text-center gap-4 relative overflow-hidden"
-            >
-              {/* Premium Glow effect */}
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-destructive via-red-500 to-destructive" />
-              
-              <div className="h-14 w-14 rounded-full bg-destructive/15 border border-destructive/20 flex items-center justify-center text-destructive animate-pulse">
-                <AlertTriangle className="h-7 w-7" />
-              </div>
-              
-              <div className="space-y-1">
-                <h3 className="text-base font-black uppercase tracking-tight text-foreground leading-tight">
-                  Security Warning
-                </h3>
-                <p className="text-xs font-bold text-destructive/95 uppercase tracking-wide">
-                  Possible screenshot or screen recording detected
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed pt-1">
-                  Screenshots and recordings are strictly discouraged and may trigger alerts.
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       {/* Private Room QR Waiting Screen Overlay */}
       <AnimatePresence>

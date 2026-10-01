@@ -96,7 +96,7 @@ const FEATURES_DETAILED = [
   {
     icon: Search, title: "GIF Search & Send 🎬", category: "Media",
     desc: "Tap the GIF icon to open the GIF picker. Browse trending GIFs or search for anything — reactions, emotions, memes, celebrities. Tap a GIF to send it instantly in chat!",
-    tech: "Integrates with the Tenor GIF API (tenor.googleapis.com/v2). Features debounced search (300ms), trending GIFs on open, and a responsive masonry grid layout.",
+    tech: "Integrates with the GIPHY API (api.giphy.com/v1/gifs). Features category filters, debounced search (300ms), trending GIFs on open, and an optimized responsive grid layout.",
     details: "GIFs play automatically on hover/tap for preview. The search is debounced to reduce API calls. Trending GIFs refresh periodically to keep content fresh.",
   },
   {
@@ -476,7 +476,7 @@ const RELEASES = [
     highlights: [
       { category: "💬 Stranger Profile Sheet", desc: "Slide-up bottom sheet to view stranger profile details, chat duration, message count, verified badge, and shared interests." },
       { category: "🛠️ Consolidated Tools Menu", desc: "Unified theme picker, message search, disappearing timers, and report/block actions into Radix popover menu." },
-      { category: "🎮 Games & Media", desc: "Added Truth or Dare, Tic-Tac-Toe, Tenor GIF search, Google Maps location sharing, and custom wallpapers." }
+      { category: "🎮 Games & Media", desc: "Added Truth or Dare, Tic-Tac-Toe, GIPHY GIF search, Google Maps location sharing, and custom wallpapers." }
     ]
   },
   {

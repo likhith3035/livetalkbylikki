@@ -50,8 +50,8 @@ const DEFAULT_SETTINGS: SettingsState = {
   notifications: false,
   chatTheme: "default",
   chatWallpaper: "none",
-  protectionEnabled: true,
-  notifyAlerts: true,
+  protectionEnabled: false,
+  notifyAlerts: false,
   autoStopOnScreenshot: false,
 
   // Customization defaults

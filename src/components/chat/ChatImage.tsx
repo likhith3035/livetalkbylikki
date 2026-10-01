@@ -107,6 +107,7 @@ const ChatImage = ({ src, isMine }: ChatImageProps) => {
               alt="Shared content"
               className="w-full h-full max-h-[280px] object-contain rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]"
               loading="lazy"
+              referrerPolicy="no-referrer"
               onError={() => setHasError(true)}
             />
             <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
@@ -186,6 +187,7 @@ const ChatImage = ({ src, isMine }: ChatImageProps) => {
                 <motion.img
                   src={src}
                   alt="Full view"
+                  referrerPolicy="no-referrer"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: zoomLevel, rotate: rotation, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
