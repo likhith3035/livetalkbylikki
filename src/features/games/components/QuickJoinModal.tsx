@@ -121,7 +121,7 @@ export const QuickJoinModal: React.FC<QuickJoinModalProps> = ({
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder="Enter player name"
                 maxLength={18}
-                autoFocus
+                autoFocus={typeof window !== "undefined" && window.innerWidth >= 768}
                 className="h-11 rounded-xl font-bold text-sm bg-muted/60 border-border/80 pr-10 focus:ring-2 focus:ring-primary"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">

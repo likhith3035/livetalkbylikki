@@ -550,7 +550,7 @@ export const SOSGame: React.FC<SOSGameProps> = ({ room, myPlayerId, isMyTurn, on
     const actingPlayerColor = actingPlayerId === room.players.host.id ? hostColor : guestColor;
     const currentPowerUp = usedPowerUp || activePowerUp;
 
-    let newBoard = board.map((row) => [...row]);
+    const newBoard = board.map((row) => [...row]);
 
     // ── Power-Up 1: EMP Bomb Quadrant Blast ──
     if (currentPowerUp === "bomb") {

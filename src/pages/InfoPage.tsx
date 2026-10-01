@@ -580,7 +580,7 @@ const InfoPage = () => {
 
       <Header onlineCount={onlineCount} />
 
-      <main className="flex-1 px-4 sm:px-6 pb-28 pt-6 sm:pt-8 max-w-2xl mx-auto w-full relative z-10 space-y-16 sm:space-y-24">
+      <main className="flex-1 px-4 sm:px-6 pb-12 pb-[max(env(safe-area-inset-bottom,0px),2rem)] pt-6 sm:pt-8 max-w-2xl mx-auto w-full relative z-10 space-y-16 sm:space-y-24">
         {/* Back */}
         <motion.button
           initial={{ opacity: 0, x: -10 }}

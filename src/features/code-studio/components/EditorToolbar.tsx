@@ -11,6 +11,7 @@ import {
   Trash2,
   FileCode,
   Zap,
+  MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -101,15 +102,15 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 p-2 sm:px-3 sm:py-2 border-b border-border/50 bg-card/80 backdrop-blur-xl">
+    <div className="flex items-center justify-between gap-1.5 p-1.5 sm:px-3 sm:py-2 border-b border-border/50 bg-card/80 backdrop-blur-xl overflow-x-auto no-scrollbar">
       {/* Left controls: Language & Template Selectors */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         {/* Language selector */}
         <Select
           value={language}
           onValueChange={(val) => onLanguageChange(val as SupportedLanguage)}
         >
-          <SelectTrigger className="w-[140px] sm:w-[170px] h-8 sm:h-9 bg-background/80 border-border/60 text-xs font-bold shadow-sm">
+          <SelectTrigger className="w-[110px] xs:w-[130px] sm:w-[170px] h-8 sm:h-9 bg-background/80 border-border/60 text-xs font-bold shadow-sm shrink-0">
             <SelectValue>
               <span className="flex items-center gap-1.5 truncate">
                 <span>{LANGUAGE_LABELS[language]?.icon}</span>
@@ -135,7 +136,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 sm:h-9 text-xs gap-1.5 bg-background/80 border-border/60 cursor-pointer font-medium"
+              className="h-8 sm:h-9 px-2 sm:px-3 text-xs gap-1.5 bg-background/80 border-border/60 cursor-pointer font-medium shrink-0"
             >
               <FileCode className="w-3.5 h-3.5 text-primary" />
               <span className="hidden sm:inline">Templates</span>
@@ -176,7 +177,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           variant="outline"
           size="sm"
           onClick={onOpenKeyModal}
-          className={`h-8 sm:h-9 px-2 sm:px-2.5 text-xs gap-1.5 border cursor-pointer font-semibold ${
+          className={`h-8 sm:h-9 px-2 sm:px-2.5 text-xs gap-1.5 border cursor-pointer font-semibold shrink-0 ${
             hasActiveKey || isOpenModelActive
               ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
               : "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
@@ -192,14 +193,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       </div>
 
       {/* Right controls: Editor actions & Run Button */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         {/* Editor appearance settings */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground cursor-pointer"
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground cursor-pointer shrink-0"
               title="Editor Settings"
             >
               <Settings2 className="w-4 h-4" />
@@ -230,59 +231,97 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onFormatCode}
-          className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
-          title="Format Code"
-        >
-          <Sparkles className="w-4 h-4 text-amber-400" />
-        </Button>
+        {/* Desktop Individual Action Buttons */}
+        <div className="hidden sm:flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onFormatCode}
+            className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+            title="Format Code"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400" />
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleCopy}
-          className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
-          title="Copy Code"
-        >
-          {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopy}
+            className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+            title="Copy Code"
+          >
+            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleDownload}
-          className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
-          title="Download Code File"
-        >
-          <Download className="w-4 h-4" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDownload}
+            className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+            title="Download Code File"
+          >
+            <Download className="w-4 h-4" />
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClearCode}
-          className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground hover:text-red-400 cursor-pointer"
-          title="Clear Code"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearCode}
+            className="h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted text-muted-foreground hover:text-red-400 cursor-pointer shrink-0"
+            title="Clear Code"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Mobile Combined More Actions Menu (< sm) */}
+        <div className="flex sm:hidden items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-muted text-muted-foreground cursor-pointer shrink-0"
+                title="More Actions"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44 bg-popover border-border z-50">
+              <DropdownMenuItem onClick={onFormatCode} className="text-xs cursor-pointer gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Format Code</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCopy} className="text-xs cursor-pointer gap-2">
+                <Copy className="w-3.5 h-3.5 text-blue-400" />
+                <span>Copy Code</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDownload} className="text-xs cursor-pointer gap-2">
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Download</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onClearCode} className="text-xs cursor-pointer gap-2 text-red-400 focus:text-red-400">
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear Editor</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {/* Primary Run Code Button */}
         <Button
           onClick={onRunCode}
           disabled={isRunning}
           size="sm"
-          className="h-8 sm:h-9 px-3 sm:px-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-black text-xs shadow-lg shadow-emerald-500/25 gap-1.5 rounded-lg transition-all active:scale-95 cursor-pointer"
+          className="h-8 sm:h-9 px-2.5 sm:px-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-black text-xs shadow-lg shadow-emerald-500/25 gap-1.5 rounded-lg transition-all active:scale-95 cursor-pointer shrink-0"
         >
           {isRunning ? (
             <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <Play className="w-3.5 h-3.5 fill-current" />
           )}
-          <span>{isRunning ? "Running..." : "Run Code"}</span>
+          <span>{isRunning ? "Running..." : "Run"}</span>
           <span className="hidden lg:inline text-[9px] opacity-75 font-normal ml-0.5">(Ctrl+↵)</span>
         </Button>
       </div>

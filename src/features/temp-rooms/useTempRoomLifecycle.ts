@@ -58,7 +58,7 @@ export function useTempRoomLifecycle({
     })();
 
     return () => {
-      heartbeat && clearInterval(heartbeat);
+      if (heartbeat) clearInterval(heartbeat);
       unsubMeta?.();
     };
   }, [enabled, roomId, sessionId]);

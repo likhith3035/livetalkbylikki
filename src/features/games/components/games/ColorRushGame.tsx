@@ -955,72 +955,18 @@ export const ColorRushGame: React.FC<ColorRushGameProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-blue-950/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-4 text-center z-20 pointer-events-auto"
+              className="absolute inset-0 bg-blue-950/20 backdrop-blur-[1.5px] flex items-center justify-center p-3 text-center z-10 pointer-events-none"
             >
-              <motion.div
-                initial={{ scale: 0.8, y: 15 }}
-                animate={{ scale: 1, y: 0 }}
-                className="bg-card/95 border border-cyan-500/40 p-5 sm:p-6 rounded-3xl shadow-2xl space-y-4 max-w-sm w-full backdrop-blur-xl"
-              >
-                <div className="flex justify-center">
-                  <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-2xl shadow-lg">
-                    🏆
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg sm:text-xl font-display font-black text-foreground">
-                    {hostPct > guestPct
-                      ? `${room.players.host.name} Wins!`
-                      : guestPct > hostPct
-                      ? `${room.players.guest?.name || "Player 2"} Wins!`
-                      : "Honorable Draw!"}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Final Arena Capture Breakdown
-                  </p>
-                </div>
-
-                {/* Score Pills */}
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  <div
-                    className="p-2.5 rounded-xl border font-mono"
-                    style={{
-                      backgroundColor: `${hostColor}15`,
-                      borderColor: `${hostColor}40`,
-                    }}
-                  >
-                    <p className="text-[10px] text-muted-foreground">{room.players.host.name}</p>
-                    <p className="text-base font-bold" style={{ color: hostColor }}>
-                      {hostPct}%
-                    </p>
-                  </div>
-
-                  <div
-                    className="p-2.5 rounded-xl border font-mono"
-                    style={{
-                      backgroundColor: `${guestColor}15`,
-                      borderColor: `${guestColor}40`,
-                    }}
-                  >
-                    <p className="text-[10px] text-muted-foreground">
-                      {room.players.guest?.name || "Player 2"}
-                    </p>
-                    <p className="text-base font-bold" style={{ color: guestColor }}>
-                      {guestPct}%
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  <Button
-                    onClick={handleRestartMatch}
-                    className="flex-1 gap-1.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground shadow-lg hover:opacity-95"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" /> Play Again
-                  </Button>
-                </div>
-              </motion.div>
+              <div className="px-4 py-2 rounded-2xl bg-card/90 border border-cyan-500/40 shadow-xl backdrop-blur-md flex items-center gap-2">
+                <span className="text-xl">🏆</span>
+                <span className="text-sm font-black text-foreground">
+                  {hostPct > guestPct
+                    ? `${room.players.host.name} Captured ${hostPct}%!`
+                    : guestPct > hostPct
+                    ? `${room.players.guest?.name || "Player 2"} Captured ${guestPct}%!`
+                    : "Honorable Draw!"}
+                </span>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

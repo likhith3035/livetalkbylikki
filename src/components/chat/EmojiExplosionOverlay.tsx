@@ -60,7 +60,7 @@ export const EmojiExplosionOverlay: React.FC<EmojiExplosionOverlayProps> = ({
     }
 
     let animationFrameId: number;
-    let startTime = performance.now();
+    const startTime = performance.now();
 
     const render = (time: number) => {
       const elapsed = time - startTime;

@@ -22,6 +22,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { ChromeDinoGame } from "./games/ChromeDinoGame";
 import { db } from "@/lib/firebase";
 import { ref, push, set } from "firebase/database";
+import { gameAudio } from "@/features/games/services/gameSoundService";
 
 interface PageErrorFallbackProps {
   error?: Error | null;

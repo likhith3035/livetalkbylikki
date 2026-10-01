@@ -24,6 +24,14 @@
     <priority>0.95</priority>
   </url>
 
+  <!-- Code Studio Playground & Multi-Language IDE -->
+  <url>
+    <loc>https://incogtalkk.netlify.app/code</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+
   <!-- Encrypted File Sharing & 1-Click ZIP Downloads -->
   <url>
     <loc>https://incogtalkk.netlify.app/file-sharing</loc>

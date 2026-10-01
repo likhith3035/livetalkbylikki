@@ -71,7 +71,7 @@ const GuidelinesPage = () => {
         <Header onlineCount={onlineCount} />
       </div>
 
-      <main className="flex-1 px-6 py-12 pb-32 max-w-3xl mx-auto w-full">
+      <main className="flex-1 px-6 py-12 pb-[max(env(safe-area-inset-bottom,0px),2rem)] max-w-3xl mx-auto w-full">
         <motion.div {...fadeUp} className="text-center mb-16 space-y-4">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 text-primary mb-2 shadow-inner">
             <ShieldCheck className="h-8 w-8" />

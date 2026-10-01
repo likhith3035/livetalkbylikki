@@ -161,8 +161,8 @@ export function stepColorRushAI(
 
   const persona = COLOR_RUSH_AI_PERSONAS[difficulty] || COLOR_RUSH_AI_PERSONAS.medium;
 
-  let currentX = aiState.currentX;
-  let currentY = aiState.currentY;
+  const currentX = aiState.currentX;
+  const currentY = aiState.currentY;
   let targetX = aiState.targetX;
   let targetY = aiState.targetY;
   let targetType = aiState.targetType;

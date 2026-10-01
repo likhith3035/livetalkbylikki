@@ -113,9 +113,9 @@ describe("usePullToRefresh Hook Protection", () => {
   });
 
   it("should not trigger pull on interactive game or chat routes", () => {
-    // Mock location pathname to /games
+    // Mock location pathname to an active game room route (/games/:code)
     const originalPathname = window.location.pathname;
-    window.history.pushState({}, "", "/games");
+    window.history.pushState({}, "", "/games/active-match");
 
     const onRefresh = vi.fn();
     const { result } = renderHook(() => usePullToRefresh({ onRefresh }));

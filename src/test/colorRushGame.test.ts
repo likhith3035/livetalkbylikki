@@ -137,7 +137,7 @@ describe("ColorRush Game Mechanics", () => {
     expect(COLOR_RUSH_AI_PERSONAS.medium).toBeDefined();
     expect(COLOR_RUSH_AI_PERSONAS.hard).toBeDefined();
 
-    let aiState = initColorRushAIState(24, 24);
+    const aiState = initColorRushAIState(24, 24);
     const gameState = createInitialColorRushState(30);
 
     const stepResult = stepColorRushAI(gameState, aiState, "hard", 2);

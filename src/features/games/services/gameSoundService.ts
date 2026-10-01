@@ -14,6 +14,26 @@ class GameSoundSynthesizer {
     } catch {
       this.muted = false;
     }
+
+    // Attach global user-gesture audio unlock listeners for mobile iOS/Android
+    if (typeof window !== "undefined") {
+      const unlockAudio = () => {
+        try {
+          const ctx = this.getContext();
+          if (ctx && ctx.state === "suspended") {
+            ctx.resume().catch(() => {});
+          }
+        } catch {}
+        window.removeEventListener("touchstart", unlockAudio);
+        window.removeEventListener("touchend", unlockAudio);
+        window.removeEventListener("pointerdown", unlockAudio);
+        window.removeEventListener("click", unlockAudio);
+      };
+      window.addEventListener("touchstart", unlockAudio, { passive: true, once: true });
+      window.addEventListener("touchend", unlockAudio, { passive: true, once: true });
+      window.addEventListener("pointerdown", unlockAudio, { passive: true, once: true });
+      window.addEventListener("click", unlockAudio, { passive: true, once: true });
+    }
   }
 
   private getContext(): AudioContext | null {

@@ -117,14 +117,14 @@
   }
 
   html, body {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: contain;
   }
 
-  /* Prevent iOS Safari from forcing auto-zoom on input focus */
+  /* Prevent iOS Safari from forcing auto-zoom on input focus, while preserving code editor sizing */
   @media screen and (max-width: 768px) {
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
     select,
-    textarea {
+    textarea:not([data-code-editor]):not(.code-editor-input) {
       font-size: 16px !important;
     }
   }

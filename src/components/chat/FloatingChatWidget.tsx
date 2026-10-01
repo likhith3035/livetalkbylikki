@@ -84,7 +84,7 @@ export const FloatingChatWidget: React.FC<FloatingChatWidgetProps> = ({
         dragElastic={0.08}
         dragConstraints={dragBounds}
         className={cn(
-          "fixed z-[95] bottom-20 right-4 sm:right-8",
+          "fixed z-[95] bottom-[max(env(safe-area-inset-bottom,0px)+5rem,5rem)] right-4 sm:right-8",
           "flex items-center gap-2 p-2 rounded-full bg-card/95 border border-primary/40 shadow-2xl backdrop-blur-2xl",
           "ring-2 ring-primary/20 hover:ring-primary/50 transition-all select-none cursor-grab active:cursor-grabbing touch-none"
         )}

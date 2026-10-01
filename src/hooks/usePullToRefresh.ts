@@ -8,7 +8,7 @@ interface UsePullToRefreshOptions {
 
 /**
  * Checks if the target element or any of its scrollable ancestors is currently scrolled down.
- * If ANY container has scrollTop > 2, the user is scrolling content (e.g. paging up/down),
+ * If ANY container has scrollTop > 3, the user is scrolling content (e.g. paging up/down),
  * so pull-to-refresh must NEVER be triggered.
  */
 const isContainerScrolledDown = (target: EventTarget | null): boolean => {
@@ -20,12 +20,12 @@ const isContainerScrolledDown = (target: EventTarget | null): boolean => {
     document.documentElement?.scrollTop ||
     document.body?.scrollTop ||
     0;
-  if (winScroll > 2) return true;
+  if (winScroll > 3) return true;
 
   // 2. Check touch target and all ancestor elements
   let el = target instanceof HTMLElement ? target : null;
   while (el && el !== document.body && el !== document.documentElement) {
-    if (el.scrollTop > 2) {
+    if (el.scrollTop > 3) {
       return true;
     }
     el = el.parentElement;
@@ -34,14 +34,14 @@ const isContainerScrolledDown = (target: EventTarget | null): boolean => {
   // 3. Check common application scroll containers (e.g. AppShell content wrapper)
   try {
     const scrollContainers = document.querySelectorAll<HTMLElement>(
-      ".overflow-y-auto, .overflow-y-scroll, [data-scroll-container]"
+      "#app-shell-scroll-container, [data-scroll-container], .overflow-y-auto, .overflow-y-scroll"
     );
     for (let i = 0; i < scrollContainers.length; i++) {
       const container = scrollContainers[i];
       if (
         target instanceof Node &&
         container.contains(target) &&
-        container.scrollTop > 2
+        container.scrollTop > 3
       ) {
         return true;
       }
@@ -55,8 +55,8 @@ const isContainerScrolledDown = (target: EventTarget | null): boolean => {
 
 export const usePullToRefresh = ({
   onRefresh,
-  threshold = 85,
-  maxPull = 130,
+  threshold = 60,
+  maxPull = 110,
 }: UsePullToRefreshOptions = {}) => {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -71,7 +71,7 @@ export const usePullToRefresh = ({
 
       return Boolean(
         target.closest(
-          'video, audio, canvas, input, textarea, button, select, a, [data-no-pull-refresh], [data-video-call-active], [data-pip-container], [data-pip], .touch-none, [role="dialog"], [role="menu"], [role="tabpanel"], .modal, pre, code'
+          'video, audio, canvas, input, textarea, select, [data-no-pull-refresh], [data-video-call-active], [data-pip-container], [data-pip], [role="dialog"], [role="menu"], pre, code'
         )
       );
     };
@@ -87,18 +87,17 @@ export const usePullToRefresh = ({
         return true;
       }
 
-      // 2. In active sessions, rooms, games, file-sharing, or forms where a reload destroys state
+      // 2. In active room matches or active peer connections where a reload forfeits the match or destroys connection
       const path = typeof window !== "undefined" ? window.location.pathname : "";
+      const search = typeof window !== "undefined" ? window.location.search : "";
+
       if (
-        path.includes("/chat") ||
-        path.includes("/room") ||
-        path.includes("/games") ||
-        path.includes("/ai-chat") ||
-        path.includes("/file-sharing") ||
-        path.includes("/share/") ||
-        path.includes("/handoff") ||
-        path.includes("/prompt-analyzer") ||
-        path.includes("/admin")
+        path.includes("/room/") ||
+        path.startsWith("/games/") ||
+        search.includes("room=") ||
+        document.querySelector("[data-game-active='true']") ||
+        document.body.classList.contains("in-chat-connected") ||
+        document.querySelector("[data-chat-connected='true']")
       ) {
         return true;
       }
@@ -151,15 +150,15 @@ export const usePullToRefresh = ({
       }
 
       // Only pull if swiping downwards from the true top
-      // Apply a 20px dead-zone so regular touch taps/page-up flicks don't trigger pull
-      if (diffY > 20) {
-        const effectivePull = diffY - 20;
-        // Damped pull effect (0.4 resistance factor)
-        const distance = Math.min(effectivePull * 0.4, maxPull);
+      // 10px dead-zone so subtle taps don't initiate pull
+      if (diffY > 10) {
+        const effectivePull = diffY - 10;
+        // Damped pull effect (0.55 factor)
+        const distance = Math.min(effectivePull * 0.55, maxPull);
         setPullDistance(distance);
 
-        // Prevent default browser bounce only once an intentional pull is underway
-        if (distance > 25 && e.cancelable) {
+        // Prevent default browser bounce once an intentional pull is underway
+        if (distance > 18 && e.cancelable) {
           e.preventDefault();
         }
       } else {
@@ -201,14 +200,21 @@ export const usePullToRefresh = ({
       }
     };
 
+    const handleTouchCancel = () => {
+      isPulling.current = false;
+      setPullDistance(0);
+    };
+
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchCancel);
 
     return () => {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchCancel);
     };
   }, [pullDistance, isRefreshing, threshold, maxPull, onRefresh]);
 

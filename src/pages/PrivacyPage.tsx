@@ -37,7 +37,7 @@ const PrivacyPage = () => {
 
       <Header onlineCount={onlineCount} />
       
-      <main className="flex-1 px-6 pb-28 pt-8 max-w-3xl mx-auto w-full relative z-10 space-y-12">
+      <main className="flex-1 px-6 pb-12 pb-[max(env(safe-area-inset-bottom,0px),2rem)] pt-8 max-w-3xl mx-auto w-full relative z-10 space-y-12">
         <motion.button
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}

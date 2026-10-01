@@ -198,6 +198,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         <div className="relative flex-1 h-full w-full overflow-hidden">
           <textarea
             ref={textareaRef}
+            data-code-editor="true"
             value={value}
             onChange={(e) => {
               onChange(e.target.value);
@@ -211,7 +212,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             autoCapitalize="off"
             autoComplete="off"
             autoCorrect="off"
-            className="w-full h-full p-3.5 bg-transparent resize-none outline-none font-mono leading-relaxed border-0 overflow-auto whitespace-pre tab-2 focus:ring-0 selection:bg-indigo-500/30 touch-manipulation"
+            className="code-editor-input w-full h-full p-3.5 bg-transparent resize-none outline-none font-mono leading-relaxed border-0 overflow-auto whitespace-pre tab-2 focus:ring-0 selection:bg-indigo-500/30 touch-manipulation"
             style={{
               fontSize: `${fontSize}px`,
               lineHeight: "1.625",

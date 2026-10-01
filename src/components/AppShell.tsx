@@ -14,7 +14,11 @@ const AppShell = ({ children }: AppShellProps) => {
         <DesktopSidebar />
 
         {/* Content area — scrollable for landing pages, fits 100% height for chat app */}
-        <div className="flex min-w-0 flex-1 flex-col h-full min-h-0 overflow-y-auto overflow-x-hidden relative overscroll-y-contain">
+        <div
+          id="app-shell-scroll-container"
+          data-scroll-container="true"
+          className="flex min-w-0 flex-1 flex-col h-full min-h-0 overflow-y-auto overflow-x-hidden relative overscroll-y-contain"
+        >
           {children}
         </div>
       </div>

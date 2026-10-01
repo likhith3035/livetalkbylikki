@@ -408,8 +408,8 @@ export default function GamesPage() {
         // If an opponent connected while QR popup is open, auto-close it with celebratory notification
         if (updated.players?.guest && !activeRoom.players?.guest) {
           setIsQRModalOpen(false);
-          try { gameHaptics?.opponentJoined?.(); } catch {}
-          try { gameAudio?.playWin?.(); } catch {}
+          try { gameHaptics?.opponentJoined?.(); } catch (_e) { /* ignore */ }
+          try { gameAudio?.playWin?.(); } catch (_e) { /* ignore */ }
           const guestName = updated.players.guest.name || "Player 2";
           const guestAvatar = updated.players.guest.avatar || "👾";
           toast.success(`🎉 ${guestAvatar} ${guestName} joined the match! Game ready!`, {
@@ -422,8 +422,8 @@ export default function GamesPage() {
         // If we were searching for quickmatch and an opponent connected, exit searching
         if (isSearchingQuickMatch && updated.players.guest) {
           setIsSearchingQuickMatch(false);
-          try { gameHaptics?.opponentJoined?.(); } catch {}
-          try { gameAudio?.playWin?.(); } catch {}
+          try { gameHaptics?.opponentJoined?.(); } catch (_e) { /* ignore */ }
+          try { gameAudio?.playWin?.(); } catch (_e) { /* ignore */ }
           const guestName = updated.players.guest.name || "Opponent";
           const guestAvatar = updated.players.guest.avatar || "👾";
           toast.success(`🎉 ${guestAvatar} ${guestName} connected! Game starting...`);
@@ -453,8 +453,8 @@ export default function GamesPage() {
     if (!prevGuestConnectedRef.current && isGuestConnected) {
       setIsQRModalOpen((isOpen) => {
         if (isOpen) {
-          try { gameHaptics?.opponentJoined?.(); } catch {}
-          try { gameAudio?.playWin?.(); } catch {}
+          try { gameHaptics?.opponentJoined?.(); } catch (_e) { /* ignore */ }
+          try { gameAudio?.playWin?.(); } catch (_e) { /* ignore */ }
           const guestName = activeRoom?.players?.guest?.name || "Player 2";
           const guestAvatar = activeRoom?.players?.guest?.avatar || "👾";
           toast.success(`🎉 ${guestAvatar} ${guestName} joined the match! Game ready!`, {

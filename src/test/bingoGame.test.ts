@@ -289,7 +289,7 @@ describe("Bingo Blitz Duel Game Logic", () => {
       const hostLockedState: BingoGameState = {
         ...state,
         hostReady: true,
-        phase: false ? "playing" : "setup",
+        phase: state.guestReady ? "playing" : "setup",
       };
       expect(hostLockedState.hostReady).toBe(true);
       expect(hostLockedState.phase).toBe("setup");

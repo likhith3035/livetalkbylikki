@@ -457,25 +457,25 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
   const getCardTextSize = () => {
     if (gridSize <= 4) return "text-2xl xs:text-3xl sm:text-4xl";
     if (gridSize <= 5) return "text-xl xs:text-2xl sm:text-3xl";
-    if (gridSize <= 6) return "text-lg xs:text-xl sm:text-2xl";
-    if (gridSize <= 7) return "text-base xs:text-lg sm:text-xl";
-    if (gridSize <= 8) return "text-sm xs:text-base sm:text-lg";
-    return "text-xs xs:text-sm sm:text-base";
+    if (gridSize <= 6) return "text-base xs:text-lg sm:text-xl";
+    if (gridSize <= 7) return "text-sm xs:text-base sm:text-lg";
+    if (gridSize <= 8) return "text-xs xs:text-sm sm:text-base";
+    return "text-[10px] xs:text-xs sm:text-sm";
   };
   const getGapSize = () => {
     if (gridSize <= 4) return "gap-1.5 xs:gap-2 sm:gap-3";
-    if (gridSize <= 5) return "gap-1.5 xs:gap-2 sm:gap-2.5";
+    if (gridSize <= 5) return "gap-1 xs:gap-1.5 sm:gap-2.5";
     if (gridSize <= 6) return "gap-1 xs:gap-1.5 sm:gap-2";
-    if (gridSize <= 7) return "gap-1 xs:gap-1 sm:gap-1.5";
-    return "gap-0.5 xs:gap-1 sm:gap-1";
+    if (gridSize <= 7) return "gap-0.5 xs:gap-1 sm:gap-1.5";
+    return "gap-0.5 xs:gap-0.5 sm:gap-1";
   };
   const getMaxWidth = () => {
     if (gridSize <= 4) return "max-w-[340px] xs:max-w-sm sm:max-w-md";
-    if (gridSize <= 5) return "max-w-[380px] xs:max-w-md sm:max-w-lg";
-    if (gridSize <= 6) return "max-w-[420px] xs:max-w-lg sm:max-w-xl";
-    if (gridSize <= 7) return "max-w-[460px] xs:max-w-xl sm:max-w-2xl";
-    if (gridSize <= 8) return "max-w-[500px] xs:max-w-xl sm:max-w-2xl";
-    return "max-w-[540px] xs:max-w-2xl sm:max-w-3xl";
+    if (gridSize <= 5) return "max-w-[360px] xs:max-w-md sm:max-w-lg";
+    if (gridSize <= 6) return "max-w-[390px] xs:max-w-lg sm:max-w-xl";
+    if (gridSize <= 7) return "max-w-[430px] xs:max-w-xl sm:max-w-2xl";
+    if (gridSize <= 8) return "max-w-[470px] xs:max-w-xl sm:max-w-2xl";
+    return "max-w-[520px] xs:max-w-2xl sm:max-w-3xl";
   };
   const getQuestionMarkSize = () => {
     if (gridSize <= 5) return "text-base sm:text-lg";
@@ -532,7 +532,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
 
       {/* Dynamic NxN Grid */}
       <div
-        className={`${getGapSize()} p-2 sm:p-3 rounded-2xl sm:rounded-3xl bg-card border-2 border-border shadow-2xl w-full`}
+        className={`${getGapSize()} p-1.5 xs:p-2 sm:p-3 rounded-2xl sm:rounded-3xl bg-card border-2 border-border shadow-2xl w-full min-w-0 max-w-full`}
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,

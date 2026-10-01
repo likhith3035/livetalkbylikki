@@ -22,7 +22,7 @@ export const PullToRefreshIndicator: React.FC<PullToRefreshIndicatorProps> = ({ 
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -20, scale: 0.85 }}
         transition={{ type: "spring", stiffness: 450, damping: 25 }}
-        className="fixed top-3 left-1/2 -translate-x-1/2 z-[250] pointer-events-none flex flex-col items-center select-none"
+        className="fixed top-[max(env(safe-area-inset-top,0px)+0.75rem,0.85rem)] left-1/2 -translate-x-1/2 z-[250] pointer-events-none flex flex-col items-center select-none"
       >
         <div
           className={`flex items-center gap-2.5 px-4 py-2 rounded-full bg-card/95 backdrop-blur-2xl border shadow-xl transition-all duration-200 ${

@@ -362,7 +362,7 @@ const SettingsPage = () => {
 
       <Header onlineCount={onlineCount} />
 
-      <main className="flex-1 px-5 py-8 pb-32 max-w-5xl mx-auto w-full">
+      <main className="flex-1 px-5 py-8 pb-12 pb-[max(env(safe-area-inset-bottom,0px),2rem)] max-w-5xl mx-auto w-full">
         <motion.div {...fadeUp} className="mb-8">
           <h1 className="text-3xl font-bold font-display tracking-tight text-foreground">Settings</h1>
           <p className="text-muted-foreground mt-1.5 text-sm font-medium">Personalize your chat experience</p>

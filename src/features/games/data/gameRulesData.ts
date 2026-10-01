@@ -567,7 +567,7 @@ export const ALL_GAME_RULES: Record<GameId, GameRuleGuide> = {
     |                  [ WOODEN DESK ]                      |
     |                                                       |
     |                 YOUR PEN (Pilot V5)                   |
-    |                   \-- AIM & FLICK -->                 |
+    |                   \\-- AIM & FLICK -->                 |
     +-------------------------------------------------------+
     `,
   },

@@ -520,7 +520,7 @@ export function getSmartPenAIFlick(
   // Target vector: Aim directly at opponent pen center
   const dx = opponentPen.x - aiPen.x;
   const dy = opponentPen.y - aiPen.y;
-  let idealAngle = Math.atan2(dy, dx);
+  const idealAngle = Math.atan2(dy, dx);
 
   // Distance between pens
   const penDist = Math.sqrt(dx * dx + dy * dy);

@@ -393,7 +393,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background font-body pb-24 lg:pb-8 select-none text-foreground transition-colors">
+    <div className="flex flex-col min-h-screen bg-background font-body pb-12 pb-[max(env(safe-area-inset-bottom,0px),2rem)] lg:pb-8 select-none text-foreground transition-colors">
       <Header onlineCount={onlineCount} />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 space-y-4">

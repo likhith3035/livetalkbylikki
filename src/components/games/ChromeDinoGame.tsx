@@ -26,13 +26,8 @@ interface ChromeDinoGameProps {
 const HIGH_SCORE_KEY = "livetalk_minimal_dino_highscore_v4";
 
 export const ChromeDinoGame: React.FC<ChromeDinoGameProps> = ({ onClose }) => {
-  let isDarkMode = true;
-  try {
-    const { settings } = useSettings();
-    isDarkMode = settings.darkMode;
-  } catch {
-    isDarkMode = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  }
+  const { settings } = useSettings();
+  const isDarkMode = settings?.darkMode ?? (typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);

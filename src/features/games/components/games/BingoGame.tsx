@@ -1843,7 +1843,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
         {/* ── 5x5 Draft Grid (Blank Slate with Ghost Previews & Drag Support) ── */}
         <div
           ref={gridContainerRef}
-          className="relative w-full aspect-square max-w-[min(370px,calc(100vw-2rem))] bg-card/80 backdrop-blur-2xl p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl border-2 border-border/80 shadow-[0_0_25px_rgba(0,0,0,0.4)] flex items-center justify-center touch-none select-none"
+          className="relative w-full aspect-square max-w-[min(370px,calc(100vw-2rem))] bg-card/80 backdrop-blur-2xl p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl border-2 border-border/80 shadow-[0_0_25px_rgba(0,0,0,0.4)] flex items-center justify-center touch-pan-y select-none"
         >
           <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-1.5 sm:gap-2">
             {currentActiveDraft.map((row, r) =>
@@ -1941,7 +1941,7 @@ export const BingoGame: React.FC<BingoGameProps> = ({ room, myPlayerId, isMyTurn
             </span>
           </div>
 
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-1.5 w-full touch-none select-none">
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-1.5 w-full touch-pan-y select-none">
             {Array.from({ length: 25 }, (_, i) => i + 1).map((n) => {
               const isPlaced = placedNumbersSet.has(n);
               const isSelected = selectedBankNumber === n;

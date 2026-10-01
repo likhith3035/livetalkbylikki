@@ -79,7 +79,7 @@ export const GameHowToPlayModal: React.FC<GameHowToPlayModalProps> = ({
                 <span>Arcade Academy</span>
               </span>
               <span className="text-xs text-muted-foreground hidden sm:inline-block">
-                Master all 8 games & rules
+                Master all {Object.keys(ALL_GAME_RULES).length} games & rules
               </span>
             </div>
             <span className="text-[11px] font-mono text-muted-foreground">
@@ -102,12 +102,12 @@ export const GameHowToPlayModal: React.FC<GameHowToPlayModalProps> = ({
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold shrink-0 transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/25 scale-105"
+                    ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105"
                     : "bg-muted/40 hover:bg-muted/80 border-border/50 text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span>{g.icon}</span>
-                <span className="truncate max-w-[100px] sm:max-w-none">{g.title.split(" ")[0]}</span>
+                <span className="text-sm">{g.icon}</span>
+                <span className="truncate max-w-[110px] sm:max-w-none">{g.title.split(" ")[0]}</span>
               </button>
             );
           })}

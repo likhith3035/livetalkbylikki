@@ -18,19 +18,34 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
 
-const drawerNavItems = [
-  { icon: Home,          path: "/",                 label: "Home Page",       accent: "#10b981" },
-  { icon: MessageSquare, path: "/chat",              label: "Start Chat",      accent: "hsl(var(--primary))" },
-  { icon: Code2,         path: "/code",              label: "Code Studio",     accent: "#06b6d4" },
-  { icon: Gamepad2,      path: "/games",             label: "Arcade Games",    accent: "#f59e0b" },
-  { icon: Bot,           path: "/ai-chat",           label: "AI Wingman",      accent: "#ec4899" },
-  { icon: Wand2,         path: "/prompt-analyzer",   label: "Prompt Analyzer", accent: "#a855f7" },
-  { icon: Share2,        path: "/file-sharing",      label: "File Sharing",    accent: "#3b82f6" },
-  { icon: Shield,        path: "/safety",            label: "Safety Center",   accent: "#14b8a6" },
-  { icon: User,          path: "/profile",           label: "My Profile",      accent: "#8b5cf6" },
-  { icon: SettingsIcon,  path: "/settings",          label: "App Settings",    accent: "#64748b" },
-  { icon: ShieldAlert,   path: "/guidelines",        label: "Community Rules", accent: "#f59e0b" },
-  { icon: Info,          path: "/info",              label: "Help & FAQ",      accent: "#0ea5e9" },
+const drawerNavSections = [
+  {
+    category: "Connect",
+    items: [
+      { icon: Home, path: "/", label: "Home Page", accent: "#10b981" },
+      { icon: MessageSquare, path: "/chat", label: "Start Chat", accent: "hsl(var(--primary))" },
+    ],
+  },
+  {
+    category: "Arcade & Studio",
+    items: [
+      { icon: Gamepad2, path: "/games", label: "Arcade Games", accent: "#f59e0b", badge: "11 Games" },
+      { icon: Code2, path: "/code", label: "Code Studio", accent: "#06b6d4", badge: "IDE" },
+      { icon: Bot, path: "/ai-chat", label: "AI Wingman", accent: "#ec4899" },
+      { icon: Wand2, path: "/prompt-analyzer", label: "Prompt Analyzer", accent: "#a855f7" },
+      { icon: Share2, path: "/file-sharing", label: "File Sharing", accent: "#3b82f6" },
+    ],
+  },
+  {
+    category: "Settings & Safety",
+    items: [
+      { icon: User, path: "/profile", label: "My Profile", accent: "#8b5cf6" },
+      { icon: SettingsIcon, path: "/settings", label: "App Settings", accent: "#64748b" },
+      { icon: Shield, path: "/safety", label: "Safety Center", accent: "#14b8a6" },
+      { icon: ShieldAlert, path: "/guidelines", label: "Community Rules", accent: "#f59e0b" },
+      { icon: Info, path: "/info", label: "Help & FAQ", accent: "#0ea5e9" },
+    ],
+  },
 ];
 
 interface HeaderProps {
@@ -248,35 +263,56 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
               </SheetHeader>
 
               {/* Navigation Items */}
-              <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-1 touch-scroll">
-                {drawerNavItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => {
-                        setDrawerOpen(false);
-                        navigate(item.path);
-                      }}
-                      className={cn(
-                        "flex items-center gap-3 px-3.5 py-2.5 rounded-2xl w-full text-left transition-all active:scale-95",
-                        isActive
-                          ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20"
-                          : "text-foreground hover:bg-secondary/80 font-medium"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
-                          isActive ? "bg-white/20" : "bg-secondary"
-                        )}
-                      >
-                        <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-foreground")} />
-                      </div>
-                      <span className="text-xs font-semibold">{item.label}</span>
-                    </button>
-                  );
-                })}
+              <div className="flex flex-col gap-2 overflow-y-auto flex-1 min-h-0 pr-1 touch-scroll no-scrollbar">
+                {drawerNavSections.map((section, sIdx) => (
+                  <div key={section.category} className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-3 pt-2">
+                      {section.category}
+                    </span>
+                    {section.items.map((item) => {
+                      const isActive = location.pathname === item.path;
+                      return (
+                        <button
+                          key={item.path}
+                          onClick={() => {
+                            setDrawerOpen(false);
+                            navigate(item.path);
+                          }}
+                          className={cn(
+                            "flex items-center justify-between px-3 py-2 rounded-2xl w-full text-left transition-all active:scale-95 group",
+                            isActive
+                              ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground font-bold shadow-md shadow-primary/25"
+                              : "text-foreground hover:bg-secondary/70 font-medium"
+                          )}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className={cn(
+                                "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
+                                isActive ? "bg-white/20 text-white" : "bg-secondary text-foreground"
+                              )}
+                            >
+                              <item.icon className="h-4 w-4" />
+                            </div>
+                            <span className="text-xs font-semibold truncate">{item.label}</span>
+                          </div>
+                          {item.badge && (
+                            <span
+                              className={cn(
+                                "text-[10px] font-extrabold px-1.5 py-0.5 rounded-md shrink-0 tracking-wide",
+                                isActive
+                                  ? "bg-white/25 text-white"
+                                  : "bg-muted text-muted-foreground border border-border/50"
+                              )}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
 
                 <div className="my-2 h-px bg-border/40" />
 

@@ -10,18 +10,47 @@ import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
 
-const navItems = [
-  { icon: Home, path: "/", label: "Home" },
-  { icon: MessageSquare, path: "/chat", label: "Chat" },
-  { icon: Gamepad2, path: "/games", label: "Arcade Games" },
-  { icon: Bot, path: "/ai-chat", label: "AI Chat" },
-  { icon: Wand2, path: "/prompt-analyzer", label: "Prompt Analyzer" },
-  { icon: Share2, path: "/file-sharing", label: "File Sharing" },
-  { icon: Shield, path: "/safety", label: "Safety" },
-  { icon: User, path: "/profile", label: "Profile" },
-  { icon: Settings, path: "/settings", label: "Settings" },
-  { icon: ShieldAlert, path: "/guidelines", label: "Guidelines" },
-  { icon: Info, path: "/info", label: "About" },
+interface NavItem {
+  icon: any;
+  path: string;
+  label: string;
+  badge?: string;
+  badgeColor?: string;
+}
+
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    title: "Connect",
+    items: [
+      { icon: Home, path: "/", label: "Home" },
+      { icon: MessageSquare, path: "/chat", label: "Chat" },
+    ],
+  },
+  {
+    title: "Arcade & AI",
+    items: [
+      { icon: Gamepad2, path: "/games", label: "Arcade Games", badge: "11", badgeColor: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
+      { icon: Code2, path: "/code", label: "Code Studio", badge: "IDE", badgeColor: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
+      { icon: Bot, path: "/ai-chat", label: "AI Wingman" },
+      { icon: Wand2, path: "/prompt-analyzer", label: "Prompt Analyzer" },
+      { icon: Share2, path: "/file-sharing", label: "File Sharing" },
+    ],
+  },
+  {
+    title: "Settings & Safety",
+    items: [
+      { icon: User, path: "/profile", label: "Profile" },
+      { icon: Settings, path: "/settings", label: "Settings" },
+      { icon: Shield, path: "/safety", label: "Safety" },
+      { icon: ShieldAlert, path: "/guidelines", label: "Guidelines" },
+      { icon: Info, path: "/info", label: "About" },
+    ],
+  },
 ];
 
 const DesktopSidebar = () => {
@@ -129,27 +158,64 @@ const DesktopSidebar = () => {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 flex flex-col gap-1 px-2.5 py-3 overflow-y-auto overflow-x-hidden">
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Link
-              key={item.label}
-              to={item.path!}
-              title={isCollapsed ? item.label : undefined}
-              className={cn(
-                "flex items-center rounded-xl transition-all duration-200 border border-transparent font-medium text-sm",
-                isCollapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2.5",
-                isActive
-                  ? "bg-primary/15 text-primary shadow-sm font-semibold"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-              )}
-            >
-              <item.icon className="h-[18px] w-[18px] shrink-0" />
-              {!isCollapsed && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 flex flex-col gap-1 px-2.5 py-2 overflow-y-auto overflow-x-hidden no-scrollbar">
+        {navSections.map((section, sIdx) => (
+          <div key={section.title || sIdx} className="flex flex-col gap-0.5">
+            {!isCollapsed && section.title && (
+              <div className="px-3 pt-3 pb-1 text-[10px] font-bold tracking-wider uppercase text-muted-foreground/60 select-none">
+                {section.title}
+              </div>
+            )}
+            {isCollapsed && sIdx > 0 && <div className="my-1.5 mx-auto w-6 h-px bg-border/40" />}
+
+            {section.items.map((item) => {
+              const isActive = pathname === item.path;
+              return (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  title={isCollapsed ? item.label : undefined}
+                  className={cn(
+                    "group relative flex items-center rounded-xl transition-all duration-200 border font-medium text-sm",
+                    isCollapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
+                    isActive
+                      ? "bg-primary/15 text-primary border-primary/25 shadow-sm font-semibold"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                  )}
+                >
+                  {/* Left indicator glow line when active */}
+                  {isActive && !isCollapsed && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                  )}
+                  {isActive && isCollapsed && (
+                    <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                  )}
+                  <item.icon
+                    className={cn(
+                      "h-[18px] w-[18px] shrink-0 transition-transform group-hover:scale-110",
+                      isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                    )}
+                  />
+                  {!isCollapsed && (
+                    <div className="flex items-center justify-between flex-1 min-w-0">
+                      <span className="truncate">{item.label}</span>
+                      {item.badge && (
+                        <span
+                          className={cn(
+                            "text-[10px] font-black px-1.5 py-0.5 rounded-md border tracking-wider",
+                            item.badgeColor
+                          )}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Footer & Theme Controls */}

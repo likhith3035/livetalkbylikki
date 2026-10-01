@@ -16,15 +16,16 @@ export const GameTurnTimer: React.FC<GameTurnTimerProps> = ({
   isMyTurn,
   onTimeout,
 }) => {
-  if (!turnExpiresAt || turnTimerSeconds <= 0) return null;
-
   const [timeLeft, setTimeLeft] = useState<number>(() => {
+    if (!turnExpiresAt || turnTimerSeconds <= 0) return 0;
     return Math.max(0, Math.ceil((turnExpiresAt - Date.now()) / 1000));
   });
 
   const lastTickedSecRef = useRef<number>(-1);
 
   useEffect(() => {
+    if (!turnExpiresAt || turnTimerSeconds <= 0) return;
+
     const interval = setInterval(() => {
       const remaining = Math.max(0, Math.ceil((turnExpiresAt - Date.now()) / 1000));
       setTimeLeft(remaining);
@@ -44,7 +45,9 @@ export const GameTurnTimer: React.FC<GameTurnTimerProps> = ({
     }, 200);
 
     return () => clearInterval(interval);
-  }, [turnExpiresAt, isMyTurn, onTimeout]);
+  }, [turnExpiresAt, turnTimerSeconds, isMyTurn, onTimeout]);
+
+  if (!turnExpiresAt || turnTimerSeconds <= 0) return null;
 
   const percentage = Math.min(100, Math.max(0, (timeLeft / turnTimerSeconds) * 100));
   const isUrgent = timeLeft <= 5;

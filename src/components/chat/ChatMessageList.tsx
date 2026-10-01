@@ -220,7 +220,7 @@ const isImageMedia = (url?: string) => {
 const isEmojiOnly = (text?: string) => {
   if (!text || text.length === 0) return false;
   // Strip variation selectors, ZWJ, and emoji modifiers, then check if anything non-emoji remains
-  const stripped = text.replace(/[\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, "");
+  const stripped = text.replace(/[\u{FE00}-\u{FE0F}]|\u{200D}|\u{20E3}|[\u{E0020}-\u{E007F}]/gu, "");
   const emojiPattern = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+$/u;
   return emojiPattern.test(stripped) && stripped.trim().length <= 12;
 };

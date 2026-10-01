@@ -223,8 +223,8 @@ export function useChat(callbacks?: ChatCallbacks) {
       const processedEventIds = new Set<string>();
       
       const channelMock: BaseChannel = {
-        _listeners: [] as Array<{ event: string, callback: Function }>,
-        on: function(type: string, filter: { event: string }, callback: Function) {
+        _listeners: [] as Array<{ event: string, callback: (...args: any[]) => void }>,
+        on: function(type: string, filter: { event: string }, callback: (...args: any[]) => void) {
           this._listeners.push({ event: filter.event, callback });
           return this;
         },
@@ -809,10 +809,9 @@ export function useChat(callbacks?: ChatCallbacks) {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         // Firebase SDK auto-reconnects, but we nudge it by checking connection
-        import("firebase/database").then(({ getDatabase, ref: fbRef, onValue, off: fbOff }) => {
+        import("firebase/database").then(({ getDatabase, ref: fbRef, onValue }) => {
           const connRef = fbRef(getDatabase(), ".info/connected");
-          let unsub: () => void;
-          unsub = onValue(connRef, (snap) => {
+          const unsub = onValue(connRef, (snap) => {
             if (snap.val() === true) {
               console.log("[Chat] Firebase reconnected after background");
             }

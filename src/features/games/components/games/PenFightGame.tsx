@@ -2364,6 +2364,54 @@ export const PenFightGame: React.FC<PenFightGameProps> = ({
           </div>
         </div>
 
+        {/* 1.5 DEDICATED IN-GAME CONTROLS SUB-BAR (Unobstructed, outside canvas) */}
+        <div className="w-full px-2.5 py-1.5 bg-stone-900/90 border-b border-amber-900/40 flex items-center justify-between gap-1.5 flex-wrap z-20 select-none">
+          {/* Left: Turn Status & Arsenal Switcher */}
+          <div className="flex items-center gap-1.5">
+            <div
+              className={`px-2.5 py-1 rounded-xl backdrop-blur-md border text-xs font-black shadow-sm flex items-center gap-1.5 transition-all ${
+                isCurrentTurnMine
+                  ? "bg-amber-500 text-slate-950 border-amber-300 shadow-amber-500/30 animate-pulse"
+                  : "bg-stone-800 text-stone-200 border-stone-700"
+              }`}
+            >
+              <span className="truncate max-w-[150px] xs:max-w-[200px] sm:max-w-none">
+                {isLocalMode
+                  ? `👉 ${activePlayerName}'s Turn (${isHostTurn ? "Bottom" : "Top"})`
+                  : isCurrentTurnMine
+                  ? "👉 YOUR TURN"
+                  : `⏳ ${activePlayerName}'s Turn`}
+              </span>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPenSelectorOpen(true)}
+              className="rounded-xl h-7 px-2 bg-stone-800 text-stone-200 text-[11px] font-bold border-stone-700 hover:bg-stone-700 flex items-center gap-1 cursor-pointer shadow-sm"
+            >
+              <span>{PEN_MODELS[selectedPenModel]?.name.split(" ")[0]}</span>
+              <span className="text-[10px] text-muted-foreground">{isCapOn ? "(Cap)" : "(No Cap)"}</span>
+            </Button>
+          </div>
+
+          {/* Right: Aim Mode Toggle */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                gameAudio.playClick();
+                setAimMode((prev) => (prev === "slingshot" ? "direct" : "slingshot"));
+              }}
+              className="px-2.5 py-1 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 text-[11px] font-bold text-stone-200 transition-all cursor-pointer shadow-sm flex items-center gap-1"
+              title="Toggle Aiming Mode: Slingshot Pull vs Direct Swipe"
+            >
+              <span>{aimMode === "slingshot" ? "🏹 Slingshot" : "👆 Swipe"}</span>
+            </button>
+          </div>
+        </div>
+
         {/* 2. THE CLASSROOM ARENA WITH RECEDING FLOOR & BATTLE DESK */}
         <div
           className={`relative w-full overflow-hidden flex items-center justify-center shadow-2xl transition-all ${
@@ -2419,54 +2467,6 @@ export const PenFightGame: React.FC<PenFightGameProps> = ({
               }`}
               style={{ touchAction: "none" }}
             />
-          </div>
-
-          {/* Turn & Controls Quick Toolbar */}
-          <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
-            {/* Left: Turn Status & Arsenal Switcher */}
-            <div className="flex items-center gap-2 pointer-events-auto">
-              <div
-                className={`px-3 py-1.5 rounded-2xl backdrop-blur-md border text-xs font-black shadow-lg flex items-center gap-1.5 transition-all ${
-                  isCurrentTurnMine
-                    ? "bg-amber-500/90 text-slate-950 border-amber-300 shadow-amber-500/30 animate-pulse"
-                    : "bg-card/85 text-foreground border-border/60"
-                }`}
-              >
-                <span>
-                  {isLocalMode
-                    ? `👉 ${activePlayerName}'s Turn (${isHostTurn ? "Bottom Pen" : "Top Pen"})`
-                    : isCurrentTurnMine
-                    ? "👉 YOUR TURN"
-                    : `⏳ ${activePlayerName}'s Turn`}
-                </span>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsPenSelectorOpen(true)}
-                className="rounded-2xl h-8 px-2.5 bg-card/85 backdrop-blur-md text-[11px] font-bold border-border/60 flex items-center gap-1 cursor-pointer shadow-sm"
-              >
-                <span>{PEN_MODELS[selectedPenModel]?.name.split(" ")[0]}</span>
-                <span className="text-[10px] text-muted-foreground">{isCapOn ? "(Cap)" : "(No Cap)"}</span>
-              </Button>
-            </div>
-
-            {/* Right: Aim Mode Toggle */}
-            <div className="flex items-center gap-2 pointer-events-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  gameAudio.playClick();
-                  setAimMode((prev) => (prev === "slingshot" ? "direct" : "slingshot"));
-                }}
-                className="px-2.5 py-1.5 rounded-2xl bg-card/85 hover:bg-card backdrop-blur-md border border-border/60 text-[11px] font-bold text-foreground transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
-                title="Toggle Aiming Mode: Slingshot Pull vs Direct Swipe"
-              >
-                <span>{aimMode === "slingshot" ? "🏹 Slingshot Pull" : "👆 Direct Swipe"}</span>
-              </button>
-            </div>
           </div>
 
           {/* Floating Trick Shot Banner */}

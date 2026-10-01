@@ -117,7 +117,7 @@ function transpileToRunnableJS(code: string): string {
   js = js.replace(/interface\s+[a-zA-Z0-9_]+\s*\{[\s\S]*?\}/g, "");
   js = js.replace(/type\s+[a-zA-Z0-9_]+\s*=[\s\S]*?;/g, "");
   js = js.replace(/:\s*(string|number|boolean|any|void|object|unknown|never|React\.ReactNode)\[\]?/g, "");
-  js = js.replace(/as\s+[a-zA-Z0-9_<>\[\]]+/g, "");
+  js = js.replace(/as\s+[a-zA-Z0-9_<>[\]]+/g, "");
 
   return js.trim();
 }
