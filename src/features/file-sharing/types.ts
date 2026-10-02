@@ -73,3 +73,49 @@ export interface StorageUsageStats {
   totalBytes: number; // Configurable max limit (default 10 GB)
   byCategory: Record<FileCategory, number>;
 }
+
+export type BeamOptionType = "files" | "camera" | "text" | "secret" | "voice";
+
+export interface BeamDeviceInfo {
+  id: string;
+  name: string;
+  type: "mobile" | "desktop" | "tablet";
+  joinedAt: number;
+  isOnline?: boolean;
+}
+
+export interface BeamTransferItem {
+  id: string;
+  senderId: string;
+  senderName: string;
+  type: BeamOptionType;
+  timestamp: number;
+  status?: "pending" | "accepted" | "declined";
+  files?: SharedFileItem[];
+  textContent?: string;
+  secretPayload?: {
+    title: string;
+    secret: string;
+    burnAfterReading?: boolean;
+    hasBeenViewed?: boolean;
+  };
+  cameraPhotoUrl?: string;
+  voiceNoteUrl?: string;
+  voiceDurationSec?: number;
+  note?: string;
+}
+
+export interface BeamSession {
+  id: string;
+  code: string;
+  createdAt: number;
+  expiresAt: number;
+  status: "waiting" | "paired" | "closed";
+  requireApproval?: boolean;
+  receiver: BeamDeviceInfo;
+  sender?: BeamDeviceInfo | null;
+  senders?: Record<string, BeamDeviceInfo>;
+  transfers?: Record<string, BeamTransferItem>;
+}
+
+
