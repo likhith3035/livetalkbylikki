@@ -30,7 +30,11 @@ Output: [1, 2]
  * @return {number[]}
  */
 function twoSum(nums, target) {
-  // Your code here
+  // Write your code here
+  
+}
+`,
+    solutionCode: `function twoSum(nums, target) {
   const map = new Map();
   for (let i = 0; i < nums.length; i++) {
     const diff = target - nums[i];
@@ -40,8 +44,7 @@ function twoSum(nums, target) {
     map.set(nums[i], i);
   }
   return [];
-}
-`,
+}`,
     testCases: [
       { id: "tc-1", input: [[2, 7, 11, 15], 9], expected: [0, 1], description: "Standard match at front" },
       { id: "tc-2", input: [[3, 2, 4], 6], expected: [1, 2], description: "Match in middle and end" },
@@ -64,25 +67,34 @@ function twoSum(nums, target) {
     language: "javascript",
     functionName: "isPalindrome",
     tags: ["String", "Two Pointers"],
-    description: `A phrase is a **palindrome** if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers.
+    description: `A phrase is a **palindrome** if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward.
 
 Given a string \`s\`, return \`true\` if it is a palindrome, or \`false\` otherwise.
 
-### Example:
+### Example 1:
 \`\`\`js
 Input: s = "A man, a plan, a canal: Panama"
 Output: true // "amanaplanacanalpanama" is a palindrome
+\`\`\`
+
+### Example 2:
+\`\`\`js
+Input: s = "race a car"
+Output: false
 \`\`\``,
     starterCode: `/**
  * @param {string} s
  * @return {boolean}
  */
 function isPalindrome(s) {
-  // Your code here
-  const clean = s.toLowerCase().replace(/[^a-z0-9]/g, "");
-  return clean === clean.split("").reverse().join("");
+  // Write your code here
+  
 }
 `,
+    solutionCode: `function isPalindrome(s) {
+  const clean = s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return clean === clean.split("").reverse().join("");
+}`,
     testCases: [
       { id: "tc-1", input: ["A man, a plan, a canal: Panama"], expected: true, description: "Classic Panama palindrome" },
       { id: "tc-2", input: ["race a car"], expected: false, description: "Not a palindrome" },
@@ -107,20 +119,15 @@ function isPalindrome(s) {
     tags: ["JavaScript", "Closures", "Web Dev"],
     description: `Create a **debounce** function that delays invoking a callback until after \`delay\` milliseconds have elapsed since the last time the debounced function was invoked.
 
-In this test harness, \`testDebounce(callsCount, delayMs)\` executes calls in rapid succession and returns the number of times the target callback actually ran.`,
+In this test harness, \`testDebounce(callsCount, delayMs)\` returns whether the callback is properly deferred.`,
     starterCode: `/**
  * @param {Function} fn
  * @param {number} delay
  * @return {Function}
  */
 function debounce(fn, delay) {
-  let timerId = null;
-  return function (...args) {
-    if (timerId) clearTimeout(timerId);
-    timerId = setTimeout(() => {
-      fn.apply(this, args);
-    }, delay);
-  };
+  // Write your debounce implementation here
+  
 }
 
 // Test runner helper
@@ -133,13 +140,35 @@ function testDebounce(burstCount, delayMs) {
   for (let i = 0; i < burstCount; i++) {
     debounced();
   }
-  return 1; // Debounced burst results in 1 execution
+  // Immediately after synchronous burst, callback should NOT have run yet
+  return executedCount === 0;
 }
 `,
+    solutionCode: `function debounce(fn, delay) {
+  let timerId = null;
+  return function (...args) {
+    if (timerId) clearTimeout(timerId);
+    timerId = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
+}
+
+function testDebounce(burstCount, delayMs) {
+  let executedCount = 0;
+  const debounced = debounce(() => {
+    executedCount++;
+  }, delayMs);
+
+  for (let i = 0; i < burstCount; i++) {
+    debounced();
+  }
+  return executedCount === 0;
+}`,
     testCases: [
-      { id: "tc-1", input: [5, 100], expected: 1, description: "5 rapid calls collapse into 1" },
-      { id: "tc-2", input: [20, 50], expected: 1, description: "20 rapid calls collapse into 1" },
-      { id: "tc-3", input: [1, 200], expected: 1, description: "Single call executes once" },
+      { id: "tc-1", input: [5, 100], expected: true, description: "5 rapid calls are queued and not executed synchronously" },
+      { id: "tc-2", input: [20, 50], expected: true, description: "20 rapid calls do not fire prematurely" },
+      { id: "tc-3", input: [1, 200], expected: true, description: "Single call is properly delayed" },
     ],
     hints: [
       "Store a `timerId` in the outer closure.",
@@ -168,6 +197,11 @@ An input string is valid if:
  * @return {boolean}
  */
 function isValid(s) {
+  // Write your code here
+  
+}
+`,
+    solutionCode: `function isValid(s) {
   const stack = [];
   const map = {
     ")": "(",
@@ -186,8 +220,7 @@ function isValid(s) {
   }
 
   return stack.length === 0;
-}
-`,
+}`,
     testCases: [
       { id: "tc-1", input: ["()"], expected: true, description: "Simple parentheses" },
       { id: "tc-2", input: ["()[]{}"], expected: true, description: "All three brackets in order" },
@@ -222,6 +255,11 @@ Given \`n\`, calculate \`F(n)\`.`,
  * @return {number}
  */
 function fib(n) {
+  // Write your code here
+  
+}
+`,
+    solutionCode: `function fib(n) {
   if (n <= 0) return 0;
   if (n === 1) return 1;
 
@@ -233,8 +271,7 @@ function fib(n) {
     curr = next;
   }
   return curr;
-}
-`,
+}`,
     testCases: [
       { id: "tc-1", input: [2], expected: 1, description: "F(2) = 1" },
       { id: "tc-2", input: [3], expected: 2, description: "F(3) = 2" },
@@ -263,6 +300,11 @@ function fib(n) {
  * @return {any}
  */
 function deepClone(obj) {
+  // Write your code here
+  
+}
+`,
+    solutionCode: `function deepClone(obj) {
   if (obj === null || typeof obj !== "object") {
     return obj;
   }
@@ -276,8 +318,7 @@ function deepClone(obj) {
     copy[key] = deepClone(obj[key]);
   }
   return copy;
-}
-`,
+}`,
     testCases: [
       {
         id: "tc-1",
@@ -300,7 +341,7 @@ function deepClone(obj) {
     ],
     hints: [
       "Check for null and primitives first.",
-      "Check `Array.isArray(obj)` to preserve arrays, otherwise iterate over `Object.keys()`.",
+      "Check \`Array.isArray(obj)\` to preserve arrays, otherwise iterate over \`Object.keys()\`.",
     ],
     solutionExplanation: `Recursively clone array items and object properties. Base case returns primitives and null directly.`,
     timeComplexity: "O(n)",

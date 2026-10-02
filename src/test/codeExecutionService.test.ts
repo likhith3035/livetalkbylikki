@@ -44,16 +44,78 @@ describe("Sandboxed Code Execution Engine", () => {
     expect(result.logs.some((l) => l.type === "error")).toBe(true);
   });
 
-  it("runs challenge automated test cases and computes pass rate", async () => {
+  it("runs challenge automated test cases and computes pass rate with solutionCode", async () => {
     const twoSumChallenge = CODING_CHALLENGES.find((c) => c.id === "two-sum")!;
     expect(twoSumChallenge).toBeDefined();
 
-    const result = await runChallengeTests(twoSumChallenge.starterCode, twoSumChallenge);
+    // 1. Solution code must pass 100% of test cases
+    const solCode = twoSumChallenge.solutionCode || twoSumChallenge.starterCode;
+    const result = await runChallengeTests(solCode, twoSumChallenge);
     expect(result.success).toBe(true);
     expect(result.testsPassed).toBe(twoSumChallenge.testCases.length);
     expect(result.totalTests).toBe(twoSumChallenge.testCases.length);
     expect(result.testResults?.length).toBe(twoSumChallenge.testCases.length);
     expect(result.testResults?.every((tr) => tr.passed)).toBe(true);
+
+    // 2. Fresh starter code should not pass before user writes implementation
+    const starterResult = await runChallengeTests(twoSumChallenge.starterCode, twoSumChallenge);
+    expect(starterResult.success).toBe(false);
+  });
+
+  it("safely detects and halts infinite loops using runtime guard", async () => {
+    const infiniteLoopCode = `
+      let count = 0;
+      while (true) {
+        count++;
+      }
+    `;
+
+    const result = await executeCode(infiniteLoopCode, "javascript");
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Infinite loop detected");
+  });
+
+  it("executes C++ competitive programming code cleanly", async () => {
+    const cppCode = `
+      #include <iostream>
+      #include <vector>
+      #include <numeric>
+      using namespace std;
+      int main() {
+        vector<int> nums = {1, 2, 3, 4, 5};
+        int sum = accumulate(nums.begin(), nums.end(), 0);
+        cout << "Sum: " << sum << endl;
+        return 0;
+      }
+    `;
+
+    const result = await executeCode(cppCode, "cpp");
+    expect(result.success).toBe(true);
+    expect(result.logs.some((l) => l.message.includes("Sum: 15"))).toBe(true);
+  });
+
+  it("executes Java standard code cleanly", async () => {
+    const javaCode = `
+      public class Main {
+        public static void main(String[] args) {
+          System.out.println("Java 21 Virtual Threads Ready");
+        }
+      }
+    `;
+
+    const result = await executeCode(javaCode, "java");
+    expect(result.success).toBe(true);
+    expect(result.logs.some((l) => l.message.includes("Java 21 Virtual Threads Ready"))).toBe(true);
+  });
+
+  it("executes SQL queries with tabular formatted output", async () => {
+    const sqlCode = `
+      SELECT name, age FROM users WHERE age > 21;
+    `;
+
+    const result = await executeCode(sqlCode, "sql");
+    expect(result.success).toBe(true);
+    expect(result.logs.some((l) => l.message.includes("Query returned") || l.message.includes("Query Result"))).toBe(true);
   });
 
   it("injects parent bridge script into HTML live preview", () => {

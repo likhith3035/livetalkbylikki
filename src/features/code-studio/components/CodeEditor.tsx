@@ -116,7 +116,61 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       return;
     }
 
-    // 3. Auto-close brackets and quotes
+    // 3. Smart Backspace: Delete pair if cursor is between matching brackets/quotes
+    if (e.key === "Backspace") {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      if (start === end && start > 0) {
+        const charBefore = value[start - 1];
+        const charAfter = value[start];
+        const PAIRS_MAP: Record<string, string> = { "(": ")", "[": "]", "{": "}", '"': '"', "'": "'", "`": "`" };
+        if (PAIRS_MAP[charBefore] === charAfter) {
+          e.preventDefault();
+          const nextVal = value.substring(0, start - 1) + value.substring(start + 1);
+          onChange(nextVal);
+          setTimeout(() => {
+            textarea.selectionStart = textarea.selectionEnd = start - 1;
+            updateCursorPosition();
+          }, 0);
+          return;
+        }
+      }
+    }
+
+    // 4. Auto-Indentation on Enter
+    if (e.key === "Enter") {
+      const pos = textarea.selectionStart;
+      const textBefore = value.substring(0, pos);
+      const currentLine = textBefore.substring(textBefore.lastIndexOf("\n") + 1);
+      const matchIndent = currentLine.match(/^\s*/);
+      const indent = matchIndent ? matchIndent[0] : "";
+      const trimmedLine = currentLine.trimEnd();
+      const shouldIncrease = trimmedLine.endsWith("{") || trimmedLine.endsWith("(") || trimmedLine.endsWith("[");
+      const nextIndent = indent + (shouldIncrease ? "  " : "");
+
+      e.preventDefault();
+      const nextVal = value.substring(0, pos) + "\n" + nextIndent + value.substring(textarea.selectionEnd);
+      onChange(nextVal);
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = pos + 1 + nextIndent.length;
+        updateCursorPosition();
+      }, 0);
+      return;
+    }
+
+    // 5. Overtyping closing bracket/quote
+    const CLOSING_CHARS = [")", "]", "}", '"', "'", "`"];
+    if (CLOSING_CHARS.includes(e.key)) {
+      const pos = textarea.selectionStart;
+      if (pos === textarea.selectionEnd && value[pos] === e.key) {
+        e.preventDefault();
+        textarea.selectionStart = textarea.selectionEnd = pos + 1;
+        updateCursorPosition();
+        return;
+      }
+    }
+
+    // 6. Auto-close brackets and quotes
     const PAIRS: Record<string, string> = {
       "(": ")",
       "[": "]",
@@ -145,7 +199,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         return;
       }
 
-      // If typing quotes or brackets inside standard code, auto insert closing pair
+      // Avoid auto-closing single quotes after letters (like contractions: don't)
+      if (e.key === "'" && start > 0 && /[a-zA-Z0-9]/.test(value[start - 1])) {
+        return;
+      }
+
       e.preventDefault();
       const nextVal = value.substring(0, start) + e.key + closing + value.substring(end);
       onChange(nextVal);

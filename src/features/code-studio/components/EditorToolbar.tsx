@@ -172,22 +172,22 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* API Key / Open Model Status Badge Button */}
+        {/* API Key / Assistant Status Badge Button */}
         <Button
           variant="outline"
           size="sm"
           onClick={onOpenKeyModal}
-          className={`h-8 sm:h-9 px-2 sm:px-2.5 text-xs gap-1.5 border cursor-pointer font-semibold shrink-0 ${
-            hasActiveKey || isOpenModelActive
+          className={`h-8 sm:h-9 px-2 sm:px-2.5 text-xs gap-1.5 border cursor-pointer font-semibold shrink-0 transition-colors ${
+            hasActiveKey
               ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
-              : "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+              : "bg-cyan-500/10 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20"
           }`}
-          title="Configure API Keys & Open Models"
+          title={hasActiveKey ? "Cloud LLM Active (Groq / Gemini / OpenAI)" : "Offline AI Engine Active. Click to add API Key"}
         >
-          <span className={`w-2 h-2 rounded-full ${hasActiveKey || isOpenModelActive ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+          <span className={`w-2 h-2 rounded-full ${hasActiveKey ? "bg-emerald-400 animate-pulse" : "bg-cyan-400"}`} />
           <Key className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">
-            {isOpenModelActive ? "Open Model Active" : hasActiveKey ? "AI Key Ready" : "Setup AI Key"}
+          <span className="hidden xl:inline">
+            {hasActiveKey ? "Cloud AI Ready" : "Offline AI Engine"}
           </span>
         </Button>
       </div>
@@ -231,8 +231,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Desktop Individual Action Buttons */}
-        <div className="hidden sm:flex items-center gap-1">
+        {/* Desktop Individual Action Buttons (Visible on wide panels) */}
+        <div className="hidden xl:flex items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
@@ -274,8 +274,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </Button>
         </div>
 
-        {/* Mobile Combined More Actions Menu (< sm) */}
-        <div className="flex sm:hidden items-center">
+        {/* Compact Combined More Actions Menu (< xl) */}
+        <div className="flex xl:hidden items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

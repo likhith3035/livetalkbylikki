@@ -94,8 +94,8 @@ export default function CodeStudioPage() {
 
   // 4. Layout & Modals State
   const [mobileTab, setMobileTab] = useState<"editor" | "terminal" | "challenges" | "ai">("editor");
-  const [showLeftSidebar, setShowLeftSidebar] = useState(true);
-  const [showRightSidebar, setShowRightSidebar] = useState(true);
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
 
   // 5. API Keys & Open Models reactive state
@@ -133,6 +133,28 @@ export default function CodeStudioPage() {
       window.removeEventListener("code_studio_open_model_toggled", refreshKeyStatus);
     };
   }, [refreshKeyStatus]);
+
+  // Handle intelligent Language change with per-language draft preservation
+  const handleLanguageChange = (newLang: SupportedLanguage) => {
+    // 1. Save current code as draft for the active language
+    try {
+      localStorage.setItem(`code_studio_draft_${language}`, code);
+    } catch {}
+
+    setLanguage(newLang);
+
+    // 2. Load draft for newly selected language or fallback to default starter
+    const savedDraft = localStorage.getItem(`code_studio_draft_${newLang}`);
+    if (savedDraft && savedDraft.trim()) {
+      setCode(savedDraft);
+    } else {
+      setCode(STARTER_TEMPLATES[newLang]);
+    }
+
+    setLogs([]);
+    setCurrentError(null);
+    toast.info(`Switched to ${newLang.toUpperCase()}`);
+  };
 
   // Execute Code in Sandbox
   const handleRunCode = async () => {
@@ -189,6 +211,7 @@ export default function CodeStudioPage() {
       setCode(ch.starterCode);
       setLogs([]);
       setCurrentError(null);
+      setShowLeftSidebar(true);
       toast.info(`Loaded problem: ${ch.title}`);
       if (window.innerWidth < 1024) {
         setMobileTab("editor");
@@ -210,7 +233,6 @@ export default function CodeStudioPage() {
   // Format Code Beautifier
   const handleFormatCode = () => {
     try {
-      // Clean multiple consecutive blank lines and trim trailing whitespace
       const lines = code.split("\n");
       const cleaned: string[] = [];
       let consecutiveBlank = 0;
@@ -242,7 +264,7 @@ export default function CodeStudioPage() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full bg-background overflow-hidden select-none font-sans">
+    <div className="flex flex-col h-[100dvh] w-full bg-background overflow-hidden font-sans">
       {/* 1. Global Studio Header Bar */}
       <header className="h-12 sm:h-14 px-3 sm:px-4 border-b border-border/50 bg-card/90 backdrop-blur-xl flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -280,22 +302,32 @@ export default function CodeStudioPage() {
               variant="ghost"
               size="sm"
               onClick={() => setShowLeftSidebar((v) => !v)}
-              className={`h-7 px-2 text-xs gap-1 cursor-pointer ${showLeftSidebar ? "bg-muted text-foreground font-bold" : "text-muted-foreground"}`}
+              className={`h-7 px-2.5 text-xs gap-1.5 cursor-pointer transition-all duration-200 ${
+                showLeftSidebar
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
               title="Toggle Challenges Explorer"
             >
               <Trophy className="w-3.5 h-3.5" />
               <span>Problems</span>
+              {showLeftSidebar && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse ml-0.5" />}
             </Button>
 
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowRightSidebar((v) => !v)}
-              className={`h-7 px-2 text-xs gap-1 cursor-pointer ${showRightSidebar ? "bg-muted text-foreground font-bold" : "text-muted-foreground"}`}
+              className={`h-7 px-2.5 text-xs gap-1.5 cursor-pointer transition-all duration-200 ${
+                showRightSidebar
+                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
               title="Toggle AI Copilot"
             >
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               <span>AI Copilot</span>
+              {showRightSidebar && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse ml-0.5" />}
             </Button>
           </div>
 
@@ -359,6 +391,7 @@ export default function CodeStudioPage() {
                   onRunTests={handleRunChallengeTests}
                   isRunningTests={isRunningTests}
                   onResetStarter={() => activeChallenge && setCode(activeChallenge.starterCode)}
+                  onLoadSolution={(sol) => setCode(sol)}
                 />
               </Panel>
               <PanelResizeHandle className="w-1 bg-border/40 hover:bg-primary transition-colors cursor-col-resize" />
@@ -373,12 +406,7 @@ export default function CodeStudioPage() {
                 <div className="flex flex-col h-full w-full overflow-hidden">
                   <EditorToolbar
                     language={language}
-                    onLanguageChange={(l) => {
-                      setLanguage(l);
-                      if (!code.trim() || code === STARTER_TEMPLATES[language]) {
-                        setCode(STARTER_TEMPLATES[l]);
-                      }
-                    }}
+                    onLanguageChange={handleLanguageChange}
                     onRunCode={handleRunCode}
                     isRunning={isRunning}
                     onFormatCode={handleFormatCode}
@@ -456,12 +484,7 @@ export default function CodeStudioPage() {
           <div className="flex flex-col h-full w-full overflow-hidden">
             <EditorToolbar
               language={language}
-              onLanguageChange={(l) => {
-                setLanguage(l);
-                if (!code.trim() || code === STARTER_TEMPLATES[language]) {
-                  setCode(STARTER_TEMPLATES[l]);
-                }
-              }}
+              onLanguageChange={handleLanguageChange}
               onRunCode={handleRunCode}
               isRunning={isRunning}
               onFormatCode={handleFormatCode}
@@ -518,6 +541,7 @@ export default function CodeStudioPage() {
               onRunTests={handleRunChallengeTests}
               isRunningTests={isRunningTests}
               onResetStarter={() => activeChallenge && setCode(activeChallenge.starterCode)}
+              onLoadSolution={(sol) => setCode(sol)}
             />
           </div>
         )}

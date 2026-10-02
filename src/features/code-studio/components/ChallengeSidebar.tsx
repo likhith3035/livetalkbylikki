@@ -29,6 +29,7 @@ interface ChallengeSidebarProps {
   onRunTests: () => void;
   isRunningTests: boolean;
   onResetStarter: () => void;
+  onLoadSolution?: (solutionCode: string) => void;
 }
 
 export const ChallengeSidebar: React.FC<ChallengeSidebarProps> = ({
@@ -38,11 +39,13 @@ export const ChallengeSidebar: React.FC<ChallengeSidebarProps> = ({
   onRunTests,
   isRunningTests,
   onResetStarter,
+  onLoadSolution,
 }) => {
   const [search, setSearch] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory>("all");
   const [revealedHintIndex, setRevealedHintIndex] = useState<number>(-1);
+  const [showSolution, setShowSolution] = useState(false);
 
   const filteredChallenges = CODING_CHALLENGES.filter((ch) => {
     if (search && !ch.title.toLowerCase().includes(search.toLowerCase()) && !ch.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()))) {
@@ -138,23 +141,28 @@ export const ChallengeSidebar: React.FC<ChallengeSidebarProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onSelectChallenge(null as any)}
+                onClick={() => {
+                  onSelectChallenge(null as any);
+                  setShowSolution(false);
+                }}
                 className="h-7 px-2 text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 All Problems
               </Button>
             </div>
 
-            {/* Problem Description */}
+            {/* Problem Description with Clean Formatting */}
             <div className="p-3 rounded-xl bg-background/80 border border-border/50 space-y-2 text-foreground/90 leading-relaxed text-[11px] sm:text-xs">
-              <pre className="whitespace-pre-wrap font-sans break-words">{activeChallenge.description}</pre>
+              <div className="space-y-2 whitespace-pre-wrap font-sans break-words">
+                {activeChallenge.description}
+              </div>
             </div>
 
             {/* Test Cases Count & Run Tests Button */}
             <div className="p-2.5 rounded-xl bg-gradient-to-r from-primary/10 to-indigo-500/10 border border-primary/25 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 font-bold text-foreground">
                 <Code2 className="w-4 h-4 text-primary" />
-                <span>{activeChallenge.testCases.length} Test Cases Ready</span>
+                <span>{activeChallenge.testCases.length} Tests</span>
               </div>
 
               <div className="flex items-center gap-1.5">
@@ -187,10 +195,22 @@ export const ChallengeSidebar: React.FC<ChallengeSidebarProps> = ({
 
             {/* Hints Accordion */}
             <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 font-bold text-muted-foreground text-[11px]">
-                <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-                <span>Hints & Guidance</span>
+              <div className="flex items-center justify-between font-bold text-muted-foreground text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Hints & Guidance</span>
+                </div>
+
+                {activeChallenge.solutionCode && (
+                  <button
+                    onClick={() => setShowSolution((v) => !v)}
+                    className="text-[10px] text-primary hover:underline font-bold"
+                  >
+                    {showSolution ? "Hide Solution" : "💡 Reveal Solution"}
+                  </button>
+                )}
               </div>
+
               {activeChallenge.hints.map((hint, idx) => (
                 <div key={idx} className="rounded-lg bg-muted/40 border border-border/50 p-2 text-[11px]">
                   {revealedHintIndex >= idx ? (
@@ -205,6 +225,28 @@ export const ChallengeSidebar: React.FC<ChallengeSidebarProps> = ({
                   )}
                 </div>
               ))}
+
+              {/* Solution Preview */}
+              {showSolution && activeChallenge.solutionCode && (
+                <div className="p-3 rounded-xl bg-zinc-950 border border-emerald-500/30 space-y-2 mt-2">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="font-bold text-emerald-400">Canonical Solution</span>
+                    {onLoadSolution && (
+                      <Button
+                        size="sm"
+                        onClick={() => onLoadSolution(activeChallenge.solutionCode!)}
+                        className="h-6 px-2 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30"
+                      >
+                        Load into Editor
+                      </Button>
+                    )}
+                  </div>
+                  <pre className="text-[11px] font-mono text-zinc-300 overflow-x-auto whitespace-pre p-2 bg-zinc-900 rounded">
+                    {activeChallenge.solutionCode}
+                  </pre>
+                  <p className="text-[10px] text-muted-foreground">{activeChallenge.solutionExplanation}</p>
+                </div>
+              )}
             </div>
           </div>
         ) : (

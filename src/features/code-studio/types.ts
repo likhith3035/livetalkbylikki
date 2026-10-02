@@ -47,6 +47,7 @@ export interface CodingChallenge {
   description: string;
   language: SupportedLanguage;
   starterCode: string;
+  solutionCode?: string;
   functionName: string;
   testCases: TestCase[];
   hints: string[];
