@@ -98,6 +98,52 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
     }
   };
 
+  // Secret Easter Egg: Type 'likki' anywhere on the keyboard to activate/toggle X-Ray Vision
+  const keyBufferRef = useRef<string>("");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Do not trigger if typing inside an active input or textarea (e.g. in-game chat or passcode dialog)
+      const target = e.target as HTMLElement | null;
+      const tagName = (target?.tagName || "").toLowerCase();
+      if (tagName === "input" || tagName === "textarea" || target?.isContentEditable) {
+        return;
+      }
+
+      if (!e.key || e.key.length !== 1) return;
+
+      const char = e.key.toLowerCase();
+      keyBufferRef.current = (keyBufferRef.current + char).slice(-5);
+
+      if (keyBufferRef.current.toLowerCase() === "likki") {
+        keyBufferRef.current = ""; // Reset buffer
+        setIsCheatActive((prev) => {
+          const next = !prev;
+          setCheatActiveState(next);
+          if (next) {
+            toast.success("👁️ X-Ray Vision: ACTIVATED!", {
+              description: "Secret code 'likki' recognized. All hidden cards are now visible to you.",
+              duration: 4000,
+              icon: "✨",
+            });
+            gameAudio.playWin?.();
+            if (navigator.vibrate) navigator.vibrate([60, 40, 80]);
+          } else {
+            toast.info("👁️ X-Ray Vision: DEACTIVATED", {
+              description: "Cards returned to normal hidden state.",
+              duration: 2500,
+            });
+            gameAudio.playClick?.();
+          }
+          return next;
+        });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // Normalize state so arrays are NEVER undefined or non-iterable
   const rawState = room.gameState;
   const state: MemoryGameState = {
@@ -509,13 +555,13 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
               type="button"
               onClick={() => {
                 setCheatActiveState(false);
-                toast.info("👁️ Owner X-Ray Deactivated");
+                toast.info("👁️ X-Ray Vision Deactivated");
               }}
-              title="Owner X-Ray Vision Active (Click to disable)"
-              className="px-2 py-0.5 rounded-lg bg-violet-500/20 border border-violet-500/40 text-[10px] font-mono font-bold text-violet-300 flex items-center gap-1 hover:bg-violet-500/30 transition-all cursor-pointer shadow-sm animate-pulse"
+              title="X-Ray Vision Active (Click to disable or type 'likki' again)"
+              className="px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 border border-violet-400/50 text-[10px] font-mono font-bold text-violet-200 flex items-center gap-1 hover:bg-violet-500/40 transition-all cursor-pointer shadow-sm animate-pulse"
             >
               <Eye className="w-3 h-3 text-violet-400" />
-              <span>X-RAY</span>
+              <span>X-RAY: ON</span>
             </button>
           )}
         </div>
@@ -575,7 +621,7 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
                   : card.isFlipped
                   ? "bg-primary/20 border-2 border-primary shadow-lg shadow-primary/30"
                   : isCheatVisible
-                  ? "bg-violet-950/25 border-violet-500/40 hover:bg-violet-900/35 cursor-pointer shadow-inner"
+                  ? "bg-violet-950/40 border-violet-500/50 hover:bg-violet-900/50 cursor-pointer shadow-[0_0_12px_rgba(139,92,246,0.3)] ring-1 ring-violet-400/40"
                   : canClick
                   ? "bg-muted/40 hover:bg-primary/10 border-border cursor-pointer"
                   : "bg-muted/40 border-border cursor-default opacity-85"
@@ -594,12 +640,13 @@ export const MemoryDuelGame: React.FC<MemoryDuelGameProps> = ({
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center justify-center w-full h-full select-none"
+                  className="relative flex items-center justify-center w-full h-full select-none"
                 >
-                  {/* Half Opacity Emoji for Owner */}
-                  <span className="opacity-50 drop-shadow-sm filter contrast-125">
+                  {/* High visibility for X-Ray */}
+                  <span className="opacity-70 drop-shadow-md filter contrast-125 saturate-150">
                     {card.emoji}
                   </span>
+                  <span className="absolute bottom-0.5 right-0.5 text-[8px] opacity-40 font-mono">👁️</span>
                 </motion.div>
               ) : (
                 <span className={`text-muted-foreground/40 font-bold ${getQuestionMarkSize()}`}>?</span>

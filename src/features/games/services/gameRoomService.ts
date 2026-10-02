@@ -22,6 +22,10 @@ import {
   TapTugGameState,
   PenFightGameState,
   ColorRushGameState,
+  DotsBoxesGameState,
+  AirHockeyGameState,
+  TypeRaceGameState,
+  WordClashGameState,
 } from "../types";
 import { createInitialPenRigidBody } from "../data/penFightData";
 import { createInitialColorRushState } from "../data/colorRushData";
@@ -264,6 +268,87 @@ export function createInitialGameState(gameId: GameId, rules?: GameCustomRules) 
         ? rules.turnTimerSeconds
         : 30;
       const state: ColorRushGameState = createInitialColorRushState(duration);
+      return state;
+    }
+    case "dotsboxes": {
+      const state: DotsBoxesGameState = {
+        gridSize: 5, // 5x5 dots = 16 boxes (4x4)
+        lines: {},
+        boxes: {},
+        hostScore: 0,
+        guestScore: 0,
+        totalBoxes: 16,
+        lastMoveLineId: null,
+        lastCompletedBoxes: [],
+        chainCount: 0,
+        winner: null,
+      };
+      return state;
+    }
+    case "airhockey": {
+      const state: AirHockeyGameState = {
+        tableWidth: 600,
+        tableHeight: 900,
+        puck: { x: 300, y: 450, vx: 0, vy: 0, radius: 18, trail: [] },
+        hostPaddle: { x: 300, y: 780, vx: 0, vy: 0, radius: 34 },
+        guestPaddle: { x: 300, y: 120, vx: 0, vy: 0, radius: 34 },
+        hostScore: 0,
+        guestScore: 0,
+        maxScore: 5,
+        lastScorerId: null,
+        isPaused: false,
+        pauseRemainingSeconds: 0,
+        goalAnimationTrigger: 0,
+        winner: null,
+      };
+      return state;
+    }
+    case "typerace": {
+      const defaultQuote = "The quick neon racer drifts through the cyber streets with lightning speed and flawless focus.";
+      const state: TypeRaceGameState = {
+        promptText: defaultQuote,
+        words: defaultQuote.split(" "),
+        hostCharIndex: 0,
+        guestCharIndex: 0,
+        hostWpm: 0,
+        guestWpm: 0,
+        hostAccuracy: 100,
+        guestAccuracy: 100,
+        hostFinished: false,
+        guestFinished: false,
+        hostFinishTimeMs: null,
+        guestFinishTimeMs: null,
+        startedAt: Date.now(),
+        winner: null,
+      };
+      return state;
+    }
+    case "wordclash": {
+      const wordsList = [
+        { word: "REACT", hint: "Popular frontend library" },
+        { word: "CYBER", hint: "Futuristic digital world" },
+        { word: "FLAME", hint: "Burning energetic fire" },
+        { word: "PIXEL", hint: "Single screen color dot" },
+        { word: "LASER", hint: "High intensity light beam" },
+        { word: "NEONS", hint: "Glowing nightclub lights" },
+        { word: "RADAR", hint: "Radio wave scanner" },
+        { word: "TURBO", hint: "Supercharged speed boost" },
+        { word: "CHAMP", hint: "Grand arena victor" },
+      ];
+      const selected = wordsList[Math.floor(Math.random() * wordsList.length)];
+      const state: WordClashGameState = {
+        targetWord: selected.word,
+        clueHint: selected.hint,
+        hostAttempts: [],
+        guestAttempts: [],
+        hostCurrentWord: "",
+        guestCurrentWord: "",
+        maxAttempts: 6,
+        hostWon: false,
+        guestWon: false,
+        revealed: false,
+        winner: null,
+      };
       return state;
     }
   }

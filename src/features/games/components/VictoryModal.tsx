@@ -86,6 +86,10 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     taptug: "Tap Blitz: Tug of War",
     penfight: "Pen Fight Classroom Duel",
     colorrush: "Color Rush",
+    dotsboxes: "Dots & Boxes (Square Clash)",
+    airhockey: "Neon Air Hockey 1v1",
+    typerace: "Speed Typing Nitro Race",
+    wordclash: "Word Clash 1v1",
   };
   const activeGameTitle = GAME_TITLES[room.gameId] || "Arcade Duel";
 

@@ -26,6 +26,10 @@ import { HandCricketGame } from "@/features/games/components/games/HandCricketGa
 import { TapTugGame } from "@/features/games/components/games/TapTugGame";
 import { PenFightGame } from "@/features/games/components/games/PenFightGame";
 import { ColorRushGame } from "@/features/games/components/games/ColorRushGame";
+import { DotsBoxesGame } from "@/features/games/components/games/DotsBoxesGame";
+import { AirHockeyGame } from "@/features/games/components/games/AirHockeyGame";
+import { TypeRaceGame } from "@/features/games/components/games/TypeRaceGame";
+import { WordClashGame } from "@/features/games/components/games/WordClashGame";
 import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
 import { GameHowToPlayModal } from "@/features/games/components/GameHowToPlayModal";
 import {
@@ -200,6 +204,46 @@ const GAMES_CATALOG: GameMetadata[] = [
     gradient: "from-cyan-500 via-fuchsia-500 to-pink-500",
     accentColor: "#06b6d4",
     badge: "New 🔥",
+  },
+  {
+    id: "dotsboxes",
+    title: "Dots & Boxes (Square Clash)",
+    tagline: "Connect dots, complete 4-sided boxes, and unleash chained bonus turns!",
+    category: "Strategy",
+    icon: "🔲",
+    gradient: "from-blue-600 via-indigo-600 to-purple-600",
+    accentColor: "#6366f1",
+    badge: "Classroom 🔥",
+  },
+  {
+    id: "airhockey",
+    title: "Neon Air Hockey 1v1",
+    tagline: "Hyper-speed glowing puck physics, bank shots, and lightning fast reflexes!",
+    category: "Action",
+    icon: "🏒",
+    gradient: "from-cyan-500 via-teal-500 to-emerald-500",
+    accentColor: "#06b6d4",
+    badge: "60 FPS 🔥",
+  },
+  {
+    id: "typerace",
+    title: "Speed Typing Nitro Race",
+    tagline: "Sprint down the neon speedway with real-time WPM, drift physics, and nitro boosts!",
+    category: "Reflex",
+    icon: "🏎️",
+    gradient: "from-amber-500 via-orange-500 to-red-600",
+    accentColor: "#f59e0b",
+    badge: "Nitro 🔥",
+  },
+  {
+    id: "wordclash",
+    title: "Word Clash 1v1",
+    tagline: "Decipher secret 5-letter words with tactical color clues in a head-to-head duel!",
+    category: "Brain",
+    icon: "🔤",
+    gradient: "from-emerald-500 via-teal-600 to-cyan-600",
+    accentColor: "#10b981",
+    badge: "Wordle 1v1 🔥",
   },
 ];
 
@@ -952,6 +996,38 @@ export default function GamesPage() {
               )}
               {activeRoom.gameId === "colorrush" && (
                 <ColorRushGame
+                  room={activeRoom as any}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator}
+                  onLocalMove={(updated) => setActiveRoom(updated as any)}
+                />
+              )}
+              {activeRoom.gameId === "dotsboxes" && (
+                <DotsBoxesGame
+                  room={activeRoom as any}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator && activeRoom.currentTurn === myPlayerId}
+                  onLocalMove={(updated) => setActiveRoom(updated as any)}
+                />
+              )}
+              {activeRoom.gameId === "airhockey" && (
+                <AirHockeyGame
+                  room={activeRoom as any}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator}
+                  onLocalMove={(updated) => setActiveRoom(updated as any)}
+                />
+              )}
+              {activeRoom.gameId === "typerace" && (
+                <TypeRaceGame
+                  room={activeRoom as any}
+                  myPlayerId={myPlayerId}
+                  isMyTurn={!isSpectator}
+                  onLocalMove={(updated) => setActiveRoom(updated as any)}
+                />
+              )}
+              {activeRoom.gameId === "wordclash" && (
+                <WordClashGame
                   room={activeRoom as any}
                   myPlayerId={myPlayerId}
                   isMyTurn={!isSpectator}

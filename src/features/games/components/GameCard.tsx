@@ -8,7 +8,7 @@ export interface GameMetadata {
   id: GameId;
   title: string;
   tagline: string;
-  category: "Strategy" | "Reflex" | "Casual" | "Classic" | "Brain";
+  category: "Strategy" | "Reflex" | "Casual" | "Classic" | "Brain" | "Action" | "Arcade";
   icon: string;
   gradient: string;
   accentColor: string;
@@ -33,6 +33,13 @@ const DEFAULT_TAGS: Record<GameId, string[]> = {
   sos: ["Strategy", "Multiplayer"],
   bingo: ["Classic", "Casual"],
   cricket: ["Strategy", "Sports"],
+  taptug: ["Reflex", "Action"],
+  penfight: ["Physics", "Nostalgia"],
+  colorrush: ["Action", "Speed"],
+  dotsboxes: ["Strategy", "Classroom"],
+  airhockey: ["Action", "Arcade"],
+  typerace: ["Reflex", "Speed"],
+  wordclash: ["Brain", "Puzzle"],
 };
 
 const DEFAULT_PLAYERS: Record<GameId, string> = {
@@ -44,6 +51,13 @@ const DEFAULT_PLAYERS: Record<GameId, string> = {
   sos: "4.2K playing",
   cricket: "7.3K playing",
   bingo: "5.6K playing",
+  taptug: "6.1K playing",
+  penfight: "9.2K playing",
+  colorrush: "8.8K playing",
+  dotsboxes: "7.9K playing",
+  airhockey: "8.5K playing",
+  typerace: "6.9K playing",
+  wordclash: "9.1K playing",
 };
 
 const BADGE_STYLES: Record<string, string> = {

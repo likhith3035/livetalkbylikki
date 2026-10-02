@@ -1,4 +1,19 @@
-export type GameId = "ttt" | "connect4" | "rps" | "memory" | "reaction" | "sos" | "bingo" | "cricket" | "taptug" | "penfight" | "colorrush";
+export type GameId =
+  | "ttt"
+  | "connect4"
+  | "rps"
+  | "memory"
+  | "reaction"
+  | "sos"
+  | "bingo"
+  | "cricket"
+  | "taptug"
+  | "penfight"
+  | "colorrush"
+  | "dotsboxes"
+  | "airhockey"
+  | "typerace"
+  | "wordclash";
 
 export type GameMode = "friend" | "quickmatch" | "ai" | "local";
 
@@ -453,4 +468,98 @@ export interface ColorRushGameState {
   hostScore: number;
   guestScore: number;
 }
+
+// ── Dots & Boxes (Chowka / Square Clash) ──
+
+export interface DotsBoxesGameState {
+  gridSize: number; // e.g. 5 (5x5 dots = 4x4 boxes = 16 boxes total)
+  lines: Record<string, string>; // "h_r_c" or "v_r_c" -> playerId
+  boxes: Record<string, string>; // "r_c" -> playerId
+  hostScore: number;
+  guestScore: number;
+  totalBoxes: number;
+  lastMoveLineId?: string | null;
+  lastCompletedBoxes?: string[];
+  chainCount: number;
+  winner?: string | null;
+}
+
+// ── Neon Air Hockey 1v1 (Glow Puck Arena) ──
+
+export interface AirHockeyPaddle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+}
+
+export interface AirHockeyPuck {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  trail: { x: number; y: number }[];
+}
+
+export interface AirHockeyGameState {
+  tableWidth: number;
+  tableHeight: number;
+  puck: AirHockeyPuck;
+  hostPaddle: AirHockeyPaddle;
+  guestPaddle: AirHockeyPaddle;
+  hostScore: number;
+  guestScore: number;
+  maxScore: number; // 5 or 7
+  lastScorerId: string | null;
+  isPaused: boolean;
+  pauseRemainingSeconds: number;
+  goalAnimationTrigger: number;
+  winner?: string | null;
+}
+
+// ── Speed Typing Nitro Race ──
+
+export interface TypeRaceGameState {
+  promptText: string;
+  words: string[];
+  hostCharIndex: number;
+  guestCharIndex: number;
+  hostWpm: number;
+  guestWpm: number;
+  hostAccuracy: number;
+  guestAccuracy: number;
+  hostFinished: boolean;
+  guestFinished: boolean;
+  hostFinishTimeMs: number | null;
+  guestFinishTimeMs: number | null;
+  startedAt: number;
+  winner?: string | null;
+}
+
+// ── Word Clash 1v1 (Wordle Duel) ──
+
+export type WordTileResult = "correct" | "present" | "absent";
+
+export interface WordClashAttempt {
+  word: string;
+  result: WordTileResult[];
+  timestamp: number;
+}
+
+export interface WordClashGameState {
+  targetWord: string;
+  clueHint: string;
+  hostAttempts: WordClashAttempt[];
+  guestAttempts: WordClashAttempt[];
+  hostCurrentWord: string;
+  guestCurrentWord: string;
+  maxAttempts: number; // 6
+  hostWon: boolean;
+  guestWon: boolean;
+  revealed: boolean;
+  winner?: string | null;
+}
+
 
