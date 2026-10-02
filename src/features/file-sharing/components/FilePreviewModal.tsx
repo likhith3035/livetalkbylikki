@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SharedFileItem } from "../types";
@@ -93,6 +93,9 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
           <DialogTitle className="text-base sm:text-lg font-display font-bold text-foreground truncate pt-1">
             {name}
           </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground truncate">
+            Preview file content or download to local device.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Content Viewer Body */}

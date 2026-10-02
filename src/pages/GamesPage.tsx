@@ -1593,6 +1593,10 @@ export default function GamesPage() {
       {/* Classic Chrome Dino Mini-Game Modal */}
       <Dialog open={isDinoGameOpen} onOpenChange={setIsDinoGameOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg p-2 sm:p-4 rounded-3xl bg-transparent border-0 shadow-none">
+          <DialogTitle className="sr-only">Chrome Dino Mini-Game</DialogTitle>
+          <DialogDescription className="sr-only">
+            Play classic offline dino runner while waiting for opponents.
+          </DialogDescription>
           <ChromeDinoGame onClose={() => setIsDinoGameOpen(false)} />
         </DialogContent>
       </Dialog>

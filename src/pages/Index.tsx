@@ -41,7 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useSEO } from "@/hooks/use-seo";
 import { useAnalytics } from "@/hooks/use-analytics";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import QrScanner from "@/components/chat/QrScanner";
 import ApkDownloadButton from "@/components/ApkDownloadButton";
 import LiquidBackground from "@/components/LiquidBackground";
@@ -845,6 +845,9 @@ const Index = () => {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display">Scan QR Code</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Scan a private room or game invite QR code to join immediately.
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4 flex justify-center">
             <QrScanner onScanSuccess={handleQrScanSuccess} onClose={() => setShowScanner(false)} />

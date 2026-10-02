@@ -13,9 +13,9 @@ import { cn, isAvatarImage, normalizeAvatarSrc } from "@/lib/utils";
 import { db } from "@/lib/firebase";
 import { ref as firebaseRef, onValue } from "firebase/database";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger, SheetClose
 } from "@/components/ui/sheet";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ChromeDinoGame } from "@/components/games/ChromeDinoGame";
 
 const drawerNavSections = [
@@ -257,7 +257,9 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
                     <SheetTitle className="text-base font-display font-bold text-foreground">
                       IncogTalk
                     </SheetTitle>
-                    <p className="text-[10px] text-muted-foreground font-mono">Speak Freely. Stay Incognito.</p>
+                    <SheetDescription className="text-[10px] text-muted-foreground font-mono m-0 p-0">
+                      Speak Freely. Stay Incognito.
+                    </SheetDescription>
                   </div>
                 </div>
               </SheetHeader>
@@ -397,6 +399,10 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
     {/* Classic Chrome Dino Mini-Game Modal */}
     <Dialog open={showMiniGame} onOpenChange={setShowMiniGame}>
       <DialogContent className="max-w-[95vw] sm:max-w-lg p-2 sm:p-4 rounded-3xl bg-transparent border-0 shadow-none">
+        <DialogTitle className="sr-only">Chrome Dino Mini-Game</DialogTitle>
+        <DialogDescription className="sr-only">
+          Play classic offline dino runner while waiting or relaxing.
+        </DialogDescription>
         <ChromeDinoGame onClose={() => setShowMiniGame(false)} />
       </DialogContent>
     </Dialog>

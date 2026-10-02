@@ -555,6 +555,10 @@ export const ShareVictoryCardModal: React.FC<ShareVictoryCardModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-[94vw] sm:max-w-lg p-0 overflow-hidden bg-black/95 border border-primary/30 rounded-3xl shadow-2xl backdrop-blur-2xl max-h-[92vh] flex flex-col">
+        <DialogTitle className="sr-only">Arcade Battle Victory Card</DialogTitle>
+        <DialogDescription className="sr-only">
+          Preview, customize, and export your 1v1 match victory poster or battle summary.
+        </DialogDescription>
         {/* Scrollable Poster Container */}
         <div className="overflow-y-auto p-4 sm:p-6 no-scrollbar flex-1 flex flex-col items-center">
           {/* 9:16 Vertical Card Preview */}

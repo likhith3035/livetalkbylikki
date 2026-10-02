@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -85,6 +86,9 @@ const PrivateRoomDialog = ({ onCreateRoom, onJoinRoom, disabled }: PrivateRoomDi
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="font-display">Private Room</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Create or join a private encrypted 1-on-1 chat room.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 pt-2">

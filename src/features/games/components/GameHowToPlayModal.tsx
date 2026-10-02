@@ -74,13 +74,15 @@ export const GameHowToPlayModal: React.FC<GameHowToPlayModalProps> = ({
         <DialogHeader className="text-left pb-2 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-primary/10 border border-primary/25 text-primary text-sm flex items-center gap-1.5 font-bold">
-                <BookOpen className="w-4 h-4" />
-                <span>Arcade Academy</span>
-              </span>
-              <span className="text-xs text-muted-foreground hidden sm:inline-block">
+              <DialogTitle className="text-sm font-bold m-0 p-0">
+                <span className="p-2 rounded-xl bg-primary/10 border border-primary/25 text-primary text-sm flex items-center gap-1.5 font-bold inline-flex">
+                  <BookOpen className="w-4 h-4" />
+                  <span>Arcade Academy</span>
+                </span>
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground sr-only sm:not-sr-only sm:inline-block">
                 Master all {Object.keys(ALL_GAME_RULES).length} games & rules
-              </span>
+              </DialogDescription>
             </div>
             <span className="text-[11px] font-mono text-muted-foreground">
               {rule.avgDuration}
