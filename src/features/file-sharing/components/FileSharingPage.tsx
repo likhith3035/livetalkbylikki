@@ -14,10 +14,12 @@ import { MySharesView } from "./MySharesView";
 import { StorageStatsCard } from "./StorageStatsCard";
 import { ShareTextCard } from "./ShareTextCard";
 import { SharePasswordCard } from "./SharePasswordCard";
+import { LiveBeamReceiverView } from "./LiveBeamReceiverView";
+import { LiveBeamSenderView } from "./LiveBeamSenderView";
 import { SharedFileItem, ShareRecord } from "../types";
 import {
   Share2, KeyRound, UploadCloud, FolderOpen, ShieldCheck, Sparkles,
-  ArrowRight, HardDrive, Lock, ArrowLeft, Home, QrCode, Camera, FileText
+  ArrowRight, HardDrive, Lock, ArrowLeft, Home, QrCode, Camera, FileText, Wifi, Smartphone
 } from "lucide-react";
 import { getSavedFiles, purgeExpiredShares } from "../services/fileSharingService";
 import { toast } from "sonner";
@@ -56,11 +58,22 @@ export const FileSharingPage: React.FC = () => {
   });
 
   const codeFromUrl = searchParams.get("code");
-  const [activeTab, setActiveTab] = useState<"home" | "upload" | "share_text" | "share_password" | "enter_code" | "scan_qr" | "files" | "shares">(
-    codeFromUrl ? "enter_code" : "home"
+  const beamFromUrl = searchParams.get("beam");
+
+  type MainTab = "beam" | "send" | "receive" | "library" | "beam_sender";
+  type SendSubMode = "files" | "text" | "password";
+  type ReceiveSubMode = "code" | "qr";
+  type LibrarySubMode = "files" | "shares";
+
+  const [activeTab, setActiveTab] = useState<MainTab>(
+    beamFromUrl ? "beam_sender" : codeFromUrl ? "receive" : "beam"
   );
+  const [sendSubMode, setSendSubMode] = useState<SendSubMode>("files");
+  const [receiveSubMode, setReceiveSubMode] = useState<ReceiveSubMode>("code");
+  const [librarySubMode, setLibrarySubMode] = useState<LibrarySubMode>("files");
 
   const [activeAccessCode, setActiveAccessCode] = useState<string | null>(codeFromUrl);
+  const [activeBeamCode, setActiveBeamCode] = useState<string | null>(beamFromUrl);
   const [shareModalFiles, setShareModalFiles] = useState<SharedFileItem[]>([]);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [allFiles, setAllFiles] = useState<SharedFileItem[]>(getSavedFiles);
@@ -69,9 +82,15 @@ export const FileSharingPage: React.FC = () => {
     // Auto-purge expired shares on app mount
     purgeExpiredShares();
 
-    if (codeFromUrl) {
+    if (beamFromUrl) {
+      const upperBeam = beamFromUrl.toUpperCase().replace(/^BEAM-/, "");
+      setActiveBeamCode(upperBeam);
+      setActiveTab("beam_sender");
+      document.title = `Live Beam Drop (${upperBeam}) – IncogTalk`;
+    } else if (codeFromUrl) {
       const upper = codeFromUrl.toUpperCase();
       setActiveAccessCode(upper);
+      setActiveTab("receive");
       document.title = `IncogTalk Shared Files (${upper}) – Access Code`;
       const ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) ogTitle.setAttribute("content", `Shared Files Received (Code: ${upper}) - IncogTalk File Share`);
@@ -80,7 +99,7 @@ export const FileSharingPage: React.FC = () => {
     } else {
       document.title = "IncogTalk – Speak Freely. Stay Incognito | Encrypted File Sharing";
     }
-  }, [codeFromUrl]);
+  }, [codeFromUrl, beamFromUrl]);
 
   const handleUploadCompleted = (files: SharedFileItem[]) => {
     setShareModalFiles(files);
@@ -91,9 +110,28 @@ export const FileSharingPage: React.FC = () => {
   const handleAccessCode = (code: string) => {
     setSearchParams({ code: code.toUpperCase() });
     setActiveAccessCode(code.toUpperCase());
+    setActiveBeamCode(null);
+  };
+
+  const handleBeamCode = (beamPin: string) => {
+    const clean = beamPin.toUpperCase().replace(/^BEAM-/, "");
+    setSearchParams({ beam: clean });
+    setActiveBeamCode(clean);
+    setActiveAccessCode(null);
+    setActiveTab("beam_sender");
   };
 
   const handleQrScanSuccess = (decodedText: string) => {
+    // 1. Check if decoded text is a Live Beam Drop QR (e.g. ?beam=7K9M or /file-sharing?beam=...)
+    const beamMatch = decodedText.match(/[?&]beam=([A-Za-z0-9-]+)/i) || decodedText.match(/BEAM-([A-Za-z0-9]+)/i);
+    if (beamMatch) {
+      const beamPin = beamMatch[1].toUpperCase().replace(/^BEAM-/, "");
+      toast.success(`⚡ Live Beam QR Scanned: ${beamPin}`);
+      handleBeamCode(beamPin);
+      return;
+    }
+
+    // 2. Check if decoded text is a standard share URL with ?code= or /share/
     let scannedCode = decodedText.trim().toUpperCase();
     const urlMatch = decodedText.match(/[?&]code=([A-Za-z0-9]{6})/i) || decodedText.match(/\/share\/([A-Za-z0-9]{6})/i);
     if (urlMatch) {
@@ -107,14 +145,22 @@ export const FileSharingPage: React.FC = () => {
       toast.success(`✅ QR Code Scanned: ${scannedCode}`);
       handleAccessCode(scannedCode);
     } else {
-      toast.error("Invalid QR Code. Please scan a valid File Share QR Code.");
+      toast.error("Invalid QR Code. Please scan a valid File Share or Beam QR Code.");
     }
   };
 
   const handleClearAccessCode = () => {
     setActiveAccessCode(null);
+    setActiveBeamCode(null);
     setSearchParams({});
-    setActiveTab("home");
+    setActiveTab("receive");
+  };
+
+  const handleClearBeam = () => {
+    setActiveBeamCode(null);
+    setActiveAccessCode(null);
+    setSearchParams({});
+    setActiveTab("beam");
   };
 
   return (
@@ -126,294 +172,311 @@ export const FileSharingPage: React.FC = () => {
 
       <div className="py-4 sm:py-6 px-3 sm:px-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
         {/* Header Banner */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-border/40 pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <Badge variant="outline" className="text-[11px] font-semibold border-primary/30 text-primary bg-primary/10 px-2 py-0.5">
-                <ShieldCheck className="h-3 w-3" /> Direct File Sharing
+                <ShieldCheck className="h-3 w-3 mr-1 inline" /> Direct Encrypted Sharing
               </Badge>
               <Badge variant="secondary" className="text-[9px] uppercase font-mono px-1.5 py-0.5">
-                Fast & Encrypted
+                AES-256 Client-Side
+              </Badge>
+              <Badge className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-mono px-1.5 py-0.5">
+                ⚡ AirDrop Web
               </Badge>
             </div>
 
             <h1 className="text-xl sm:text-3xl font-display font-extrabold text-foreground tracking-tight">
-              File Sharing & Share Code
+              File Sharing & Live QR Drop
             </h1>
             <p className="text-[11px] sm:text-xs text-muted-foreground max-w-lg">
-              Upload files up to 100 MB each and generate secure 6-character share codes, direct links, or QR codes.
+              Direct mobile-to-PC QR pairing, encrypted 6-character access codes, auto-burn secrets, and 1-click ZIP downloads.
             </p>
           </div>
 
-          {/* Tab Navigation Buttons */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-card border border-border/80 shadow-sm overflow-x-auto w-full sm:w-auto no-scrollbar touch-pan-x">
-          <button
-            type="button"
-            onClick={() => { setActiveTab("home"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 ${
-              activeTab === "home" && !activeAccessCode
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Home
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("upload"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
-              activeTab === "upload"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <UploadCloud className="h-3 w-3" /> Upload
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("share_text"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
-              activeTab === "share_text"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <FileText className="h-3 w-3" /> Share Text
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("share_password"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
-              activeTab === "share_password"
-                ? "bg-amber-600 text-white shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Lock className="h-3 w-3" /> Share Password
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("enter_code"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
-              (activeTab === "enter_code" || activeAccessCode) && activeTab !== "home"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <KeyRound className="h-3 w-3" /> Enter Code
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("scan_qr"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
-              activeTab === "scan_qr"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <QrCode className="h-3 w-3" /> Scan QR
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("files"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
-              activeTab === "files"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <FolderOpen className="h-3 w-3" /> My Files
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("shares"); setActiveAccessCode(null); setSearchParams({}); }}
-            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1 ${
-              activeTab === "shares"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Share2 className="h-3 w-3" /> My Shares
-          </button>
-        </div>
-      </div>
-
-      {/* Active Code Access View */}
-      {activeAccessCode ? (
-        <SharedAccessView
-          initialCode={activeAccessCode}
-          onBackToSearch={handleClearAccessCode}
-        />
-      ) : (
-        <>
-          {/* Homepage Cards Grid */}
-          {activeTab === "home" && (
-            <div className="space-y-8 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {/* Upload & Share Card */}
-                <div className="bg-card border border-border/80 rounded-3xl p-6 shadow-xl space-y-4 hover:border-primary/50 transition-all group flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="h-12 w-12 rounded-2xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition-transform">
-                      <UploadCloud className="h-6 w-6" />
-                    </div>
-
-                    <h3 className="text-lg font-display font-bold text-foreground">
-                      Upload Files
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Upload documents, images, audio, video, or archives. Share using short codes or QR codes.
-                    </p>
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={() => setActiveTab("upload")}
-                    className="w-full h-10 rounded-2xl bg-primary text-primary-foreground font-bold text-xs gap-2 shadow-md hover:scale-[1.01] transition-all mt-3"
-                  >
-                    Upload File <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Share Text Card */}
-                <div className="bg-card border border-border/80 rounded-3xl p-6 shadow-xl space-y-4 hover:border-primary/50 transition-all group flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="h-12 w-12 rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-500 flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition-transform">
-                      <FileText className="h-6 w-6" />
-                    </div>
-
-                    <h3 className="text-lg font-display font-bold text-foreground">
-                      Share Text & Notes
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Paste or write raw text, code snippets, or notes. Generate an instant share code.
-                    </p>
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={() => setActiveTab("share_text")}
-                    variant="outline"
-                    className="w-full h-10 rounded-2xl border-primary/30 text-primary hover:bg-primary/10 font-bold text-xs gap-2 shadow-sm transition-all mt-3"
-                  >
-                    Share Text <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Share Password Card */}
-                <div className="bg-card border border-amber-500/30 rounded-3xl p-6 shadow-xl space-y-4 hover:border-amber-500/60 transition-all group flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="h-12 w-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition-transform">
-                      <Lock className="h-6 w-6" />
-                    </div>
-
-                    <h3 className="text-lg font-display font-bold text-foreground">
-                      Share Password & Secrets
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Share Wi-Fi keys, logins, or tokens with auto-burn self-destruct & password protection.
-                    </p>
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={() => setActiveTab("share_password")}
-                    className="w-full h-10 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-xs gap-2 shadow-md hover:scale-[1.01] transition-all mt-3"
-                  >
-                    Share Password <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Direct Quick Dropzone */}
-              <div className="bg-card/50 border border-border/70 rounded-3xl p-6 shadow-lg space-y-3">
-                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" /> Quick Upload Dropzone
-                </h4>
-                <UploadDropzone onUploadCompleted={handleUploadCompleted} />
-              </div>
-
-              {/* Storage Quota Categorized Chart */}
-              <StorageStatsCard files={allFiles} />
-            </div>
-          )}
-
-          {/* Upload Tab */}
-          {activeTab === "upload" && (
-            <div className="space-y-4 animate-fade-in max-w-2xl mx-auto">
-              <div className="space-y-1">
-                <h3 className="text-lg font-display font-bold text-foreground">
-                  Upload File & Create Share Code
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Upload single or multiple files to generate a shareable code.
-                </p>
-              </div>
-
-              <UploadDropzone onUploadCompleted={handleUploadCompleted} />
-            </div>
-          )}
-
-          {/* Share Text Tab */}
-          {activeTab === "share_text" && (
-            <div className="animate-fade-in max-w-2xl mx-auto py-2">
-              <ShareTextCard />
-            </div>
-          )}
-
-          {/* Share Password Tab */}
-          {activeTab === "share_password" && (
-            <div className="animate-fade-in max-w-2xl mx-auto py-2">
-              <SharePasswordCard />
-            </div>
-          )}
-
-          {/* Enter Code Tab */}
-          {activeTab === "enter_code" && (
-            <div className="max-w-md mx-auto animate-fade-in py-4">
-              <EnterShareCodeCard onAccessCode={handleAccessCode} />
-            </div>
-          )}
-
-          {/* Scan QR Code Tab */}
-          {activeTab === "scan_qr" && (
-            <div className="max-w-md mx-auto animate-fade-in py-4">
-              <div className="bg-card border border-border/80 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5 text-center">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-display font-bold text-foreground flex items-center justify-center gap-2">
-                    <Camera className="h-5 w-5 text-primary" /> Camera QR Scanner
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Point your camera at an IncogTalk File Share QR code or upload a QR image.
-                  </p>
-                </div>
-
-                <QrScanner
-                  onScanSuccess={handleQrScanSuccess}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* My Files Tab */}
-          {activeTab === "files" && (
-            <div className="animate-fade-in">
-              <FileManagerView
-                onSelectFilesForShare={(selected) => {
-                  setShareModalFiles(selected);
-                  setIsShareModalOpen(true);
+          {/* Unified 4-Mode Segmented Dock */}
+          <div className="w-full md:w-auto p-1 rounded-2xl bg-card border border-border/80 shadow-md">
+            <div className="grid grid-cols-4 sm:flex sm:items-center gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("beam");
+                  setActiveAccessCode(null);
+                  setActiveBeamCode(null);
+                  setSearchParams({});
                 }}
-              />
-            </div>
-          )}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
+                  activeTab === "beam"
+                    ? "bg-gradient-to-r from-primary to-purple-600 text-white shadow-md shadow-primary/25"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
+                <span>Live Drop</span>
+                <span className="hidden lg:inline text-[8px] uppercase tracking-wider px-1 py-0.2 rounded bg-white/20 text-white font-mono font-bold">
+                  Live
+                </span>
+              </button>
 
-          {/* My Shares Tab */}
-          {activeTab === "shares" && (
-            <div className="animate-fade-in">
-              <MySharesView />
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("send");
+                  setActiveAccessCode(null);
+                  setActiveBeamCode(null);
+                  setSearchParams({});
+                }}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
+                  activeTab === "send"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                }`}
+              >
+                <UploadCloud className="h-3.5 w-3.5" />
+                <span>Send</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("receive");
+                  setActiveAccessCode(null);
+                  setActiveBeamCode(null);
+                  setSearchParams({});
+                }}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
+                  (activeTab === "receive" || activeAccessCode) && activeTab !== "beam"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                }`}
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                <span>Receive</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("library");
+                  setActiveAccessCode(null);
+                  setActiveBeamCode(null);
+                  setSearchParams({});
+                }}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
+                  activeTab === "library"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                }`}
+              >
+                <FolderOpen className="h-3.5 w-3.5" />
+                <span>Vault</span>
+                {allFiles.length > 0 && (
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeTab === "library" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {allFiles.length}
+                  </span>
+                )}
+              </button>
             </div>
-          )}
-        </>
-      )}
+          </div>
+        </div>
+
+        {/* Active Beam Sender View (opened via QR scan or URL) */}
+        {activeBeamCode || activeTab === "beam_sender" ? (
+          <LiveBeamSenderView
+            initialCode={activeBeamCode || ""}
+            onExit={handleClearBeam}
+          />
+        ) : activeAccessCode ? (
+          <SharedAccessView
+            initialCode={activeAccessCode}
+            onBackToSearch={handleClearAccessCode}
+          />
+        ) : (
+          <>
+            {/* 1. Live Beam Receiver Tab */}
+            {activeTab === "beam" && (
+              <div className="py-2 animate-fade-in">
+                <LiveBeamReceiverView onClose={() => setActiveTab("send")} />
+              </div>
+            )}
+
+            {/* 2. Send & Share Hub Tab */}
+            {activeTab === "send" && (
+              <div className="space-y-6 animate-fade-in max-w-3xl mx-auto">
+                {/* Send Mode Sub-Pills */}
+                <div className="flex items-center justify-center gap-1 p-1 rounded-2xl bg-card border border-border/80 max-w-sm mx-auto shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setSendSubMode("files")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      sendSubMode === "files"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    }`}
+                  >
+                    <UploadCloud className="h-3.5 w-3.5" /> Files
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSendSubMode("text")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      sendSubMode === "text"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    }`}
+                  >
+                    <FileText className="h-3.5 w-3.5" /> Text Note
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSendSubMode("password")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      sendSubMode === "password"
+                        ? "bg-amber-600 text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    }`}
+                  >
+                    <Lock className="h-3.5 w-3.5" /> Password
+                  </button>
+                </div>
+
+                {sendSubMode === "files" && (
+                  <div className="space-y-4 animate-fade-in">
+                    <div className="space-y-1 text-center sm:text-left">
+                      <h3 className="text-lg font-display font-bold text-foreground">
+                        Upload Files & Create Share Code
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Upload single or multiple files to generate a shareable 6-digit code or QR code.
+                      </p>
+                    </div>
+                    <UploadDropzone onUploadCompleted={handleUploadCompleted} />
+                  </div>
+                )}
+
+                {sendSubMode === "text" && (
+                  <div className="animate-fade-in max-w-2xl mx-auto py-2">
+                    <ShareTextCard />
+                  </div>
+                )}
+
+                {sendSubMode === "password" && (
+                  <div className="animate-fade-in max-w-2xl mx-auto py-2">
+                    <SharePasswordCard />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 3. Receive Hub Tab */}
+            {activeTab === "receive" && (
+              <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
+                {/* Receive Mode Sub-Pills */}
+                <div className="flex items-center justify-center gap-1 p-1 rounded-2xl bg-card border border-border/80 max-w-xs mx-auto shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setReceiveSubMode("code")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      receiveSubMode === "code"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    }`}
+                  >
+                    <KeyRound className="h-3.5 w-3.5" /> Enter Code
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReceiveSubMode("qr")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      receiveSubMode === "qr"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    }`}
+                  >
+                    <Camera className="h-3.5 w-3.5" /> Scan Camera
+                  </button>
+                </div>
+
+                {receiveSubMode === "code" && (
+                  <div className="animate-fade-in max-w-md mx-auto py-2">
+                    <EnterShareCodeCard onAccessCode={handleAccessCode} onBeamCode={handleBeamCode} />
+                  </div>
+                )}
+
+                {receiveSubMode === "qr" && (
+                  <div className="animate-fade-in max-w-md mx-auto py-2">
+                    <div className="bg-card border border-border/80 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5 text-center">
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-display font-bold text-foreground flex items-center justify-center gap-2">
+                          <Camera className="h-5 w-5 text-primary" /> Camera QR Scanner
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          Point your camera at an IncogTalk File Share or Live Beam QR code.
+                        </p>
+                      </div>
+                      <QrScanner onScanSuccess={handleQrScanSuccess} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 4. Vault & Library Tab */}
+            {activeTab === "library" && (
+              <div className="space-y-6 animate-fade-in">
+                {/* Library Mode Sub-Pills */}
+                <div className="flex items-center justify-center gap-1 p-1 rounded-2xl bg-card border border-border/80 max-w-xs mx-auto shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setLibrarySubMode("files")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      librarySubMode === "files"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    }`}
+                  >
+                    <FolderOpen className="h-3.5 w-3.5" /> My Files ({allFiles.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLibrarySubMode("shares")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      librarySubMode === "shares"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                    }`}
+                  >
+                    <Share2 className="h-3.5 w-3.5" /> Active Shares
+                  </button>
+                </div>
+
+                {librarySubMode === "files" && (
+                  <div className="animate-fade-in">
+                    <FileManagerView
+                      onSelectFilesForShare={(selected) => {
+                        setShareModalFiles(selected);
+                        setIsShareModalOpen(true);
+                      }}
+                    />
+                  </div>
+                )}
+
+                {librarySubMode === "shares" && (
+                  <div className="animate-fade-in">
+                    <MySharesView />
+                  </div>
+                )}
+
+                {/* Storage breakdown */}
+                <div className="pt-4 border-t border-border/40">
+                  <StorageStatsCard files={allFiles} />
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
       {/* Share Modal */}
       <ShareCodeModal
