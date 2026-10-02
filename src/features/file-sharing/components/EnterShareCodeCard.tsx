@@ -8,11 +8,13 @@ import QrScanner from "@/components/chat/QrScanner";
 
 interface EnterShareCodeCardProps {
   onAccessCode: (code: string) => void;
+  onBeamCode?: (code: string) => void;
   isSubmitting?: boolean;
 }
 
 export const EnterShareCodeCard: React.FC<EnterShareCodeCardProps> = ({
   onAccessCode,
+  onBeamCode,
   isSubmitting = false,
 }) => {
   const [code, setCode] = useState("");
@@ -23,8 +25,16 @@ export const EnterShareCodeCard: React.FC<EnterShareCodeCardProps> = ({
     e.preventDefault();
     const clean = code.trim().toUpperCase();
     if (!clean) {
-      toast.error("Please enter a 6-character share code.");
+      toast.error("Please enter a share code or Beam PIN.");
       return;
+    }
+
+    // Check if it's a Beam code (4 chars or BEAM-...)
+    if (clean.startsWith("BEAM-") || clean.length === 4) {
+      if (onBeamCode) {
+        onBeamCode(clean.replace(/^BEAM-/, ""));
+        return;
+      }
     }
 
     // Check rate limit
@@ -43,7 +53,21 @@ export const EnterShareCodeCard: React.FC<EnterShareCodeCardProps> = ({
   const handleQrScanSuccess = (decodedText: string) => {
     let scannedCode = decodedText.trim().toUpperCase();
 
-    // Check if decoded text is a full URL with ?code= or /share/
+    // 1. Check if decoded text is a Live Beam Drop QR (e.g. ?beam=7K9M or /file-sharing?beam=...)
+    const beamMatch = decodedText.match(/[?&]beam=([A-Za-z0-9-]+)/i) || decodedText.match(/BEAM-([A-Za-z0-9]+)/i);
+    if (beamMatch) {
+      const beamPin = beamMatch[1].toUpperCase().replace(/^BEAM-/, "");
+      toast.success(`⚡ Live Beam QR Scanned: ${beamPin}`);
+      setShowScanner(false);
+      if (onBeamCode) {
+        onBeamCode(beamPin);
+      } else {
+        onAccessCode(beamPin);
+      }
+      return;
+    }
+
+    // 2. Check if decoded text is a standard share URL with ?code= or /share/
     const urlMatch = decodedText.match(/[?&]code=([A-Za-z0-9]{6})/i) || decodedText.match(/\/share\/([A-Za-z0-9]{6})/i);
     if (urlMatch) {
       scannedCode = urlMatch[1].toUpperCase();
