@@ -3,7 +3,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://incogtalkk.netlify.app/</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -11,15 +11,15 @@
   <!-- Anonymous Video & Text Chat -->
   <url>
     <loc>https://incogtalkk.netlify.app/chat</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.98</priority>
+    <priority>0.95</priority>
   </url>
 
   <!-- IncogTalk Arcade & Multiplayer 1v1 Games -->
   <url>
     <loc>https://incogtalkk.netlify.app/games</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
@@ -27,15 +27,15 @@
   <!-- Code Studio Playground & Multi-Language IDE -->
   <url>
     <loc>https://incogtalkk.netlify.app/code</loc>
-    <lastmod>2026-10-01</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.95</priority>
+    <priority>0.90</priority>
   </url>
 
   <!-- Encrypted File Sharing & 1-Click ZIP Downloads -->
   <url>
     <loc>https://incogtalkk.netlify.app/file-sharing</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
@@ -43,7 +43,7 @@
   <!-- AI Chat Studio & Companions -->
   <url>
     <loc>https://incogtalkk.netlify.app/ai-chat</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -51,7 +51,7 @@
   <!-- AI Prompt Quality Analyzer -->
   <url>
     <loc>https://incogtalkk.netlify.app/prompt-analyzer</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -59,15 +59,15 @@
   <!-- Anonymous Profile & Customizer -->
   <url>
     <loc>https://incogtalkk.netlify.app/profile</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
+    <priority>0.75</priority>
   </url>
 
   <!-- About & Platform Info -->
   <url>
     <loc>https://incogtalkk.netlify.app/info</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
@@ -75,15 +75,15 @@
   <!-- Safety Center -->
   <url>
     <loc>https://incogtalkk.netlify.app/safety</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.80</priority>
+    <priority>0.75</priority>
   </url>
 
   <!-- Community Guidelines -->
   <url>
     <loc>https://incogtalkk.netlify.app/guidelines</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
@@ -91,7 +91,7 @@
   <!-- Privacy Policy -->
   <url>
     <loc>https://incogtalkk.netlify.app/privacy</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
@@ -99,7 +99,7 @@
   <!-- Terms of Service -->
   <url>
     <loc>https://incogtalkk.netlify.app/terms</loc>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>

@@ -17,7 +17,7 @@ export const useSEO = ({ title, description, keywords, image, schema, breadcrumb
   useEffect(() => {
     const fullTitle = title
       ? (title.includes("IncogTalk") ? title : `${title} | IncogTalk`)
-      : `IncogTalk (IncogTalkk) – Speak Freely. Stay Incognito | #1 Omegle Alternative & Anonymous Video Chat`;
+      : `IncogTalk – Free Anonymous Video Chat & 1v1 Games`;
     const fullDesc = description || DEFAULT_DESC;
     const fullKeywords = keywords
       ? `${keywords}, incogtalk, incogtalkk, incog talk, incog talkk, speak freely stay incognito, likhith kami, likki, omegle alternative`
