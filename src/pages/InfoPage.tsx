@@ -50,6 +50,17 @@ const HOW_TO = [
   { step: "8", title: "Done? Just leave", desc: "Close the page or tap Stop. Everything disappears automatically. No cleanup needed — your chat history is gone forever." },
 ];
 
+const MILESTONES = [
+  { date: "Mar 2026", title: "Project Born", emoji: "🚀", icon: Sparkles, desc: "First commit. Anonymous text chat with Supabase realtime, interest matching, typing indicators, and dark mode." },
+  { date: "Mar 2026", title: "Video & Canvas", emoji: "📹", icon: Video, desc: "WebRTC HD peer-to-peer video calls, shared drawing canvas with shape tools, rainbow brush, and emoji reactions." },
+  { date: "Apr 2026", title: "Private Rooms", emoji: "🔒", icon: Lock, desc: "Custom room codes, QR-based join flow, hybrid realtime architecture, and device handoff support." },
+  { date: "May – Jun 2026", title: "AI Wingman", emoji: "🤖", icon: Bot, desc: "Multi-model AI chat — Sarvam AI, Claude, GPT, Gemini, and local LLMs. Plus a full prompt analyzer." },
+  { date: "Jul 2026", title: "Android APK", emoji: "📱", icon: Smartphone, desc: "Native Android app with WhatsApp-style call banner, fingerprint lock, screen capture block, and OTA auto-updater." },
+  { date: "Aug – Sep 2026", title: "Arcade Arena", emoji: "🎮", icon: Gamepad2, desc: "9 multiplayer games — Tic-Tac-Toe, Connect 4, Bingo, Pen Fight, Color Rush, Hand Cricket, Tap Tug, and more." },
+  { date: "Sep 2026", title: "P2P File Drop", emoji: "📂", icon: Share2, desc: "Zero-server encrypted file sharing with Live Beam QR Drop for instant cross-device transfers." },
+  { date: "Oct 2026", title: "Code Studio", emoji: "💻", icon: Code2, desc: "Full web IDE with multi-language cloud compilers, AI copilot with ghost completions, and a practice arena.", isLatest: true },
+];
+
 const FEATURES_DETAILED = [
   {
     icon: Smile, title: "Emoji Picker 😊", category: "Messaging",
@@ -1298,7 +1309,157 @@ const InfoPage = () => {
           </div>
         </motion.section>
 
-        {/* ─── Safety CTA ─── */}
+        {/* ─── Journey & Milestones Timeline ─── */}
+        <motion.section {...fadeUp} transition={{ delay: 0.42 }} className="space-y-8">
+          <div className="text-center space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
+              <Clock className="h-3.5 w-3.5" /> Journey & Milestones
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black font-display tracking-tight text-foreground">
+              From <span className="bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] bg-clip-text text-transparent">Zero to 87K Lines</span>
+            </h2>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto font-medium leading-relaxed">
+              Every major feature milestone — built solo by one developer across 8 months of relentless shipping.
+            </p>
+          </div>
+
+          {/* Timeline */}
+          <div className="relative max-w-2xl mx-auto">
+            {/* Vertical Gold Line */}
+            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-amber-500/10 via-amber-500/60 to-amber-500/10 md:-translate-x-px" />
+
+            <div className="space-y-8 md:space-y-12">
+              {MILESTONES.map((m, idx) => {
+                const isEven = idx % 2 === 0;
+                return (
+                  <motion.div
+                    key={m.title}
+                    initial={{ opacity: 0, x: isEven ? -30 : 30, y: 10 }}
+                    whileInView={{ opacity: 1, x: 0, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.5, delay: idx * 0.06 }}
+                    className={cn(
+                      "relative flex items-start gap-4",
+                      "md:gap-0",
+                      isEven ? "md:flex-row" : "md:flex-row-reverse"
+                    )}
+                  >
+                    {/* Glowing Dot on the line */}
+                    <div className={cn(
+                      "absolute left-6 md:left-1/2 top-1 -translate-x-1/2 z-10 flex items-center justify-center",
+                    )}>
+                      <div className={cn(
+                        "w-3.5 h-3.5 rounded-full border-2 border-background",
+                        m.isLatest
+                          ? "bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.7)] animate-pulse"
+                          : "bg-amber-500/80 shadow-[0_0_6px_rgba(245,158,11,0.3)]"
+                      )} />
+                    </div>
+
+                    {/* Card */}
+                    <div className={cn(
+                      "ml-14 md:ml-0 md:w-[calc(50%-2rem)] rounded-2xl p-4 sm:p-5 bg-card/50 border border-border/40 backdrop-blur-sm hover:border-primary/30 transition-all group",
+                      isEven ? "md:mr-auto md:pr-6" : "md:ml-auto md:pl-6"
+                    )}>
+                      {/* Date + NOW badge */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 tracking-wider uppercase">
+                          {m.date}
+                        </span>
+                        {m.isLatest && (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-[9px] font-black text-emerald-500 tracking-widest uppercase flex items-center gap-1">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            NOW
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Icon + Title */}
+                      <div className="flex items-center gap-2.5 mb-1.5">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 group-hover:scale-110 transition-transform">
+                          <m.icon className="h-4 w-4" />
+                        </div>
+                        <h3 className="text-sm sm:text-base font-bold text-foreground">
+                          {m.emoji} {m.title}
+                        </h3>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {m.desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ─── Engineering Scale Showcase ─── */}
+        <motion.section {...fadeUp} transition={{ delay: 0.45 }} className="space-y-8">
+          <div className="text-center space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
+              <Code2 className="h-3.5 w-3.5" /> Engineering Scale
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black font-display tracking-tight text-foreground">
+              Built with <span className="bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] bg-clip-text text-transparent">Serious Engineering</span>
+            </h2>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto font-medium leading-relaxed">
+              IncogTalk isn't a weekend project — it's a production-grade platform built from scratch with modern architecture and thousands of hours of craftsmanship.
+            </p>
+          </div>
+
+          {/* Stats Image Showcase */}
+          <div className="relative max-w-3xl mx-auto group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#e5a93b]/20 via-[#d48c18]/10 to-[#e5a93b]/20 rounded-[2.5rem] blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+            <div className="relative rounded-[2rem] overflow-hidden border border-primary/20 shadow-2xl shadow-primary/10 group-hover:border-primary/40 transition-all">
+              <img
+                src="/codebase-stats.jpg"
+                alt="IncogTalk Codebase Statistics — 87,000+ Lines of Code, 363 Files, 231 Components, 130 Services"
+                className="w-full h-auto"
+                loading="lazy"
+              />
+            </div>
+          </div>
+
+          {/* Live Engineering Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto">
+            {[
+              { value: "87K+", label: "Lines of Code", icon: FileCode2, color: "text-amber-400" },
+              { value: "363", label: "Source Files", icon: FolderArchive, color: "text-blue-400" },
+              { value: "231", label: "React Components", icon: Layers, color: "text-emerald-400" },
+              { value: "130", label: "Services & Hooks", icon: Cpu, color: "text-purple-400" },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-4 sm:p-5 rounded-2xl bg-card/40 border border-border/40 backdrop-blur-sm text-center space-y-1 hover:border-primary/30 transition-all group/stat"
+              >
+                <stat.icon className={cn("h-5 w-5 mx-auto mb-1", stat.color)} />
+                <span className="text-xl sm:text-3xl font-black font-display tracking-tight text-foreground">{stat.value}</span>
+                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground block">{stat.label}</span>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Tech Stack Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
+            {["React 18", "TypeScript", "Vite", "Tailwind CSS", "Supabase", "WebRTC", "Framer Motion", "Zustand", "Monaco Editor", "Sarvam AI"].map((tech) => (
+              <span
+                key={tech}
+                className="px-3 py-1.5 rounded-full bg-card/60 border border-border/40 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+        </motion.section>
+
+
         <motion.div {...fadeUp} transition={{ delay: 0.5 }} className="pt-10">
           <div className="p-10 rounded-[3rem] bg-primary/5 border border-primary/10 space-y-6 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
