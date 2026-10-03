@@ -22,8 +22,8 @@ const drawerNavSections = [
   {
     category: "Connect",
     items: [
-      { icon: Home, path: "/", label: "Home Page", accent: "#10b981" },
-      { icon: MessageSquare, path: "/chat", label: "Start Chat", accent: "hsl(var(--primary))" },
+      { icon: Home, path: "/", label: "Home Page", accent: "#e5a93b" },
+      { icon: MessageSquare, path: "/chat", label: "Start Chat", accent: "#f59e0b" },
     ],
   },
   {
@@ -31,19 +31,19 @@ const drawerNavSections = [
     items: [
       { icon: Gamepad2, path: "/games", label: "Arcade Games", accent: "#f59e0b", badge: "11 Games" },
       { icon: Code2, path: "/code", label: "Code Studio", accent: "#06b6d4", badge: "IDE" },
-      { icon: Bot, path: "/ai-chat", label: "AI Wingman", accent: "#ec4899" },
-      { icon: Wand2, path: "/prompt-analyzer", label: "Prompt Analyzer", accent: "#a855f7" },
-      { icon: Share2, path: "/file-sharing", label: "File Sharing", accent: "#3b82f6" },
+      { icon: Bot, path: "/ai-chat", label: "AI Wingman", accent: "#e5a93b" },
+      { icon: Wand2, path: "/prompt-analyzer", label: "Prompt Analyzer", accent: "#d97706" },
+      { icon: Share2, path: "/file-sharing", label: "File Sharing", accent: "#38bdf8" },
     ],
   },
   {
     category: "Settings & Safety",
     items: [
-      { icon: User, path: "/profile", label: "My Profile", accent: "#8b5cf6" },
-      { icon: SettingsIcon, path: "/settings", label: "App Settings", accent: "#64748b" },
-      { icon: Shield, path: "/safety", label: "Safety Center", accent: "#14b8a6" },
+      { icon: User, path: "/profile", label: "My Profile", accent: "#e5a93b" },
+      { icon: SettingsIcon, path: "/settings", label: "App Settings", accent: "#94a3b8" },
+      { icon: Shield, path: "/safety", label: "Safety Center", accent: "#10b981" },
       { icon: ShieldAlert, path: "/guidelines", label: "Community Rules", accent: "#f59e0b" },
-      { icon: Info, path: "/info", label: "Help & FAQ", accent: "#0ea5e9" },
+      { icon: Info, path: "/info", label: "Help & FAQ", accent: "#e5a93b" },
     ],
   },
 ];
@@ -217,8 +217,8 @@ const Header = forwardRef<HTMLElement, HeaderProps>(({
   return (
     <>
       {announcement && (
-        <div className="w-full bg-gradient-to-r from-purple-600 via-primary to-indigo-600 text-white text-[11px] font-bold py-1 px-3 flex items-center justify-center gap-2 shadow-md relative z-50 overflow-hidden">
-          <Megaphone className="h-3.5 w-3.5 animate-bounce shrink-0 text-yellow-300" />
+        <div className="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-stone-950 text-[11px] font-black py-1 px-3 flex items-center justify-center gap-2 shadow-md relative z-50 overflow-hidden">
+          <Megaphone className="h-3.5 w-3.5 animate-bounce shrink-0 text-black" />
           <span className="truncate">{announcement}</span>
         </div>
       )}

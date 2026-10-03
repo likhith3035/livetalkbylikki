@@ -37,8 +37,8 @@ const GUIDELINES = [
   },
   {
     icon: MessageSquare,
-    color: "text-purple-500",
-    bg: "bg-purple-500/10",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
     title: "Report Bad Actors",
     desc: "If you encounter someone breaking these rules, use the report button immediately. Our system relies on community moderation."
   }

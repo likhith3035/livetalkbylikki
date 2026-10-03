@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import {
-  Home, MessageSquare, User, Settings, Info, Moon, Sun, Shield, ShieldAlert, Smartphone, Bot, Wand2,
-  PanelLeftClose, PanelLeftOpen, Share2, Gamepad2, Code2
+  Home, MessageSquare, User, Settings, Info, Moon, Sun, Shield, ShieldAlert,
+  Smartphone, Bot, Wand2, PanelLeftClose, PanelLeftOpen, Share2, Gamepad2, Code2,
+  FileText, QrCode, ChevronRight
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import OnlineBadge from "@/components/OnlineBadge";
 import { useOnlineCount } from "@/hooks/use-online-count";
 import { useSettings } from "@/contexts/SettingsContext";
 import { BrandLogo } from "@/components/BrandLogo";
+import { Switch } from "@/components/ui/switch";
 
 interface NavItem {
   icon: any;
@@ -25,29 +26,29 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: "Connect",
+    title: "CONNECT",
     items: [
       { icon: Home, path: "/", label: "Home" },
       { icon: MessageSquare, path: "/chat", label: "Chat" },
     ],
   },
   {
-    title: "Arcade & AI",
+    title: "EXPLORE",
     items: [
       { icon: Gamepad2, path: "/games", label: "Arcade Games", badge: "11", badgeColor: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-      { icon: Code2, path: "/code", label: "Code Studio", badge: "IDE", badgeColor: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
+      { icon: Code2, path: "/code", label: "Code Studio" },
       { icon: Bot, path: "/ai-chat", label: "AI Wingman" },
       { icon: Wand2, path: "/prompt-analyzer", label: "Prompt Analyzer" },
       { icon: Share2, path: "/file-sharing", label: "File Sharing" },
     ],
   },
   {
-    title: "Settings & Safety",
+    title: "SETTINGS",
     items: [
       { icon: User, path: "/profile", label: "Profile" },
       { icon: Settings, path: "/settings", label: "Settings" },
       { icon: Shield, path: "/safety", label: "Safety" },
-      { icon: ShieldAlert, path: "/guidelines", label: "Guidelines" },
+      { icon: FileText, path: "/guidelines", label: "Guidelines" },
       { icon: Info, path: "/info", label: "About" },
     ],
   },
@@ -140,25 +141,40 @@ const DesktopSidebar = () => {
       </div>
 
       {/* Online Count */}
-      <div className={cn("transition-all duration-300", isCollapsed ? "px-2 py-2.5 text-center" : "px-4 pt-4 pb-2")}>
+      <div className={cn("transition-all duration-300", isCollapsed ? "px-2 py-2 text-center" : "px-3.5 pt-3 pb-1")}>
         {!isCollapsed ? (
-          <OnlineBadge count={onlineCount} />
+          <Link
+            to="/chat"
+            className="flex items-center justify-between w-full px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 dark:bg-[#13141a]/90 dark:hover:bg-[#181a22] dark:border-white/8 dark:hover:border-emerald-500/40 transition-all text-xs group cursor-pointer shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+              </span>
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 font-mono">
+                {onlineCount} online now
+              </span>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-emerald-600/70 dark:text-muted-foreground/60 group-hover:translate-x-0.5 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-all" />
+          </Link>
         ) : (
-          <div
+          <Link
+            to="/chat"
             className="flex flex-col items-center justify-center p-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 cursor-pointer"
             title={`${onlineCount} users online`}
           >
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-[9px] font-bold font-mono text-emerald-400 mt-0.5">{onlineCount}</span>
-          </div>
+            <span className="text-[9px] font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">{onlineCount}</span>
+          </Link>
         )}
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 flex flex-col gap-1 px-2.5 py-2 overflow-y-auto overflow-x-hidden no-scrollbar">
+      <nav className="flex-1 flex flex-col gap-1 px-3 py-2 overflow-y-auto overflow-x-hidden no-scrollbar">
         {navSections.map((section, sIdx) => (
           <div key={section.title || sIdx} className="flex flex-col gap-0.5">
             {!isCollapsed && section.title && (
@@ -176,24 +192,17 @@ const DesktopSidebar = () => {
                   to={item.path}
                   title={isCollapsed ? item.label : undefined}
                   className={cn(
-                    "group relative flex items-center rounded-xl transition-all duration-200 border font-medium text-sm",
+                    "group relative flex items-center rounded-xl transition-all duration-200 border text-sm font-medium",
                     isCollapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
                     isActive
-                      ? "bg-primary/15 text-primary border-primary/25 shadow-sm font-semibold"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                      ? "border-amber-500/60 bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent text-amber-950 dark:text-white font-bold shadow-sm"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                   )}
                 >
-                  {/* Left indicator glow line when active */}
-                  {isActive && !isCollapsed && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
-                  )}
-                  {isActive && isCollapsed && (
-                    <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
-                  )}
                   <item.icon
                     className={cn(
                       "h-[18px] w-[18px] shrink-0 transition-transform group-hover:scale-110",
-                      isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                      isActive ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground group-hover:text-foreground"
                     )}
                   />
                   {!isCollapsed && (
@@ -219,48 +228,75 @@ const DesktopSidebar = () => {
       </nav>
 
       {/* Footer & Theme Controls */}
-      <div className={cn("border-t border-border/50 transition-all duration-300", isCollapsed ? "p-2 space-y-2 flex flex-col items-center" : "px-4 py-4 space-y-3")}>
-        <button
-          onClick={() => updateSetting("darkMode", !settings.darkMode)}
-          title={settings.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      <div className={cn("border-t border-border/50 transition-all duration-300", isCollapsed ? "p-2 space-y-2 flex flex-col items-center" : "px-3.5 py-3 space-y-2.5")}>
+        {/* Dark Mode with Toggle Switch */}
+        <div
           className={cn(
-            "flex items-center rounded-xl text-sm font-medium transition-all duration-200 border border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/60",
-            isCollapsed ? "justify-center h-10 w-10" : "w-full gap-3 px-3 py-2.5"
+            "flex items-center justify-between rounded-xl text-sm font-medium transition-all duration-200 border border-transparent text-muted-foreground hover:bg-secondary/40 px-3 py-1.5",
+            isCollapsed && "justify-center px-1"
           )}
         >
-          {settings.darkMode ? <Moon className="h-[18px] w-[18px] shrink-0 text-indigo-400" /> : <Sun className="h-[18px] w-[18px] shrink-0 text-amber-500" />}
-          {!isCollapsed && <span>{settings.darkMode ? "Dark Mode" : "Light Mode"}</span>}
-        </button>
+          <div className="flex items-center gap-3">
+            <Moon className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />
+            {!isCollapsed && <span className="text-xs font-medium text-foreground/90">Dark Mode</span>}
+          </div>
+          {!isCollapsed && (
+            <Switch
+              checked={settings.darkMode}
+              onCheckedChange={(checked) => updateSetting("darkMode", checked)}
+              className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-400 scale-90 cursor-pointer"
+            />
+          )}
+        </div>
 
         {/* Join via Code */}
         <Link
           to="/handoff"
-          title="Join via Code (Handoff)"
+          title="Join via Code"
           className={cn(
-            "flex items-center rounded-xl text-sm font-medium transition-all duration-200 border border-transparent",
-            isCollapsed ? "justify-center h-10 w-10" : "gap-3 px-3 py-2.5",
-            pathname === "/handoff"
-              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20"
-              : "text-muted-foreground hover:text-amber-600 hover:bg-amber-500/8"
+            "flex items-center rounded-xl text-xs font-medium transition-all duration-200 border border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40",
+            isCollapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
+            pathname === "/handoff" && "border-amber-500/40 bg-amber-500/10 text-amber-500 dark:text-amber-400"
           )}
         >
-          <Smartphone className="h-[18px] w-[18px] shrink-0" />
+          <QrCode className="h-[18px] w-[18px] shrink-0" />
           {!isCollapsed && <span>Join via Code</span>}
         </Link>
 
-        {!isCollapsed && (
-          <div className="flex flex-col items-center gap-1 text-[10px] pt-1">
-            <a
-              href="https://devlikhith.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground/70 hover:text-primary transition-colors underline underline-offset-2 font-medium"
-              title="Likhith Kami's Portfolio & Websites"
-            >
-              Kami Likhith Portfolio
-            </a>
-            <p className="text-muted-foreground/40">© 2026 IncogTalk</p>
-          </div>
+        {/* Founder Profile Card */}
+        {!isCollapsed ? (
+          <a
+            href="https://devlikhith.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between p-2 rounded-2xl bg-secondary/30 hover:bg-secondary/60 border border-border/40 hover:border-amber-500/30 transition-all group cursor-pointer text-left shadow-sm"
+            title="Developed with ❤️ by Likhith Kami (Likki)"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-black font-black text-xs shrink-0 shadow-sm">
+                L
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-stone-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
+                  Likhith Kami
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  Built with ❤️ for everyone
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+          </a>
+        ) : (
+          <a
+            href="https://devlikhith.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-xs shadow-sm mx-auto cursor-pointer"
+            title="Likhith Kami — Built with ❤️ for everyone"
+          >
+            L
+          </a>
         )}
       </div>
     </aside>

@@ -101,7 +101,7 @@ export const PromptAnalyzerPage: React.FC = () => {
         </div>
 
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-primary/10 via-purple-500/5 to-card border border-primary/20 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="bg-gradient-to-r from-primary/15 via-amber-500/10 to-card border border-primary/20 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/15 text-primary text-xs font-semibold mb-1">
               <Wand2 className="h-3.5 w-3.5" /> IncogTalk Add-on Feature

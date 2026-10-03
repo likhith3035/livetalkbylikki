@@ -1444,9 +1444,9 @@ const AdminDashboard = () => {
                           <div key={log.id} className="flex items-start gap-2 p-2 rounded-xl bg-white/5 border border-white/10 text-[11px] leading-relaxed">
                             <span className="text-muted-foreground shrink-0 text-[10px]">{log.time}</span>
                             <span className={`px-1.5 py-0.2 text-[8.5px] font-black uppercase rounded shrink-0 ${
-                              log.type === "purge" ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
+                              log.type === "purge" ? "bg-orange-500/20 text-orange-300 border border-orange-500/30" :
                               log.type === "maint" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" :
-                              log.type === "announce" ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" :
+                              log.type === "announce" ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
                               "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                             }`}>
                               {log.type}

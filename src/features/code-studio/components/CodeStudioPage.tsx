@@ -591,7 +591,7 @@ export default function CodeStudioPage() {
           {mobileTab === "editor" ? (
             <Button
               onClick={() => setMobileTab("ai")}
-              className="flex-1 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-xs gap-1.5 shadow-md shadow-indigo-500/20 cursor-pointer"
+              className="flex-1 h-10 bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] hover:brightness-110 text-stone-950 font-bold text-xs gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>AI Copilot</span>

@@ -551,7 +551,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
           </div>
           
           <div className="space-y-4">
-            <h1 className="text-4xl font-black font-display tracking-tight text-white uppercase italic">
+            <h1 className="text-4xl font-black font-display tracking-tight text-foreground uppercase italic">
               You cross limits
             </h1>
             <p className="text-muted-foreground text-sm font-medium leading-relaxed">
@@ -566,7 +566,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
                   placeholder="Enter reason for unbanning..."
                   value={appealReason}
                   onChange={(e) => setAppealReason(e.target.value)}
-                  className="h-14 bg-white/5 border-white/10 text-white rounded-2xl pr-12 focus:border-primary/50 transition-all font-medium text-sm"
+                  className="h-14 bg-background border-border text-foreground rounded-2xl pr-12 focus:border-primary/50 transition-all font-medium text-sm"
                 />
                 <Button 
                    onClick={handleAppealSubmit}
@@ -576,7 +576,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-widest">
+              <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">
                 Submit an appeal to request access
               </p>
             </div>
@@ -587,7 +587,7 @@ const ChatPage = ({ initialRoomCode }: { initialRoomCode?: string } = {}) => {
                className="bg-primary/10 border border-primary/20 p-6 rounded-3xl"
             >
               <h3 className="text-primary font-black uppercase tracking-widest text-xs mb-1">Appeal Received</h3>
-              <p className="text-white/60 text-[10px] font-medium uppercase tracking-[0.2em]">Our team will review your request shortly.</p>
+              <p className="text-muted-foreground text-[10px] font-medium uppercase tracking-[0.2em]">Our team will review your request shortly.</p>
             </motion.div>
           )}
 

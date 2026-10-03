@@ -1199,7 +1199,7 @@ export default function GamesPage() {
                   title="Arcade Notifications"
                 >
                   <Bell className="w-4 h-4" />
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-indigo-600 border-2 border-card dark:border-[#12131e] text-[9px] font-bold text-white flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-500 border-2 border-card dark:border-[#0c0d14] text-[9px] font-bold text-stone-950 flex items-center justify-center">
                     0
                   </span>
                 </button>
@@ -1207,14 +1207,14 @@ export default function GamesPage() {
                 {/* Profile Chip */}
                 <div
                   onClick={() => setIsProfileModalOpen(true)}
-                  className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-card dark:bg-[#12131e] border border-border dark:border-white/[0.08] hover:border-indigo-500/30 transition-all cursor-pointer group shadow-sm"
+                  className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-card dark:bg-[#12141d] border border-border dark:border-white/[0.08] hover:border-amber-500/40 transition-all cursor-pointer group shadow-sm"
                   title="Click to customize gamer profile"
                 >
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-gradient-to-br dark:from-indigo-500/30 dark:to-purple-600/40 border border-indigo-200 dark:border-indigo-400/40 flex items-center justify-center text-xs font-black text-indigo-700 dark:text-indigo-200 shrink-0 shadow-inner overflow-hidden">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-gradient-to-br dark:from-amber-500/20 dark:to-yellow-600/30 border border-amber-200 dark:border-amber-400/30 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-300 shrink-0 shadow-inner overflow-hidden">
                     <GameAvatar avatar={gamerProfile.avatar} fallback={gamerProfile.nickname ? gamerProfile.nickname.charAt(0).toUpperCase() : "R"} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex flex-col text-left min-w-0 pr-1">
-                    <span className="text-xs sm:text-sm font-bold text-foreground dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors truncate max-w-[120px] sm:max-w-[150px]">
+                    <span className="text-xs sm:text-sm font-bold text-foreground dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors truncate max-w-[120px] sm:max-w-[150px]">
                       {gamerProfile.nickname || "RetroSpark50"}
                     </span>
                     <span className="text-[10px] text-muted-foreground dark:text-gray-400 truncate">
@@ -1227,20 +1227,20 @@ export default function GamesPage() {
             </div>
 
             {/* 2. HERO BANNER: Play 1v1 Games with Anyone (Compact & Sleek) */}
-            <div className="w-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50/90 via-purple-50/70 to-pink-50/80 dark:bg-gradient-to-br dark:from-[#121324] dark:via-[#10111d] dark:to-[#0d0e17] border border-indigo-100/80 dark:border-white/[0.08] p-4 sm:p-5 md:p-6 mb-5 relative overflow-hidden shadow-sm dark:shadow-xl text-foreground dark:text-white transition-colors">
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/60 to-yellow-50/70 dark:bg-gradient-to-br dark:from-[#10121b] dark:via-[#0c0d14] dark:to-[#141209] border border-amber-200/50 dark:border-white/[0.08] p-4 sm:p-5 md:p-6 mb-5 relative overflow-hidden shadow-sm dark:shadow-2xl text-foreground dark:text-white transition-colors">
               {/* Ambient radial glow */}
-              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-indigo-600/10 dark:bg-indigo-600/15 blur-[80px] pointer-events-none" />
+              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-amber-500/10 dark:bg-amber-500/15 blur-[80px] pointer-events-none" />
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-center relative z-10">
                 {/* Left Column: Heading, Subtitle, CTA */}
                 <div className="md:col-span-8 flex flex-col items-start text-left">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-[#818cf8] mb-1.5">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-1.5">
                     INCOGTALK ARCADE
                   </span>
 
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground dark:text-white tracking-tight leading-tight">
                     Play 1v1 Games with{" "}
-                    <span className="bg-gradient-to-r from-[#6366f1] via-[#7c3aed] to-[#a855f7] dark:from-[#818cf8] dark:via-[#a78bfa] dark:to-[#c084fc] bg-clip-text text-transparent drop-shadow-sm dark:drop-shadow-[0_2px_12px_rgba(99,102,241,0.4)]">
+                    <span className="bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] bg-clip-text text-transparent drop-shadow-sm dark:drop-shadow-[0_2px_12px_rgba(229,169,59,0.35)]">
                       Anyone
                     </span>
                   </h1>
@@ -1258,7 +1258,7 @@ export default function GamesPage() {
                         const defaultGame = GAMES_CATALOG[0];
                         setSelectedGameForModal(defaultGame);
                       }}
-                      className="rounded-full bg-[#6366f1] hover:bg-[#5254e0] text-white font-bold text-xs px-4 h-8 sm:h-9 shadow-md shadow-indigo-500/25 flex items-center gap-1.5 group transition-all cursor-pointer"
+                      className="rounded-full bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] hover:brightness-110 text-stone-950 font-bold text-xs px-4 h-8 sm:h-9 shadow-md shadow-amber-500/25 flex items-center gap-1.5 group transition-all cursor-pointer"
                     >
                       <span>Play Now</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
@@ -1286,7 +1286,7 @@ export default function GamesPage() {
                         className="text-[11px] text-muted-foreground hover:text-foreground dark:text-white/80 dark:hover:text-white px-2.5 py-1 rounded-full bg-white/80 hover:bg-white dark:bg-white/10 dark:hover:bg-white/20 border border-border/80 dark:border-white/15 transition-colors flex items-center gap-1 cursor-pointer shadow-sm"
                         title="Enter a 6-letter room code to join friend"
                       >
-                        <QrCode className="w-3 h-3 text-indigo-500 dark:text-indigo-300" />
+                        <QrCode className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                         <span>Join</span>
                       </button>
                       <button
@@ -1295,7 +1295,7 @@ export default function GamesPage() {
                         className="text-[11px] text-muted-foreground hover:text-foreground dark:text-white/80 dark:hover:text-white px-2.5 py-1 rounded-full bg-white/80 hover:bg-white dark:bg-white/10 dark:hover:bg-white/20 border border-border/80 dark:border-white/15 transition-colors flex items-center gap-1 cursor-pointer shadow-sm"
                         title="Scan friend's QR code camera"
                       >
-                        <ScanLine className="w-3 h-3 text-indigo-500 dark:text-indigo-300" />
+                        <ScanLine className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                         <span>Scan</span>
                       </button>
                       <button
@@ -1313,8 +1313,8 @@ export default function GamesPage() {
                 {/* Right Column: Compact 3D Floating Isometric Game Tiles & Handwritten Script */}
                 <div className="md:col-span-4 hidden md:flex items-center justify-center relative min-h-[120px] select-none">
                   {/* Glowing Orbits */}
-                  <div className="absolute w-44 h-24 border border-indigo-300/40 dark:border-indigo-400/30 rounded-full -rotate-12 pointer-events-none" />
-                  <div className="absolute w-52 h-28 border border-purple-300/30 dark:border-purple-400/20 rounded-full rotate-6 pointer-events-none" />
+                  <div className="absolute w-44 h-24 border border-amber-400/25 dark:border-amber-400/20 rounded-full -rotate-12 pointer-events-none" />
+                  <div className="absolute w-52 h-28 border border-yellow-500/20 dark:border-amber-500/15 rounded-full rotate-6 pointer-events-none" />
 
                   {/* Compact 3D Tile Pair */}
                   <div className="relative flex items-center justify-center perspective-[600px] w-44 h-28">
@@ -1322,28 +1322,28 @@ export default function GamesPage() {
                     <motion.div
                       animate={{ y: [0, -4, 0] }}
                       transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                      className="w-16 h-20 rounded-xl bg-gradient-to-br from-white to-indigo-100/90 border border-indigo-200/80 shadow-[0_12px_24px_rgba(99,102,241,0.15)] dark:from-[#1e202f] dark:to-[#121320] dark:border-white/10 dark:shadow-[0_12px_24px_rgba(0,0,0,0.6)] flex items-center justify-center transform -rotate-12 -translate-x-3 translate-y-1 z-10"
+                      className="w-16 h-20 rounded-xl bg-gradient-to-br from-white to-amber-100/90 border border-amber-200/80 shadow-[0_12px_24px_rgba(229,169,59,0.15)] dark:from-[#1b1914] dark:to-[#11100d] dark:border-amber-500/20 dark:shadow-[0_12px_24px_rgba(0,0,0,0.6)] flex items-center justify-center transform -rotate-12 -translate-x-3 translate-y-1 z-10"
                       style={{ transformStyle: "preserve-3d" }}
                     >
-                      <span className="text-xl font-black text-indigo-900 dark:text-white drop-shadow-[0_0_6px_rgba(99,102,241,0.3)] dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]">✕</span>
+                      <span className="text-xl font-black text-amber-900 dark:text-amber-300 drop-shadow-[0_0_6px_rgba(229,169,59,0.3)] dark:drop-shadow-[0_0_6px_rgba(240,190,101,0.6)]">✕</span>
                     </motion.div>
 
-                    {/* Neon Purple Tile (O) */}
+                    {/* Radiant Gold Tile (O) */}
                     <motion.div
                       animate={{ y: [0, 4, 0] }}
                       transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-                      className="w-16 h-20 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#6366f1] border border-indigo-300/30 shadow-[0_12px_24px_rgba(99,102,241,0.35)] flex items-center justify-center transform rotate-6 translate-x-2 -translate-y-1 z-20"
+                      className="w-16 h-20 rounded-xl bg-gradient-to-br from-[#f0be65] via-[#e5a83b] to-[#d48c18] border border-amber-300/40 shadow-[0_12px_24px_rgba(229,169,59,0.35)] flex items-center justify-center transform rotate-6 translate-x-2 -translate-y-1 z-20"
                       style={{ transformStyle: "preserve-3d" }}
                     >
-                      <span className="text-xl font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]">◯</span>
+                      <span className="text-xl font-black text-stone-950 drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]">◯</span>
                     </motion.div>
                   </div>
 
                   {/* Compact Script Callout Text */}
                   <div className="absolute -right-1 top-2 transform rotate-6 text-right pointer-events-none">
-                    <span className="block text-[9px] font-serif italic text-purple-700/80 dark:text-purple-300/80 leading-tight">Same Games</span>
-                    <span className="block text-[9px] font-serif italic text-purple-700/70 dark:text-purple-300/70 leading-tight">Different People</span>
-                    <span className="block text-[11px] font-serif italic font-bold text-purple-800 dark:text-purple-200 leading-tight">More Fun!</span>
+                    <span className="block text-[9px] font-serif italic text-amber-700/80 dark:text-amber-300/80 leading-tight">Same Games</span>
+                    <span className="block text-[9px] font-serif italic text-amber-700/70 dark:text-amber-300/70 leading-tight">Different People</span>
+                    <span className="block text-[11px] font-serif italic font-bold text-amber-800 dark:text-amber-200 leading-tight">More Fun!</span>
                   </div>
                 </div>
               </div>
@@ -1364,8 +1364,8 @@ export default function GamesPage() {
                       }}
                       className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                         isActive
-                          ? "bg-[#6366f1] text-white shadow-md shadow-indigo-500/25"
-                          : "bg-card dark:bg-[#12131e] hover:bg-secondary dark:hover:bg-[#1a1b2b] text-muted-foreground dark:text-gray-300 border border-border dark:border-white/[0.06]"
+                          ? "bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] text-stone-950 font-bold shadow-md shadow-amber-500/25"
+                          : "bg-card dark:bg-[#12141d] hover:bg-secondary dark:hover:bg-[#1a1c28] text-muted-foreground dark:text-gray-300 border border-border dark:border-white/[0.06]"
                       }`}
                     >
                       {cat}
@@ -1379,7 +1379,7 @@ export default function GamesPage() {
                 <button
                   type="button"
                   onClick={() => setIsSortOpen((prev) => !prev)}
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-card dark:bg-[#12131e] hover:bg-secondary dark:hover:bg-[#1a1b2b] text-muted-foreground dark:text-gray-300 border border-border dark:border-white/[0.08] text-xs font-medium cursor-pointer shadow-sm transition-colors"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-card dark:bg-[#12141d] hover:bg-secondary dark:hover:bg-[#1a1c28] text-muted-foreground dark:text-gray-300 border border-border dark:border-white/[0.08] text-xs font-medium cursor-pointer shadow-sm transition-colors"
                 >
                   <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground dark:text-gray-400" />
                   <span>
@@ -1390,7 +1390,7 @@ export default function GamesPage() {
 
                 {/* Sort Options Menu */}
                 {isSortOpen && (
-                  <div className="absolute right-0 mt-2 w-44 rounded-2xl bg-popover dark:bg-[#12131e] border border-border dark:border-white/10 shadow-2xl p-1.5 z-30">
+                  <div className="absolute right-0 mt-2 w-44 rounded-2xl bg-popover dark:bg-[#12141d] border border-border dark:border-white/10 shadow-2xl p-1.5 z-30">
                     <button
                       type="button"
                       onClick={() => {
@@ -1398,11 +1398,11 @@ export default function GamesPage() {
                         setIsSortOpen(false);
                       }}
                       className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center justify-between ${
-                        sortBy === "popular" ? "bg-indigo-600/15 text-indigo-600 dark:text-indigo-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
+                        sortBy === "popular" ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
                       }`}
                     >
                       <span>Most Popular</span>
-                      {sortBy === "popular" && <Check className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />}
+                      {sortBy === "popular" && <Check className="w-3 h-3 text-amber-500 dark:text-amber-400" />}
                     </button>
                     <button
                       type="button"
@@ -1411,11 +1411,11 @@ export default function GamesPage() {
                         setIsSortOpen(false);
                       }}
                       className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center justify-between ${
-                        sortBy === "fast" ? "bg-indigo-600/15 text-indigo-600 dark:text-indigo-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
+                        sortBy === "fast" ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
                       }`}
                     >
                       <span>Fastest Match</span>
-                      {sortBy === "fast" && <Check className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />}
+                      {sortBy === "fast" && <Check className="w-3 h-3 text-amber-500 dark:text-amber-400" />}
                     </button>
                     <button
                       type="button"
@@ -1424,11 +1424,11 @@ export default function GamesPage() {
                         setIsSortOpen(false);
                       }}
                       className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center justify-between ${
-                        sortBy === "name" ? "bg-indigo-600/15 text-indigo-600 dark:text-indigo-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
+                        sortBy === "name" ? "bg-amber-500/15 text-amber-600 dark:text-amber-300 font-bold" : "text-popover-foreground dark:text-gray-300 hover:bg-secondary dark:hover:bg-white/[0.06]"
                       }`}
                     >
                       <span>Alphabetical</span>
-                      {sortBy === "name" && <Check className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />}
+                      {sortBy === "name" && <Check className="w-3 h-3 text-amber-500 dark:text-amber-400" />}
                     </button>
                   </div>
                 )}

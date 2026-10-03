@@ -156,7 +156,7 @@ export const CodeStudioKeyModal: React.FC<CodeStudioKeyModalProps> = ({
       <DialogContent className="max-w-[94vw] sm:max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-card/95 backdrop-blur-2xl border border-border/60 shadow-2xl text-left max-h-[90vh] overflow-y-auto font-sans">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-md">
+            <span className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#f0be65] via-[#e5a83b] to-[#d48c18] text-stone-950 flex items-center justify-center shadow-md">
               <Key className="w-4 h-4" />
             </span>
             <div>
@@ -171,7 +171,7 @@ export const CodeStudioKeyModal: React.FC<CodeStudioKeyModalProps> = ({
         </DialogHeader>
 
         {/* 1. Open Models Auto-Recognition Card */}
-        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 border border-primary/30 my-3 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-yellow-500/10 border border-primary/30 my-3 space-y-3">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="font-bold text-xs text-foreground flex items-center gap-1.5">

@@ -62,7 +62,7 @@ const DEFAULT_PLAYERS: Record<GameId, string> = {
 
 const BADGE_STYLES: Record<string, string> = {
   popular: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25",
-  classic: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  classic: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
   fast: "bg-pink-500/15 text-pink-600 dark:text-pink-400 border-pink-500/30",
   brain: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
   reflex: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30",
@@ -77,7 +77,7 @@ const getBadgeStyle = (badge: string) => {
   if (lower.includes("brain")) return BADGE_STYLES.brain;
   if (lower.includes("reflex")) return BADGE_STYLES.reflex;
   if (lower.includes("hot") || lower.includes("new")) return BADGE_STYLES.hot;
-  return "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30";
+  return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30";
 };
 
 export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect, onOpenHowToPlay }) => {
@@ -90,10 +90,10 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect, onOp
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       onClick={() => onOpenModeSelect(game)}
-      className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-card dark:bg-[#12131e] border border-border/80 dark:border-white/[0.07] hover:border-indigo-400 dark:hover:border-indigo-500/40 shadow-sm hover:shadow-xl dark:shadow-xl dark:hover:shadow-indigo-950/30 transition-all duration-300 relative overflow-hidden group cursor-pointer select-none"
+      className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-card dark:bg-[#10121a] border border-border/80 dark:border-white/[0.08] hover:border-amber-400/50 dark:hover:border-amber-500/40 shadow-sm hover:shadow-xl dark:shadow-xl dark:hover:shadow-amber-500/10 transition-all duration-300 relative overflow-hidden group cursor-pointer select-none"
     >
       {/* Subtle top specular border highlight */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/10 dark:via-white/10 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/20 dark:via-amber-400/20 to-transparent pointer-events-none" />
 
       {/* Background ambient radial glow */}
       <div
@@ -103,10 +103,10 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect, onOp
       {/* Card Header: 3D Icon & Category Badge */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-secondary/80 dark:bg-[#1c1d2e]/90 border border-border/70 dark:border-white/[0.08] flex items-center justify-center text-3xl shadow-inner relative group-hover:scale-105 transition-transform">
+          <div className="w-14 h-14 rounded-2xl bg-secondary/80 dark:bg-[#161824]/90 border border-border/70 dark:border-white/[0.08] flex items-center justify-center text-3xl shadow-inner relative group-hover:scale-105 transition-transform">
             {/* Custom 3D-styled icons for the visual signature in screenshot */}
             {game.id === "ttt" ? (
-              <div className="w-8 h-8 rounded-full border-[5px] border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.6)]" />
+              <div className="w-8 h-8 rounded-full border-[5px] border-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)]" />
             ) : game.id === "connect4" ? (
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-400 via-red-500 to-red-700 shadow-[0_0_14px_rgba(239,68,68,0.7)]" />
             ) : game.id === "reaction" ? (
@@ -130,7 +130,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect, onOp
         </div>
 
         {/* Title */}
-        <h3 className="text-base sm:text-lg font-bold text-foreground dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors tracking-tight">
+        <h3 className="text-base sm:text-lg font-bold text-foreground dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors tracking-tight">
           {game.title}
         </h3>
 
@@ -144,7 +144,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect, onOp
           {tags.map((tag) => (
             <span
               key={tag}
-              className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-secondary/80 dark:bg-[#1b1c2b] text-secondary-foreground dark:text-gray-300 border border-border/50 dark:border-white/[0.04]"
+              className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-secondary/80 dark:bg-[#161824] text-secondary-foreground dark:text-gray-300 border border-border/50 dark:border-white/[0.06]"
             >
               {tag}
             </span>
@@ -165,7 +165,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect, onOp
             className="flex items-center gap-1 text-muted-foreground dark:text-gray-400 hover:text-foreground dark:hover:text-white transition-colors cursor-pointer py-1 px-1.5 -ml-1.5 rounded-lg hover:bg-secondary dark:hover:bg-white/[0.06]"
             title="Read how to play rules"
           >
-            <Bookmark className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+            <Bookmark className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             <span className="font-semibold text-[11px]">Rules</span>
           </button>
         ) : (
@@ -188,7 +188,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onOpenModeSelect, onOp
             e.stopPropagation();
             onOpenModeSelect(game);
           }}
-          className="rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-bold text-xs px-4 h-8 shadow-md shadow-indigo-500/20 group-hover:shadow-indigo-500/40 flex items-center gap-1.5 transition-all cursor-pointer"
+          className="rounded-full bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] hover:brightness-110 text-stone-950 font-bold text-xs px-4 h-8 shadow-md shadow-amber-500/20 group-hover:shadow-amber-500/35 flex items-center gap-1.5 transition-all cursor-pointer"
         >
           <span>Play</span>
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />

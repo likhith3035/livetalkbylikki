@@ -461,45 +461,45 @@ const ProfilePage = () => {
         </div>
 
         {/* 2. HERO PROFILE CARD */}
-        <div className="w-full rounded-3xl bg-gradient-to-r from-indigo-50/90 via-purple-50/80 to-pink-50/70 dark:bg-gradient-to-r dark:from-[#111224] dark:via-[#0f101f] dark:to-[#120f26] border border-indigo-100/80 dark:border-white/[0.08] p-6 sm:p-8 relative overflow-hidden shadow-sm dark:shadow-2xl text-foreground dark:text-white transition-colors">
-          {/* Mountain landscape & glowing purple planet artwork on the right */}
+        <div className="w-full rounded-3xl bg-gradient-to-r from-amber-50/90 via-orange-50/70 to-yellow-50/70 dark:bg-gradient-to-r dark:from-[#10121b] dark:via-[#0c0d14] dark:to-[#141209] border border-amber-200/50 dark:border-white/[0.08] p-6 sm:p-8 relative overflow-hidden shadow-sm dark:shadow-2xl text-foreground dark:text-white transition-colors">
+          {/* Mountain landscape & glowing golden celestial orb on the right */}
           <div className="absolute right-0 top-0 bottom-0 w-3/4 max-w-xl pointer-events-none opacity-40 dark:opacity-50 overflow-hidden">
             <svg viewBox="0 0 600 320" className="w-full h-full object-cover">
               <defs>
                 <radialGradient id="planetGlowHero" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#a855f7" stopOpacity="0.8" />
-                  <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#4338ca" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#f0be65" stopOpacity="0.8" />
+                  <stop offset="60%" stopColor="#e5a83b" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#d48c18" stopOpacity="0" />
                 </radialGradient>
                 <linearGradient id="mountainsGrad1Dark" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#241b47" stopOpacity="0.7" />
-                  <stop offset="100%" stopColor="#0d0e19" stopOpacity="1" />
+                  <stop offset="0%" stopColor="#2b2314" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#0a0a0f" stopOpacity="1" />
                 </linearGradient>
                 <linearGradient id="mountainsGrad2Dark" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#17182c" stopOpacity="0.9" />
-                  <stop offset="100%" stopColor="#090a12" stopOpacity="1" />
+                  <stop offset="0%" stopColor="#1a1815" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#08090d" stopOpacity="1" />
                 </linearGradient>
                 <linearGradient id="mountainsGrad1Light" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#c7d2fe" stopOpacity="0.7" />
-                  <stop offset="100%" stopColor="#e0e7ff" stopOpacity="0.9" />
+                  <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#fde68a" stopOpacity="0.9" />
                 </linearGradient>
                 <linearGradient id="mountainsGrad2Light" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ddd6fe" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#ede9fe" stopOpacity="1" />
+                  <stop offset="0%" stopColor="#fed7aa" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#ffedd5" stopOpacity="1" />
                 </linearGradient>
               </defs>
 
-              {/* Glowing Purple Planet / Moon */}
+              {/* Glowing Golden Planet / Celestial Orb */}
               <circle cx="450" cy="90" r="95" fill="url(#planetGlowHero)" />
-              <circle cx="455" cy="85" r="76" className="fill-purple-200/50 dark:fill-[#13102b]" />
-              <circle cx="475" cy="75" r="68" className="fill-indigo-100/60 dark:fill-[#0e0e1a]" />
+              <circle cx="455" cy="85" r="76" className="fill-amber-200/50 dark:fill-[#20180a]" />
+              <circle cx="475" cy="75" r="68" className="fill-orange-100/60 dark:fill-[#0c0d14]" />
 
               {/* Stars Specks */}
-              <circle cx="340" cy="60" r="1.5" className="fill-purple-400 dark:fill-white" opacity="0.6" />
-              <circle cx="390" cy="110" r="1" fill="#c084fc" opacity="0.8" />
-              <circle cx="490" cy="40" r="1.2" className="fill-indigo-400 dark:fill-white" opacity="0.5" />
-              <circle cx="530" cy="95" r="1.8" fill="#e9d5ff" opacity="0.7" />
-              <circle cx="280" cy="120" r="1" className="fill-purple-300 dark:fill-white" opacity="0.4" />
+              <circle cx="340" cy="60" r="1.5" className="fill-amber-400 dark:fill-white" opacity="0.6" />
+              <circle cx="390" cy="110" r="1" fill="#f0be65" opacity="0.8" />
+              <circle cx="490" cy="40" r="1.2" className="fill-amber-300 dark:fill-white" opacity="0.5" />
+              <circle cx="530" cy="95" r="1.8" fill="#fef08a" opacity="0.7" />
+              <circle cx="280" cy="120" r="1" className="fill-amber-300 dark:fill-white" opacity="0.4" />
 
               {/* Mountain silhouettes: light mode vs dark mode */}
               <g className="dark:hidden">
@@ -515,9 +515,9 @@ const ProfilePage = () => {
 
           {/* Tilted handwritten script on the right */}
           <div className="hidden sm:block absolute right-8 bottom-6 transform rotate-6 text-right pointer-events-none z-10 select-none">
-            <span className="block text-xs font-serif italic text-purple-700/80 dark:text-purple-300/80 leading-tight">Same Games.</span>
-            <span className="block text-xs font-serif italic text-purple-700/70 dark:text-purple-300/70 leading-tight">Different People.</span>
-            <span className="block text-sm font-serif italic font-bold text-purple-800 dark:text-purple-200 leading-tight">More Fun!</span>
+            <span className="block text-xs font-serif italic text-amber-700/80 dark:text-amber-300/80 leading-tight">Same Games.</span>
+            <span className="block text-xs font-serif italic text-amber-700/70 dark:text-amber-300/70 leading-tight">Different People.</span>
+            <span className="block text-sm font-serif italic font-bold text-amber-800 dark:text-amber-200 leading-tight">More Fun!</span>
           </div>
 
           {/* Top-Right: Edit Profile Button */}
@@ -539,7 +539,7 @@ const ProfilePage = () => {
             <div className="flex flex-col items-center shrink-0">
               <div
                 onClick={() => setShowAvatarModal(true)}
-                className="group relative cursor-pointer w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white dark:border-[#121324] bg-white dark:bg-[#121326] shadow-md dark:shadow-2xl flex items-center justify-center overflow-hidden ring-2 ring-purple-500/30 dark:ring-purple-500/50 hover:ring-purple-400 transition-all dark:shadow-[0_0_25px_rgba(168,85,247,0.25)]"
+                className="group relative cursor-pointer w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white dark:border-[#10121b] bg-white dark:bg-[#12141e] shadow-md dark:shadow-2xl flex items-center justify-center overflow-hidden ring-2 ring-amber-500/30 dark:ring-amber-500/50 hover:ring-amber-400 transition-all dark:shadow-[0_0_25px_rgba(229,169,59,0.25)]"
               >
                 {isCustomAvatarImage ? (
                   <img src={normalizeAvatarSrc(profile.avatar)} alt="Avatar" className="w-full h-full object-cover" />
@@ -553,7 +553,7 @@ const ProfilePage = () => {
                   <Camera className="w-7 h-7" />
                 </div>
                 {/* Online Indicator Dot from mockup */}
-                <span className="absolute bottom-1 right-2 w-4 h-4 rounded-full bg-[#10b981] border-2 border-white dark:border-[#121324] shadow-[0_0_8px_#10b981]" />
+                <span className="absolute bottom-1 right-2 w-4 h-4 rounded-full bg-[#10b981] border-2 border-white dark:border-[#10121b] shadow-[0_0_8px_#10b981]" />
               </div>
 
               {/* Change Avatar Button */}
@@ -575,7 +575,7 @@ const ProfilePage = () => {
 
               {/* Badges Row */}
               <div className="flex items-center gap-2.5 mt-2 flex-wrap justify-center sm:justify-start">
-                <span className="px-3.5 py-1 rounded-full bg-purple-100 dark:bg-[#3b1d6e]/70 border border-purple-200 dark:border-purple-500/40 text-xs font-bold text-purple-800 dark:text-purple-200 flex items-center gap-1.5 shadow-sm">
+                <span className="px-3.5 py-1 rounded-full bg-amber-100 dark:bg-[#3d2c0b]/70 border border-amber-200 dark:border-amber-500/40 text-xs font-bold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 shadow-sm">
                   <Trophy className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   <span>Explorer</span>
                 </span>
@@ -592,15 +592,15 @@ const ProfilePage = () => {
               {/* Metadata row with icons */}
               <div className="flex items-center gap-4 sm:gap-6 mt-4 text-xs text-muted-foreground dark:text-gray-400 flex-wrap justify-center sm:justify-start font-medium">
                 <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-purple-500 dark:text-gray-500" />
+                  <Calendar className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   Joined {joinedDate}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-purple-500 dark:text-gray-500" />
+                  <MapPin className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   Plays Anonymously
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-purple-500 dark:text-gray-500" />
+                  <Users className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   0 Following
                 </span>
                 <span className="flex items-center gap-1.5">
@@ -668,7 +668,7 @@ const ProfilePage = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           {/* Chats Today */}
           <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-card dark:bg-[#111222] border border-border dark:border-white/[0.08] shadow-sm dark:shadow-md flex items-center gap-3.5 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div>
@@ -750,7 +750,7 @@ const ProfilePage = () => {
                     className={cn(
                       "text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all cursor-pointer shrink-0 border",
                       isSelected
-                        ? "bg-[#6366f1] text-white border-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.5)] scale-105"
+                        ? "bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] text-stone-950 font-bold border-amber-300 shadow-[0_0_15px_rgba(229,169,59,0.4)] scale-105"
                         : "bg-secondary dark:bg-[#181928] text-secondary-foreground dark:text-gray-300 border-border dark:border-white/[0.06] hover:bg-secondary/80 dark:hover:bg-white/[0.08]"
                     )}
                   >
@@ -765,7 +765,7 @@ const ProfilePage = () => {
           <div className="p-5 rounded-2xl sm:rounded-3xl bg-card dark:bg-[#111222] border border-border dark:border-white/[0.08] shadow-sm dark:shadow-lg flex flex-col justify-between transition-colors">
             <div>
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                <User className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 <h3 className="text-xs sm:text-sm font-bold text-foreground dark:text-white">About Me</h3>
               </div>
               <p className="text-xs text-muted-foreground dark:text-gray-400 mt-0.5">Tell something about yourself (optional)</p>
@@ -777,7 +777,7 @@ const ProfilePage = () => {
                 onChange={(e) => handleSaveBio(e.target.value.slice(0, 200))}
                 rows={2}
                 placeholder="Good games. Good people. Always up for a chat!"
-                className="w-full bg-background dark:bg-[#161726] border border-border dark:border-white/[0.08] rounded-xl p-3 text-xs text-foreground dark:text-gray-200 placeholder:text-muted-foreground dark:placeholder:text-gray-500 outline-none focus:border-indigo-500/50 resize-none transition-colors"
+                className="w-full bg-background dark:bg-[#161726] border border-border dark:border-white/[0.08] rounded-xl p-3 text-xs text-foreground dark:text-gray-200 placeholder:text-muted-foreground dark:placeholder:text-gray-500 outline-none focus:border-amber-500/50 resize-none transition-colors"
               />
               <span className="absolute right-3 bottom-2.5 text-[10px] text-muted-foreground dark:text-gray-500 font-medium">
                 {bio.length}/200
@@ -793,7 +793,7 @@ const ProfilePage = () => {
             <div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <LinkIcon className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                  <LinkIcon className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   <h3 className="text-xs sm:text-sm font-bold text-foreground dark:text-white">Matchmaking Interests</h3>
                 </div>
                 <span className="text-xs text-muted-foreground dark:text-gray-400 font-semibold">{interests.length}/{MAX_INTERESTS}</span>
@@ -810,13 +810,13 @@ const ProfilePage = () => {
                 onKeyDown={(e) => e.key === "Enter" && handleAddInterest()}
                 placeholder="Add a topic (e.g. gaming, music, coding...)"
                 disabled={interests.length >= MAX_INTERESTS}
-                className="flex-1 bg-background dark:bg-[#161726] border border-border dark:border-white/[0.08] rounded-xl px-3 py-2 text-xs text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-500 outline-none focus:border-indigo-500/50 disabled:opacity-50"
+                className="flex-1 bg-background dark:bg-[#161726] border border-border dark:border-white/[0.08] rounded-xl px-3 py-2 text-xs text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-500 outline-none focus:border-amber-500/50 disabled:opacity-50"
               />
               <Button
                 size="sm"
                 onClick={handleAddInterest}
                 disabled={!customInput.trim() || interests.length >= MAX_INTERESTS}
-                className="rounded-xl bg-[#6366f1] hover:bg-[#5254e0] text-white text-xs px-3 h-8 shrink-0 font-bold"
+                className="rounded-xl bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] hover:brightness-110 text-stone-950 text-xs px-3 h-8 shrink-0 font-bold"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add</span>
@@ -849,7 +849,7 @@ const ProfilePage = () => {
                     key={interest}
                     type="button"
                     onClick={() => handleRemoveInterest(interest)}
-                    className="flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/25 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-500 transition-all cursor-pointer"
+                    className="flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/25 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-500 transition-all cursor-pointer"
                   >
                     <span>#{interest}</span>
                     <X className="w-3 h-3 opacity-60" />
@@ -863,30 +863,30 @@ const ProfilePage = () => {
           <div className="p-5 rounded-2xl sm:rounded-3xl bg-card dark:bg-[#111222] border border-border dark:border-white/[0.08] shadow-sm dark:shadow-lg flex flex-col justify-between space-y-4 transition-colors">
             <div>
               <h3 className="text-xs sm:text-sm font-bold text-foreground dark:text-white flex items-center gap-2">
-                <span className="text-indigo-500 dark:text-indigo-400">⚙️</span> Preferences
+                <span className="text-amber-500 dark:text-amber-400">⚙️</span> Preferences
               </h3>
             </div>
 
             <div className="space-y-3.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-secondary-foreground dark:text-gray-300 font-medium flex items-center gap-2">
-                  <Volume2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" /> Sound Effects
+                  <Volume2 className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Sound Effects
                 </span>
                 <Switch
                   checked={settings.soundEffects}
                   onCheckedChange={(val) => updateSetting("soundEffects", val)}
-                  className="data-[state=checked]:bg-[#6366f1]"
+                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-[#f0be65] data-[state=checked]:to-[#e5a83b]"
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="text-xs text-secondary-foreground dark:text-gray-300 font-medium flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-indigo-500 dark:text-indigo-400" /> Push Notifications
+                  <Bell className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Push Notifications
                 </span>
                 <Switch
                   checked={settings.notifications}
                   onCheckedChange={(val) => updateSetting("notifications", val)}
-                  className="data-[state=checked]:bg-[#6366f1]"
+                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-[#f0be65] data-[state=checked]:to-[#e5a83b]"
                 />
               </div>
 
@@ -897,7 +897,7 @@ const ProfilePage = () => {
                 <Switch
                   checked={settings.protectionEnabled}
                   onCheckedChange={(val) => updateSetting("protectionEnabled", val)}
-                  className="data-[state=checked]:bg-[#6366f1]"
+                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-[#f0be65] data-[state=checked]:to-[#e5a83b]"
                 />
               </div>
             </div>
@@ -932,7 +932,7 @@ const ProfilePage = () => {
                 className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-secondary dark:hover:bg-white/[0.04] transition-colors text-left cursor-pointer group"
               >
                 <span className="text-xs text-secondary-foreground dark:text-gray-300 group-hover:text-foreground dark:group-hover:text-white font-medium flex items-center gap-2">
-                  <LinkIcon className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" /> Change Username
+                  <LinkIcon className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Change Username
                 </span>
                 <ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-gray-500 group-hover:text-foreground dark:group-hover:text-white transition-colors" />
               </button>
@@ -1001,7 +1001,7 @@ const ProfilePage = () => {
                     onChange={(e) => setNameInput(e.target.value)}
                     maxLength={20}
                     disabled={shuffling}
-                    className="flex-1 rounded-xl bg-background dark:bg-[#161726] border border-border dark:border-white/10 px-3.5 py-2 text-sm font-bold text-foreground dark:text-white focus:outline-none focus:border-indigo-500"
+                    className="flex-1 rounded-xl bg-background dark:bg-[#161726] border border-border dark:border-white/10 px-3.5 py-2 text-sm font-bold text-foreground dark:text-white focus:outline-none focus:border-amber-500"
                   />
                   <button
                     type="button"
@@ -1010,7 +1010,7 @@ const ProfilePage = () => {
                     className="h-10 w-10 rounded-xl bg-secondary dark:bg-white/[0.05] hover:bg-secondary/80 dark:hover:bg-white/10 border border-border dark:border-white/10 flex items-center justify-center text-muted-foreground dark:text-gray-300 hover:text-foreground dark:hover:text-white transition-all cursor-pointer"
                     title="Random Nickname"
                   >
-                    <RefreshCw className={cn("w-4 h-4", shuffling && "animate-spin text-indigo-500")} />
+                    <RefreshCw className={cn("w-4 h-4", shuffling && "animate-spin text-amber-500")} />
                   </button>
                 </div>
               </div>
@@ -1022,7 +1022,7 @@ const ProfilePage = () => {
                   value={bio}
                   onChange={(e) => handleSaveBio(e.target.value.slice(0, 200))}
                   rows={3}
-                  className="w-full rounded-xl bg-background dark:bg-[#161726] border border-border dark:border-white/10 p-3 text-xs text-foreground dark:text-white focus:outline-none focus:border-indigo-500 resize-none"
+                  className="w-full rounded-xl bg-background dark:bg-[#161726] border border-border dark:border-white/10 p-3 text-xs text-foreground dark:text-white focus:outline-none focus:border-amber-500 resize-none"
                 />
               </div>
 
@@ -1035,7 +1035,7 @@ const ProfilePage = () => {
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1 rounded-xl bg-[#6366f1] hover:bg-[#5254e0] text-white text-xs font-bold"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] hover:brightness-110 text-stone-950 text-xs font-bold"
                   onClick={() => {
                     handleSaveName();
                     toast.success("Profile updated!");
@@ -1155,7 +1155,7 @@ const ProfilePage = () => {
                   onClick={() => setAvatarTab("upload")}
                   className={cn(
                     "flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5",
-                    avatarTab === "upload" ? "bg-[#6366f1] text-white shadow-sm" : "text-muted-foreground hover:text-foreground dark:text-gray-400 dark:hover:text-white"
+                    avatarTab === "upload" ? "bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] text-stone-950 font-bold shadow-sm" : "text-muted-foreground hover:text-foreground dark:text-gray-400 dark:hover:text-white"
                   )}
                 >
                   <Upload className="h-3.5 w-3.5" /> Upload Custom Photo
@@ -1164,7 +1164,7 @@ const ProfilePage = () => {
                   onClick={() => setAvatarTab("emojis")}
                   className={cn(
                     "flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5",
-                    avatarTab === "emojis" ? "bg-[#6366f1] text-white shadow-sm" : "text-muted-foreground hover:text-foreground dark:text-gray-400 dark:hover:text-white"
+                    avatarTab === "emojis" ? "bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] text-stone-950 font-bold shadow-sm" : "text-muted-foreground hover:text-foreground dark:text-gray-400 dark:hover:text-white"
                   )}
                 >
                   <Smile className="h-3.5 w-3.5" /> Preset Avatars
@@ -1184,9 +1184,9 @@ const ProfilePage = () => {
 
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-indigo-500/40 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-500/10 rounded-2xl p-6 cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group"
+                    className="border-2 border-dashed border-amber-500/40 hover:border-amber-500 bg-amber-500/5 hover:bg-amber-500/10 rounded-2xl p-6 cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group"
                   >
-                    <div className="h-12 w-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                    <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 dark:text-amber-400 group-hover:scale-110 transition-transform">
                       <Camera className="h-6 w-6" />
                     </div>
                     <div>
@@ -1213,7 +1213,7 @@ const ProfilePage = () => {
                       onClick={handleResetToTarget}
                       className={cn(
                         "h-11 w-11 rounded-2xl p-1.5 flex items-center justify-center transition-all hover:scale-110 bg-secondary/50 dark:bg-white/[0.04]",
-                        showBullseye ? "bg-indigo-600/30 border-2 border-indigo-400 shadow-md" : ""
+                        showBullseye ? "bg-amber-500/20 border-2 border-amber-400 shadow-md" : ""
                       )}
                       title="Bullseye Dart Avatar"
                     >
@@ -1228,8 +1228,8 @@ const ProfilePage = () => {
                           setShowAvatarModal(false);
                         }}
                         className={cn(
-                          "h-11 w-11 rounded-2xl text-2xl flex items-center justify-center transition-all hover:scale-110 hover:bg-indigo-500/20",
-                          (!isCustomAvatarImage && profile.avatar === emoji) ? "bg-indigo-600/30 border-2 border-indigo-400" : "bg-secondary/50 dark:bg-white/[0.04]"
+                          "h-11 w-11 rounded-2xl text-2xl flex items-center justify-center transition-all hover:scale-110 hover:bg-amber-500/20",
+                          (!isCustomAvatarImage && profile.avatar === emoji) ? "bg-amber-500/20 border-2 border-amber-400" : "bg-secondary/50 dark:bg-white/[0.04]"
                         )}
                       >
                         {emoji}
@@ -1261,7 +1261,7 @@ const ProfilePage = () => {
                   <span>👀</span> Preview: How others see you
                 </p>
                 <div className="flex items-center gap-2.5 bg-background dark:bg-black/40 p-2 rounded-xl border border-border dark:border-white/10">
-                  <div className="h-9 w-9 rounded-full overflow-hidden bg-black/40 border border-indigo-400/40 shrink-0 flex items-center justify-center relative">
+                  <div className="h-9 w-9 rounded-full overflow-hidden bg-black/40 border border-amber-400/40 shrink-0 flex items-center justify-center relative">
                     <img 
                       src={cropImage} 
                       alt="Avatar Preview" 
@@ -1292,7 +1292,7 @@ const ProfilePage = () => {
                 onTouchEnd={handleTouchEndCombined}
                 onWheel={handleWheelZoom}
                 className={cn(
-                  "w-48 h-48 mx-auto relative rounded-full overflow-hidden border-4 border-indigo-500/50 bg-black/40 flex items-center justify-center shadow-inner cursor-grab select-none touch-none",
+                  "w-48 h-48 mx-auto relative rounded-full overflow-hidden border-4 border-amber-500/50 bg-black/40 flex items-center justify-center shadow-inner cursor-grab select-none touch-none",
                   isDragging && "cursor-grabbing"
                 )}
               >
@@ -1319,7 +1319,7 @@ const ProfilePage = () => {
                     onClick={() => setRotation((prev) => (prev + 90) % 360)}
                     className="px-3 py-1 bg-secondary dark:bg-white/[0.06] hover:bg-secondary/80 dark:hover:bg-white/10 border border-border dark:border-white/10 text-xs font-semibold rounded-lg text-foreground dark:text-white transition-all flex items-center gap-1 active:scale-95"
                   >
-                    <RotateCw className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" /> {rotation}°
+                    <RotateCw className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" /> {rotation}°
                   </button>
                 </div>
               </div>
@@ -1334,7 +1334,7 @@ const ProfilePage = () => {
                 </button>
                 <button
                   onClick={handleApplyCrop}
-                  className="flex-1 py-2 rounded-xl bg-[#6366f1] hover:bg-[#5254e0] text-white text-xs font-bold transition-all shadow-md"
+                  className="flex-1 py-2 rounded-xl bg-gradient-to-r from-[#f0be65] via-[#e5a83b] to-[#d48c18] hover:brightness-110 text-stone-950 text-xs font-bold transition-all shadow-md"
                 >
                   Apply & Save
                 </button>

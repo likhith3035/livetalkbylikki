@@ -167,7 +167,7 @@ export const AICopilotPanel: React.FC<AICopilotPanelProps> = ({
       <div className="p-3 border-b border-border/50 bg-muted/30">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 font-black text-foreground text-sm">
-            <span className="w-7 h-7 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+            <span className="w-7 h-7 rounded-xl bg-gradient-to-tr from-[#f0be65] via-[#e5a83b] to-[#d48c18] text-stone-950 flex items-center justify-center shadow-md shadow-amber-500/25">
               <Sparkles className="w-4 h-4" />
             </span>
             <span>AI Copilot & Chat</span>

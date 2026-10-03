@@ -64,7 +64,7 @@ const DEFAULT_SETTINGS: SettingsState = {
   glassBlur: 20,
   glassBorderOpacity: 0.25,
   glassGlowIntensity: 0.3,
-  glassTintHSL: "265 90% 60%",
+  glassTintHSL: "38 92% 52%",
   glassPreset: "ios",
   liquidBgSpeed: 4,
   glassTextureIntensity: 0.045,
@@ -147,12 +147,12 @@ export const LIQUID_GLASS_PRESETS: Record<GlassPreset, {
     glassOpacity: 0.75,
     glassBlur: 25,
     glassBorderOpacity: 0.15,
-    glassGlowIntensity: 0.15,
-    glassTintHSL: "240 10% 5%",
+    glassGlowIntensity: 0.25,
+    glassTintHSL: "38 92% 52%",
     liquidBgSpeed: 2,
     glassTextureIntensity: 0.065,
     glassBorderWidth: 1,
-    colors: ["#1e293b", "#0f172a", "#334155", "#1e1b4b"]
+    colors: ["#08090d", "#1c1810", "#261e0e", "#0f1118"]
   },
   cyber: {
     label: "Cyber Hologram",
@@ -172,11 +172,11 @@ export const LIQUID_GLASS_PRESETS: Record<GlassPreset, {
     glassBlur: 20,
     glassBorderOpacity: 0.3,
     glassGlowIntensity: 0.3,
-    glassTintHSL: "265 90% 60%",
+    glassTintHSL: "38 92% 52%",
     liquidBgSpeed: 4,
     glassTextureIntensity: 0.045,
     glassBorderWidth: 1,
-    colors: ["#6366f1", "#a855f7", "#3b82f6", "#06b6d4"]
+    colors: ["#e5a93b", "#f0be65", "#d48c18", "#12141a"]
   }
 };
 

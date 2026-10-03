@@ -408,7 +408,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-xl bg-card/95 border border-primary/40 shadow-2xl rounded-2xl backdrop-blur-xl p-3 space-y-2.5 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-md">
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#f0be65] via-[#e5a83b] to-[#d48c18] text-stone-950 flex items-center justify-center shadow-md">
                 <Sparkles className="w-3.5 h-3.5" />
               </span>
               <span className="font-extrabold text-xs text-foreground flex items-center gap-1.5">

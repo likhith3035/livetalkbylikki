@@ -4,101 +4,102 @@
 
 @layer base {
   /* ─── Light Mode ─── */
+  /* ─── Light Mode ─── */
   :root {
-    --background: 260 30% 97%;
-    --foreground: 270 30% 12%;
+    --background: 40 20% 98%;
+    --foreground: 225 30% 12%;
 
-    --card: 260 25% 94%;
-    --card-foreground: 270 30% 12%;
+    --card: 40 20% 95%;
+    --card-foreground: 225 30% 12%;
 
-    --popover: 260 25% 94%;
-    --popover-foreground: 270 30% 12%;
+    --popover: 40 20% 95%;
+    --popover-foreground: 225 30% 12%;
 
-    --primary: 265 90% 55%;
+    --primary: 38 92% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 260 20% 90%;
-    --secondary-foreground: 270 20% 25%;
+    --secondary: 40 15% 90%;
+    --secondary-foreground: 225 20% 25%;
 
-    --muted: 260 15% 92%;
-    --muted-foreground: 260 15% 35%;
+    --muted: 40 10% 92%;
+    --muted-foreground: 225 15% 38%;
 
-    --accent: 265 80% 50%;
+    --accent: 38 85% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 260 15% 85%;
-    --input: 260 15% 85%;
-    --ring: 265 90% 55%;
+    --border: 40 15% 85%;
+    --input: 40 15% 85%;
+    --ring: 38 92% 48%;
     --warning: 45 90% 50%;
 
     --radius: 0.75rem;
 
     --online: 142 70% 45%;
-    --gradient-primary: linear-gradient(135deg, hsl(265 90% 50%), hsl(280 90% 60%));
-    --gradient-button: linear-gradient(135deg, hsl(265 90% 45%), hsl(285 85% 55%));
-    --shadow-glow: 0 0 30px hsl(265 90% 55% / 0.2);
+    --gradient-primary: linear-gradient(135deg, hsl(38 92% 50%), hsl(30 88% 54%));
+    --gradient-button: linear-gradient(135deg, #f0be65, #e5a83b, #d48c18);
+    --shadow-glow: 0 0 30px rgba(229, 169, 59, 0.25);
 
     /* Glass tokens */
-    --glass-bg: 260 25% 96% / 0.7;
-    --glass-border: 260 20% 85% / 0.5;
+    --glass-bg: 40 20% 96% / 0.7;
+    --glass-border: 40 15% 85% / 0.5;
     --glass-blur: 16px;
 
     /* Bubble tokens */
-    --bubble-you: 265 90% 55%;
+    --bubble-you: 38 90% 48%;
     --bubble-you-foreground: 0 0% 100%;
-    --bubble-stranger: 260 20% 92%;
-    --bubble-stranger-foreground: 270 20% 20%;
+    --bubble-stranger: 40 15% 92%;
+    --bubble-stranger-foreground: 225 20% 20%;
   }
 
-  /* ─── Dark Mode ─── */
+  /* ─── Dark Mode (Cosmic Obsidian & Radiant Gold/Amber) ─── */
   .dark {
-    --background: 270 30% 6%;
-    --foreground: 0 0% 95%;
+    --background: 225 25% 5%;
+    --foreground: 0 0% 96%;
 
-    --card: 270 25% 10%;
-    --card-foreground: 0 0% 95%;
+    --card: 225 20% 8%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 270 25% 10%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 225 20% 8%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 265 90% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 38 92% 52%;
+    --primary-foreground: 225 25% 6%;
 
-    --secondary: 270 20% 15%;
+    --secondary: 225 18% 13%;
     --secondary-foreground: 0 0% 90%;
 
-    --muted: 270 15% 14%;
-    --muted-foreground: 270 10% 55%;
+    --muted: 225 15% 12%;
+    --muted-foreground: 225 10% 60%;
 
-    --accent: 265 80% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 38 85% 56%;
+    --accent-foreground: 225 25% 6%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 20% 18%;
-    --input: 270 20% 18%;
-    --ring: 265 90% 60%;
+    --border: 225 15% 15%;
+    --input: 225 15% 15%;
+    --ring: 38 92% 52%;
     --warning: 45 90% 50%;
 
     --online: 142 70% 50%;
-    --gradient-primary: linear-gradient(135deg, hsl(265 90% 55%), hsl(280 90% 65%));
-    --gradient-button: linear-gradient(135deg, hsl(265 90% 50%), hsl(285 85% 60%));
-    --shadow-glow: 0 0 30px hsl(265 90% 60% / 0.3);
+    --gradient-primary: linear-gradient(135deg, #f0be65, #e5a83b, #d48c18);
+    --gradient-button: linear-gradient(135deg, #f0be65, #e5a83b, #d48c18);
+    --shadow-glow: 0 0 35px rgba(229, 169, 59, 0.35);
 
     /* Glass tokens */
-    --glass-bg: 270 25% 10% / 0.6;
-    --glass-border: 270 20% 22% / 0.4;
+    --glass-bg: 225 20% 8% / 0.75;
+    --glass-border: 225 15% 18% / 0.4;
     --glass-blur: 20px;
 
     /* Bubble tokens */
-    --bubble-you: 265 85% 52%;
-    --bubble-you-foreground: 0 0% 100%;
-    --bubble-stranger: 270 20% 16%;
-    --bubble-stranger-foreground: 0 0% 92%;
+    --bubble-you: 38 88% 50%;
+    --bubble-you-foreground: 225 25% 6%;
+    --bubble-stranger: 225 18% 13%;
+    --bubble-stranger-foreground: 0 0% 94%;
   }
 }
 
