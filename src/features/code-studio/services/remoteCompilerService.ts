@@ -137,12 +137,29 @@ export function parseRemoteExecutionResponse(
         timestamp: Date.now(),
       });
     }
+
+    // Detect missing input for interactive scripts (input() in Python, cin >> in C++, etc.)
+    if (data.program_error.includes("EOFError: EOF when reading a line") || data.program_error.includes("EOFError")) {
+      logs.push({
+        id: `rc-tip-${logId++}`,
+        type: "warn",
+        message: "💡 Input Required: Your script called input(), but no stdin was provided. Click 'stdin' in the console toolbar above, enter your number or text (e.g. 17), and run again!",
+        timestamp: Date.now(),
+      });
+    }
   }
 
   // 4. Status determination
   const success = exitCode === 0 && !hasCompilerError;
+  const isEOFError = hasProgramError && data.program_error.includes("EOFError");
+  const lastErrorLine = hasProgramError ? data.program_error.trim().split("\n").pop() : "";
+
   const errorSummary = hasCompilerError
     ? `Compilation Error (Exit code ${exitCode})`
+    : isEOFError
+    ? `EOFError: Script called input(), but stdin was empty. Click 'stdin' above to provide input.`
+    : lastErrorLine
+    ? `${lastErrorLine} (Exit code ${exitCode})`
     : exitCode !== 0
     ? `Runtime Error (Exit code ${exitCode})`
     : null;

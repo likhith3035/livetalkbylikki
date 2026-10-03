@@ -52,6 +52,20 @@ export const ConsoleOutput: React.FC<ConsoleOutputProps> = ({
     }
   }, [logs, error]);
 
+  // When error occurs, ensure filter is "all" so error tracebacks are visible
+  useEffect(() => {
+    if (error) {
+      setFilter("all");
+    }
+  }, [error]);
+
+  // Auto-expand stdin drawer if script failed due to EOFError (missing input)
+  useEffect(() => {
+    if (error && (error.toLowerCase().includes("eoferror") || error.toLowerCase().includes("input()"))) {
+      setShowStdin(true);
+    }
+  }, [error]);
+
   const handleCopyLogs = () => {
     const text = logs.map((l) => `[${l.type.toUpperCase()}] ${l.message}`).join("\n");
     navigator.clipboard.writeText(text || error || "No output");
@@ -181,6 +195,41 @@ export const ConsoleOutput: React.FC<ConsoleOutputProps> = ({
             rows={2}
             className="w-full bg-[#0d1117] border border-border/60 rounded p-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/80 font-mono resize-none"
           />
+          <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-border/30">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-muted-foreground">Quick test input:</span>
+              <button
+                type="button"
+                onClick={() => onStdinChange("17\n")}
+                className="text-[10px] px-2 py-0.5 rounded bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 transition-colors font-mono cursor-pointer"
+              >
+                17
+              </button>
+              <button
+                type="button"
+                onClick={() => onStdinChange("24\n")}
+                className="text-[10px] px-2 py-0.5 rounded bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/40 transition-colors font-mono cursor-pointer"
+              >
+                24
+              </button>
+              <button
+                type="button"
+                onClick={() => onStdinChange("100\n")}
+                className="text-[10px] px-2 py-0.5 rounded bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/40 transition-colors font-mono cursor-pointer"
+              >
+                100
+              </button>
+            </div>
+            {stdin.trim() && (
+              <button
+                type="button"
+                onClick={() => onStdinChange("")}
+                className="text-[10px] text-muted-foreground hover:text-red-400 cursor-pointer"
+              >
+                Clear stdin
+              </button>
+            )}
+          </div>
         </div>
       )}
 

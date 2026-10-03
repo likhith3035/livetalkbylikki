@@ -89,4 +89,19 @@ describe("Remote Compiler Service", () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it("detects EOFError and provides helpful tip for missing stdin", () => {
+    const mockEOF = {
+      status: "1",
+      program_output: "Enter a number: ",
+      program_error: "Traceback (most recent call last):\n  File \"prog.py\", line 19, in <module>\n    num = int(input(\"Enter a number: \"))\nEOFError: EOF when reading a line\n",
+    };
+
+    const parsed = parseRemoteExecutionResponse(mockEOF, "CPython 3.12.7", 90);
+    expect(parsed.success).toBe(false);
+    expect(parsed.exitCode).toBe(1);
+    expect(parsed.error).toContain("EOFError");
+    expect(parsed.logs.some((l) => l.type === "warn" && l.message.includes("💡 Input Required"))).toBe(true);
+    expect(parsed.logs.some((l) => l.type === "error" && l.message.includes("EOFError: EOF when reading a line"))).toBe(true);
+  });
 });
