@@ -131,4 +131,16 @@ describe("AI Coding Assistant & Error Diagnostics Service", () => {
       globalThis.fetch = origFetch;
     }
   });
+
+  it("handles conversational greetings like 'hi' naturally with friendly response", () => {
+    const res = analyzeCodeOfflineHeuristic({
+      action: "custom_chat",
+      code: "x = 10",
+      language: "python",
+      userPrompt: "hi",
+    });
+
+    expect(res.summary).toContain("Hello!");
+    expect(res.detailedExplanation).toContain("Code Studio AI Copilot");
+  });
 });

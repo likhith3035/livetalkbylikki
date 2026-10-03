@@ -102,10 +102,45 @@ export function analyzeCodeOfflineHeuristic(req: AICodeRequest): AICodeResponse 
     };
   }
 
+  // Handle general conversational chat & greetings (e.g., "hi", "hello")
+  if (req.userPrompt) {
+    const trimmed = req.userPrompt.trim().toLowerCase();
+    if (/^(hi|hello|hey|greetings|good\s*(morning|afternoon|evening)|howdy|sup|yo|hii+)\b/i.test(trimmed)) {
+      return {
+        summary: "Hello! 👋 How can I help you today?",
+        detailedExplanation: "Hey there! I am your **Code Studio AI Copilot**.\n\nYou can chat with me normally, or ask me anything:\n- 🚀 **Write or generate code**: \"Write a function to check palindrome in Python\"\n- 🐞 **Debug errors**: \"Why is my code throwing an EOFError?\"\n- ⚡ **Optimize**: \"How can I make this algorithm $O(N)$?\"\n- 💡 **Explain**: \"Explain how this loop works line-by-line\"\n\nWhat are you coding right now?",
+        keyTakeaways: [
+          "Chat with me normally or ask any programming question",
+          "Use Ctrl+K in the editor to make inline code edits",
+          "Click 'Fix Errors' to automatically repair runtime bugs",
+        ],
+        usedModel: "IncogTalk Copilot Engine",
+        provider: "offline",
+        isOpenModel: false,
+      };
+    }
+
+    if (/^(who are you|what can you do|help)\b/i.test(trimmed)) {
+      return {
+        summary: "I'm your AI Coding Assistant",
+        detailedExplanation: "I can help you build, fix, optimize, and learn coding!\n\nHere is what I can do:\n1. **Auto-Complete Code**: Real-time ghost text while you type (<kbd>Tab</kbd> to accept).\n2. **Inline AI Edits**: Press <kbd>Ctrl+K</kbd> to generate or refactor code in place.\n3. **Fix Errors**: Trace and fix errors with 1-click apply.\n4. **Explain Code**: Breakdown complex algorithms and calculate Big-O time and space complexity.\n5. **General Chat**: Ask me any question about languages, frameworks, or data structures.",
+        keyTakeaways: [
+          "Powered by Sarvam AI, Groq, Gemini, and offline heuristics",
+          "Full support for Python, C++, Java, JS, TS, HTML, and SQL",
+        ],
+        usedModel: "IncogTalk Copilot Engine",
+        provider: "offline",
+        isOpenModel: false,
+      };
+    }
+  }
+
   // Default fallback
   return {
-    summary: "AI Coding Assistant Response",
-    detailedExplanation: `Reviewed your ${language.toUpperCase()} code. The structure is well-formed. For live dynamic suggestions, add an API key or enable Open Models.`,
+    summary: req.userPrompt ? `Response to: "${req.userPrompt.slice(0, 30)}..."` : "AI Coding Assistant Response",
+    detailedExplanation: req.userPrompt
+      ? `Here are some insights regarding your request: "${req.userPrompt}".\n\nReviewed your ${language.toUpperCase()} code (${lines.length} lines). You can also run the script in the Terminal Console or press Ctrl+K in the editor for inline generation.`
+      : `Reviewed your ${language.toUpperCase()} code. The structure is well-formed. For live dynamic suggestions, add an API key or enable Open Models.`,
     suggestedCode: code,
     keyTakeaways: [
       "Code parsed cleanly without syntax fatal breaks",
@@ -347,16 +382,18 @@ async function callSarvamAICoding({
  * Builds structured prompts for the LLM
  */
 function buildSystemAndUserPrompt(req: AICodeRequest): { system: string; user: string } {
-  const system = `You are IncogTalk Code Studio AI Copilot. You are an expert principal software engineer and competitive programmer.
-Provide concise, elegant, perfectly formatted answers.
+  const system = `You are IncogTalk Code Studio AI Copilot. You are an expert principal software engineer, mentor, and coding companion.
+Provide concise, helpful, elegant, and perfectly formatted answers.
+If the user asks a conversational question, greeting (e.g. "hi", "hello", "who are you"), or conceptual question, answer naturally, warmly, and helpfully in detailedExplanation. Only provide suggestedCode and timeComplexity if the user specifically asked for code or code changes.
+
 Format your answer as valid JSON matching this schema:
 {
-  "summary": "Brief 1-sentence headline of the solution/fix",
-  "detailedExplanation": "Clear markdown explanation with bullet points and code references",
-  "suggestedCode": "Full corrected/optimized code without markdown backticks (pure code string)",
-  "timeComplexity": "O(...)",
-  "spaceComplexity": "O(...)",
-  "keyTakeaways": ["Key lesson 1", "Key lesson 2"]
+  "summary": "Brief 1-sentence headline or friendly greeting",
+  "detailedExplanation": "Clear markdown answer with helpful explanations and bullet points",
+  "suggestedCode": "Full corrected/generated code without markdown backticks (optional if not code-related)",
+  "timeComplexity": "O(...) (optional if not algorithmic)",
+  "spaceComplexity": "O(...) (optional if not algorithmic)",
+  "keyTakeaways": ["Key takeaway 1", "Key takeaway 2"]
 }
 Only output the raw JSON object, without markdown code fences around the JSON itself.`;
 
