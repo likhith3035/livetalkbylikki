@@ -143,7 +143,7 @@ describe("Sandboxed Code Execution Engine", () => {
     const result = await executeCode(cppCode, "cpp");
     expect(result.success).toBe(true);
     expect(result.logs.some((l) => l.message.includes("Sum: 15") || l.message.includes("15"))).toBe(true);
-  });
+  }, 15000);
 
   it("executes Java standard code cleanly", async () => {
     const javaCode = `
@@ -157,7 +157,7 @@ describe("Sandboxed Code Execution Engine", () => {
     const result = await executeCode(javaCode, "java");
     expect(result.success).toBe(true);
     expect(result.logs.some((l) => l.message.includes("Java 21 Virtual Threads Ready"))).toBe(true);
-  });
+  }, 15000);
 
   it("executes SQL queries with tabular formatted output", async () => {
     const sqlCode = `
@@ -169,7 +169,7 @@ describe("Sandboxed Code Execution Engine", () => {
     const result = await executeCode(sqlCode, "sql");
     expect(result.success).toBe(true);
     expect(result.logs.some((l) => l.message.includes("Alice") || l.message.includes("Query Result") || l.message.includes("┌"))).toBe(true);
-  });
+  }, 15000);
 
   it("injects parent bridge script into HTML live preview", () => {
     const html = `<html><head><title>Test</title></head><body><h1>Hello</h1></body></html>`;

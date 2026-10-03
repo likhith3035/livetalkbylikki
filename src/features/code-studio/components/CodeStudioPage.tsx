@@ -431,6 +431,9 @@ export default function CodeStudioPage() {
                       theme={theme}
                       fontSize={fontSize}
                       onRunShortcut={handleRunCode}
+                      onTriggerAICopilot={() => {
+                        setShowRightSidebar(true);
+                      }}
                     />
                   </div>
                 </div>
@@ -512,6 +515,9 @@ export default function CodeStudioPage() {
                 theme={theme}
                 fontSize={fontSize}
                 onRunShortcut={handleRunCode}
+                onTriggerAICopilot={() => {
+                  setMobileTab("ai");
+                }}
               />
             </div>
           </div>
