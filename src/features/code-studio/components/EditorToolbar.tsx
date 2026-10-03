@@ -51,16 +51,16 @@ interface EditorToolbarProps {
   onOpenKeyModal: () => void;
 }
 
-const LANGUAGE_LABELS: Record<SupportedLanguage, { label: string; ext: string; icon: string }> = {
-  javascript: { label: "JavaScript (ES6+)", ext: "js", icon: "🟨" },
-  typescript: { label: "TypeScript", ext: "ts", icon: "🔷" },
-  python: { label: "Python 3", ext: "py", icon: "🐍" },
-  html: { label: "HTML5 / CSS / JS", ext: "html", icon: "🌐" },
-  css: { label: "CSS3", ext: "css", icon: "🎨" },
-  sql: { label: "SQL (Postgres)", ext: "sql", icon: "🗄️" },
-  json: { label: "JSON", ext: "json", icon: "📋" },
-  cpp: { label: "C++ (Competitive)", ext: "cpp", icon: "⚡" },
-  java: { label: "Java 21", ext: "java", icon: "☕" },
+const LANGUAGE_LABELS: Record<SupportedLanguage, { label: string; ext: string; icon: string; compiler: string }> = {
+  javascript: { label: "JavaScript (ES6+)", ext: "js", icon: "🟨", compiler: "V8 (Browser)" },
+  typescript: { label: "TypeScript", ext: "ts", icon: "🔷", compiler: "TS Transpiler" },
+  python: { label: "Python 3.12", ext: "py", icon: "🐍", compiler: "CPython 3.12" },
+  html: { label: "HTML5 / CSS / JS", ext: "html", icon: "🌐", compiler: "DOM Live Sandbox" },
+  css: { label: "CSS3", ext: "css", icon: "🎨", compiler: "CSS Sandbox" },
+  sql: { label: "SQL (SQLite 3)", ext: "sql", icon: "🗄️", compiler: "SQLite 3.46" },
+  json: { label: "JSON", ext: "json", icon: "📋", compiler: "JSON Validator" },
+  cpp: { label: "C++ (GCC 14.2)", ext: "cpp", icon: "⚡", compiler: "GCC 14.2 (C++20)" },
+  java: { label: "Java 21 LTS", ext: "java", icon: "☕", compiler: "OpenJDK 21" },
 };
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -190,6 +190,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             {hasActiveKey ? "Cloud AI Ready" : "Offline AI Engine"}
           </span>
         </Button>
+
+        {/* Active Engine / Compiler Badge */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/40 border border-border/50 text-[11px] font-mono text-muted-foreground shrink-0 select-none">
+          <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+          <span className="font-semibold text-foreground/90">{LANGUAGE_LABELS[language]?.compiler}</span>
+        </div>
       </div>
 
       {/* Right controls: Editor actions & Run Button */}

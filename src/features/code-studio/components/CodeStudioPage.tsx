@@ -73,6 +73,7 @@ export default function CodeStudioPage() {
 
   // 2. Execution State
   const [isRunning, setIsRunning] = useState(false);
+  const [stdin, setStdin] = useState<string>("");
   const [logs, setLogs] = useState<ExecutionLog[]>([]);
   const [currentError, setCurrentError] = useState<string | null>(null);
   const [executionTimeMs, setExecutionTimeMs] = useState<number | undefined>(undefined);
@@ -161,7 +162,7 @@ export default function CodeStudioPage() {
     setIsRunning(true);
     setCurrentError(null);
     try {
-      const result = await executeCode(code, language);
+      const result = await executeCode(code, language, stdin);
       setLogs(result.logs);
       setCurrentError(result.error);
       setExecutionTimeMs(result.executionTimeMs);
@@ -446,6 +447,9 @@ export default function CodeStudioPage() {
                     logs={logs}
                     error={currentError}
                     executionTimeMs={executionTimeMs}
+                    language={language}
+                    stdin={stdin}
+                    onStdinChange={setStdin}
                     onClear={() => {
                       setLogs([]);
                       setCurrentError(null);
@@ -522,6 +526,9 @@ export default function CodeStudioPage() {
                 logs={logs}
                 error={currentError}
                 executionTimeMs={executionTimeMs}
+                language={language}
+                stdin={stdin}
+                onStdinChange={setStdin}
                 onClear={() => {
                   setLogs([]);
                   setCurrentError(null);

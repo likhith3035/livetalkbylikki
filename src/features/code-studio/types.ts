@@ -83,6 +83,8 @@ export interface ExecutionResult {
   testsPassed?: number;
   totalTests?: number;
   testResults?: TestCaseResult[];
+  compilerVersion?: string;
+  exitCode?: number;
 }
 
 export type AICodeActionType =

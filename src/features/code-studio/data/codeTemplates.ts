@@ -151,13 +151,12 @@ print(f"Total count: {len(primes)}")
 }
 `,
 
-  sql: `-- PostgreSQL / SQLite Schema Example
+  sql: `-- SQLite / PostgreSQL Compatible Schema & Query Example
 CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(50) UNIQUE NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  xp INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  id INTEGER PRIMARY KEY,
+  username TEXT NOT NULL,
+  email TEXT NOT NULL,
+  xp INTEGER DEFAULT 0
 );
 
 INSERT INTO users (username, email, xp) VALUES

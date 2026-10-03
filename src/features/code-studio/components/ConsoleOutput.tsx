@@ -9,10 +9,12 @@ import {
   XCircle,
   AlertTriangle,
   Info,
-  Maximize2,
+  ChevronDown,
+  ChevronUp,
+  Sliders,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ExecutionLog } from "../types";
+import { ExecutionLog, SupportedLanguage } from "../types";
 import { toast } from "sonner";
 
 interface ConsoleOutputProps {
@@ -21,6 +23,9 @@ interface ConsoleOutputProps {
   executionTimeMs?: number;
   onClear: () => void;
   isRunning?: boolean;
+  language?: SupportedLanguage;
+  stdin?: string;
+  onStdinChange?: (val: string) => void;
 }
 
 export const ConsoleOutput: React.FC<ConsoleOutputProps> = ({
@@ -29,10 +34,16 @@ export const ConsoleOutput: React.FC<ConsoleOutputProps> = ({
   executionTimeMs,
   onClear,
   isRunning = false,
+  language,
+  stdin = "",
+  onStdinChange,
 }) => {
   const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState<"all" | "errors" | "logs">("all");
+  const [showStdin, setShowStdin] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const supportsStdin = language === "cpp" || language === "python" || language === "java";
 
   // Auto-scroll when new logs arrive
   useEffect(() => {
@@ -66,7 +77,7 @@ export const ConsoleOutput: React.FC<ConsoleOutputProps> = ({
           {isRunning ? (
             <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              Executing...
+              Compiling...
             </span>
           ) : error ? (
             <span className="flex items-center gap-1 text-[11px] text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/30">
@@ -90,6 +101,25 @@ export const ConsoleOutput: React.FC<ConsoleOutputProps> = ({
 
         {/* Right action tools */}
         <div className="flex items-center gap-1">
+          {/* Stdin Toggle for interactive programs */}
+          {supportsStdin && onStdinChange && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowStdin((prev) => !prev)}
+              className={`h-6 px-1.5 text-[10px] gap-1 cursor-pointer transition-colors ${
+                showStdin || stdin.trim().length > 0
+                  ? "bg-primary/20 text-primary border border-primary/40 font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Configure interactive program input (stdin)"
+            >
+              <Sliders className="w-3 h-3" />
+              <span>stdin</span>
+              {showStdin ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+            </Button>
+          )}
+
           {/* Filters */}
           <div className="flex items-center bg-[#0d1117] p-0.5 rounded-md border border-border/40 text-[10px] mr-1.5">
             <button
@@ -134,6 +164,25 @@ export const ConsoleOutput: React.FC<ConsoleOutputProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Interactive Stdin Drawer */}
+      {showStdin && supportsStdin && onStdinChange && (
+        <div className="p-2 bg-[#12161f] border-b border-border/40 transition-all">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Standard Input (stdin)
+            </span>
+            <span className="text-[10px] text-muted-foreground">Passed to cin / input() / Scanner</span>
+          </div>
+          <textarea
+            value={stdin}
+            onChange={(e) => onStdinChange(e.target.value)}
+            placeholder="Type input data here (e.g. numbers, words, test lines)..."
+            rows={2}
+            className="w-full bg-[#0d1117] border border-border/60 rounded p-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/80 font-mono resize-none"
+          />
+        </div>
+      )}
 
       {/* Console output body */}
       <div ref={scrollRef} className="flex-1 p-3 overflow-y-auto space-y-1.5 leading-relaxed selection:bg-cyan-500/30">
