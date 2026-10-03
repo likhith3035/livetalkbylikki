@@ -129,7 +129,7 @@ export const DotsBoxesGame: React.FC<DotsBoxesGameProps> = ({
 
       const gotBox = newlyCompleted.length > 0;
       let nextTurn = room.currentTurn;
-      let nextChain = gotBox ? state.chainCount + 1 : 0;
+      const nextChain = gotBox ? state.chainCount + 1 : 0;
 
       if (gotBox) {
         gameAudio.playWin();

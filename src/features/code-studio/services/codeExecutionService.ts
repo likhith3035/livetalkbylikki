@@ -115,11 +115,11 @@ function executePythonCode(code: string): { logs: ExecutionLog[]; error: string 
       const printMatch = line.match(/^print\((.*)\)$/);
       if (printMatch) {
         hasOutput = true;
-        let inside = printMatch[1].trim();
+        const inside = printMatch[1].trim();
 
         // Handle f-string
         if (inside.startsWith('f"') || inside.startsWith("f'")) {
-          let text = inside.substring(2, inside.length - 1);
+          const text = inside.substring(2, inside.length - 1);
           // Simple interpolation replacement for basic variables
           logs.push({
             id: `py-${logId++}`,
@@ -127,7 +127,7 @@ function executePythonCode(code: string): { logs: ExecutionLog[]; error: string 
             message: text.replace(/\{([^}]+)\}/g, (_, expr) => {
               try {
                 // If it's a numeric expression or string
-                return String(eval(expr));
+                return String(new Function(`"use strict"; return (${expr});`)());
               } catch {
                 return `[${expr}]`;
               }

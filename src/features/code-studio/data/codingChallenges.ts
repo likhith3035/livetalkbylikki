@@ -341,7 +341,7 @@ function deepClone(obj) {
     ],
     hints: [
       "Check for null and primitives first.",
-      "Check \`Array.isArray(obj)\` to preserve arrays, otherwise iterate over \`Object.keys()\`.",
+      "Check `Array.isArray(obj)` to preserve arrays, otherwise iterate over `Object.keys()`.",
     ],
     solutionExplanation: `Recursively clone array items and object properties. Base case returns primitives and null directly.`,
     timeComplexity: "O(n)",
