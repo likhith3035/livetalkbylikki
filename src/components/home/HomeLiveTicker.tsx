@@ -30,7 +30,7 @@ const ACTIVITIES: ActivityItem[] = [
     icon: Lock,
     text: "Private Room created with instant QR Code",
     badge: "Private Room",
-    color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
   },
   {
     id: "4",

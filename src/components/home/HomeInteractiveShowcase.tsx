@@ -210,7 +210,7 @@ export const HomeInteractiveShowcase: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-3 rounded-2xl bg-gradient-to-r from-primary/20 via-purple-600/15 to-indigo-600/20 border border-primary/40 flex items-center justify-between gap-3 shadow-md"
+                className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-600/15 to-yellow-600/20 border border-amber-500/40 flex items-center justify-between gap-3 shadow-md"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-primary/30 text-primary flex items-center justify-center animate-pulse">
@@ -310,7 +310,7 @@ export const HomeInteractiveShowcase: React.FC = () => {
                 </button>
                 <button
                   onClick={() => fireCheer("🎺", "Stadium Horn")}
-                  className="px-2 py-1 rounded-xl bg-violet-500/15 text-violet-400 hover:bg-violet-500/25 text-[10px] font-bold border border-violet-500/30 cursor-pointer"
+                  className="px-2 py-1 rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 text-[10px] font-bold border border-amber-500/30 cursor-pointer"
                 >
                   🎺 Horn
                 </button>
