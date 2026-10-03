@@ -4,7 +4,7 @@
  * existing app storage (livetalk_ai_api_keys, echo_ai_api_key, URL params, and env vars).
  */
 
-export type AIProvider = "gemini" | "openai" | "groq" | "openrouter" | "claude" | "deepseek";
+export type AIProvider = "gemini" | "openai" | "groq" | "openrouter" | "claude" | "deepseek" | "sarvam";
 
 export interface StudioAPIKeys {
   gemini?: string;
@@ -13,6 +13,7 @@ export interface StudioAPIKeys {
   openrouter?: string;
   claude?: string;
   deepseek?: string;
+  sarvam?: string;
 }
 
 export interface KeyDetectionResult {
@@ -96,6 +97,20 @@ export function detectKeyProvider(rawKey: string): KeyDetectionResult {
     };
   }
 
+  // Sarvam AI: starts with "sarvam_" or matches 32-character hex key (subscription key format)
+  if (
+    trimmed.startsWith("sarvam_") ||
+    trimmed.startsWith("sarvam-") ||
+    (/^[a-f0-9]{32}$/i.test(trimmed) && !trimmed.startsWith("gsk_") && !trimmed.startsWith("AIzaSy"))
+  ) {
+    return {
+      provider: "sarvam",
+      confidence: "high",
+      displayName: "Sarvam AI (₹100 Free Credit)",
+      sanitizedKey: trimmed,
+    };
+  }
+
   // DeepSeek: often starts with "sk-" followed by 32 alphanumeric chars (shorter than OpenAI project keys)
   if (trimmed.startsWith("sk-") && trimmed.length <= 36) {
     return {
@@ -151,6 +166,7 @@ export function scanAllKeySources(): { keys: StudioAPIKeys; sources: DetectedSou
 
   // 1. Environment variables
   if (typeof import.meta !== "undefined" && import.meta.env) {
+    if (import.meta.env.VITE_SARVAM_API_KEY) registerKey("sarvam", import.meta.env.VITE_SARVAM_API_KEY, "Environment (VITE_SARVAM_API_KEY)");
     if (import.meta.env.VITE_GEMINI_API_KEY) registerKey("gemini", import.meta.env.VITE_GEMINI_API_KEY, "Environment (VITE_GEMINI_API_KEY)");
     if (import.meta.env.VITE_OPENAI_API_KEY) registerKey("openai", import.meta.env.VITE_OPENAI_API_KEY, "Environment (VITE_OPENAI_API_KEY)");
     if (import.meta.env.VITE_GROQ_API_KEY) registerKey("groq", import.meta.env.VITE_GROQ_API_KEY, "Environment (VITE_GROQ_API_KEY)");
@@ -164,6 +180,7 @@ export function scanAllKeySources(): { keys: StudioAPIKeys; sources: DetectedSou
     const rawPrompt = localStorage.getItem(STORAGE_KEY_PROMPT);
     if (rawPrompt) {
       const parsed = JSON.parse(rawPrompt);
+      if (parsed.sarvam) registerKey("sarvam", parsed.sarvam, "Shared App AI Chat (livetalk_ai_api_keys)");
       if (parsed.gemini) registerKey("gemini", parsed.gemini, "Shared App AI Chat (livetalk_ai_api_keys)");
       if (parsed.openai) registerKey("openai", parsed.openai, "Shared App AI Chat (livetalk_ai_api_keys)");
       if (parsed.groq) registerKey("groq", parsed.groq, "Shared App AI Chat (livetalk_ai_api_keys)");
@@ -180,6 +197,7 @@ export function scanAllKeySources(): { keys: StudioAPIKeys; sources: DetectedSou
     const rawStudio = localStorage.getItem(STORAGE_KEY_STUDIO);
     if (rawStudio) {
       const parsed = JSON.parse(rawStudio);
+      if (parsed.sarvam) registerKey("sarvam", parsed.sarvam, "Code Studio Storage");
       if (parsed.gemini) registerKey("gemini", parsed.gemini, "Code Studio Storage");
       if (parsed.openai) registerKey("openai", parsed.openai, "Code Studio Storage");
       if (parsed.groq) registerKey("groq", parsed.groq, "Code Studio Storage");
@@ -206,6 +224,8 @@ export function scanAllKeySources(): { keys: StudioAPIKeys; sources: DetectedSou
 
   // 5. Individual commonly used localStorage / sessionStorage keys
   const individualKeys: { keyName: string; provider?: AIProvider }[] = [
+    { keyName: "sarvam_api_key", provider: "sarvam" },
+    { keyName: "sarvam_key", provider: "sarvam" },
     { keyName: "groq_api_key", provider: "groq" },
     { keyName: "groq_key", provider: "groq" },
     { keyName: "gemini_api_key", provider: "gemini" },
@@ -256,7 +276,7 @@ export function scanAllKeySources(): { keys: StudioAPIKeys; sources: DetectedSou
     /* ignore error */
   }
 
-  // 7. URL query params (e.g. ?apiKey=... or ?groqKey=...)
+  // 7. URL query params (e.g. ?apiKey=... or ?sarvamKey=... or ?groqKey=...)
   try {
     if (typeof window !== "undefined" && window.location) {
       const searchStr = window.location.search || window.location.hash.split("?")[1] || "";
@@ -269,6 +289,7 @@ export function scanAllKeySources(): { keys: StudioAPIKeys; sources: DetectedSou
             registerKey(detected.provider, urlKey, "URL Query Parameter");
           }
         }
+        if (params.get("sarvamKey")) registerKey("sarvam", params.get("sarvamKey")!, "URL Parameter (sarvamKey)");
         if (params.get("geminiKey")) registerKey("gemini", params.get("geminiKey")!, "URL Parameter (geminiKey)");
         if (params.get("openaiKey")) registerKey("openai", params.get("openaiKey")!, "URL Parameter (openaiKey)");
         if (params.get("groqKey")) registerKey("groq", params.get("groqKey")!, "URL Parameter (groqKey)");
@@ -323,7 +344,7 @@ export async function detectKeyFromClipboard(): Promise<{
       try {
         const parsed = JSON.parse(trimmed);
         let importedCount = 0;
-        for (const prov of ["gemini", "openai", "groq", "openrouter", "claude", "deepseek"] as AIProvider[]) {
+        for (const prov of ["sarvam", "gemini", "openai", "groq", "openrouter", "claude", "deepseek"] as AIProvider[]) {
           if (parsed[prov] && typeof parsed[prov] === "string") {
             saveDetectedAPIKey(parsed[prov], prov);
             importedCount++;
@@ -344,7 +365,7 @@ export async function detectKeyFromClipboard(): Promise<{
     if (detected.provider === "unknown") {
       return {
         success: false,
-        message: "Clipboard does not contain a recognized API key format (OpenAI, Gemini, Groq, OpenRouter, Claude, or DeepSeek).",
+        message: "Clipboard does not contain a recognized API key format (Sarvam AI, OpenAI, Gemini, Groq, OpenRouter, Claude, or DeepSeek).",
       };
     }
 
@@ -406,5 +427,5 @@ export function removeAPIKey(provider: AIProvider): void {
  */
 export function hasActiveAPIKey(): boolean {
   const keys = getAutoDetectedAPIKeys();
-  return Boolean(keys.gemini || keys.openai || keys.groq || keys.openrouter || keys.claude || keys.deepseek);
+  return Boolean(keys.sarvam || keys.gemini || keys.openai || keys.groq || keys.openrouter || keys.claude || keys.deepseek);
 }

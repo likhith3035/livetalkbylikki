@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   analyzeCodeOfflineHeuristic,
   requestAICodeAssistance,
@@ -80,5 +80,55 @@ describe("AI Coding Assistant & Error Diagnostics Service", () => {
     expect(res).toBeDefined();
     expect(res.summary).toBeTruthy();
     expect(res.detailedExplanation).toBeTruthy();
+  });
+
+  it("prioritizes and calls Sarvam AI when sarvam key is configured", async () => {
+    localStorage.setItem("livetalk_ai_api_keys", JSON.stringify({ sarvam: "sarvam_mock_key_123" }));
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                summary: "Optimized with Sarvam AI",
+                detailedExplanation: "Sarvam 105B analyzed the loop and optimized memory.",
+                suggestedCode: "const a = 2;",
+                timeComplexity: "O(1)",
+                spaceComplexity: "O(1)",
+                keyTakeaways: ["Efficient O(1) approach"],
+              }),
+            },
+          },
+        ],
+      }),
+    });
+
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = mockFetch as any;
+
+    try {
+      const res = await requestAICodeAssistance({
+        action: "optimize",
+        code: "const a = 1;",
+        language: "javascript",
+      });
+
+      expect(res.summary).toContain("Optimized with Sarvam AI");
+      expect(res.provider).toContain("Sarvam AI");
+      expect(res.usedModel).toContain("sarvam-105b");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://api.sarvam.ai/v1/chat/completions",
+        expect.objectContaining({
+          method: "POST",
+          headers: expect.objectContaining({
+            "api-subscription-key": "sarvam_mock_key_123",
+          }),
+        })
+      );
+    } finally {
+      globalThis.fetch = origFetch;
+    }
   });
 });

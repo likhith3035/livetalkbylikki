@@ -124,7 +124,20 @@ export async function requestAICodeAssistance(req: AICodeRequest): Promise<AICod
   const keys = getAutoDetectedAPIKeys();
   const openModelEnabled = isOpenModelsEnabled();
 
-  // 1. Try Groq (Ultra Fast Open Models: DeepSeek R1 / Llama 3.3)
+  // 1. Try Sarvam AI (sarvam-105b-conversations - ₹100 Free Credit)
+  if (keys.sarvam) {
+    try {
+      const response = await callSarvamAICoding({
+        apiKey: keys.sarvam,
+        request: req,
+      });
+      if (response) return response;
+    } catch (e) {
+      console.warn("[CodeStudio] Sarvam AI call failed, trying next provider:", e);
+    }
+  }
+
+  // 2. Try Groq (Ultra Fast Open Models: DeepSeek R1 / Llama 3.3)
   if (keys.groq) {
     try {
       const model = openModelEnabled ? "deepseek-r1-distill-llama-70b" : "llama-3.3-70b-versatile";
@@ -277,6 +290,57 @@ async function callGoogleGemini({
   const data = await res.json();
   const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
   return parseAIResponse(rawText, "gemini-1.5-flash", "Google Gemini", false);
+}
+
+/**
+ * Sarvam AI REST API Caller (sarvam-105b-conversations)
+ */
+async function callSarvamAICoding({
+  apiKey,
+  request,
+}: {
+  apiKey: string;
+  request: AICodeRequest;
+}): Promise<AICodeResponse | null> {
+  const prompt = buildSystemAndUserPrompt(request);
+  const cleanKey = apiKey.replace(/^Bearer\s+/i, "").trim();
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout
+
+  try {
+    const res = await fetch("https://api.sarvam.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-subscription-key": cleanKey,
+        Authorization: `Bearer ${cleanKey}`,
+      },
+      body: JSON.stringify({
+        model: "sarvam-105b-conversations",
+        messages: [
+          { role: "system", content: prompt.system },
+          { role: "user", content: prompt.user },
+        ],
+        temperature: 0.2,
+        max_tokens: 1500,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error(`Sarvam API error ${res.status}: ${await res.text()}`);
+    }
+
+    const data = await res.json();
+    const rawText = data.choices?.[0]?.message?.content || "";
+    return parseAIResponse(rawText, "sarvam-105b-conversations", "Sarvam AI (105B Conversations)", false);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
 }
 
 /**

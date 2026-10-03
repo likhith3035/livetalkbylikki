@@ -52,6 +52,18 @@ describe("API Key Auto-Detection Service", () => {
     expect(res.confidence).toBe("high");
   });
 
+  it("accurately detects Sarvam AI key by sarvam_ prefix or 32-hex format", () => {
+    const resPrefix = detectKeyProvider("sarvam_secret_test_key_123");
+    expect(resPrefix.provider).toBe("sarvam");
+    expect(resPrefix.displayName).toContain("Sarvam AI");
+    expect(resPrefix.confidence).toBe("high");
+
+    const resHex = detectKeyProvider("a1b2c3d4e5f678901234567890abcdef");
+    expect(resHex.provider).toBe("sarvam");
+    expect(resHex.displayName).toContain("Sarvam AI");
+    expect(resHex.confidence).toBe("high");
+  });
+
   it("saves detected key into both studio and shared BYOK storage seamlessly", () => {
     saveDetectedAPIKey("AIzaSyFakeKey999");
     const stored = getAutoDetectedAPIKeys();

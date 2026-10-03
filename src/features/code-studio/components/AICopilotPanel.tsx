@@ -120,7 +120,15 @@ export const AICopilotPanel: React.FC<AICopilotPanelProps> = ({
                 isOpenModelActive || hasActiveKey ? "bg-emerald-400" : "bg-amber-400"
               }`}
             />
-            <span>{isOpenModelActive ? "Open Model" : hasActiveKey ? "Active Key" : "Offline AI"}</span>
+            <span>
+              {getAutoDetectedAPIKeys().sarvam
+                ? "Sarvam AI (105B)"
+                : isOpenModelActive
+                ? "Open Model"
+                : hasActiveKey
+                ? "Active Key"
+                : "Offline AI"}
+            </span>
           </button>
         </div>
 

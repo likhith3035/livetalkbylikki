@@ -22,6 +22,8 @@ import {
   RefreshCw,
   Layers,
   Check,
+  Gift,
+  ExternalLink,
 } from "lucide-react";
 import {
   AIProvider,
@@ -275,6 +277,28 @@ export const CodeStudioKeyModal: React.FC<CodeStudioKeyModalProps> = ({
           </Button>
         </div>
 
+        {/* 🎁 Free ₹100 Sarvam AI Key Banner */}
+        <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-purple-500/15 border border-amber-500/30 text-xs space-y-2 mb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 font-bold text-amber-400">
+              <Gift className="w-4 h-4 text-amber-400 animate-bounce" />
+              <span>Get ₹100 Free AI Key (Sarvam AI)</span>
+            </div>
+            <a
+              href="https://dashboard.sarvam.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] font-extrabold text-amber-400 hover:underline flex items-center gap-1 bg-amber-500/20 px-2 py-0.5 rounded-lg"
+            >
+              <span>dashboard.sarvam.ai</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+          <p className="text-[11px] text-foreground/80 leading-relaxed">
+            Want free AI credits? Sign up on <strong>Sarvam AI</strong> with any email (or temp mail) to receive <strong>₹100 worth of free API credits</strong>! Create a secret key in <em>API Keys</em> tab and paste it below.
+          </p>
+        </div>
+
         {/* 3. Smart Paste & Auto-Detect Key Input */}
         <div className="space-y-2 mb-3">
           <Label className="text-xs font-bold text-foreground">
@@ -285,7 +309,7 @@ export const CodeStudioKeyModal: React.FC<CodeStudioKeyModalProps> = ({
               <Input
                 value={inputKey}
                 onChange={(e) => setInputKey(e.target.value)}
-                placeholder="Paste sk-proj-..., AIzaSy..., gsk_..., or sk-or-v1-..."
+                placeholder="Paste Sarvam AI key, sk-proj-..., AIzaSy..., or gsk_..."
                 className="h-9 font-mono text-xs pr-24 bg-background/80 border-border/60"
               />
               {detectedInfo.provider !== "unknown" && (
@@ -338,7 +362,7 @@ export const CodeStudioKeyModal: React.FC<CodeStudioKeyModalProps> = ({
         <div className="space-y-1.5">
           <Label className="text-xs font-bold text-foreground">Active Synchronized Keys</Label>
           <div className="space-y-1.5 max-h-36 overflow-y-auto">
-            {(["gemini", "groq", "openrouter", "openai", "claude", "deepseek"] as AIProvider[]).map((prov) => {
+            {(["sarvam", "gemini", "groq", "openrouter", "openai", "claude", "deepseek"] as AIProvider[]).map((prov) => {
               const activeVal = keys[prov];
               return (
                 <div
@@ -347,7 +371,9 @@ export const CodeStudioKeyModal: React.FC<CodeStudioKeyModalProps> = ({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`w-2 h-2 rounded-full ${activeVal ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
-                    <span className="font-bold text-foreground capitalize truncate">{prov}</span>
+                    <span className="font-bold text-foreground capitalize truncate">
+                      {prov === "sarvam" ? "Sarvam AI (₹100 Free)" : prov}
+                    </span>
                     {activeVal ? (
                       <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[120px]">
                         ••••{activeVal.slice(-4)}
